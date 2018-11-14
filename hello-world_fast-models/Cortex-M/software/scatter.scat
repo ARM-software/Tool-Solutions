@@ -1,0 +1,24 @@
+;*******************************************************
+;
+; Copyright (c) 2018 Arm Limited. All rights reserved.
+;
+;*******************************************************
+
+; Scatter-file for Cortex-M bare-metal minimal example
+
+LOAD_REGION 0x0
+{
+    CODE +0 
+    {
+        startup.o (BOOT, +First)        
+        * (+RO)                             
+    }
+
+    DATA +0 
+    {
+        * (+RW,+ZI)                         
+    }
+
+    ARM_LIB_STACKHEAP +0 EMPTY 0x00002000 
+    {}
+}
