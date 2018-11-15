@@ -3,21 +3,11 @@ pipeline {
   stages {
     stage('Test Env') {
       steps {
-        sh '''ls
+        script {
+          def tests = load "~/arm-tool-solutions-resource@script/jenkinsTests.Groovy"
+          tests.run_tests()
+        }
 
-
-'''
-        sh 'echo $PATH'
-      }
-    }
-    stage('mathworks-support-packages') {
-      steps {
-        sh '''cd mathworks-support-packages
-
-
-
-
-&& [ -f "R2018a/Arm Compiler Support Package.mltbx" ]; echo $?'''
       }
     }
   }
