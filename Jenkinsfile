@@ -4,7 +4,8 @@ pipeline {
     stage('Environment Check') {
       steps {
         sh 'echo $PATH'
-        sh 'ls ~'
+        sh 'ls /var/lib/jenkins/arm-tool-solutions-resource/'
+        sh 'echo $PATH_TO_ARM_TOOL_TESTS'
       }
     }
     stage('Run Tests') {
