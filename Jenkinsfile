@@ -7,7 +7,17 @@ pipeline {
 
 
 '''
-        sh 'echo PATH'
+        sh 'echo $PATH'
+      }
+    }
+    stage('mathworks-support-packages') {
+      steps {
+        sh '''cd mathworks-support-packages
+
+
+
+
+&& [ -f "R2018a/Arm Compiler Support Package.mltbx" ]; echo $?'''
       }
     }
   }
