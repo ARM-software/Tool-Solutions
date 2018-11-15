@@ -1,4 +1,9 @@
-# docker build -t arm-tool-base:latest -f Dockerfile .
+# Place the tool tar files in a directory ABOVE Tool-Solutions, and set BASEDIR equal to that directory. Also specify the correct path to your Arm license file. 
+# For example, if the directory above Tool-Solutions is named 'arm-tool-base-repo' with the proper tar files and the Tool-Solutions directory, run the following commands:
+
+# export BASEDIR=/path/to/arm-tool-base-repo
+# export LICPATH=/path/to/license
+# docker build -t arm-tool-base:latest --build-arg license_path=${LICPATH} -f ${BASEDIR}/Tool-Solutions/docker/arm-tool-base/Dockerfile ${BASEDIR}
 
 
 # The Arm Docker container follows the following steps:
@@ -22,7 +27,6 @@
 #______________________
 FROM ubuntu:16.04
 
-ARG tools_base_dir
 ARG license_path
 
 RUN apt-get update
@@ -64,7 +68,7 @@ ENV ARMLMD_LICENSE_FILE=$license_path
 #___________2__________ 
 #__________FMs_________
 #### Local zip:
-COPY $tools_base_dir/FastModels_11-3-030_Linux64.tgz /home/
+COPY FastModels_11-3-030_Linux64.tgz /home/
 
 RUN 	tar xvzf /home/FastModels_11-3-030_Linux64.tgz && \
 		cd FastModels_11-3-030_Linux64 && \
@@ -76,7 +80,7 @@ RUN 	tar xvzf /home/FastModels_11-3-030_Linux64.tgz && \
 #______________________
 #___________3__________ 
 #__________DS-5_________
-COPY $tools_base_dir/DS500-BN-00019-r5p0-28rel1.tgz /home/
+COPY DS500-BN-00019-r5p0-28rel1.tgz /home/
 	
 		# ds5 installer doesn't work with the default tar binary, change to bsdtar then change back.
 RUN 	mkdir /DS500-BN-00019-r5p0-28rel1/ && \
