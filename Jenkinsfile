@@ -4,8 +4,8 @@ pipeline {
     stage('Test Env') {
       steps {
         script {
-          def tests = load "~/arm-tool-solutions-resource@script/jenkinsTests.Groovy"
-          tests.run_tests()
+          modules.script = load "~/arm-tool-solutions-resource/jenkinsTests.Groovy"
+          modules.script.run_tests()
         }
 
       }
