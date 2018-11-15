@@ -6,7 +6,7 @@ pipeline {
         sh 'echo $PATH'
         sh 'ls ~'
         script {
-          def script = load "~/arm-tool-solutions-resource/jenkinsTests.Groovy "
+          def script = load "/var/lib/jenkins/arm-tool-solutions-resource/jenkinsTests.Groovy "
           script.run_tests()
         }
 
