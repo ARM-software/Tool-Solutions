@@ -1,5 +1,5 @@
 # Tool Solutions
-This repository is home to various examples and tutorials made to improve your efficiency working with embedded development tools. From system design to software development, we provide material to better utilize tools from Arm and the greater Arm ecosystem. 
+This repository is home to various examples and tutorials made to improve your efficiency working with development tools. From system design to software development, we provide material to better utilize tools from Arm and the Arm ecosystem. 
 
 
 ### Downloading Content
@@ -16,6 +16,12 @@ Here is a list of all the contents of this repository with short descriptions:
 A tutorial to get started with Arm Fast Model tools, from install to running your first program.
 ```
 svn export https://github.com/ARM-software/Tool-Solutions/trunk/hello-world_fast-models
+```
+
+#### ml-tool-examples
+Performance analysis for Machine Learning 
+```
+svn export https://github.com/ARM-software/Tool-Solutions/trunk/ml-tool-examples
 ```
 
 #### mathworks-support-packages
