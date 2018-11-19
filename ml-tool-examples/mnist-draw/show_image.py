@@ -1,5 +1,9 @@
 #!/usr/bin/python3
 
+# Simple script to show a picture of the captured image
+# Script assumes image.txt is present in the current directory
+# Requires numpy and matplotlib
+
 import numpy as np
 import matplotlib.pyplot as plt
 import sys 
