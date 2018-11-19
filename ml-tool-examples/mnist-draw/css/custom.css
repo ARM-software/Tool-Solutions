@@ -1,0 +1,42 @@
+body {
+	margin-top: 100px;
+}
+
+#canvas {
+	border: 1px solid #aaaaaa;
+}
+
+#canvas-div {
+	margin-bottom: 20px;
+}
+
+#header {
+	margin-top: 0px;
+}
+
+#svg-chart {
+	margin-top: 15px;
+}
+
+.bar { 
+	fill: steelblue; 
+}
+
+.bar:hover {
+    fill: orangered ;
+}
+
+.axis text {
+  font: 10px sans-serif;
+}
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.x.axis path {
+  display: none;
+}

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <!-- Meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>MNIST Draw</title>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" href="css/font-awesome.min.css">
+    <link rel="stylesheet" href="css/custom.css">
+</head>
+
+<body>
+
+    <div class="container">
+      <div class="row">
+        <div id="canvas-div" class="col-md-4 col-md-offset-2 col-xs-12">
+          <canvas id="canvas" width="364" height="364"></canvas>
+        </div>
+        <div class="col-md-4 col-xs-12">
+            <h2 id="header">MNIST Draw</h2>
+            <p><small>Draw a single digit (0-9) in the box to the left, then click Predict.</small></p>
+            <p><small>A machine learning model trained against the MNIST character dataset will classify the image. Scores for each classification label are plotted below.</small></p>
+            <div class="btn-group" role="group" aria-label="...">
+                <button type="button" class="btn btn-primary" id="predict">Predict <i id="status"></i></button>
+                <button type="button" class="btn btn-default" id="clear-canvas">Clear</button>
+            </div>
+            <div>
+                <svg id="svg-chart"></svg>
+            </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Javascript -->
+    <script src="js/jquery.min.js"></script>
+    <script src="js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <script src="js/d3.v3.min.js"></script>
+    <script src="js/fabric.min.js"></script>
+    <script src="js/custom.js"></script>
+
+</body>
+</html>
