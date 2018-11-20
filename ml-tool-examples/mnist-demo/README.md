@@ -1,4 +1,4 @@
-## Arm NN Demo Application
+## MNIST Demo Application
 
 Simple TensorFlow neural network trained on the task of [MNIST](http://yann.lecun.com/exdb/mnist/).
 Uses Arm NN to optimise inference on Arm Cortex-A CPU or Arm Mali GPU.
