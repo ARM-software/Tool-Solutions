@@ -30,10 +30,10 @@ FROM ubuntu:16.04
 ARG license_path
 
 RUN apt-get update
-RUN apt-get install -y apt-utils
-RUN apt-get install -y \
- #Python
+RUN apt-get install -y apt-utils \
+     	iputils-ping \
 	python2.7
+
 RUN apt-get install -y \
  #Python
 	python-pip 
@@ -63,6 +63,18 @@ RUN apt-get install -y --fix-missing \
 
 ENV ARMLMD_LICENSE_FILE=$license_path
 
+
+#______________________
+#__________1.5_________ 
+#Tool Variable Versions
+
+ARG FM_INSTALL=FastModels_11-3-030_Linux64
+ARG FM_DIR=FastModelsTools_11.3
+
+ARG DS5_INSTALL=DS500-BN-00019-r5p0-28rel1
+ARG DS5_DIR=DS-5v5.28.0
+
+
     
 #______________________
 #___________2__________ 
@@ -70,28 +82,37 @@ ENV ARMLMD_LICENSE_FILE=$license_path
 #### Local zip:
 COPY FastModels_11-3-030_Linux64.tgz /home/
 
-RUN 	tar xvzf /home/FastModels_11-3-030_Linux64.tgz && \
-		cd FastModels_11-3-030_Linux64 && \
-		./setup.sh --i-accept-the-license-agreement && \
-		rm /home/FastModels_11-3-030_Linux64.tgz && \
-		rm -r /FastModels_11-3-030_Linux64/
-  
+RUN 	tar xvzf /home/$FM_INSTALL.tgz 							&&\
+		cd $FM_INSTALL 								&&\
+		./setup.sh --i-accept-the-license-agreement --basepath /arm-tools/ 	&&\
+		rm /home/$FM_INSTALL.tgz 						&&\
+		rm -r /$FM_INSTALL/ 							
 
 #______________________
 #___________3__________ 
-#__________DS-5_________
-COPY DS500-BN-00019-r5p0-28rel1.tgz /home/
+#__________DS-5________
+COPY $DS5_INSTALL.tgz /home/
 	
 		# ds5 installer doesn't work with the default tar binary, change to bsdtar then change back.
-RUN 	mkdir /DS500-BN-00019-r5p0-28rel1/ && \
-		tar xvzf /home/DS500-BN-00019-r5p0-28rel1.tgz --directory /DS500-BN-00019-r5p0-28rel1/ && \
-		cd DS500-BN-00019-r5p0-28rel1/ && \
+RUN 	mkdir /$DS5_INSTALL/ && \
+		tar xvzf /home/$DS5_INSTALL.tgz --directory /$DS5_INSTALL/ && \
+		cd $DS5_INSTALL/ && \
 		apt-get install -y bsdtar && \
 		cp $(which tar) $(which tar)~ && \
-		ln -sf $(which bsdtar) $(which tar) && \
-		./install.sh --i-agree-to-the-contained-eula --no-interactive -d ~/ARM/DS-5v5.28.0/ && \
+		ln -sf $(which bsdtar) $(which tar) && \ 
+		./install.sh --i-agree-to-the-contained-eula --no-interactive -d /arm-tools/$DS5_DIR/ && \
  		mv $(which tar)~ $(which tar) && \
-		PATH=$PATH:/usr/local/DS-5_v5.28.1/bin && \
-		rm /home/DS500-BN-00019-r5p0-28rel1.tgz && \
-		rm -r /DS500-BN-00019-r5p0-28rel1/
-			
+		rm /home/$DS5_INSTALL.tgz && \
+		rm -r /$DS5_INSTALL/
+
+
+#______________________
+#___________3__________ 
+#________Startup_______
+RUN	echo 	"export PATH=$PATH:/arm-tools/$DS5_DIR/sw/ARMCompiler6.9/bin:/arm-tools/$DS5_DIR/bin:/arm-tools/$DS5_DIR/sw/java/bin"    >> /init.sh &&\
+	echo 	"export DS5_CDB_PATH=/arm-tools/$DS5_DIR/sw/debugger/configdb"   >> /init.sh 			&&\
+	echo 	"export DBGHWCONFIG_PLATFORMFILES=/arm-tools/$DS5_DIR/sw/debughw/PlatformFiles"   >> /init.sh 	&&\
+	echo 	"export ARM_PRODUCT_PATH=/arm-tools/$DS5_DIR/sw/mappings"   >> /init.sh 			&&\
+	echo 	"export DS5_HOME=/arm-tools/$DS5_DIR"   >> /init.sh 						
+RUN 	echo 	"set +e; . /arm-tools/$FM_DIR/source_all.sh" >> /init.sh
+
