@@ -1,4 +1,4 @@
-**Arm Fast Models quick start**
+# Arm Fast Models quick start
 
 [Arm Fast Models](https://developer.arm.com/products/system-design/fast-models) are fast, flexible programmer&#39;s view models of Arm IP. Fast Models are used to build virtual prototypes for software development which are useful during all phases of a project. System models can start very small and grow into comprehensive models of hardware. Fast Models are also a great way to learn the details of software development for the Arm architecture.
 
@@ -8,11 +8,11 @@ This quick start covers how to run an example system with a minimal hello world 
 
 Fast Models are supported on both Linux and Windows.
 
-**Arm developer account**
+## Arm developer account
 
 The first step is to create an account on [Arm Developer](https://developer.arm.com/). This is needed for downloads and license creation. Find the User Menu on the top right-hand corner of the page and click register. Follow the registration process and make note of your login credentials.
 
-**Product License**
+## Product License
 
 Fast Models use [FlexNet Licensing](https://www.flexera.com/products/software-monetization/flexnet-licensing.html) and the required software is not included in the Fast Model installation. Many companies have a common license server which hosts licenses for multiple products. It&#39;s worth asking to find out if there is a license server and a license administrator to find out if licenses are already available or new licenses can be added to the common server. If a server exists but doesn&#39;t have Fast Model licenses, ask for the hostid of the server.
 
@@ -49,7 +49,7 @@ The license server can now be started.
 
 To learn more about licensing visit the [FAQ](https://developer.arm.com/support/licensing/faq).
 
-**Download and Install Fast Models for Windows or Linux**
+## Download and Install Fast Models for Windows or Linux
 
 Fast Models can be downloaded from the [Fast Models page on Arm Developer](https://developer.arm.com/products/system-design/fast-models). The _Evaluate_ buttons for Linux and Windows lead to the downloads. These are the complete Fast Models product, there is no functional difference implied by the evaluation label.
 
@@ -73,7 +73,7 @@ Linux users should have the GNU Compiler Collection installed. Supported g++ ver
 
 A faster CPU and more memory will generally achieve better simulation performance, but the examples are very small and can fine on any recent computer.
 
-**Run an example system and hello world software**
+## Run an example system and hello world software
 
 To verify the installation and license setup is correct, it&#39;s useful to run a hello world example.
 
@@ -162,5 +162,8 @@ Depending on the licenses available, select the correct example for the Cortex-M
 	- Cortex-R52		
 
 To replace CPUs, drag the desired core from the component list onto the canvas. Connect the new core to the same ports as the initial core, delete the initial core, and recompile the model. Refer to the [System Canvas Tutorial](https://developer.arm.com/products/system-design/fast-models/docs/100965/latest/system-canvas-tutorial) for more information.
+
+
+## Summary
 
 This quick start explained how to get up and running with Arm Fast Models. Please e-mail [support-esl@arm.com](mailto:support-esl@arm.com) or visit [Arm Support](https://developer.arm.com/support/) to open a support case. For any questions or comments about the Arm Developer Solutions Repository and this example e-mail [arm-tool-solutions@arm.com](mailto:arm-tool-solutions@arm.com)
