@@ -1,8 +1,8 @@
-sgproject "m0.sgproj"
+sgproject "Cortex-M.sgproj"
 {
 TOP_LEVEL_COMPONENT = "m0";
 ACTIVE_CONFIG_LINUX  = "Linux64-Release-GCC-5.4";
-ACTIVE_CONFIG_WINDOWS  = "Win64-Release-VC2013";
+ACTIVE_CONFIG_WINDOWS  = "Win64-Release-VC2015";
 config "Linux64-Debug-GCC-4.8"
 {
     ADDITIONAL_COMPILER_SETTINGS = "-march=core2 -Wall -ggdb3 -std=c++11";
@@ -122,6 +122,8 @@ config "Win64-Release-VC2015"
     PLATFORM = "Win64";
     PREPROCESSOR_DEFINES = "NDEBUG;WIN32;_WINDOWS;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS";
     SIMGEN_WARNINGS_AS_ERRORS = "1";
+    TARGET_MAXVIEW = "0";
+    TARGET_SYSTEMC_ISIM = "1";
 }
 files
 {
