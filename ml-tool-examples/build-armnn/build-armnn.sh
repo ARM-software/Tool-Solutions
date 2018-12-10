@@ -40,15 +40,16 @@ done
 cd armnn-devenv 
 
 # packages to install on the host
-packages="wget curl autoconf autogen libtool scons cmake g++"
+packages="git wget curl autoconf autogen automake libtool scons make cmake gcc g++ unzip bzip2"
 for package in $packages; do
     if ! IsPackageInstalled $package; then
         sudo apt-get install -y $package
     fi
 done
 
-# number of CPUs for make -j
+# number of CPUs and memory size for make -j
 NPROC=`grep -c ^processor /proc/cpuinfo`
+MEM=`awk '/MemTotal/ {print $2}' /proc/meminfo`
 
 # Boost
 
@@ -155,8 +156,8 @@ cmake ..  \
 -DCMAKE_CXX_FLAGS="-Wno-error=sign-conversion" \
 -DCMAKE_BUILD_TYPE=Debug
 
-if [ $Arch = "armv7l" ]; then
-    # avoid running out of memory on armv7 systems 
+if [ $Arch = "armv7l" ] || [ $MEM -lt 2000000 ]; then
+    # avoid running out of memory on smaller systems 
     make
 else
     make -j $NPROC
