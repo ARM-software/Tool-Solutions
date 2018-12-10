@@ -1,4 +1,4 @@
-sgproject "m0.sgproj"
+sgproject "Cortex-M.sgproj"
 {
 TOP_LEVEL_COMPONENT = "m0";
 ACTIVE_CONFIG_LINUX  = "Linux64-Release-GCC-5.4";

@@ -1,6 +1,6 @@
 sgproject "Cortex-R_Armv8-R.sgproj"
 {
-TOP_LEVEL_COMPONENT = "r8x1";
+TOP_LEVEL_COMPONENT = "r52x1";
 ACTIVE_CONFIG_LINUX  = "Linux64-Debug-GCC-5.4";
 ACTIVE_CONFIG_WINDOWS  = "Win64-Release-VC2013";
 config "Linux64-Debug-GCC-4.8"
