@@ -13,7 +13,7 @@ There are multiple ways to obtain content from this repository to use locally. T
 Here is a list of all the contents of this repository with short descriptions:
 
 
-#### docker
+#### docker 
 Dockerfiles with Arm tools pre-installed in them for developing across operating systems and easily sharing projects.
 
 #### hello-world_fast-models
