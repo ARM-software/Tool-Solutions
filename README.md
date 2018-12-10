@@ -9,7 +9,7 @@ There are multiple ways to obtain content from this repository to use locally. T
 - ```svn export https://github.com/ARM-software/Tool-Solutions/trunk/<specific_directory_name>```
     - This method downloads specific directories, narrowing down to exactly what you needed. Note that this downloads the folder only, does not checkout/clone it, and requires svn.
 
-## Table of Contents
+## Table of Contents 
 Here is a list of all the contents of this repository with short descriptions:
 
 
