@@ -23,7 +23,7 @@ Build the Compute Library and example by running the build script:
 
 Once the Compute Library is built, changes to the application can be done using the makefile.
 
-The default application in neon_convolution. Other examples can be compiled by passing the base name of the example to the make step. For example:
+The default application is neon_convolution. Other examples can be compiled by passing the base name of the example to the make step. For example:
 
 ```bash
 make APP_NAME=neon_sgemm
