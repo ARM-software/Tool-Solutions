@@ -6,7 +6,7 @@ Running Arm Compute Library examples on a Cortex-R52 Fast Model
 
 The example hardware system used is in the Fast Models quick start.
 
-Required tools are git and scons and the bare-metal gcc toolchain. The build script will check for them and ask to install or add to the PATH if they are not found.
+Required tools are git and scons and the bare-metal gcc toolchain. The build script will check for them and ask to install or add to the PATH if they are not found. The example has been tested on Ubuntu Linux, but other Linux distributions are possible.
 
 The [GNU-A toolchain](https://developer.arm.com/open-source/gnu-toolchain/gnu-a/downloads) can be used for the Cortex-R52 development. Please install it and add it to the PATH before running the build script. Use the AArch32 bare-metal target (arm-eabi).
 
@@ -34,6 +34,6 @@ Semihosting is used for the name of the application and any required arguments. 
 Run the simulation using isim_system from the quick start with the name of the axf file and the semihosting parameter.
 
 ```bash
-isim_system -a neon_convolution_Cortex-R52_GCC.axf -C armcortexr52x1ct.cpu0.semihosting-cmd_line="./neon_convolution" 
+isim_system -a neon_convolution-Cortex-R52_GCC.axf -C armcortexr52x1ct.cpu0.semihosting-cmd_line="./neon_convolution" 
 ```
 
