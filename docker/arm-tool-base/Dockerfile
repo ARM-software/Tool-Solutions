@@ -68,8 +68,8 @@ ENV ARMLMD_LICENSE_FILE=$license_path
 #__________1.5_________ 
 #Tool Variable Versions
 
-ARG FM_INSTALL=FastModels_11-3-030_Linux64
-ARG FM_DIR=FastModelsTools_11.3
+ARG FM_INSTALL=FastModels_11-5-033_Linux64
+ARG FM_DIR=FastModelsTools_11.5
 
 ARG DS5_INSTALL=DS500-BN-00019-r5p0-28rel1
 ARG DS5_DIR=DS-5v5.28.0
@@ -80,7 +80,7 @@ ARG DS5_DIR=DS-5v5.28.0
 #___________2__________ 
 #__________FMs_________
 #### Local zip:
-COPY FastModels_11-3-030_Linux64.tgz /home/
+COPY $FM_INSTALL.tgz /home/
 
 RUN 	tar xvzf /home/$FM_INSTALL.tgz 							&&\
 		cd $FM_INSTALL 								&&\
