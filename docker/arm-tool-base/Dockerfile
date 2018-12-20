@@ -64,7 +64,7 @@ RUN apt-get install -y --fix-missing \
 ENV ARMLMD_LICENSE_FILE=$license_path
 
 RUN 	mkdir /arm-tools/	&&\
-	chmod 777 /arm-tools/
+	chmod 755 /arm-tools/
 
 #______________________
 #__________1.5_________ 
