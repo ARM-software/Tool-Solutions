@@ -19,6 +19,7 @@
 
 #include "mnist_loader.hpp"
 
+#define MAX_IMAGES 3000 
 
 // Helper function to make input tensors
 armnn::InputTensors MakeInputTensors(const std::pair<armnn::LayerBindingId,
@@ -58,9 +59,9 @@ int main(int argc, char** argv)
 
     // Parse input size option
     nrOfImages = std::stoi(argv[2]);
-    if (!(nrOfImages > 0 && nrOfImages < 2000))
+    if (!(nrOfImages > 0 && nrOfImages <= MAX_IMAGES))
     {
-      std::cout << "Invalid input size." << std::endl;
+      std::cout << "Error: Maximum number of images is " << MAX_IMAGES << std::endl;
       return 1;
     }
 
@@ -105,9 +106,9 @@ int main(int argc, char** argv)
     // Load multiple images from the data directory
     std::string dataDir = "data/";
 
-    float input[nrOfImages][g_kMnistImageByteSize];
-    float output[nrOfImages][10];
-    int labels[nrOfImages];
+    auto input = new float[nrOfImages][g_kMnistImageByteSize];
+    auto output = new float[nrOfImages][10];
+    auto labels = new int[nrOfImages];
 
     for (int i = 0; i < nrOfImages; ++i)
     {
@@ -147,5 +148,9 @@ int main(int argc, char** argv)
     std::cout << "Prediction accuracy: " << (float)nrOfCorrectPredictions/nrOfImages*100 << "%";
     std::cout << std::endl;
 
+    delete[] input;
+    delete[] output;
+    delete[] labels;
+ 
     return 0;
 }
