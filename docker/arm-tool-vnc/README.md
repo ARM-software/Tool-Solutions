@@ -10,8 +10,10 @@ In order to properly build and run this image, follow these steps:
 
   1. Ensure that the latest arm-tool-base Dockerfile from this repository is downloaded and built on your desired machine, as this image requires the arm-tool-base image to work.
   2. Change the password in the 'password.txt' file to a secure one. The password must be at least 8 characters.
-  3. Build this Docker image by running the following with all files in this directory present:   >> docker build -t arm-tool-vnc:latest .
-  4. Run this Docker image in detached mode by running:   >> docker run -d -p 1111:5901 arm-tool-vnc:latest
+  3. Build this Docker image by running the following with all files in this directory present: 
+  ```docker build -t arm-tool-vnc:latest .```
+  4. Run this Docker image in detached mode by running:   
+  ```docker run -d -p 1111:5901 arm-tool-vnc:latest```
   5. (optional) Run this Docker image in interactive mode (useful for viewing logs in stdout) by running the above 'docker run' command without the '-d' option.
   6. Connect to the Docker vnc server by any VNC client; I use the lightweight 'xtightvncviewer' for on Linux. Connect to '0.0.0.0:1111', enter your password, and the connection should be made.
      
