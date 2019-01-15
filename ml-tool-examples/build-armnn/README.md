@@ -10,8 +10,16 @@ The build-armnn.sh script builds Arm NN and Arm Compute Library as a native buil
 ## Run the build
 ./build-armnn.sh
 ```
+
+## Cross-compile from an x86 system
+The build-armnn.sh script can also cross-compile and the results can be copied to an Arm board. Use -h to see the usage message. For example, to cross-compile for aarch64 with no OpenCL use:
+
+```bash
+## Run the build
+./build-armnn.sh -a arm64-v8a -o 0
+```
+
 A logfile is created all of the build is done under $HOME/armnn-devenv 
 
 Instrumented versions of Arm NN and Compute Library are used to enable Streamline profiling.
-
 
