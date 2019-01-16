@@ -1,11 +1,11 @@
 # # Build command
-# # 	docker build -t arm-tool-interactive:latest -f Dockerfile-interactive .
+# # 	docker build -t arm-tool-interactive:latest .
 #
 # # Run VPN Server
-# # 	docker run -p 5901:5901 arm-tool-interactive:latest
+# # 	docker run -p 5901:5901 --entrypoint /opt/vnc_server.sh arm-tool-interactive:latest
 #
 # # NoMachine Server
-# #		docker run -p 4000:4000 --cap-add=SYS_PTRACE arm-tool-interactive:latest
+# #	docker run -p 4000:4000 --cap-add=SYS_PTRACE --entrypoint /opt/nx_server.sh arm-tool-interactive:latest
 
 
 FROM arm-tool-base:latest
@@ -38,6 +38,9 @@ RUN apt-get update &&\
 
 # # set XRDP to use TightVNC port
 RUN sed -i '0,/port=-1/{s/port=-1/port=5901/}' /etc/xrdp/xrdp.ini
+
+# # set environment varialbe USER, used by VNC server
+ENV USER root
 
 
 
@@ -92,5 +95,5 @@ EXPOSE 4000
 EXPOSE 5901
 
 
-#ENTRYPOINT ["/opt/nxserver.sh"]
-#ENTRYPOINT [". /opt/vnc.sh"]
+#ENTRYPOINT ["/opt/nx_server.sh"]
+#ENTRYPOINT ["/opt/vnc_server.sh"]
