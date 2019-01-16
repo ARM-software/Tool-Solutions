@@ -28,6 +28,9 @@ Connection from local Linux machines only.
   
 ### NoMachine (Free)
 Connection from any local machine type (Windows, Linux, Mac, etc)
+
+  0. (potentially needed) Set executable permissions on the 'nxserver.sh' script
+  ```chmod +x nxserver.sh```
   1. Run this Docker image by running the command below. This will make the dockerfile behave as a binary, starting the NoMachine server with the logs displaying in the terminal. Note that the '--cap-add=SYS_PTRACE' addition is required by Ubuntu versions 16.04 and above:   
   ```docker run -p 4000:4000 --cap-add=SYS_PTRACE --entrypoint /opt/nx_server.sh arm-tool-interactive:latest```
 
