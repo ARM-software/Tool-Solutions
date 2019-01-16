@@ -1,10 +1,7 @@
 # Docker image: arm-tool-interactive
 This dockerfile adds remote desktop capabilities to the arm-tool-base image containing Arm tools pre-installed on it for ease of use in a graphical environment. This file currently supports the following protocols:
   * VNC
-  * NoMachine
-
-## Legal Note
-NOTE: Before installing Arm tools from the command line with the "--i-accept-the-license-agreement" option or similar option, you will be required to agree to be bound by and automatically accept the included the terms and conditions of the relevant Arm End User License Agreement (EULA) and agree to the terms and conditions detailed therein. This condition applies to installation and use of any product updates or new versions of the product will be subject to as the terms and conditions of the relevant Arm EULA that applies at the time of install. 
+  * NoMachine 
 
 ## Usage instructions
 The servers are configured to start automatically as a deamon by default with the appropriate run command.
@@ -18,6 +15,8 @@ In order to properly build and run this image for the desired type of connection
 Next, follow the specific instructions for the desired connection.
   
 ### VNC Server
+Connection from local Linux machines only.
+
   0. (optional: if running docker on a remote machine) In a terminal make an ssh connection to the remote machine using port forwarding to forward the VNC port to the local machine with the following command. The -i command is used in this case to connect with a private key but other (on no) authentication methods can be used:
   ```ssh -L 5901:localhost:5901 -i private_key.pem username@url_path```
   
@@ -28,6 +27,7 @@ Next, follow the specific instructions for the desired connection.
   
   
 ### NoMachine (Free)
+Connection from any local machine type (Windows, Linux, Mac, etc)
   1. Run this Docker image by running the command below. This will make the dockerfile behave as a binary, starting the NoMachine server with the logs displaying in the terminal. Note that the '--cap-add=SYS_PTRACE' addition is required by Ubuntu versions 16.04 and above:   
   ```docker run -p 4000:4000 --cap-add=SYS_PTRACE --entrypoint /opt/nx_server.sh arm-tool-interactive:latest```
 
