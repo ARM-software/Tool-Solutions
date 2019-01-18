@@ -19,6 +19,9 @@ Dockerfiles with Arm tools pre-installed in them for developing across operating
 #### hello-world_fast-models
 A tutorial to get started with Arm Fast Model tools, from install to running your first program.
 
+#### fast-models-examples
+Various example systems and software for Arm Fast Models.
+
 #### ml-tool-examples
 Examples to run performance analysis for Machine Learning applications. 
 
