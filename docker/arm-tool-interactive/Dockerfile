@@ -7,7 +7,6 @@
 # # NoMachine Server
 # #	    docker run -p 4000:4000 --cap-add=SYS_PTRACE --entrypoint /opt/nx_server.sh arm-tool-interactive:latest
 
-
 FROM arm-tool-base:latest
 
 MAINTAINER Zach

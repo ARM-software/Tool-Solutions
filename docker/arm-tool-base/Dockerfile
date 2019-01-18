@@ -5,7 +5,7 @@
 # # 	docker run -it arm-tool-base:latest
 
 
-### 	System Functionality 	###
+
 
 FROM ubuntu:16.04
 
@@ -13,6 +13,10 @@ MAINTAINER Zach
 
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update -y
+
+
+
+### 	System Functionality 	###
 
 RUN apt-get install -y apt-utils 	\
     iputils-ping 					\
