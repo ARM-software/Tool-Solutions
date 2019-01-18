@@ -92,7 +92,7 @@ The simulation will run and automatically exit.
 
 The PL011 SystemC UART can be connected to a simple model which writes characters to the stdout or to file. This is done by a SystemC model named fterm and the code is in fterm.cpp and fterm.h
 
-There is an additional option to use an interactive terminal instead of simple output to the screen or a file. This option uses xterm on Linux and telnet or putty on Windows. The alternative SystemC model is called tterm and is in the files ttermcpp and tterm.h. This option can be uncommented in main.cpp and the fterm can be commented out. The tterm model is good for interactive applications and the fterm model is good for output only and no user interaction.
+There is an additional option to use an interactive terminal instead of simple output to the screen or a file. This option uses xterm on Linux and telnet or putty on Windows. The alternative SystemC model is called tterm and is in the files tterm.cpp and tterm.h. This option can be uncommented in main.cpp and the fterm can be commented out. The tterm model is good for interactive applications and the fterm model is good for output only and no user interaction. In main.cpp:
 
 ```c++
 // NOTE: select 1 of the 2 possible terminal models:
