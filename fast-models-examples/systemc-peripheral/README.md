@@ -86,7 +86,7 @@ For Linux, make sure to check (and change if needed) the build\_linux.sh file to
 
 The SystemC executable runs and loads a simple software application. In this example the UART is being modeled in SystemC. It is recommended to study the pl011\_uart.cpp and pl011\_uart.h files to see how SystemC models are created. The model shows how to use TLM-2.0 sockets for memory mapped buses and other SystemC data types for hardware modeling.
 
-The simulation will run and automatically exit.
+The simulation will run and automatically exit. If no 'hello world' message pops up, this may be because a terminal window is opening, printing the message, and closing automatically before it appears on the screen. Read on to the next section to select how to display the message, using models named tterm or fterm.
 
 ## Additional configuration options
 
@@ -103,7 +103,7 @@ tterm       term("term", true);
 // fterm       term("term", true, false);
 ```
 
-For Windows make sure telnet.exe or putty.exe is installed. There is an option to select which one is used in the tterm.cpp model source code.
+For Windows make sure telnet.exe or putty.exe is installed. There is an option to select which one is used in the tterm.cpp model source code. When using tterm be aware that the window displaying the hello message may not appear when the start and automatic exit of the application occur very close to each other.
 
 ## Simulation exit
 
