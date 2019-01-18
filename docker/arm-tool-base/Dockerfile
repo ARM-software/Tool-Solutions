@@ -1,8 +1,8 @@
 # # Build command
-# 	docker build -t arm-tool-base:latest --build-arg license_path=/path/to/license .
+# # 	docker build -t arm-tool-base:latest --build-arg license_path=/path/to/license .
 #
 # # Run command
-# 	docker run -it arm-tool-base:latest
+# # 	docker run -it arm-tool-base:latest
 
 
 ### 	System Functionality 	###
@@ -45,10 +45,11 @@ RUN apt-get install -y --fix-missing \
 	libstdc++6 			\
 	libwebkitgtk-1.0-0 
 
-
+# # set the license path from command line argument
 ARG license_path
 ENV ARMLMD_LICENSE_FILE=$license_path
 
+# # create /arm-tools/ dirctory to install all tools into
 RUN mkdir /arm-tools/		&&\
 	chmod 755 /arm-tools/
 
@@ -70,8 +71,10 @@ ARG ArmDS_DIR=ArmDS
 
 ### 	Install Fast Models 	###
 
+# # copy file from same directory as this Dockerfile
 COPY $FM_INSTALL.tgz /home/
 
+# # install program and delete artifacts
 RUN 	tar xvzf /home/$FM_INSTALL.tgz 			&&\
 		cd $FM_INSTALL 							&&\
 		./setup.sh --i-accept-the-license-agreement --basepath /arm-tools/ 	&&\
@@ -86,8 +89,10 @@ RUN 	echo 	"set +e; . /arm-tools/$FM_DIR/source_all.sh" >> /init.sh
 
 ### 	Install ArmDS	###
 
+# # copy file from same directory as this Dockerfile
 COPY $ArmDS_INSTALL.tgz /home/
 
+# # install program and delete artifacts
 RUN 	mkdir /$ArmDS_INSTALL/ 					&&\
     	tar xvzf /home/$ArmDS_INSTALL.tgz --directory /$ArmDS_INSTALL/ &&\
 		cd $ArmDS_INSTALL/ 						&&\
@@ -107,8 +112,10 @@ RUN	echo 	"export PATH=$PATH:/arm-tools/$ArmDS_DIR/sw/ARMCompiler6.9/bin:/arm-to
 
 ### 	Install DS5 	###
 
+# # copy file from same directory as this Dockerfile
 # COPY $DS5_INSTALL.tgz /home/
 
+# # install program and delete artifacts
 # # DS5 installer doesn't work with the default tar binary, change to bsdtar then change back.
 # RUN 	mkdir /$DS5_INSTALL/ 					&&\
 #		tar xvzf /home/$DS5_INSTALL.tgz --directory /$DS5_INSTALL/ &&\

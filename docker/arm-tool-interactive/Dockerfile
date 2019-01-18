@@ -5,7 +5,7 @@
 # # 	docker run -p 5901:5901 --entrypoint /opt/vnc_server.sh arm-tool-interactive:latest
 #
 # # NoMachine Server
-# #	docker run -p 4000:4000 --cap-add=SYS_PTRACE --entrypoint /opt/nx_server.sh arm-tool-interactive:latest
+# #	    docker run -p 4000:4000 --cap-add=SYS_PTRACE --entrypoint /opt/nx_server.sh arm-tool-interactive:latest
 
 
 FROM arm-tool-base:latest
