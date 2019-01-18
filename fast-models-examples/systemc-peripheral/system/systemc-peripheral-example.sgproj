@@ -1,0 +1,167 @@
+sgproject "systemc-peripheral-example.sgproj"
+{
+TOP_LEVEL_COMPONENT = "a53x1";
+ACTIVE_CONFIG_LINUX  = "Linux64-Release-GCC-5.4";
+ACTIVE_CONFIG_WINDOWS  = "Win64-Release-VC2015";
+config "Linux64-Debug-GCC-4.8"
+{
+    ADDITIONAL_COMPILER_SETTINGS = "-march=core2 -Wall -ggdb3 -std=c++11";
+    BUILD_DIR = "./Linux64-Debug-GCC-4.8";
+    COMPILER = "gcc-4.8";
+    CONFIG_DESCRIPTION = "Default Linux configuration for gcc 4.8 with debug info support";
+    CONFIG_NAME = "Linux64-Debug-GCC-4.8";
+    ENABLE_DEBUG_SUPPORT = "1";
+    PLATFORM = "Linux64";
+    SIMGEN_WARNINGS_AS_ERRORS = "1";
+    TARGET_MAXVIEW = "0";
+    TARGET_SYSTEMC = "1";
+}
+config "Linux64-Debug-GCC-4.9"
+{
+    ADDITIONAL_COMPILER_SETTINGS = "-march=core2 -Wall -ggdb3 -std=c++11";
+    BUILD_DIR = "./Linux64-Debug-GCC-4.9";
+    COMPILER = "gcc-4.9";
+    CONFIG_DESCRIPTION = "Default Linux configuration for gcc 4.9 with debug info support";
+    CONFIG_NAME = "Linux64-Debug-GCC-4.9";
+    ENABLE_DEBUG_SUPPORT = "1";
+    PLATFORM = "Linux64";
+    SIMGEN_WARNINGS_AS_ERRORS = "1";
+    TARGET_MAXVIEW = "0";
+    TARGET_SYSTEMC = "1";
+}
+config "Linux64-Debug-GCC-5.4"
+{
+    ADDITIONAL_COMPILER_SETTINGS = "-march=core2 -Wall -ggdb3 -std=c++11 -Wno-deprecated";
+    BUILD_DIR = "./Linux64-Debug-GCC-5.4";
+    COMPILER = "gcc-5.4";
+    CONFIG_DESCRIPTION = "Default Linux configuration for gcc 5.4 with debug info support";
+    CONFIG_NAME = "Linux64-Debug-GCC-5.4";
+    ENABLE_DEBUG_SUPPORT = "1";
+    PLATFORM = "Linux64";
+    SIMGEN_WARNINGS_AS_ERRORS = "1";
+    TARGET_MAXVIEW = "0";
+    TARGET_SYSTEMC = "1";
+    TARGET_SYSTEMC_ISIM = "0";
+}
+config "Linux64-Debug-GCC-6.4"
+{
+    ADDITIONAL_COMPILER_SETTINGS = "-march=core2 -Wall -ggdb3 -std=c++11 -Wno-deprecated";
+    BUILD_DIR = "./Linux64-Debug-GCC-6.4";
+    CONFIG_DESCRIPTION = "Default Linux configuration for gcc 6.4 with debug info support";
+    CONFIG_NAME = "Linux64-Debug-GCC-6.4";
+    ENABLE_DEBUG_SUPPORT = "1";
+    PLATFORM = "Linux64";
+    SIMGEN_WARNINGS_AS_ERRORS = "1";
+    TARGET_MAXVIEW = "0";
+    TARGET_SYSTEMC = "1";
+}
+config "Linux64-Release-GCC-4.8"
+{
+    ADDITIONAL_COMPILER_SETTINGS = "-march=core2 -Wall -O3 -std=c++11";
+    BUILD_DIR = "./Linux64-Release-GCC-4.8";
+    COMPILER = "gcc-4.8";
+    CONFIG_DESCRIPTION = "Default Linux configuration for gcc 4.8, optimized for speed";
+    CONFIG_NAME = "Linux64-Release-GCC-4.8";
+    PLATFORM = "Linux64";
+    PREPROCESSOR_DEFINES = "NDEBUG";
+    SIMGEN_WARNINGS_AS_ERRORS = "1";
+    TARGET_MAXVIEW = "0";
+    TARGET_SYSTEMC = "1";
+}
+config "Linux64-Release-GCC-4.9"
+{
+    ADDITIONAL_COMPILER_SETTINGS = "-march=core2 -Wall -O3 -std=c++11";
+    BUILD_DIR = "./Linux64-Release-GCC-4.9";
+    COMPILER = "gcc-4.9";
+    CONFIG_DESCRIPTION = "Default Linux configuration for gcc 4.9, optimized for speed";
+    CONFIG_NAME = "Linux64-Release-GCC-4.9";
+    PLATFORM = "Linux64";
+    PREPROCESSOR_DEFINES = "NDEBUG";
+    SIMGEN_WARNINGS_AS_ERRORS = "1";
+    TARGET_MAXVIEW = "0";
+    TARGET_SYSTEMC = "1";
+}
+config "Linux64-Release-GCC-5.4"
+{
+    ADDITIONAL_COMPILER_SETTINGS = "-march=core2 -Wall -O3 -std=c++11 -Wno-deprecated";
+    BUILD_DIR = "./Linux64-Release-GCC-5.4";
+    COMPILER = "gcc-5.4";
+    CONFIG_DESCRIPTION = "Default Linux configuration for gcc 5.4, optimized for speed";
+    CONFIG_NAME = "Linux64-Release-GCC-5.4";
+    PLATFORM = "Linux64";
+    PREPROCESSOR_DEFINES = "NDEBUG";
+    SIMGEN_WARNINGS_AS_ERRORS = "1";
+    TARGET_MAXVIEW = "0";
+    TARGET_SYSTEMC = "1";
+}
+config "Linux64-Release-GCC-6.4"
+{
+    ADDITIONAL_COMPILER_SETTINGS = "-march=core2 -Wall -O3 -std=c++11 -Wno-deprecated";
+    BUILD_DIR = "./Linux64-Release-GCC-6.4";
+    CONFIG_DESCRIPTION = "Default Linux configuration for gcc 6.4, optimized for speed";
+    CONFIG_NAME = "Linux64-Release-GCC-6.4";
+    PLATFORM = "Linux64";
+    PREPROCESSOR_DEFINES = "NDEBUG";
+    SIMGEN_WARNINGS_AS_ERRORS = "1";
+    TARGET_MAXVIEW = "0";
+    TARGET_SYSTEMC = "1";
+}
+config "Win64-Debug-VC2013"
+{
+    ADDITIONAL_COMPILER_SETTINGS = "/Od /RTCsu /Zi /d1scalableinclude-";
+    ADDITIONAL_LINKER_SETTINGS = "/DEBUG";
+    BUILD_DIR = "./Win64-Debug-VC2013";
+    COMPILER = "VC2013";
+    CONFIG_DESCRIPTION = "Default Windows 64bit configuration for VC2013 compiler with debug info support (linked to DEBUG runtime library)";
+    CONFIG_NAME = "Win64-Debug-VC2013";
+    ENABLE_DEBUG_SUPPORT = "1";
+    PLATFORM = "Win64D";
+    PREPROCESSOR_DEFINES = "_DEBUG;WIN32;_WINDOWS;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS";
+    SIMGEN_WARNINGS_AS_ERRORS = "1";
+}
+config "Win64-Debug-VC2015"
+{
+    ADDITIONAL_COMPILER_SETTINGS = "/Od /RTCsu /Zi /d1scalableinclude-";
+    ADDITIONAL_LINKER_SETTINGS = "/DEBUG";
+    BUILD_DIR = "./Win64-Debug-VC2015";
+    COMPILER = "VC2015";
+    CONFIG_DESCRIPTION = "Default Windows 64bit configuration for VC2015 compiler with debug info support (linked to DEBUG runtime library)";
+    CONFIG_NAME = "Win64-Debug-VC2015";
+    ENABLE_DEBUG_SUPPORT = "1";
+    PLATFORM = "Win64D";
+    PREPROCESSOR_DEFINES = "_DEBUG;WIN32;_WINDOWS;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS";
+    SIMGEN_WARNINGS_AS_ERRORS = "1";
+}
+config "Win64-Release-VC2013"
+{
+    ADDITIONAL_COMPILER_SETTINGS = "/O2 /d1scalableinclude-";
+    BUILD_DIR = "./Win64-Release-VC2013";
+    COMPILER = "VC2013";
+    CONFIG_DESCRIPTION = "Default Windows 64bit configuration for VC2013 compiler , optimized for speed, linked to RELEASE runtime library";
+    CONFIG_NAME = "Win64-Release-VC2013";
+    PLATFORM = "Win64";
+    PREPROCESSOR_DEFINES = "NDEBUG;WIN32;_WINDOWS;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS";
+    SIMGEN_WARNINGS_AS_ERRORS = "1";
+    TARGET_MAXVIEW = "0";
+    TARGET_SYSTEMC = "1";
+    TARGET_SYSTEMC_ISIM = "0";
+}
+config "Win64-Release-VC2015"
+{
+    ADDITIONAL_COMPILER_SETTINGS = "/O2 /d1scalableinclude-";
+    BUILD_DIR = "./Win64-Release-VC2015";
+    COMPILER = "VC2015";
+    CONFIG_DESCRIPTION = "Default Windows 64bit configuration for VC2015 compiler , optimized for speed, linked to RELEASE runtime library";
+    CONFIG_NAME = "Win64-Release-VC2015";
+    PLATFORM = "Win64";
+    PREPROCESSOR_DEFINES = "NDEBUG;WIN32;_WINDOWS;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS";
+    SIMGEN_WARNINGS_AS_ERRORS = "1";
+    TARGET_MAXVIEW = "0";
+    TARGET_SYSTEMC = "1";
+}
+files
+{
+    path = "$(PVLIB_HOME)/etc/sglib.sgrepo";
+    path = "systemc-peripheral-example.lisa";
+}
+}
