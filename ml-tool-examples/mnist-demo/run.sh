@@ -14,13 +14,13 @@ export LD_LIBRARY_PATH=$HOME/armnn-devenv/armnn/build/
 
 if [ "$#" -eq 1 ]; then
     # Set the type of acceleration 1=CPU and 2=GPU
-    echo "running ./mnist_tf_convol $1 1999"
-    ./mnist_tf_convol $1  1999
+    echo "running ./mnist_tf_convol $1 1000"
+    ./mnist_tf_convol $1  1000
 elif [ "$#" -eq 0 ]; then
     # Default case just runs CPU accellerated
     echo "defaulting to CPU acclerated"
-    echo "running ./mnist_tf_convol 1 1999"
-    ./mnist_tf_convol 1 1999
+    echo "running ./mnist_tf_convol 1 1000"
+    ./mnist_tf_convol 1 1000
 else 
     # Control type of acceleration and iterations by just forwarding command line
     echo "running ./mnist_tf_convol $*"
