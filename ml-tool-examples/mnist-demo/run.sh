@@ -5,7 +5,7 @@
 # When launching from Streamline it's easier to run a script than typing
 # the commands into the Streamline dialog box
 
-export LD_LIBRARY_PATH=/home/arm01/armnn-devenv/armnn/build/ 
+export LD_LIBRARY_PATH=$HOME/armnn-devenv/armnn/build/ 
 
 # export MALI_TIMELINE_ENABLE=1
 # export MALI_TIMELINE_PROFILING_ENABLED=1  
