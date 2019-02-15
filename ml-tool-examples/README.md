@@ -20,5 +20,5 @@ Linux application using Arm NN to run on an Arm board.
 #### mnist-draw
 Another Linux application using Arm NN to run on an Arm board.
 
-## rock960-linux
+#### rock960-linux
 Script to install OpenCL on the [Rock 960](https://www.96boards.org/product/rock960/).
