@@ -27,6 +27,8 @@ On the machine where you want to host the license run the lmhostid command:
 - For Linux: ./lmutil lmhostid
 - For Windows: lmutil.exe lmhostid
 
+NOTE: If you recieve the strange error of './lmutil: No such file or directory' on Linux the library 'Linux Standard Base' should be installed. To do so on Ubuntu for example type 'sudo apt-get install lsb' and try the above './lmutil lmhostid' command again.
+
 Make a note of the hostid printed by lmhostid. For more information there is a pdf file with additional documentation included in the FlexNet software download.
 
 Floating licenses can be run on any machine on the network and the license are checked out from the license server. Node locked licenses are used on the same machine running the Fast Models. Most Fast Model licenses are floating licenses and the details here are for floating licenses.
