@@ -21,6 +21,7 @@ The script will ask for the sudo password on the host machine 1 or 2 times so en
 ```console
 $ cd build-ubuntu/
 $ ./build.sh
+$ cd ..
 ```
 
 It will take some time to download the packages for the Armv8-A version of Ubuntu. If all goes well, the result is the output file ubuntu/system.simg  This file represents the root filesystem that can be flashed to the HiKey 960 system partition. It will be used in a later step.
@@ -57,6 +58,7 @@ Run the recovery procedure using the recover.sh script; this runs the hikey_idt 
 
 ```console
 $ cp flash-images/* tools-images-hikey960/
+$ cd tools-images-hikey960
 $ ./recovery.sh /dev/ttyUSB0
 Config name: config
 Port name: /dev/ttyUSB0
@@ -90,7 +92,7 @@ $ sudo fastboot devices
 Before the HiKey board can be flashed, the proper images and setup scripts must be in the same directory. From the last step, the script fastboot.sh and two Linux images boot.img and dts.img were copied from flash-images/ to the tools-images-hikey960/ directory. The system.simg file, generated in the first step, also needs to be copied into the tools-images-hikey960/ directory.
 
 ```console
-$ cp build-ubuntu/ubuntu/system.simg tools-images-hikey960/
+$ cp ../build-ubuntu/ubuntu/system.simg .
 ```
 In summary, the Linux related images in the tools-images-hikey960 directory are:
 
