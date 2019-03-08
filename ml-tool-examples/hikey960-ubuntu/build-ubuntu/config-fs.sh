@@ -135,3 +135,4 @@ END_FILE
 # Enable root to log on ttyAMA6
 echo "ttyAMA6" >> "/etc/securetty"
 
+chown root:root /
