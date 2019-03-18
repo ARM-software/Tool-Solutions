@@ -5,7 +5,7 @@ Copyright (c) 2019 Arm Limited. All rights reserved.
 This is the source code for the  *InfiniteTerrain* demo used to show how
 to integrate [Arm Mobile Studio's](https://developer.arm.com/mobile-studio) Streamline Annotations with your Unity Project.
 
-It goes with the blog [Better Together: Integrating Arm Mobile Studio with Unity](https://community.arm.com/).
+It goes with the blog [Better Together: Integrating Arm Mobile Studio with Unity](https://community.arm.com/developer/tools-software/graphics/b/blog/posts/integrating-arm-mobile-studio-with-unity).
 
 The InfiniteTerrain Unity Project was developed and tested with Unity 2018.2.
 If you open the project in Unity, you will get fully-working content that is
