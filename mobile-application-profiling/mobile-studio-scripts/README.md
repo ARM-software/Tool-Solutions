@@ -66,4 +66,4 @@ application's user then `gatord` will become unkillable. In this scenario the
 device must be power cycled to close the daemon before any further profiling
 can take place.
 
-For an example of how to analyze a Streamline capture refer to Accelerating Mali GPU analysis using Arm Mobile Studio on the [Arm Community](https://community.arm.com/developer/tools-software/graphics/b/blog/posts/accelerating-mali-gpu-analysis-using-arm-mobile-studio).
+For an example of how to analyze a Streamline capture refer to [Accelerating Mali GPU analysis using Arm Mobile Studio](https://community.arm.com/developer/tools-software/graphics/b/blog/posts/accelerating-mali-gpu-analysis-using-arm-mobile-studio) on the [Arm Community](https://community.arm.com/).
