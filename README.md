@@ -25,6 +25,9 @@ Various example systems and software for Arm Fast Models.
 #### ml-tool-examples
 Examples to run performance analysis for Machine Learning applications. 
 
+#### mobile-application-profiling
+Examples and scripts for Android performance analysis with Arm Mobile Studio.
+
 #### mathworks-support-packages
 Support packages to enable Arm Fast Models and Arm Compiler usage with MathWorks software such as Embedded Coder, Simulink, and MATLAB.
 
