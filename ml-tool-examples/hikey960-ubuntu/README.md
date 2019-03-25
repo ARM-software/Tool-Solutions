@@ -6,7 +6,7 @@ Besides the board, gather up the required hardware. An HDMI monitor and cable, U
 
 Let&#39;s get started with the information to install Ubuntu Linux on the Hikey 960. The recipe uses a Ubuntu 18.04 host machine, but the instructions should be similar for other Linux distributions. Even though some of the steps will work, Windows is not recommended as a host machine.  The general steps are:
 
-* Run a recovery to make sure the parition table is correct
+* Run a recovery to make sure the partition table is correct
 * Flash firmware and Linux operating system
 * Boot and run Linux 
 
@@ -28,7 +28,7 @@ It will take some time to download the packages for the Armv8-A version of Ubunt
 
 ## Flashing the base firmware and OS
 
-The flash process builds on an [existing proejct used to flash the base firmware and operating system](https://github.com/96boards-hikey/tools-images-hikey960). It also ensures the partion table is reset to the default state before installing the operating system. The flow is to clone the project from github, copy in some new files, and run the flash procedure.
+The flash process builds on an [existing project used to flash the base firmware and operating system](https://github.com/96boards-hikey/tools-images-hikey960). It also ensures the partition table is reset to the default state before installing the operating system. The flow is to clone the project from github, copy in some new files, and run the flash procedure.
 
 ```console
 $ git clone https://github.com/96boards-hikey/tools-images-hikey960
