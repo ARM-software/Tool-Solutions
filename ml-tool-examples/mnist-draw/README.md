@@ -4,7 +4,7 @@ MNIST draw is a fun, single page website that enables users to hand-draw and cla
 The project is a modifed version of [nmist-draw](https://github.com/rhammell/mnist-draw) which uses the [Arm NN SDK](https://developer.arm.com/products/processors/machine-learning/arm-nn) to perform inferences on an Arm Cortex-A CPU. Usually this means running on a board like the [HiKey 960](https://www.96boards.org/product/hikey960) and accessing it over a network using a browser.
 
 ## Setup
-Python 3.5+ is required for compatability with all required modules
+Python 3.5+ is required for compatibility with all required modules
 
 ```bash
 ## Go into the repository
