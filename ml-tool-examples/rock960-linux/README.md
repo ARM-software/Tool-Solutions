@@ -38,7 +38,7 @@ Run the ifconfig command to get the ip the board.
 ```console
 $ ifconfig
 ```
-Now try to ssh to the HiKey 960 ip address from another machine using the same login/pw as above.
+Now try to ssh to the Rock 960 ip address from another machine using the same login/pw as above.
 
 ## Adding more diskspace
 
