@@ -16,7 +16,7 @@ The first step is to create an account on [Arm Developer](https://developer.arm.
 
 Fast Models use [FlexNet Licensing](https://www.flexera.com/products/software-monetization/flexnet-licensing.html) and the required software is not included in the Fast Model installation. Many companies have a common license server which hosts licenses for multiple products. It&#39;s worth asking to find out if there is a license server and a license administrator to find out if licenses are already available or new licenses can be added to the common server. If a server exists but doesn&#39;t have Fast Model licenses, ask for the hostid of the server.
 
-If you need a license please e-mail [support-esl@arm.com](mailto:support-esl@arm.com) and request a 30 day trial license for Fast Models and specify which Arm CPU models you would like to try. The response will be a Serial Number which allows you to create your own license by following the steps below.
+If you need a license please e-mail [license.support@arm.com](mailto:license.support@arm.com) and request a 30 day trial license for Fast Models and specify which Arm CPU models you would like to try. The response will be a Serial Number which allows you to create your own license by following the steps below.
 
 To get started with license setup, use your Arm Developer account to download the [FlexNet software](https://silver.arm.com/browse/BX002) for one of the many supported platforms.
 
