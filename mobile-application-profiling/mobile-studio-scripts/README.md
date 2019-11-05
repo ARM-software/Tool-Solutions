@@ -1,7 +1,8 @@
 # Arm Mobile Studio Helper Scripts
 
-This directory contains helper scripts for [Arm Mobile Studio](https://developer.arm.com/mobile-studio), a set of performance analysis tools for developers creating Android applications and interested in performance analysis. For more information refer to the [Quick Start Guide](https://developer.arm.com/mobile-studio/get-started).
+This directory contains helper scripts for [Arm Mobile Studio 2019.0 and 2019.1](https://developer.arm.com/mobile-studio), a set of performance analysis tools for developers creating Android applications and interested in performance analysis. For more information refer to the [Quick Start Guide](https://developer.arm.com/mobile-studio/get-started).
 
+*Note:* For Arm Mobile Studio 2019.2 onwards this version of the helper scripts have been superseded by a new `gator_me.py` Python script, which is shipped alongside Streamline in the Arm Mobile Studio installation. See [Getting Started with Streamline](https://developer.arm.com/tools-and-software/graphics-and-gaming/arm-mobile-studio/learn/get-started/get-started-with-streamline) for more details.
 
 ## Gatorme
 
