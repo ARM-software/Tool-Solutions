@@ -80,7 +80,7 @@ done
 
 # extra packages when cross compiling
 if [ $CrossCompile = "True" ]; then
-    if [ $Arch = "armv7a" ]; then
+    if [ "$Arch" = "armv7a" ]; then
         cross_packages="g++-arm-linux-gnueabihf"
     else
         cross_packages="g++-aarch64-linux-gnu"
@@ -145,13 +145,7 @@ fi
 cp gator/daemon/gatord $HOME/
 
 # Arm Compute Library 
-# Pick either official version from github or annotated version for Streamline
-
-# official version
 git clone https://github.com/ARM-software/ComputeLibrary.git
-
-# version with Streamline annotations
-#git clone https://github.com/jasonrandrews/ComputeLibrary.git
 
 echo "building Arm CL"
 pushd ComputeLibrary
@@ -171,9 +165,13 @@ popd
 
 pushd pkg
 mkdir install
-#git clone --branch 3.5.x https://github.com/protocolbuffers/protobuf.git
-git clone https://github.com/protocolbuffers/protobuf.git
+git clone --branch 3.5.x https://github.com/protocolbuffers/protobuf.git
 git clone https://github.com/tensorflow/tensorflow.git
+cd tensorflow
+# need specific version of tensorflow
+# https://github.com/ARM-software/armnn/issues/267
+git checkout a0043f9262dc1b0e7dc4bdf3a7f0ef0bebc4891e
+cd ../
 
 # build Protobuf
 cd protobuf
@@ -224,12 +222,7 @@ fi
 popd
 
 # Arm NN
-# Pick either official version from github or annotated version for Streamline
-
-# official version
 git clone https://github.com/ARM-software/armnn.git
-# version with Streamline annotations
-#git clone https://github.com/jasonrandrews/armnn.git
 
 pushd pkg/tensorflow/
 
@@ -264,7 +257,7 @@ $CrossOptions  \
 -DONNX_GENERATED_SOURCES=$HOME/armnn-devenv/pkg/onnx \
 -DPROTOBUF_ROOT=$HOME/armnn-devenv/pkg/install   \
 -DPROTOBUF_INCLUDE_DIRS=$HOME/armnn-devenv/pkg/install/include   \
--DPROFILING_BACKEND_STREAMLINE=0 \
+-DPROFILING_BACKEND_STREAMLINE=1 \
 -DGATOR_ROOT=$HOME/armnn-devenv/gator \
 -DARMCOMPUTENEON=1  \
 -DARMCOMPUTECL=$OpenCL \
