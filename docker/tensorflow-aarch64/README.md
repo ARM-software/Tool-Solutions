@@ -67,16 +67,14 @@ To see the command line options for build.sh use:
 The image to build is selected with the '--build-type' flag. The options are base, libs, tools, dev, tensorflow, or full. Selecting full builds all of the images. The default value is 'tensorflow'
 
 
-The '--prefix' flag can be used to set a prefix for the image names, the default value is the current $USER.
-
 For example:
-  * For a full build with username as the image prefix:
+  * For a full build:
 
-    ``` > ./build.sh ```
+    ``` > ./build.sh --build-type full ```
 
-  * For a base build with a custom prefix:
+  * For a base build:
 
-    ```  > ./build.sh --prefix DockerTest  --build-type base ```
+    ```  > ./build.sh --build-type base ```
 
     This will generate an image named 'DockerTest/ubuntu/base'. 
 
