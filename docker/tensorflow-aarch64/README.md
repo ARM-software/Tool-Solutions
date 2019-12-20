@@ -68,6 +68,10 @@ The image to build is selected with the '--build-type' flag. The options are bas
 
 
 For example:
+  * To build the final tensorflow image:
+
+    ``` > ./build.sh --build-type tensorflow ```
+
   * For a full build:
 
     ``` > ./build.sh --build-type full ```
