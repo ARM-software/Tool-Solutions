@@ -197,7 +197,7 @@ USER $DOCKER_USER
 
 # Copy in the Python virtual environment
 ENV VENV_DIR=/home/$DOCKER_USER/python3-venv
-COPY --from=tools $VENV_DIR /home/$DOCKER_USER/python3-venv
+COPY --from=dev $VENV_DIR /home/$DOCKER_USER/python3-venv
 ENV PATH="$VENV_DIR/bin:$PATH"
 
 # Clone Tensorflow benchmarks
