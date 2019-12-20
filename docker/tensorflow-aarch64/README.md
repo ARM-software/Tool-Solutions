@@ -92,7 +92,9 @@ To run the finished image:
 
   ``` > docker run -it --init <image name> ```
 
-where <image name> is the name of the finished image, for example '$USER/ubuntu/tensorflow'.
+where <image name> is the name of the finished image, for example 'tensorflow'.
+
+  ``` > docker run -it --init tensorflow ```
 
 To display available images use the Docker command:
 
