@@ -1,4 +1,4 @@
-# Build TensorFlow for Aarch64 using Docker
+# Build TensorFlow for AArch64 using Docker
 
 A script to build a Docker image containing [TensorFlow](https://www.tensorflow.org/) and dependencies for the [Armv8-A architecture](https://developer.arm.com/architectures/cpu-architecture/a-profile) with AArch64 execution. 
 
