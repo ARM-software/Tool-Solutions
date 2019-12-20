@@ -33,7 +33,7 @@ extra_args=""
 if [[ $BZL_RAM ]]; then extra_args="$extra_args --local_ram_resources=$BZL_RAM"; fi
 if [[ $NP_MAKE ]]; then extra_args="$extra_args --jobs=$NP_MAKE"; fi
 
-bazel build --define  tensorflow_mkldnn_contraction_kernel=0 --copt="-mtune=native" --copt="-march=armv8-a" --copt="-O3" \
+bazel build $extra_args --define  tensorflow_mkldnn_contraction_kernel=0 --copt="-mtune=native" --copt="-march=armv8-a" --copt="-O3" \
   --copt="-L$PROD_DIR/arm_opt_routines/lib -lmathlib -lm" \
   --config=noaws --cxxopt="-D_GLIBCXX_USE_CXX11_ABI=0" //tensorflow/tools/pip_package:build_pip_package  
 
