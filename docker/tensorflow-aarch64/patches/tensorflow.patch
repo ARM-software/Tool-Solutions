@@ -1,0 +1,26 @@
+diff --git a/configure.py b/configure.py
+index 64022101e9..d7f341d8c4 100644
+--- a/configure.py
++++ b/configure.py
+@@ -50,7 +50,7 @@ _TF_WORKSPACE_ROOT = ''
+ _TF_BAZELRC = ''
+ _TF_CURRENT_BAZEL_VERSION = None
+ _TF_MIN_BAZEL_VERSION = '0.24.1'
+-_TF_MAX_BAZEL_VERSION = '0.26.1'
++_TF_MAX_BAZEL_VERSION = '0.29.1'
+ 
+ NCCL_LIB_PATHS = [
+     'lib64/', 'lib/powerpc64le-linux-gnu/', 'lib/x86_64-linux-gnu/', ''
+diff --git a/tensorflow/tensorflow.bzl b/tensorflow/tensorflow.bzl
+index a3956322fe..78b8b4f95c 100644
+--- a/tensorflow/tensorflow.bzl
++++ b/tensorflow/tensorflow.bzl
+@@ -1591,6 +1591,7 @@ def _py_wrap_cc_impl(ctx):
+     args += [src.path]
+     outputs = [ctx.outputs.cc_out, ctx.outputs.py_out]
+     ctx.actions.run(
++        use_default_shell_env = True,
+         executable = ctx.executable._swig,
+         arguments = args,
+         inputs = inputs.to_list(),
+
