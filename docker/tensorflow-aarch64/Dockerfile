@@ -173,7 +173,7 @@ RUN mkdir -p $PACKAGE_DIR
 
 # Copy in the Python virtual environment
 ENV VENV_DIR=/home/$DOCKER_USER/python3-venv
-COPY --from=tools $VENV_DIR /home/$DOCKER_USER/python3-venv
+COPY --chown=$DOCKER_USER:$DOCKER_USER --from=tools $VENV_DIR /home/$DOCKER_USER/python3-venv
 ENV PATH="$VENV_DIR/bin:$PATH"
 
 # Build Bazel
@@ -198,7 +198,7 @@ USER $DOCKER_USER
 
 # Copy in the Python virtual environment
 ENV VENV_DIR=/home/$DOCKER_USER/python3-venv
-COPY --from=dev $VENV_DIR /home/$DOCKER_USER/python3-venv
+COPY --chown=$DOCKER_USER:$DOCKER_USER --from=dev $VENV_DIR /home/$DOCKER_USER/python3-venv
 ENV PATH="$VENV_DIR/bin:$PATH"
 
 # Clone Tensorflow benchmarks
