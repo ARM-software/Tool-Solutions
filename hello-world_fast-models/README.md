@@ -117,7 +117,7 @@ Any debugger with CADI support can be used to connect, control the software exec
 Arm debuggers with CADI support are:
 
 - [Model Debugger](https://developer.arm.com/docs/100968/1101/introduction/about-model-debugger)
-- [Arm DS-5](https://developer.arm.com/products/software-development-tools/ds-5-development-studio) 
+- [Arm DS](https://developer.arm.com/tools-and-software/embedded/arm-development-studio) 
 - [uVision](http://www2.keil.com/mdk5/uvision/)
 
 
