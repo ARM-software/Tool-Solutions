@@ -14,7 +14,7 @@ Here is a list of all the contents of this repository with short descriptions:
 
 
 #### docker 
-Dockerfiles with Arm tools pre-installed in them for developing across operating systems and easily sharing projects.
+Dockerfiles with Arm tools pre-installed in them for developing across operating systems and easily sharing projects. Also included are some examples of how to build multi-architecture docker images supporting the Arm architecture and other Arm docker images such as how to build TensorFlow on AArch64.
 
 #### hello-world_fast-models
 A tutorial to get started with Arm Fast Model tools, from install to running your first program.
