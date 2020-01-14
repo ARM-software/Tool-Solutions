@@ -139,16 +139,16 @@ ENV PATH="$VENV_DIR/bin:$PATH"
 RUN pip install --no-cache-dir --upgrade pip
 RUN pip install --no-cache-dir "setuptools>=41.0.0" six mock wheel cython
 
+# Build numpy from source, using OpenBLAS for BLAS calls
+COPY scripts/build-numpy.sh $PACKAGE_DIR/.
+COPY patches/site.cfg $PACKAGE_DIR/site.cfg
+RUN $PACKAGE_DIR/build-numpy.sh
+
 # Install some TensorFlow essentials
 RUN pip install --no-cache-dir keras_applications==1.0.8 --no-deps
 RUN pip install --no-cache-dir keras_preprocessing==1.0.5 --no-deps
 RUN HDF5_DIR=/usr/lib/aarch64-linux-gnu/hdf5/serial pip install h5py
 RUN pip install --no-cache-dir ck absl-py pycocotools
-
-# Build numpy from source, using OpenBLAS for BLAS calls
-COPY scripts/build-numpy.sh $PACKAGE_DIR/.
-COPY patches/site.cfg $PACKAGE_DIR/site.cfg
-RUN $PACKAGE_DIR/build-numpy.sh
 
 CMD ["bash", "-l"]
 
