@@ -20,7 +20,8 @@ RUN apt-get update -y
 
 RUN apt-get install -y apt-utils 	\
     iputils-ping 					\
-	python2.7
+	python2.7						\
+	vim
 
 RUN apt-get install -y 	\
  # Python
@@ -61,11 +62,11 @@ RUN mkdir /arm-tools/		&&\
 
 ### 	Tool Version Select 	###
 
-ARG FM_INSTALL=FastModels_11-5-033_Linux64
-ARG FM_DIR=FastModelsTools_11.5
+ARG FM_INSTALL=FastModels_11-9-041_Linux64
+ARG FM_DIR=FastModelsTools_11.9
 
-ARG ArmDS_INSTALL=DS000-BN-00001-r18p0-00rel0
-ARG ArmDS_VERSION=2018.0
+ARG ArmDS_INSTALL=DS000-BN-00001-r19p1-00rel1
+ARG ArmDS_VERSION=2019.1
 ARG ArmDS_DIR=ArmDS
 
 #ARG DS5_INSTALL=DS500-BN-00019-r5p0-28rel1
@@ -99,7 +100,7 @@ COPY $ArmDS_INSTALL.tgz /home/
 # # install program and delete artifacts
 RUN 	mkdir /$ArmDS_INSTALL/ 					&&\
     	tar xvzf /home/$ArmDS_INSTALL.tgz --directory /$ArmDS_INSTALL/ &&\
-		cd $ArmDS_INSTALL/ 						&&\
+		cd $ArmDS_INSTALL/$ArmDS_INSTALL/		&&\
 		./armds-$ArmDS_VERSION.sh --i-agree-to-the-contained-eula --no-interactive -d /arm-tools/$ArmDS_DIR/ 	&&\
 		rm /home/$ArmDS_INSTALL.tgz 			&&\
 		rm -r /$ArmDS_INSTALL/

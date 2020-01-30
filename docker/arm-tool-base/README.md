@@ -20,6 +20,6 @@ In order to properly build and run this image, follow these steps:
      - ```docker run -it arm-tool-base:latest```
      - This will run an interactive container of the arm-tool-base image.
   6. In the docker container, source the setup script to initialize all Arm tools
-     - ```. /init.sh```
+     - ```source /init.sh```
      
 Now you are inside a docker container with Arm tools installed and ready to use.
