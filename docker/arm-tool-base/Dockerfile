@@ -9,7 +9,6 @@
 
 FROM ubuntu:16.04
 
-MAINTAINER Zach
 
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update -y
@@ -65,6 +64,9 @@ RUN mkdir /arm-tools/		&&\
 ARG FM_INSTALL=FastModels_11-9-041_Linux64
 ARG FM_DIR=FastModelsTools_11.9
 
+ARG TP_INSTALL=FastModels_ThirdParty_IP_11-9_b41_Linux64
+ARG TP_DIR=FastModels_ThirdParty_IP_11.9
+
 ARG ArmDS_INSTALL=DS000-BN-00001-r19p1-00rel1
 ARG ArmDS_VERSION=2019.1
 ARG ArmDS_DIR=ArmDS
@@ -104,6 +106,26 @@ RUN 	mkdir /$ArmDS_INSTALL/ 					&&\
 		./armds-$ArmDS_VERSION.sh --i-agree-to-the-contained-eula --no-interactive -d /arm-tools/$ArmDS_DIR/ 	&&\
 		rm /home/$ArmDS_INSTALL.tgz 			&&\
 		rm -r /$ArmDS_INSTALL/
+
+
+
+
+### 	Install Fast Models Third Party IP	###
+
+COPY 	$TP_INSTALL.tgz /home/
+
+# # install program and delete artifacts
+RUN 	mkdir /$TP_INSTALL/											&&\
+		tar xvzf /home/$TP_INSTALL.tgz --directory /$TP_INSTALL/ 	&&\
+		cd /$TP_INSTALL/FastModels_ThirdParty_IP_11-9_Linux64/		&&\
+		./setup.bin --i-accept-the-license-agreement --basepath /arm-tools/$TP_DIR/		&&\
+		rm -rf /home/$TP_INSTALL.tgz								&&\
+		rm -rf /$TP_INSTALL/
+
+
+
+
+
 
 # # add setup to /init.sh 
 RUN	echo 	"export PATH=$PATH:/arm-tools/$ArmDS_DIR/sw/ARMCompiler6.9/bin:/arm-tools/$ArmDS_DIR/bin:/arm-tools/$ArmDS_DIR/sw/java/bin"    >> /init.sh &&\
