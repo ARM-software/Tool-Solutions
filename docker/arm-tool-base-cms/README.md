@@ -7,17 +7,16 @@ NOTE: Before installing Arm tools from the command line with the "--i-accept-the
 ## Usage instructions
 In order to properly build and run this image, follow these steps:
 
-  1. Create a new directory, for example called 'arm-tool-base-repo'.
-  2. Download the most recent versions  of Arm tools and place the tar files in the 'arm-tool-base-repo'. 
-     - [Fast Models](https://developer.arm.com/products/system-design/fast-models)
-     - [DS-5](https://developer.arm.com/products/software-development-tools/ds-5-development-studio)
-  3. Download this dockerfile and place it in 'arm-tool-base-repo'
-  4. Enter the 'arm-tool-base-repo' and build the dockerfile with the following syntax from the command line or terminal:
-     - ```docker build -t arm-tool-base:latest --build-arg license_path=${ARMLMD_LICENSE_PATH} .```
+  1. Create a new directory, for example called 'arm-tool-base-cms-repo'.
+  2. Download the most recent versions  of Arm tools and place the tar files in the 'arm-tool-base-cms-repo'. 
+     - [Cycle Models](https://developer.arm.com/products/system-design/cycle-models)
+  3. Download this dockerfile and place it in 'arm-tool-base-cms-repo'
+  4. Enter the 'arm-tool-base-cms-repo' and build the dockerfile with the following syntax from the command line or terminal:
+     - ```docker build -t arm-tool-base-cms:latest --build-arg license_path=${ARMLMD_LICENSE_PATH} .```
      - **NOTE:** This assumes that the environmental variable 'ARMLMD_LICENSE_PATH' is set to a floating license on a server.
      - Wait until the build completes; this will take some time.
   5. Run the docker image
-     - ```docker run -it arm-tool-base:latest```
+     - ```docker run -it arm-tool-base-cms:latest bash```
      - This will run an interactive container of the arm-tool-base image.
   6. In the docker container, source the setup script to initialize all Arm tools
      - ```source /init.sh```
