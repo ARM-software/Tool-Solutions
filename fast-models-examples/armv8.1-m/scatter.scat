@@ -1,0 +1,23 @@
+;*******************************************************
+;
+; Copyright (c) 2020 Arm Limited. All rights reserved.
+;
+;*******************************************************
+
+
+LOAD_REGION 0x10000000
+{
+    CODE +0 
+    {
+        startup.o (BOOT, +First)        
+        * (+RO)                             
+    }
+
+    DATA 0x20000000 
+    {
+        * (+RW,+ZI)                         
+    }
+
+    ARM_LIB_STACKHEAP 0x100000 ALIGN 64 EMPTY 0x00002000 
+    {}
+}
