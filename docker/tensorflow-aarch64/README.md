@@ -82,6 +82,9 @@ For example:
 
     This will generate an image named 'DockerTest/ubuntu/base'. 
 
+Tensorflow can optionally be built with DNNL, using the '--dnnl' flag, either useing the C++ reference kernels throughout,
+'--dnnl reference', or with the addition of OpenBLAS for BLAS calls '--dnnl openblas'
+
 Memory requirements for building TensorFlow can be singificant, and may exceed the available
 memory, paricuarly for parallel builds (the default). There are two flags which can be used to 
 control the resources Bazel consumes:

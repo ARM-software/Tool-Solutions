@@ -14,28 +14,48 @@ git checkout v$version -b v$version
 
 # Apply path to allow use of newer Bazel build.
 patch -p1 < ../tensorflow.patch
+patch -p1 < ../tf_dnnl_decoupling.patch
 
-# The following selections are piped through to configure...
-# TODO: This can be replaced with env vars picked up by configure.py
 
-python_loc='\n' #  (use default)
-python_site_packages_loc='\n' #  (use default)
-xla_support=n
-opencl_sycl_support=n
-rocm_support=n
-cuda_support=n
-download_clang=n
-mpi_support=n
-opt_flags='\n' # (none, these will be passed to Bazel build later)
-echo -e   "${python_loc}${python_site_packages_loc}${xla_support}${opencl_sycl_support}${rocm_support}${cuda_support}${download_clang}${mpi_support}${opt_flags}" | ./configure
+# Env vars used to avoid interactive elements of the build.
+export HOST_C_COMPILER=(which gcc)
+export HOST_CXX_COMPILER=(which g++)
+export PYTHON_BIN_PATH=(which python)
+export USE_DEFAULT_PYTHON_LIB_PATH=1
+export CC_OPT_FLAGS=""
+export TF_ENABLE_XLA=0
+export TF_NEED_GCP=0
+export TF_NEED_S3=0
+export TF_NEED_OPENCL_SYCL=0
+export TF_NEED_CUDA=0
+export TF_DOWNLOAD_CLANG=0
+export TF_NEED_MPI=0
+export TF_SET_ANDROID_WORKSPACE=0
+export TF_NEED_ROCM=0
+
+./configure
 
 extra_args=""
 if [[ $BZL_RAM ]]; then extra_args="$extra_args --local_ram_resources=$BZL_RAM"; fi
 if [[ $NP_MAKE ]]; then extra_args="$extra_args --jobs=$NP_MAKE"; fi
 
-bazel build $extra_args --define  tensorflow_mkldnn_contraction_kernel=0 --copt="-mtune=native" --copt="-march=armv8-a" --copt="-O3" \
-  --copt="-L$PROD_DIR/arm_opt_routines/lib -lmathlib -lm" \
-  --config=noaws --cxxopt="-D_GLIBCXX_USE_CXX11_ABI=0" //tensorflow/tools/pip_package:build_pip_package  
+if [[ $DNNL_BUILD ]]; then 
+  echo "$DNNL_BUILD build"
+  bazel build $extra_args --define  tensorflow_mkldnn_contraction_kernel=1 \
+    --copt="-mtune=native" --copt="-march=armv8-a" --copt="-O3" --copt="-fopenmp" \
+    --cxxopt="-mtune=native" --cxxopt="-march=armv8-a" --cxxopt="-O3" --cxxopt="-fopenmp" \
+    --linkopt="-L$PROD_DIR/arm_opt_routines/lib -lmathlib -lm" --linkopt="-fopenmp" \
+    --define=build_with_mkl_dnn_v1_only=true --config=noaws --cxxopt="-D_GLIBCXX_USE_CXX11_ABI=0" \
+    //tensorflow/tools/pip_package:build_pip_package
+else
+   echo "Eigen-only build"
+   bazel build $extra_args --define  tensorflow_mkldnn_contraction_kernel=0 \
+    --copt="-mtune=native" --copt="-march=armv8-a" --copt="-O3" \
+    --cxxopt="-mtune=native" --cxxopt="-march=armv8-a" --cxxopt="-O3" \
+    --copt="-L$PROD_DIR/arm_opt_routines/lib -lmathlib -lm" \
+    --config=noaws --cxxopt="-D_GLIBCXX_USE_CXX11_ABI=0" \
+    //tensorflow/tools/pip_package:build_pip_package
+fi
 
 ./bazel-bin/tensorflow/tools/pip_package/build_pip_package ./wheel-TF$TF_VERSION-py$PY_VERSION-$CC
 

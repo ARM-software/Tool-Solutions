@@ -28,14 +28,18 @@ RUN apt-get -y update && \
       libc++-dev \
       libcgal-dev \
       libffi-dev \
+      libfreetype6-dev \
       libhdf5-dev \
       libjpeg-dev \
       liblzma-dev \
       libncurses5-dev \
       libncursesw5-dev \
+      libpng-dev \
       libreadline-dev \
       libssl-dev \
       libsqlite3-dev \
+      libxml2-dev \
+      libxslt-dev \
       locales \
       moreutils \
       openjdk-8-jdk \
@@ -66,7 +70,7 @@ RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selectio
 
 # Import profile for bash
 COPY bash_profile /home/$DOCKER_USER/.bash_profile
-RUN chown $DOCKER_USER:$DOCKER_USER /home/$DOCKER_USER/.bash_profile 
+RUN chown $DOCKER_USER:$DOCKER_USER /home/$DOCKER_USER/.bash_profile
 
 
 # ========
@@ -74,15 +78,17 @@ RUN chown $DOCKER_USER:$DOCKER_USER /home/$DOCKER_USER/.bash_profile
 # ========
 FROM base AS libs
 ARG njobs
-ENV NP_MAKE="${njobs}"
+ARG dnnl_opt
+ENV NP_MAKE="${njobs}" \
+    DNNL_BUILD="${dnnl_opt}"
 
 # Key version numbers
 ENV PY_VERSION=3.7.0 \
-    OPENBLAS_VERSION=0.3.6
+    OPENBLAS_VERSION=0.3.7 \
+    DNNL_VERSION=1.1.2
 
 # Package build parameters
-ENV LD_LIBRARY_PATH="" \
-    PROD_DIR=/opt \
+ENV PROD_DIR=/opt \
     PACKAGE_DIR=/packages
 
 # Make directories to hold package source & build directories (PACKAGE_DIR)
@@ -102,7 +108,8 @@ RUN $PACKAGE_DIR/build-arm_opt_routines.sh
 ENV CC=gcc \
     CXX=g++ \
     BASE_CFLAGS="-mcpu=native" \
-    BASE_LDFLAGS="-L$PROD_DIR/arm_opt_routines/lib -lmathlib -lm"
+    BASE_LDFLAGS="-L$PROD_DIR/arm_opt_routines/lib -lmathlib -lm" \
+    LD_LIBRARY_PATH="$PROD_DIR/arm_opt_routines/lib"
 
 # Build python from source
 COPY scripts/build-cpython.sh $PACKAGE_DIR/.
@@ -112,6 +119,12 @@ RUN $PACKAGE_DIR/build-cpython.sh
 COPY scripts/build-openblas.sh $PACKAGE_DIR/.
 RUN $PACKAGE_DIR/build-openblas.sh
 ENV OPENBLAS_DIR=$PROD_DIR/openblas/$OPENBLAS_VERSION
+ENV LD_LIBRARY_PATH=$OPENBLAS_DIR/lib:$LD_LIBRARY_PATH 
+
+# Build DNNL from source
+COPY scripts/build-dnnl.sh $PACKAGE_DIR/.
+COPY patches/dnnl.patch $PACKAGE_DIR/dnnl.patch
+RUN $PACKAGE_DIR/build-dnnl.sh
 
 # ========
 # Stage 3: install essential python dependencies into a venv
@@ -150,6 +163,10 @@ RUN pip install --no-cache-dir keras_preprocessing==1.0.5 --no-deps
 RUN HDF5_DIR=/usr/lib/aarch64-linux-gnu/hdf5/serial pip install h5py
 RUN pip install --no-cache-dir ck absl-py pycocotools
 
+# Install OpenCV into our venv,
+COPY scripts/build-opencv.sh $PACKAGE_DIR/.
+RUN $PACKAGE_DIR/build-opencv.sh
+
 CMD ["bash", "-l"]
 
 # ========
@@ -158,8 +175,10 @@ CMD ["bash", "-l"]
 FROM libs AS dev
 ARG njobs
 ARG bazel_mem
+ARG dnnl_opt
 ENV NP_MAKE="${njobs}" \
-    BZL_RAM="${bazel_mem}"
+    BZL_RAM="${bazel_mem}" \
+    DNNL_BUILD="${dnnl_opt}"
 
 # Key version numbers
 ENV BZL_VERSION=0.29.1 \
@@ -183,6 +202,7 @@ ENV PATH=$PACKAGE_DIR/bazel/output:$PATH
 
 # Build TensorFlow
 COPY scripts/build-tensorflow.sh $PACKAGE_DIR/.
+COPY patches/tf_dnnl_decoupling.patch $PACKAGE_DIR/tf_dnnl_decoupling.patch
 COPY patches/tensorflow.patch $PACKAGE_DIR/tensorflow.patch
 RUN $PACKAGE_DIR/build-tensorflow.sh
 

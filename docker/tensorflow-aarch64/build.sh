@@ -11,6 +11,9 @@ function print_usage_and_exit {
   echo "  -h, --help                   Display this message"
   echo "      --jobs                   Specify number of jobs to run in parallel during the build"
   echo "      --bazel_memory_limit     Set a memory limit for Bazel build"
+  echo "      --dnnl                   Build and link to MKL-DNN / DNNL"
+  echo "                                 * reference  - use the C++ reference kernels throughout."
+  echo "                                 * openblas   - use OpenBLAS rather than reference kernel where possibe"
   echo "      --build-type             Type of build to perform:"
   echo "                                 * base       - build the basic portion of the image, OS and essential packages"
   echo "                                 * libs       - build image including maths libraries and Python3."
@@ -45,6 +48,7 @@ fi
 extra_args=""
 nproc_build=
 bazel_mem=
+dnnl_blas=
 
 while [ $# -gt 0 ]
 do
@@ -111,6 +115,11 @@ do
       shift
       ;;
 
+    --dnnl )
+      dnnl_blas=$2
+      shift
+      ;;
+
     -h | --help )
       print_usage_and_exit 0
       ;;
@@ -131,6 +140,12 @@ if [[ $bazel_mem ]]; then
   # Set -j to use for builds, if specified
   extra_args="$extra_args --build-arg bazel_mem=$bazel_mem"
 fi
+
+if [[ $dnnl_blas ]]; then
+  # DNNL based build 
+  extra_args="$extra_args --build-arg dnnl_opt=$dnnl_blas"
+fi
+
 
 echo $extra_args
 
