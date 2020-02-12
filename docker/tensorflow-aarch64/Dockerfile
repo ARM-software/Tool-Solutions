@@ -85,7 +85,7 @@ ENV NP_MAKE="${njobs}" \
 # Key version numbers
 ENV PY_VERSION=3.7.0 \
     OPENBLAS_VERSION=0.3.7 \
-    DNNL_VERSION=1.1.2
+    DNNL_VERSION=0.20.6
 
 # Package build parameters
 ENV PROD_DIR=/opt \
@@ -119,12 +119,17 @@ RUN $PACKAGE_DIR/build-cpython.sh
 COPY scripts/build-openblas.sh $PACKAGE_DIR/.
 RUN $PACKAGE_DIR/build-openblas.sh
 ENV OPENBLAS_DIR=$PROD_DIR/openblas/$OPENBLAS_VERSION
-ENV LD_LIBRARY_PATH=$OPENBLAS_DIR/lib:$LD_LIBRARY_PATH 
+ENV LD_LIBRARY_PATH=$OPENBLAS_DIR/lib:$LD_LIBRARY_PATH
 
 # Build DNNL from source
 COPY scripts/build-dnnl.sh $PACKAGE_DIR/.
-COPY patches/dnnl.patch $PACKAGE_DIR/dnnl.patch
+# Patch for MKL-DNN, v0.20.6
+COPY patches/mkldnn.patch $PACKAGE_DIR/mkldnn.patch
+# Patch for DNNL  v1.1.2
+#COPY patches/dnnl.patch $PACKAGE_DIR/dnnl.patch
 RUN $PACKAGE_DIR/build-dnnl.sh
+ENV DNNL_DIR=$PROD_DIR/dnnl/$DNNL_VERSION
+ENV LD_LIBRARY_PATH=$DNNL_DIR/lib:$LD_LIBRARY_PATH
 
 # ========
 # Stage 3: install essential python dependencies into a venv

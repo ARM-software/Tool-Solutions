@@ -41,15 +41,17 @@ if [[ $NP_MAKE ]]; then extra_args="$extra_args --jobs=$NP_MAKE"; fi
 
 if [[ $DNNL_BUILD ]]; then 
   echo "$DNNL_BUILD build"
-  bazel build $extra_args --define  tensorflow_mkldnn_contraction_kernel=1 \
+  bazel build $extra_args \
+    --define=build_with_mkl_dnn_only=true --define=build_with_mkl=true \
+    --define=tensorflow_mkldnn_contraction_kernel=1 \
     --copt="-mtune=native" --copt="-march=armv8-a" --copt="-O3" --copt="-fopenmp" \
     --cxxopt="-mtune=native" --cxxopt="-march=armv8-a" --cxxopt="-O3" --cxxopt="-fopenmp" \
     --linkopt="-L$PROD_DIR/arm_opt_routines/lib -lmathlib -lm" --linkopt="-fopenmp" \
-    --define=build_with_mkl_dnn_v1_only=true --config=noaws --cxxopt="-D_GLIBCXX_USE_CXX11_ABI=0" \
+    --config=noaws --cxxopt="-D_GLIBCXX_USE_CXX11_ABI=0" \
     //tensorflow/tools/pip_package:build_pip_package
 else
    echo "Eigen-only build"
-   bazel build $extra_args --define  tensorflow_mkldnn_contraction_kernel=0 \
+   bazel build $extra_args --define tensorflow_mkldnn_contraction_kernel=0 \
     --copt="-mtune=native" --copt="-march=armv8-a" --copt="-O3" \
     --cxxopt="-mtune=native" --cxxopt="-march=armv8-a" --cxxopt="-O3" \
     --copt="-L$PROD_DIR/arm_opt_routines/lib -lmathlib -lm" \

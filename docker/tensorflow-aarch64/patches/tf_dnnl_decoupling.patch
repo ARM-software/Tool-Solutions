@@ -1,23 +1,25 @@
 diff --git a/tensorflow/workspace.bzl b/tensorflow/workspace.bzl
-index 25484734fc..259627ecf2 100755
+index 25484734fc..1840ea944d 100755
 --- a/tensorflow/workspace.bzl
 +++ b/tensorflow/workspace.bzl
-@@ -135,23 +135,18 @@ def tf_repositories(path_prefix = "", tf_repo_name = ""):
-     tf_http_archive(
+@@ -132,26 +132,16 @@ def tf_repositories(path_prefix = "", tf_repo_name = ""):
+     # MKL-DNN might require upgrading MKL ML libraries also. If they need to be
+     # upgraded then update the version numbers on all three versions above
+     # (Linux, Mac, Windows).
+-    tf_http_archive(
++    native.new_local_repository(
          name = "mkl_dnn",
          build_file = clean_dep("//third_party/mkl_dnn:mkldnn.BUILD"),
 -        sha256 = "74675e93eef339ff3d9a9be95c15d0c7ad8736a5356c23428ab2e33dcdb8e3e1",
 -        strip_prefix = "mkl-dnn-0.20.6",
-+        sha256 = "38a1c02104ee9f630c1ad68164119cd58ad0aaf59e04ccbe7bd5781add7bfbea",
-+        strip_prefix = "mkl-dnn-0.18",
-         urls = [
+-        urls = [
 -            "https://storage.googleapis.com/mirror.tensorflow.org/github.com/intel/mkl-dnn/archive/v0.20.6.tar.gz",
 -            "https://github.com/intel/mkl-dnn/archive/v0.20.6.tar.gz",
-+            "http://mirror.tensorflow.org/github.com/intel/mkl-dnn/archive/v0.18.tar.gz",
-+            "https://github.com/intel/mkl-dnn/archive/v0.18.tar.gz",
-         ],
-     )
-
+-        ],
+-    )
++        path = '/opt/dnnl/0.20.6'
++    ) 
+ 
 -    tf_http_archive(
 +    native.new_local_repository(
          name = "mkl_dnn_v1",
@@ -28,9 +30,9 @@ index 25484734fc..259627ecf2 100755
 -            "https://storage.googleapis.com/mirror.tensorflow.org/github.com/intel/mkl-dnn/archive/v1.0-pc2.tar.gz",
 -            "https://github.com/intel/mkl-dnn/archive/v1.0-pc2.tar.gz",
 -        ],
-+        path = '/opt/mkl-dnn/1.1.2'
++        path = '/opt/dnnl/1.1.2'
      )
-
+ 
      tf_http_archive(
 diff --git a/third_party/mkl_dnn/mkldnn.BUILD b/third_party/mkl_dnn/mkldnn.BUILD
 index 35832ffcef..03f7645a1a 100644
