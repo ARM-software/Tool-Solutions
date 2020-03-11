@@ -4,7 +4,7 @@
 ARG njobs
 ARG bazel_mem
 
-FROM ubuntu:18.04 AS base
+FROM ubuntu:18.04 AS tensorflow-base
 
 RUN if ! [ "$(arch)" = "aarch64" ] ; then exit 1; fi
 
@@ -76,7 +76,7 @@ RUN chown $DOCKER_USER:$DOCKER_USER /home/$DOCKER_USER/.bash_profile
 # ========
 # Stage 2: augment the base image with some essential libs
 # ========
-FROM base AS libs
+FROM tensorflow-base AS tensorflow-libs
 ARG njobs
 ARG dnnl_opt
 ENV NP_MAKE="${njobs}" \
@@ -85,7 +85,7 @@ ENV NP_MAKE="${njobs}" \
 # Key version numbers
 ENV PY_VERSION=3.7.0 \
     OPENBLAS_VERSION=0.3.7 \
-    DNNL_VERSION=0.20.6
+    DNNL_VERSION=0.21.3
 
 # Package build parameters
 ENV PROD_DIR=/opt \
@@ -134,12 +134,13 @@ ENV LD_LIBRARY_PATH=$DNNL_DIR/lib:$LD_LIBRARY_PATH
 # ========
 # Stage 3: install essential python dependencies into a venv
 # ========
-FROM libs AS tools
+FROM tensorflow-libs AS tensorflow-tools
 ARG njobs
 ENV NP_MAKE="${njobs}"
 
 # Key version numbers
-ENV NUMPY_VERSION=1.17.1
+ENV NUMPY_VERSION=1.17.1 \
+    NPY_DISTUTILS_APPEND_FLAGS=1
 
 # Using venv means this can be done in userspace
 WORKDIR /home/$DOCKER_USER
@@ -177,7 +178,7 @@ CMD ["bash", "-l"]
 # ========
 # Stage 4: install Bazel, and build tensorflow
 # ========
-FROM libs AS dev
+FROM tensorflow-libs AS tensorflow-dev
 ARG njobs
 ARG bazel_mem
 ARG dnnl_opt
@@ -187,7 +188,7 @@ ENV NP_MAKE="${njobs}" \
 
 # Key version numbers
 ENV BZL_VERSION=0.29.1 \
-    TF_VERSION=1.15.0
+    TF_VERSION=1.15.2
 
 # Use a PACKAGE_DIR in userspace
 WORKDIR /home/$DOCKER_USER
@@ -197,7 +198,7 @@ RUN mkdir -p $PACKAGE_DIR
 
 # Copy in the Python virtual environment
 ENV VENV_DIR=/home/$DOCKER_USER/python3-venv
-COPY --chown=$DOCKER_USER:$DOCKER_USER --from=tools $VENV_DIR /home/$DOCKER_USER/python3-venv
+COPY --chown=$DOCKER_USER:$DOCKER_USER --from=tensorflow-tools $VENV_DIR /home/$DOCKER_USER/python3-venv
 ENV PATH="$VENV_DIR/bin:$PATH"
 
 # Build Bazel
@@ -216,14 +217,14 @@ CMD ["bash", "-l"]
 # ========
 # Stage 5: install tensorflow benchmarks
 # ========
-FROM libs AS tensorflow
+FROM tensorflow-libs AS tensorflow
 
 WORKDIR /home/$DOCKER_USER
 USER $DOCKER_USER
 
 # Copy in the Python virtual environment
 ENV VENV_DIR=/home/$DOCKER_USER/python3-venv
-COPY --chown=$DOCKER_USER:$DOCKER_USER --from=dev $VENV_DIR /home/$DOCKER_USER/python3-venv
+COPY --chown=$DOCKER_USER:$DOCKER_USER --from=tensorflow-dev $VENV_DIR /home/$DOCKER_USER/python3-venv
 ENV PATH="$VENV_DIR/bin:$PATH"
 
 # Clone Tensorflow benchmarks

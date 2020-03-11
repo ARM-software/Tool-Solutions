@@ -151,22 +151,22 @@ echo $extra_args
 
 if [[ $build_base_image ]]; then
   # Stage 1: Base image, Ubuntu with core packages and GCC9
-  docker build $extra_args --target base -t base:latest .
+  docker build $extra_args --target tensorflow-base -t tensorflow-base:latest .
 fi
 
 if [[ $build_libs_image ]]; then
   # Stage 2: Libs image, essential maths libs and Python built and installed
-  docker build $extra_args --target libs -t libs:latest .
+  docker build $extra_args --target tensorflow-libs -t tensorflow-libs:latest .
 fi
 
 if [[ $build_tools_image ]]; then
   # Stage 3: Tools image, Python3 venv added with additional Python essentials
-  docker build $extra_args --target tools -t tools:latest .
+  docker build $extra_args --target tensorflow-tools -t tensorflow-tools:latest .
 fi
 
 if [[ $build_dev_image ]]; then
   # Stage 4: Adds bazel and TensorFlow builds with sources
-  docker build $extra_args --target dev -t dev:latest .
+  docker build $extra_args --target tensorflow-dev -t tensorflow-dev:latest .
 fi
 
 if [[ $build_tensorflow_image ]]; then
