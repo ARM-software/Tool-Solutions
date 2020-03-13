@@ -1,0 +1,91 @@
+# Build PyTorch for AArch64 using Docker
+
+A script to build a Docker image containing [PyTorch](https://www.pytorch.org/) and dependencies for the [Armv8-A architecture](https://developer.arm.com/architectures/cpu-architecture/a-profile) with AArch64 execution. 
+
+Before using this project run the uname command to confirm the machine is aarch64. Other architectures will not work.
+
+``` 
+> uname -m 
+aarch64 
+```
+
+
+## What's in the final image?
+  * OS: Ubuntu 18.04
+  * Compiler: GCC 9.2
+  * Maths libraries: [Arm Optimized Routines](https://github.com/ARM-software/optimized-routines) and [OpenBLAS](https://www.openblas.net/) 0.3.6
+  * Python3 environment built from CPython 3.7 and containing:
+    - NumPy 1.17.1
+    - SciPy 1.4.0
+    - PyTorch 1.2
+  * PyTorch examples, and some key dependencies such as Matplolib.
+
+A user account with username 'ubuntu' is created with sudo privaleges and password of 'Arm2020'. 
+
+In addition to the Dockerfile, please look at the files in the scripts/ directory and the patches/ directory too see how the software is built. 
+
+
+## Installing Docker
+The [Docker Community Engine](https://docs.docker.com/install/) is used. Instructions on how to install Docker CE are available for various Linux distributions such as [CentOS](https://docs.docker.com/install/linux/docker-ce/centos/) and [Ubuntu](https://docs.docker.com/install/linux/docker-ce/ubuntu/).
+
+Confirm Docker is working: 
+
+``` > docker run hello-world ```
+
+If there are any problems make sure the service is running:
+
+``` > systemctl start docker ```
+
+and make sure you are in the Docker group:
+
+```  > usermod -aG docker $USER ```
+
+These steps may require root privlages and usermod requires logout and login to take effect.
+
+See https://docs.docker.com for more information.
+
+
+## Building the Docker image
+Use the build.sh script to build the image. This script implements a multi-stage build to minimise the size of the finished image:
+  * Stage 1: 'base' image including Ubuntu with core packages and GCC9.
+  * Stage 2: 'libs' image including essential tools and libraries such as Python and OpenBLAS.
+  * Stage 3: 'tools' image, including a Python3 virtual environment in userspace and a build of NumPy against OpenBLAS, as well as other Python essentials.
+  * Stage 4: 'dev' image, including Bazel and PyTorvh and the source code
+  * Stage 5: 'pytorch' image, including only the Python3 virtual environment, the PyTorch module, and the basic examples. PyTorch sources are not included in this image.
+      
+To see the command line options for build.sh use:
+
+``` > ./build.sh -h ```
+
+The image to build is selected with the '--build-type' flag. The options are base, libs, tools, dev, PyTorch, or full. Selecting full builds all of the images. The default value is 'pytorch'
+
+
+For example:
+  * To build the final pytorch image:
+
+    ``` > ./build.sh --build-type pytorch ```
+
+  * For a full build:
+
+    ``` > ./build.sh --build-type full ```
+
+  * For a base build:
+
+    ```  > ./build.sh --build-type base ```
+
+    This will generate an image named 'DockerTest/ubuntu/base'. 
+
+## Running the Docker image
+To run the finished image:
+
+  ``` > docker run -it --init <image name> ```
+
+where <image name> is the name of the finished image, for example 'pytorch'.
+
+  ``` > docker run -it --init pytorch```
+
+To display available images use the Docker command:
+
+  ``` > docker images ```
+
+
