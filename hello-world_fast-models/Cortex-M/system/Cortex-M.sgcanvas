@@ -2,8 +2,8 @@
 #//////////////////////////////////////////////////////////////////////////
 #//
 #//  File:    Cortex-M.sgcanvas
-#//  Created: Tue Nov 13 13:50:31 2018
-#//  By: Fast Models  System Canvas 11.3.30  (Feb 23 2018)
+#//  Created: Mon Apr 20 21:36:01 2020
+#//  By: Fast Models  System Canvas 11.10.22  (Mar 11 2020)
 #//
 # *  Do NOT modify this file. It is for internal use by System Canvas only.
 #//
@@ -165,6 +165,550 @@ editor
                 )
             )
         )
+        instance "Core"
+        (
+            x = -30;
+            y = -50;
+            width = 171;
+            height = 221;
+            sheight = 21;
+            show_title = true;
+            show_name = true;
+            show_type = false;
+            show_logo = true;
+            ports
+            (
+                define "ahbd"
+                (
+                x = 0;
+                y = 2;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = false;
+                moved_by_user = false;
+            expanded = false;
+                )
+                define "bigend"
+                (
+                x = 0;
+                y = 22;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = false;
+                moved_by_user = false;
+            expanded = false;
+                )
+                define "clk_in"
+                (
+                x = 0;
+                y = 42;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = false;
+                moved_by_user = false;
+            expanded = false;
+                )
+                define "currpri"
+                (
+                x = 0;
+                y = 2;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = false;
+                moved_by_user = false;
+            expanded = false;
+                )
+                define "edbgrq"
+                (
+                x = 0;
+                y = 62;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = false;
+                moved_by_user = false;
+            expanded = false;
+                )
+                define "event"
+                (
+                x = 0;
+                y = 22;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = false;
+                moved_by_user = false;
+            expanded = false;
+                )
+                define "intisr"
+                (
+                x = 0;
+                y = 82;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = false;
+                moved_by_user = false;
+            expanded = false;
+                )
+                define "intisr[0]"
+                (
+                x = 0;
+                y = 82;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = false;
+                moved_by_user = false;
+                )
+                define "intisr[1]"
+                (
+                x = 0;
+                y = 82;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = false;
+                moved_by_user = false;
+                )
+                define "intisr[2]"
+                (
+                x = 0;
+                y = 82;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = false;
+                moved_by_user = false;
+                )
+                define "intisr[3]"
+                (
+                x = 0;
+                y = 82;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = false;
+                moved_by_user = false;
+                )
+                define "intisr[4]"
+                (
+                x = 0;
+                y = 82;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = false;
+                moved_by_user = false;
+                )
+                define "intisr[5]"
+                (
+                x = 0;
+                y = 82;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = false;
+                moved_by_user = false;
+                )
+                define "intisr[6]"
+                (
+                x = 0;
+                y = 82;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = false;
+                moved_by_user = false;
+                )
+                define "intisr[7]"
+                (
+                x = 0;
+                y = 82;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = false;
+                moved_by_user = false;
+                )
+                define "intisr[8]"
+                (
+                x = 0;
+                y = 82;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = false;
+                moved_by_user = false;
+                )
+                define "intisr[9]"
+                (
+                x = 0;
+                y = 82;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = false;
+                moved_by_user = false;
+                )
+                define "intisr[10]"
+                (
+                x = 0;
+                y = 82;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = false;
+                moved_by_user = false;
+                )
+                define "intisr[11]"
+                (
+                x = 0;
+                y = 82;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = false;
+                moved_by_user = false;
+                )
+                define "intisr[12]"
+                (
+                x = 0;
+                y = 82;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = false;
+                moved_by_user = false;
+                )
+                define "intisr[13]"
+                (
+                x = 0;
+                y = 82;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = false;
+                moved_by_user = false;
+                )
+                define "intisr[14]"
+                (
+                x = 0;
+                y = 82;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = false;
+                moved_by_user = false;
+                )
+                define "intisr[15]"
+                (
+                x = 0;
+                y = 82;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = false;
+                moved_by_user = false;
+                )
+                define "intisr[16]"
+                (
+                x = 0;
+                y = 82;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = false;
+                moved_by_user = false;
+                )
+                define "intisr[17]"
+                (
+                x = 0;
+                y = 82;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = false;
+                moved_by_user = false;
+                )
+                define "intisr[18]"
+                (
+                x = 0;
+                y = 82;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = false;
+                moved_by_user = false;
+                )
+                define "intisr[19]"
+                (
+                x = 0;
+                y = 82;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = false;
+                moved_by_user = false;
+                )
+                define "intisr[20]"
+                (
+                x = 0;
+                y = 82;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = false;
+                moved_by_user = false;
+                )
+                define "intisr[21]"
+                (
+                x = 0;
+                y = 82;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = false;
+                moved_by_user = false;
+                )
+                define "intisr[22]"
+                (
+                x = 0;
+                y = 82;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = false;
+                moved_by_user = false;
+                )
+                define "intisr[23]"
+                (
+                x = 0;
+                y = 82;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = false;
+                moved_by_user = false;
+                )
+                define "intisr[24]"
+                (
+                x = 0;
+                y = 82;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = false;
+                moved_by_user = false;
+                )
+                define "intisr[25]"
+                (
+                x = 0;
+                y = 82;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = false;
+                moved_by_user = false;
+                )
+                define "intisr[26]"
+                (
+                x = 0;
+                y = 82;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = false;
+                moved_by_user = false;
+                )
+                define "intisr[27]"
+                (
+                x = 0;
+                y = 82;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = false;
+                moved_by_user = false;
+                )
+                define "intisr[28]"
+                (
+                x = 0;
+                y = 82;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = false;
+                moved_by_user = false;
+                )
+                define "intisr[29]"
+                (
+                x = 0;
+                y = 82;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = false;
+                moved_by_user = false;
+                )
+                define "intisr[30]"
+                (
+                x = 0;
+                y = 82;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = false;
+                moved_by_user = false;
+                )
+                define "intisr[31]"
+                (
+                x = 0;
+                y = 82;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = false;
+                moved_by_user = false;
+                )
+                define "intnmi"
+                (
+                x = 0;
+                y = 102;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = false;
+                moved_by_user = false;
+            expanded = false;
+                )
+                define "lockup"
+                (
+                x = 0;
+                y = 42;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = false;
+                moved_by_user = false;
+            expanded = false;
+                )
+                define "poreset"
+                (
+                x = 0;
+                y = 122;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = false;
+                moved_by_user = false;
+            expanded = false;
+                )
+                define "pv_ppbus_m"
+                (
+                x = 0;
+                y = 62;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = false;
+                moved_by_user = false;
+            expanded = false;
+                )
+                define "pvbus_m"
+                (
+                x = 0;
+                y = 82;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = false;
+                moved_by_user = false;
+            expanded = false;
+                )
+                define "sleepdeep"
+                (
+                x = 0;
+                y = 102;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = false;
+                moved_by_user = false;
+            expanded = false;
+                )
+                define "sleeping"
+                (
+                x = 0;
+                y = 122;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = false;
+                moved_by_user = false;
+            expanded = false;
+                )
+                define "stcalib"
+                (
+                x = 0;
+                y = 142;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = false;
+                moved_by_user = false;
+            expanded = false;
+                )
+                define "stclk"
+                (
+                x = 0;
+                y = 162;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = false;
+                moved_by_user = false;
+            expanded = false;
+                )
+                define "sysreset"
+                (
+                x = 0;
+                y = 182;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = false;
+                moved_by_user = false;
+            expanded = false;
+                )
+                define "sysresetreq"
+                (
+                x = 0;
+                y = 142;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = false;
+                moved_by_user = false;
+            expanded = false;
+                )
+                define "ticks"
+                (
+                x = 0;
+                y = 162;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = false;
+                moved_by_user = false;
+            expanded = false;
+                )
+            )
+        )
         instance "Memory"
         (
             x = 480;
@@ -186,561 +730,6 @@ editor
                 clock_type = 0;
                 enabled = true;
                 hidden = false;
-                moved_by_user = false;
-            expanded = false;
-                )
-            )
-        )
-        instance "armcortexm0ct"
-        (
-            x = -30;
-            y = -40;
-            width = 171;
-            height = 131;
-            sheight = 41;
-            show_title = true;
-            show_name = true;
-            show_type = false;
-            show_logo = true;
-            ports
-            (
-                define "ahbd"
-                (
-                x = 0;
-                y = 2;
-                side = 16;
-                clock_type = 0;
-                enabled = true;
-                hidden = true;
-                moved_by_user = false;
-            expanded = false;
-                )
-                define "auxfault"
-                (
-                x = 0;
-                y = 22;
-                side = 16;
-                clock_type = 0;
-                enabled = true;
-                hidden = true;
-                moved_by_user = false;
-            expanded = false;
-                )
-                define "bigend"
-                (
-                x = 0;
-                y = 42;
-                side = 16;
-                clock_type = 0;
-                enabled = true;
-                hidden = true;
-                moved_by_user = false;
-            expanded = false;
-                )
-                define "clk_in"
-                (
-                x = 0;
-                y = 2;
-                side = 16;
-                clock_type = 0;
-                enabled = true;
-                hidden = false;
-                moved_by_user = true;
-            expanded = false;
-                )
-                define "currpri"
-                (
-                x = 0;
-                y = 2;
-                side = 64;
-                clock_type = 0;
-                enabled = true;
-                hidden = true;
-                moved_by_user = false;
-            expanded = false;
-                )
-                define "edbgrq"
-                (
-                x = 0;
-                y = 82;
-                side = 16;
-                clock_type = 0;
-                enabled = true;
-                hidden = true;
-                moved_by_user = false;
-            expanded = false;
-                )
-                define "event"
-                (
-                x = 0;
-                y = 22;
-                side = 64;
-                clock_type = 0;
-                enabled = true;
-                hidden = true;
-                moved_by_user = false;
-            expanded = false;
-                )
-                define "intisr"
-                (
-                x = 0;
-                y = 102;
-                side = 16;
-                clock_type = 0;
-                enabled = true;
-                hidden = true;
-                moved_by_user = false;
-            expanded = false;
-                )
-                define "intisr[0]"
-                (
-                x = 0;
-                y = 102;
-                side = 16;
-                clock_type = 0;
-                enabled = true;
-                hidden = true;
-                moved_by_user = false;
-                )
-                define "intisr[1]"
-                (
-                x = 0;
-                y = 102;
-                side = 16;
-                clock_type = 0;
-                enabled = true;
-                hidden = true;
-                moved_by_user = false;
-                )
-                define "intisr[2]"
-                (
-                x = 0;
-                y = 102;
-                side = 16;
-                clock_type = 0;
-                enabled = true;
-                hidden = true;
-                moved_by_user = false;
-                )
-                define "intisr[3]"
-                (
-                x = 0;
-                y = 102;
-                side = 16;
-                clock_type = 0;
-                enabled = true;
-                hidden = true;
-                moved_by_user = false;
-                )
-                define "intisr[4]"
-                (
-                x = 0;
-                y = 102;
-                side = 16;
-                clock_type = 0;
-                enabled = true;
-                hidden = true;
-                moved_by_user = false;
-                )
-                define "intisr[5]"
-                (
-                x = 0;
-                y = 102;
-                side = 16;
-                clock_type = 0;
-                enabled = true;
-                hidden = true;
-                moved_by_user = false;
-                )
-                define "intisr[6]"
-                (
-                x = 0;
-                y = 102;
-                side = 16;
-                clock_type = 0;
-                enabled = true;
-                hidden = true;
-                moved_by_user = false;
-                )
-                define "intisr[7]"
-                (
-                x = 0;
-                y = 102;
-                side = 16;
-                clock_type = 0;
-                enabled = true;
-                hidden = true;
-                moved_by_user = false;
-                )
-                define "intisr[8]"
-                (
-                x = 0;
-                y = 102;
-                side = 16;
-                clock_type = 0;
-                enabled = true;
-                hidden = true;
-                moved_by_user = false;
-                )
-                define "intisr[9]"
-                (
-                x = 0;
-                y = 102;
-                side = 16;
-                clock_type = 0;
-                enabled = true;
-                hidden = true;
-                moved_by_user = false;
-                )
-                define "intisr[10]"
-                (
-                x = 0;
-                y = 102;
-                side = 16;
-                clock_type = 0;
-                enabled = true;
-                hidden = true;
-                moved_by_user = false;
-                )
-                define "intisr[11]"
-                (
-                x = 0;
-                y = 102;
-                side = 16;
-                clock_type = 0;
-                enabled = true;
-                hidden = true;
-                moved_by_user = false;
-                )
-                define "intisr[12]"
-                (
-                x = 0;
-                y = 102;
-                side = 16;
-                clock_type = 0;
-                enabled = true;
-                hidden = true;
-                moved_by_user = false;
-                )
-                define "intisr[13]"
-                (
-                x = 0;
-                y = 102;
-                side = 16;
-                clock_type = 0;
-                enabled = true;
-                hidden = true;
-                moved_by_user = false;
-                )
-                define "intisr[14]"
-                (
-                x = 0;
-                y = 102;
-                side = 16;
-                clock_type = 0;
-                enabled = true;
-                hidden = true;
-                moved_by_user = false;
-                )
-                define "intisr[15]"
-                (
-                x = 0;
-                y = 102;
-                side = 16;
-                clock_type = 0;
-                enabled = true;
-                hidden = true;
-                moved_by_user = false;
-                )
-                define "intisr[16]"
-                (
-                x = 0;
-                y = 102;
-                side = 16;
-                clock_type = 0;
-                enabled = true;
-                hidden = true;
-                moved_by_user = false;
-                )
-                define "intisr[17]"
-                (
-                x = 0;
-                y = 102;
-                side = 16;
-                clock_type = 0;
-                enabled = true;
-                hidden = true;
-                moved_by_user = false;
-                )
-                define "intisr[18]"
-                (
-                x = 0;
-                y = 102;
-                side = 16;
-                clock_type = 0;
-                enabled = true;
-                hidden = true;
-                moved_by_user = false;
-                )
-                define "intisr[19]"
-                (
-                x = 0;
-                y = 102;
-                side = 16;
-                clock_type = 0;
-                enabled = true;
-                hidden = true;
-                moved_by_user = false;
-                )
-                define "intisr[20]"
-                (
-                x = 0;
-                y = 102;
-                side = 16;
-                clock_type = 0;
-                enabled = true;
-                hidden = true;
-                moved_by_user = false;
-                )
-                define "intisr[21]"
-                (
-                x = 0;
-                y = 102;
-                side = 16;
-                clock_type = 0;
-                enabled = true;
-                hidden = true;
-                moved_by_user = false;
-                )
-                define "intisr[22]"
-                (
-                x = 0;
-                y = 102;
-                side = 16;
-                clock_type = 0;
-                enabled = true;
-                hidden = true;
-                moved_by_user = false;
-                )
-                define "intisr[23]"
-                (
-                x = 0;
-                y = 102;
-                side = 16;
-                clock_type = 0;
-                enabled = true;
-                hidden = true;
-                moved_by_user = false;
-                )
-                define "intisr[24]"
-                (
-                x = 0;
-                y = 102;
-                side = 16;
-                clock_type = 0;
-                enabled = true;
-                hidden = true;
-                moved_by_user = false;
-                )
-                define "intisr[25]"
-                (
-                x = 0;
-                y = 102;
-                side = 16;
-                clock_type = 0;
-                enabled = true;
-                hidden = true;
-                moved_by_user = false;
-                )
-                define "intisr[26]"
-                (
-                x = 0;
-                y = 102;
-                side = 16;
-                clock_type = 0;
-                enabled = true;
-                hidden = true;
-                moved_by_user = false;
-                )
-                define "intisr[27]"
-                (
-                x = 0;
-                y = 102;
-                side = 16;
-                clock_type = 0;
-                enabled = true;
-                hidden = true;
-                moved_by_user = false;
-                )
-                define "intisr[28]"
-                (
-                x = 0;
-                y = 102;
-                side = 16;
-                clock_type = 0;
-                enabled = true;
-                hidden = true;
-                moved_by_user = false;
-                )
-                define "intisr[29]"
-                (
-                x = 0;
-                y = 102;
-                side = 16;
-                clock_type = 0;
-                enabled = true;
-                hidden = true;
-                moved_by_user = false;
-                )
-                define "intisr[30]"
-                (
-                x = 0;
-                y = 102;
-                side = 16;
-                clock_type = 0;
-                enabled = true;
-                hidden = true;
-                moved_by_user = false;
-                )
-                define "intisr[31]"
-                (
-                x = 0;
-                y = 102;
-                side = 16;
-                clock_type = 0;
-                enabled = true;
-                hidden = true;
-                moved_by_user = false;
-                )
-                define "intnmi"
-                (
-                x = 0;
-                y = 122;
-                side = 16;
-                clock_type = 0;
-                enabled = true;
-                hidden = true;
-                moved_by_user = false;
-            expanded = false;
-                )
-                define "lockup"
-                (
-                x = 0;
-                y = 42;
-                side = 64;
-                clock_type = 0;
-                enabled = true;
-                hidden = true;
-                moved_by_user = false;
-            expanded = false;
-                )
-                define "poreset"
-                (
-                x = 0;
-                y = 142;
-                side = 16;
-                clock_type = 0;
-                enabled = true;
-                hidden = true;
-                moved_by_user = false;
-            expanded = false;
-                )
-                define "pv_ppbus_m"
-                (
-                x = 0;
-                y = 62;
-                side = 64;
-                clock_type = 0;
-                enabled = true;
-                hidden = true;
-                moved_by_user = false;
-            expanded = false;
-                )
-                define "pvbus_m"
-                (
-                x = 250;
-                y = 2;
-                side = 64;
-                clock_type = 0;
-                enabled = true;
-                hidden = false;
-                moved_by_user = true;
-            expanded = false;
-                )
-                define "sleepdeep"
-                (
-                x = 0;
-                y = 102;
-                side = 64;
-                clock_type = 0;
-                enabled = true;
-                hidden = true;
-                moved_by_user = false;
-            expanded = false;
-                )
-                define "sleeping"
-                (
-                x = 0;
-                y = 122;
-                side = 64;
-                clock_type = 0;
-                enabled = true;
-                hidden = true;
-                moved_by_user = false;
-            expanded = false;
-                )
-                define "stcalib"
-                (
-                x = 0;
-                y = 162;
-                side = 16;
-                clock_type = 0;
-                enabled = true;
-                hidden = true;
-                moved_by_user = false;
-            expanded = false;
-                )
-                define "stclk"
-                (
-                x = 0;
-                y = 182;
-                side = 16;
-                clock_type = 0;
-                enabled = true;
-                hidden = true;
-                moved_by_user = false;
-            expanded = false;
-                )
-                define "sysreset"
-                (
-                x = 0;
-                y = 202;
-                side = 16;
-                clock_type = 0;
-                enabled = true;
-                hidden = true;
-                moved_by_user = false;
-            expanded = false;
-                )
-                define "sysresetreq"
-                (
-                x = 0;
-                y = 142;
-                side = 64;
-                clock_type = 0;
-                enabled = true;
-                hidden = true;
-                moved_by_user = false;
-            expanded = false;
-                )
-                define "ticks"
-                (
-                x = 0;
-                y = 162;
-                side = 64;
-                clock_type = 0;
-                enabled = true;
-                hidden = true;
                 moved_by_user = false;
             expanded = false;
                 )
@@ -867,7 +856,7 @@ editor
                 automatic = true;
             )
         )
-        define "Clock100MHz.clk_out=>armcortexm0ct.clk_in"
+        define "Clock100MHz.clk_out=>Core.clk_in"
         (
             point
             (
@@ -878,7 +867,7 @@ editor
             point
             (
                 x = -60;
-                y = 10;
+                y = 20;
                 automatic = true;
             )
         )
@@ -900,8 +889,20 @@ editor
         define "Clock1Hz.clk_out=>Clock100MHz.clk_in"
         (
         )
-        define "armcortexm0ct.pvbus_m=>BusDecoder.pvbus_s"
+        define "Core.pvbus_m=>BusDecoder.pvbus_s"
         (
+            point
+            (
+                x = 160;
+                y = 60;
+                automatic = true;
+            )
+            point
+            (
+                x = 160;
+                y = 10;
+                automatic = true;
+            )
         )
         define "pl011_uart.serial_out=>telnetterminal.serial"
         (
