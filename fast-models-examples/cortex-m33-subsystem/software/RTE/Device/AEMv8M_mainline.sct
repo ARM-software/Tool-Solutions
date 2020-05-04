@@ -1,0 +1,17 @@
+LR_IROM1 0x00000000 0x00200000 {    ; load region size_region
+  ER_IROM1 0x00000000 0x00200000 {  ; load address = execution address
+   *.o (.vectors, +First)
+   * (InRoot$$Sections)
+   .ANY (+RO)
+   .ANY (+XO)
+  }
+  RW_IRAM1 0x20000000 0x00020000 {
+   .ANY (+RW +ZI)
+  }
+}
+LR_IROM2 0x00200000 0x00200000 {
+  ER_IROM2 0x00200000 0x00200000 {  ; load address = execution address
+   .ANY (+RO)
+  }
+}
+
