@@ -47,25 +47,30 @@ CXXFLAGS += $(CXXFLAGS_$(word 1, $(subst _, ,$@))) $(CXXFLAGS_arch)
 
 # Determine C++11 support from target's prefix
 CXXFLAGS_gcc49 = -std=c++11
-CXXFLAGS_gcc54 = -std=c++11
+CXXFLAGS_gcc53 = -std=c++11
 CXXFLAGS_gcc64 = -std=c++11
+CXXFLAGS_gcc73 = -std=c++11
 CXXFLAGS += $(CXXFLAGS_$(word 2, $(subst _, ,$@)))
 
 # Determine binares and config to use from make target
 GCC_VER_gcc49       = 4.9
 CONFIG_VER_gcc49    = 4.9
-GCC_VER_gcc54       = 5.4
-CONFIG_VER_gcc54    = 5.4
+GCC_VER_gcc53       = 5.3
+CONFIG_VER_gcc53    = 5.3
 GCC_VER_gcc64       = 6.4
 CONFIG_VER_gcc64    = 6.4
+GCC_VER_gcc73       = 7.3
+CONFIG_VER_gcc73    = 7.3
 
 
 GCC_VER = $(GCC_VER_$(word 2, $(subst _, ,$@)))
 CONFIG_VER = $(CONFIG_VER_$(word 2, $(subst _, ,$@)))
 
 # Determine actual compiler in use from compiler binary
+
 CXX_VER := $(shell $(CXX) -dumpversion 2> /dev/null | \
                    sed -e "s/\([0-9]*\.[0-9]*\)\.[0-9]*/\1/")
+CXX_VER_MAJOR := $(word 1, $(subst ., ,$(CXX_VER)))
 
 # Determine configuration
 CONFIG=Linux$(BITNESS_IN_NAME)-$(REGIME)-GCC-$(CONFIG_VER)
@@ -83,6 +88,10 @@ LDFLAGS += -L$(PVLIB_HOME)/lib/Linux$(BITNESS_IN_NAME)_GCC-$(GCC_VER) \
            -L$(PVLIB_HOME)/Iris/Linux$(BITNESS_IN_NAME)_GCC-$(GCC_VER) \
            -L$(SYSTEMC_HOME)/lib/Linux$(BITNESS_IN_NAME)_GCC-$(GCC_VER)
 
+ifeq ($(CXX_VER_MAJOR),7)
+LDFLAGS += -latomic
+endif
+
 # Determine additional simgen flags
 ifneq ($(origin CXX),default)
     override SIMGENFLAGS += --gcc-path $(CXX)
@@ -96,22 +105,20 @@ DBG = dbg_gcc49_64
 REL = rel_gcc49_64
 endif
 
-ifeq ($(CXX_VER),5.2)
-DBG = dbg_gcc52_64
-REL = rel_gcc52_64
+ifeq ($(CXX_VER),5.3)
+DBG = dbg_gcc53_64
+REL = rel_gcc53_64
 endif
-
-ifeq ($(CXX_VER),5.4)
-DBG = dbg_gcc54_64
-REL = rel_gcc54_64
-endif
-
 
 ifeq ($(CXX_VER),6.4)
 DBG = dbg_gcc64_64
 REL = rel_gcc64_64
 endif
 
+ifeq ($(CXX_VER_MAJOR),7)
+DBG = dbg_gcc73_64
+REL = rel_gcc73_64
+endif
 
 # Default rules
 

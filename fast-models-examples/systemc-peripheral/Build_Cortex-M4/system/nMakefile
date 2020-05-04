@@ -1,0 +1,101 @@
+#
+# nMakefile - platform NMAKE makefile.
+#
+# Copyright 2012 ARM Limited.
+# All rights reserved.
+#
+
+!IFNDEF PROJECT_PATH
+PROJECT_PATH=.
+!ENDIF
+
+# Common rules
+!include "nMakefile.common"
+
+# Specify objects and target(s) to build
+SRCS = "$(PROJECT_PATH)\..\..\SystemC_Source\*.cpp"
+TARGET = systemc-peripheral-example.exe
+
+# Determine others...
+LIBS_rel_vs14_64=scx-cpu_core-$(CONFIG_rel_vs14_64).lib $(LIBS_common) \
+	cpu_core-$(CONFIG_rel_vs14_64).lib
+LIBS_dbg_vs14_64=scx-cpu_core-$(CONFIG_dbg_vs14_64).lib $(LIBS_common) \
+	cpu_core-$(CONFIG_dbg_vs14_64).lib
+LIBS_rel_vs141_64=scx-cpu_core-$(CONFIG_rel_vs141_64).lib $(LIBS_common) \
+	cpu_core-$(CONFIG_rel_vs141_64).lib
+LIBS_dbg_vs141_64=scx-cpu_core-$(CONFIG_dbg_vs141_64).lib $(LIBS_common) \
+	cpu_core-$(CONFIG_dbg_vs141_64).lib
+
+
+# Determine commands
+SIMGEN_CMD = "$(MAXCORE_HOME)\bin\simgen.exe" \
+			 -p "$(PROJECT_PATH)\systemc-peripheral-example.sgproj" \
+			 --num-build-cpus $(J) $(SIMGENFLAGS)
+CXX_CMD = $(CXX) /Fe$(TARGET) $(SRCS)
+MT_CMD = mt -nologo -manifest $(TARGET).manifest -outputresource:$(TARGET);1
+
+# Local rules
+
+.SUFFIXES:
+
+rel_vs14_64:
+	$(SIMGEN_CMD) --configuration $(CONFIG_rel_vs14_64) -b
+	copy .\$(CONFIG_rel_vs14_64)\cpu_core-$(CONFIG_rel_vs14_64).dll .
+	$(CXX_CMD) $(CXXFLAGS_rel_vs14_64) $(LDFLAGS_rel_vs14_64) $(LIBS_rel_vs14_64)
+
+dbg_vs14_64:
+	$(SIMGEN_CMD) --configuration $(CONFIG_dbg_vs14_64) -b
+	copy .\$(CONFIG_dbg_vs14_64)\cpu_core-$(CONFIG_dbg_vs14_64).dll .
+	$(CXX_CMD) $(CXXFLAGS_dbg_vs14_64) $(LDFLAGS_dbg_vs14_64) $(LIBS_dbg_vs14_64)
+
+rel_vs141_64:
+	$(SIMGEN_CMD) --configuration $(CONFIG_rel_vs141_64) -b
+	copy .\$(CONFIG_rel_vs141_64)\cpu_core-$(CONFIG_rel_vs141_64).dll .
+	$(CXX_CMD) $(CXXFLAGS_rel_vs141_64) $(LDFLAGS_rel_vs141_64) $(LIBS_rel_vs141_64)
+
+dbg_vs141_64:
+	$(SIMGEN_CMD) --configuration $(CONFIG_dbg_vs141_64) -b
+	copy .\$(CONFIG_dbg_vs141_64)\cpu_core-$(CONFIG_dbg_vs141_64).dll .
+	$(CXX_CMD) $(CXXFLAGS_dbg_vs141_64) $(LDFLAGS_dbg_vs141_64) $(LIBS_dbg_vs14_64)
+
+
+rel_vs14_64_clean:
+	-$(SIMGEN_CMD) --configuration $(CONFIG_rel_vs14_64) --clean
+	-del /f $(TARGET) 2>nul
+	-del /f $(TARGET).manifest 2>nul
+	-rmdir /s /q $(CONFIG_rel_vs14_64) 2>nul
+	-del /f *.dll 2>nul
+	-del /f *.exp 2>nul
+	-del /f *.lib 2>nul
+
+
+rel_vs141_64_clean:
+	-$(SIMGEN_CMD) --configuration $(CONFIG_rel_vs141_64) --clean
+	-del /f $(TARGET) 2>nul
+	-del /f $(TARGET).manifest 2>nul
+	-rmdir /s /q $(CONFIG_rel_vs141_64) 2>nul
+	-del /f *.dll 2>nul
+	-del /f *.exp 2>nul
+	-del /f *.lib 2>nul
+
+
+rel_vs14_64_clean:
+	-$(SIMGEN_CMD) --configuration $(CONFIG_rel_vs141_64) --clean
+	-del /f $(TARGET) 2>nul
+	-del /f $(TARGET).manifest 2>nul
+	-rmdir /s /q $(CONFIG_rel_vs14_64) 2>nul
+	-del /f *.dll 2>nul
+	-del /f *.exp 2>nul
+	-del /f *.lib 2>nul
+
+dbg_vs141_64_clean:
+	-$(SIMGEN_CMD) --configuration $(CONFIG_dbg_vs141_64) --clean
+	-del /f $(TARGET) 2>nul
+	-del /f $(TARGET).manifest 2>nul
+	-rmdir /s /q $(CONFIG_rel_vs141_64) 2>nul
+	-del /f *.dll 2>nul
+	-del /f *.exp 2>nul
+	-del /f *.lib 2>nul
+
+
+

@@ -1,12 +1,12 @@
 /*
- * main.cpp - Example Cortex-A53 system with SystemC UART
+ * main.cpp - Example exported Fast Model system with SystemC UART
  *
- * Copyright 2011-2019 ARM Limited.
+ * Copyright 2011-2020 ARM Limited.
  * All rights reserved.
  */
 
 /* Includes */
-#include <scx_evs_a53x1.h>
+#include <scx_evs_cpu_core.h>
 #include "pl011_uart.h"
 #include "tterm.h"
 #include "fterm.h"
@@ -20,12 +20,12 @@ int sc_main(int argc , char * argv[]) {
     /*
      * Initialize simulation 
      */
-    scx::scx_initialize("a53x1");
+    scx::scx_initialize("cpu_core");
 
     /*
      * Components
      */
-    scx_evs_a53x1  a53x1("a53x1");
+    scx_evs_cpu_core  cpu_core("cpu_core");
     amba_pv::amba_pv_to_tlm_bridge<64> amba2tlm("amba2tlm");
     pl011_uart  uart("uart");
     amba_pv::signal_from_sc_bridge<bool> sc2sig("sc2sig");
@@ -56,13 +56,13 @@ int sc_main(int argc , char * argv[]) {
     /*
      * Bindings
      */
-    a53x1.amba_pv_m(amba2tlm.amba_pv_s);
+    cpu_core.amba_pv_m(amba2tlm.amba_pv_s);
     amba2tlm.tlm_m.bind(uart.bus);
     uart.tx(term.rx);
     term.tx(uart.rx);
     uart.intr(interrupt);
     sc2sig.signal_in(interrupt);
-    sc2sig.signal_m(a53x1.uart_intr);
+    sc2sig.signal_m(cpu_core.uart_intr);
     
     /*
      * Start of simulation

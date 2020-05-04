@@ -2,16 +2,34 @@
 
 [Arm Fast Models](https://developer.arm.com/products/system-design/fast-models) allow a subsystem from the Fast Model canvas (sgcanvas) to be exported as a SystemC component. The exported component can be connected to other SystemC models. This is a common flow for users interested in extending systems by writing peripheral models.
 
+Multiple Fast Model subsystems can be exported and used as components in a SystemC simulation.  The exported Fast Model could be a single model or a subsystem made up of many models.  
+
 This example demonstrates how to export a CPU and memory from the Fast Models canvas and instantiate it in SystemC along with an example SystemC peripheral model. The principles shown in this example can be extended to create any subsystem in SystemC based on Fast Models.
 
-The design is a derivative of the Cortex-A example from the [Fast Models quick start](https://github.com/ARM-software/Tool-Solutions/tree/master/hello-world_fast-models). It may be useful to review those examples as an introduction. The example peripheral provided is a SystemC PL011 UART.
+The design is a derivative of the examples from the [Fast Models quick start](https://github.com/ARM-software/Tool-Solutions/tree/master/hello-world_fast-models). The platform supports Windows (10) and Linux (RHEL or Ubuntu) host platforms. Two variants supplied in this package:
+
+- An example based on Cortex-A53x1
+- An example based on Cortex-M4
+
+It may be useful to review those examples as an introduction. The example peripheral provided is a SystemC PL011 UART.
+
+The structure of the example folder is as follows:
+
+- Build_Cortex-A53x1 - the Cortex-A53x1 example
+  - software - example software to run on the Fast Model platform 
+  - system - the Fast Model platform files, including makefiles and scripts to build and clean the platform
+  - run commands for Linux and Windows
+- Build_Cortex-M4 - as above, but for Cortex-M4
+- SystemC_Source - common SystemC source files for the platform
 
 Start System Canvas:
+
+Change your working directory to the system folder in the example that you want to build and run.
 
 - For Linux: run sgcanvas from the terminal
 - For Windows: open System Canvas from the Fast Models section of the Start menu
 
-Open the example project by clicking File then Load Project and open system/systemc-peripheral-example.sgproj
+Open the example project by clicking File then Load Project and open system/systemc-peripheral-example.sgproj 
 
 ## Fast Model subsystem design
 
@@ -25,7 +43,7 @@ There are components and ports in the design which represent the connections tha
 
 There is also an interrupt input which can come from SystemC and connect to the Cortex-A53 interrupt input.
 
-The build process which compiles the SystemC main and peripheral also does the creation of the SystemC model of the components on the canvas so there is no need to use the Build button to compile the design from sgcanvas.
+The build process which compiles the SystemC main and peripheral also does the creation of the SystemC model of the components on the canvas so there is no requiremnt to use the Build button to compile the design from sgcanvas.
 
 ## SystemC design
 
@@ -34,7 +52,7 @@ The SystemC design (sc\_main) and an example SystemC peripheral are in the Syste
 The main.cpp contains sc\_main(), the main function for the simulation. A few SystemC models make up the system. The first is the contents of the exported SystemC model. The others are regular SystemC TLM-2.0 models.
 
 ```c++
-#include <scx_evs_a53x1.h>
+#include <scx_evs_cpu_core.h>
 #include "pl011_uart.h"
 #include "tterm.h"
 #include "fterm.h"
@@ -49,7 +67,7 @@ Instantiated components are below. The first one is the model of the canvas.
 /*
  * Components
  */
-scx_evs_a53x1  a53x1("a53x1");
+scx_evs_core  cpu_core("cpu_core");
 amba_pv::amba_pv_to_tlm_bridge<64> amba2tlm("amba2tlm");
 pl011_uart  uart("uart");
 fterm       fterm("term", true);
@@ -63,21 +81,25 @@ The ports are connected as shown here:
 /*
  * Bindings
  */
-a53x1.amba_pv_m(amba2tlm.amba_pv_s);
-amba2tlm.tlm_m.bind(uart.bus);
-uart.tx(term.rx);
-term.tx(uart.rx);
-uart.intr(interrupt);
-sc2sig.signal_in(interrupt);
-sc2sig.signal_m(a53x1.uart_intr);
+    cpu_core.amba_pv_m(amba2tlm.amba_pv_s);
+    amba2tlm.tlm_m.bind(uart.bus);
+    uart.tx(term.rx);
+    term.tx(uart.rx);
+    uart.intr(interrupt);
+    sc2sig.signal_in(interrupt);
+    sc2sig.signal_m(cpu_core.uart_intr);
 ```
 
 ## Compilation
 
 - For Linux: compile the design using the provided build\_linux.sh script. It invokes a Makefile which includes Makefile.common. The generated executable is systemc-peripheral-example.x
-- For Windows: compile the deign using the provided build\_windows.bat. It invokes the nMakefile and Visual Studio is used as the compiler. The generated executable is systemc-peripheral-example.exe The command file should be run in the VS2015 x64 Native Tools Command Prompt to ensure the proper setup of the Visual Studio compiler.
+- For Windows: compile the deign using the provided build\_windows.cmd. It invokes the nMakefile and Visual Studio is used as the compiler. The generated executable is systemc-peripheral-example.exe The command file should be run in the VS2017 x64 Native Tools Command Prompt to ensure the proper setup of the Visual Studio compiler.
 
 For Linux, make sure to check (and change if needed) the build\_linux.sh file to set the proper target for your gcc version.
+
+## Cleaning
+
+For convenience clean_linux.sh and clean_windows.cmd scripts are provided to clean up previous builds.
 
 ## Running simulation
 
@@ -124,5 +146,5 @@ Be careful using the tterm model with the write to sim\_exit as the terminal wil
 
 ## Conclusion
 
-This example shows how a Fast Model system can be extended using SystemC modeling. It is suitable for software development of all types and good for users who want to add their own SystemC TLM-2.0 models to existing Arm IP models such as the Cortex-A53. Any third-party IP models which are available can be added in the same way. The simulation executable can be provided to software engineers for easy to use software development.
+This example shows how a Fast Model system can be extended using SystemC modeling. It is suitable for software development of all types and good for users who want to add their own SystemC TLM-2.0 models to existing Arm IP models such as the Cortex-A53 or Cortex-M4. Any third-party IP models which are available can be added in the same way. The simulation executable can be provided to software engineers for easy to use software development.
  
