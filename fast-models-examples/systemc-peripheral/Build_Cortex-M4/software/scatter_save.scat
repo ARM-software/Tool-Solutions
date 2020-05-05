@@ -1,0 +1,33 @@
+;*******************************************************
+;
+; Copyright (c) 2018 Arm Limited. All rights reserved.
+;
+;*******************************************************
+
+; Scatter-file for Cortex-Av8 bare-metal minimal example
+
+LOAD_REGION 0x0
+{
+    CODE +0 
+    {
+        startup.o (BOOT, +FIRST)
+        * (+RO)
+    }
+  
+    DATA +0 		
+    {
+        * (+RW,+ZI)
+    }
+    
+    ARM_LIB_STACKHEAP 0x10000 EMPTY 0x2000 
+    {} 
+    
+    TT0_L1 0x01000000 EMPTY 0x2000
+    {}
+    
+    TT0_L2 0x01002000 
+    {
+        ttb.o (+TEXT,+DATA,+ZI)
+    }   
+       
+}

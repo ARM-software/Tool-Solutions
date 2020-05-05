@@ -1,0 +1,138 @@
+#
+# Makefile.common - Common Makefile rules included in examples Makefiles.
+#
+# Copyright 2012-2016 ARM Limited.
+# All rights reserved.
+#
+
+# Environment checks
+ifeq ($(MAXCORE_HOME),)
+    $(error MAXCORE_HOME: undefined variable)
+endif
+ifeq ($(PVLIB_HOME),)
+    $(error PVLIB_HOME: undefined variable)
+endif
+ifeq ($(SYSTEMC_HOME),)
+    $(error SYSTEMC_HOME: undefined variable)
+endif
+
+# Globals
+OS = $(shell uname)
+ifeq ($(OS),Linux)
+    ARCH = linux
+else
+    $(error $OS: unknown architecture)
+endif
+
+# number of cpus to build
+J = $(shell grep -c processor /proc/cpuinfo)
+
+# Determine architecture from target's suffix
+%_64: BITNESS = 64
+%_64_clean: BITNESS = 64
+
+BITNESS_IN_NAME_64 = 64
+BITNESS_IN_NAME = $(BITNESS_IN_NAME_$(BITNESS))
+
+# Determine regime from target's prefix
+REGIME_dbg = Debug
+REGIME_rel = Release
+REGIME = $(REGIME_$(word 1, $(subst _, ,$@)))
+
+# Determine compiler flags from target's prefix
+CXXFLAGS_dbg = -ggdb3 -DSIMGEN_DEBUG
+CXXFLAGS_rel = -O3 -DNDEBUG
+%_64: CXXFLAGS_arch = -march=core2
+CXXFLAGS += $(CXXFLAGS_$(word 1, $(subst _, ,$@))) $(CXXFLAGS_arch)
+
+# Determine C++11 support from target's prefix
+CXXFLAGS_gcc49 = -std=c++11
+CXXFLAGS_gcc53 = -std=c++11
+CXXFLAGS_gcc64 = -std=c++11
+CXXFLAGS_gcc73 = -std=c++11
+CXXFLAGS += $(CXXFLAGS_$(word 2, $(subst _, ,$@)))
+
+# Determine binares and config to use from make target
+GCC_VER_gcc49       = 4.9
+CONFIG_VER_gcc49    = 4.9
+GCC_VER_gcc53       = 5.3
+CONFIG_VER_gcc53    = 5.3
+GCC_VER_gcc64       = 6.4
+CONFIG_VER_gcc64    = 6.4
+GCC_VER_gcc73       = 7.3
+CONFIG_VER_gcc73    = 7.3
+
+
+GCC_VER = $(GCC_VER_$(word 2, $(subst _, ,$@)))
+CONFIG_VER = $(CONFIG_VER_$(word 2, $(subst _, ,$@)))
+
+# Determine actual compiler in use from compiler binary
+
+CXX_VER := $(shell $(CXX) -dumpversion 2> /dev/null | \
+                   sed -e "s/\([0-9]*\.[0-9]*\)\.[0-9]*/\1/")
+CXX_VER_MAJOR := $(word 1, $(subst ., ,$(CXX_VER)))
+
+# Determine configuration
+CONFIG=Linux$(BITNESS_IN_NAME)-$(REGIME)-GCC-$(CONFIG_VER)
+
+# Determine compiler flags
+CXXFLAGS += -m$(BITNESS) -pthread -DSC_INCLUDE_DYNAMIC_PROCESSES -Wall \
+			-I$(PVLIB_HOME)/include/fmruntime \
+            -I$(PVLIB_HOME)/include/fmruntime/eslapi \
+			-I$(PVLIB_HOME)/Iris/include \
+            -I$(SYSTEMC_HOME)/include \
+			-I$(MAXCORE_HOME)/AMBA-PV/include \
+			-I$(PVLIB_HOME)/examples/SystemCExport/Common
+# Determine linker flags
+LDFLAGS += -L$(PVLIB_HOME)/lib/Linux$(BITNESS_IN_NAME)_GCC-$(GCC_VER) \
+           -L$(PVLIB_HOME)/Iris/Linux$(BITNESS_IN_NAME)_GCC-$(GCC_VER) \
+           -L$(SYSTEMC_HOME)/lib/Linux$(BITNESS_IN_NAME)_GCC-$(GCC_VER)
+
+ifeq ($(CXX_VER_MAJOR),7)
+LDFLAGS += -latomic
+endif
+
+# Determine additional simgen flags
+ifneq ($(origin CXX),default)
+    override SIMGENFLAGS += --gcc-path $(CXX)
+endif
+
+# Default targets done on the real compiler not the version extracted from the
+# target.
+
+ifeq ($(CXX_VER),4.9)
+DBG = dbg_gcc49_64
+REL = rel_gcc49_64
+endif
+
+ifeq ($(CXX_VER),5.3)
+DBG = dbg_gcc53_64
+REL = rel_gcc53_64
+endif
+
+ifeq ($(CXX_VER),6.4)
+DBG = dbg_gcc64_64
+REL = rel_gcc64_64
+endif
+
+ifeq ($(CXX_VER_MAJOR),7)
+DBG = dbg_gcc73_64
+REL = rel_gcc73_64
+endif
+
+# Default rules
+
+.PHONY: all dbg rel clean
+
+all: rel
+
+dbg:
+	$(MAKE) $(MAKEFLAGS) $(DBG)
+
+rel:
+	$(MAKE) $(MAKEFLAGS) $(REL)
+
+clean:
+	$(MAKE) $(MAKEFLAGS) $(DBG)_clean
+	$(MAKE) $(MAKEFLAGS) $(REL)_clean
+

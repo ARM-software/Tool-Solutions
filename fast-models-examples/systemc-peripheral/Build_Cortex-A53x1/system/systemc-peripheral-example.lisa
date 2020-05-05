@@ -1,0 +1,46 @@
+/*
+ * Copyright 2007 ARM Limited. All rights reserved.
+ * Copyright 2008 ARM Limited. All rights reserved.
+ */
+
+component cpu_core
+{
+    composition
+    {
+	ambapvsignal2sgsignal : AMBAPVSignal2SGSignal();
+	pvbus2ambapv : PVBus2AMBAPV();
+	Memory : RAMDevice();
+	armcortexa53x1ct : ARMCortexA53x1CT();
+        Clock100MHz : ClockDivider(mul=100000000);
+        Clock1Hz : MasterClock();
+        BusDecoder : PVBusDecoder()
+    }
+    
+    connection
+    {
+        Clock1Hz.clk_out => Clock100MHz.clk_in;
+	Clock100MHz.clk_out => armcortexa53x1ct.clk_in;
+	armcortexa53x1ct.pvbus_m0 => BusDecoder.pvbus_s;
+	BusDecoder.pvbus_m_range[0x0..0x0fffffff] => Memory.pvbus;
+	BusDecoder.pvbus_m_range[0x1C090000..0x1C090fff] => pvbus2ambapv.pvbus_s;
+	pvbus2ambapv.amba_pv_m => self.amba_pv_m;
+	self.uart_intr => ambapvsignal2sgsignal.amba_pv_signal_s;
+	ambapvsignal2sgsignal.sg_signal_m => armcortexa53x1ct.irq[0];
+    }
+
+    properties
+    {
+        component_type = "System";
+    }
+    master port<AMBAPV> amba_pv_m;
+    slave port<AMBAPVSignal> uart_intr
+    {
+        behavior set_state(int export_id,
+                              const bool & state):void
+        {
+            // TODO: place your code here
+        }
+
+    }
+    
+}

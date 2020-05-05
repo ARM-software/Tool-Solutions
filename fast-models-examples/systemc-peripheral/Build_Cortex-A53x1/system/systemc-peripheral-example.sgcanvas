@@ -1,0 +1,2706 @@
+#//////////////////////////////////////////////////////////////////////////
+#//////////////////////////////////////////////////////////////////////////
+#//
+#//  File:    systemc-peripheral-example.sgcanvas
+#//  Created: Fri May  1 13:11:14 2020
+#//  By: Fast Models  System Canvas 11.10.40  (Apr 18 2020)
+#//
+# *  Do NOT modify this file. It is for internal use by System Canvas only.
+#//
+#//  Copyright (c) 2004-2008 by ARM Limited,  2000-2004 by AXYS Design Automation Inc.,
+#//
+#//  AXYS GmbH, Herzogenrath, Germany
+#//
+#//  ARM Limited Proprietary Information.
+#//  Disclosure to third parties is prohibited without prior consent.
+#//
+#//////////////////////////////////////////////////////////////////////////
+#//////////////////////////////////////////////////////////////////////////
+
+
+editor
+(
+    properties
+    (
+        instance "component"
+        (
+            font_family = "Times New Roman";
+            font_size = 12;
+            font_bold = true;
+            font_italic = false;
+            font_underline = false;
+        )
+        instance "component_port"
+        (
+            font_family = "Arial";
+            font_size = 10;
+            font_bold = false;
+            font_italic = false;
+            font_underline = false;
+        )
+        instance "external_port"
+        (
+            font_family = "Arial";
+            font_size = 10;
+            font_bold = false;
+            font_italic = false;
+            font_underline = false;
+        )
+        instance "grid"
+        (
+            width = 10;
+            height = 10;
+        )
+    )
+    components
+    (
+        instance "BusDecoder"
+        (
+            x = 960;
+            y = 0;
+            width = 241;
+            height = 81;
+            sheight = 41;
+            show_title = true;
+            show_name = true;
+            show_type = false;
+            show_logo = true;
+            ports
+            (
+                define "pvbus_m_range"
+                (
+                x = 0;
+                y = 2;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = false;
+                moved_by_user = false;
+            expanded = false;
+                )
+                define "pvbus_s"
+                (
+                x = 0;
+                y = 2;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = false;
+                moved_by_user = false;
+            expanded = false;
+                )
+            )
+        )
+        instance "Clock100MHz"
+        (
+            x = 540;
+            y = 0;
+            width = 171;
+            height = 61;
+            sheight = 41;
+            show_title = true;
+            show_name = true;
+            show_type = false;
+            show_logo = true;
+            ports
+            (
+                define "clk_in"
+                (
+                x = 0;
+                y = 2;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = false;
+                moved_by_user = false;
+            expanded = false;
+                )
+                define "clk_out"
+                (
+                x = 0;
+                y = 2;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = false;
+                moved_by_user = false;
+            expanded = false;
+                )
+                define "rate"
+                (
+                x = 0;
+                y = 22;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+            expanded = false;
+                )
+            )
+        )
+        instance "Clock1Hz"
+        (
+            x = 340;
+            y = 0;
+            width = 171;
+            height = 61;
+            sheight = 40;
+            show_title = true;
+            show_name = true;
+            show_type = false;
+            show_logo = true;
+            ports
+            (
+                define "clk_out"
+                (
+                x = 0;
+                y = 2;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = false;
+                moved_by_user = false;
+            expanded = false;
+                )
+            )
+        )
+        instance "Memory"
+        (
+            x = 1280;
+            y = 50;
+            width = 171;
+            height = 91;
+            sheight = 40;
+            show_title = true;
+            show_name = true;
+            show_type = false;
+            show_logo = true;
+            ports
+            (
+                define "pvbus"
+                (
+                x = 0;
+                y = 2;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = false;
+                moved_by_user = false;
+            expanded = false;
+                )
+            )
+        )
+        instance "ambapvsignal2sgsignal"
+        (
+            x = 540;
+            y = 100;
+            width = 171;
+            height = 81;
+            sheight = 41;
+            show_title = true;
+            show_name = true;
+            show_type = false;
+            show_logo = true;
+            ports
+            (
+                define "amba_pv_signal_s"
+                (
+                x = 0;
+                y = 2;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = false;
+                moved_by_user = false;
+            expanded = false;
+                )
+                define "sg_signal_m"
+                (
+                x = 0;
+                y = 2;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = false;
+                moved_by_user = false;
+            expanded = false;
+                )
+            )
+        )
+        instance "armcortexa53x1ct"
+        (
+            x = 750;
+            y = 0;
+            width = 171;
+            height = 181;
+            sheight = 41;
+            show_title = true;
+            show_name = true;
+            show_type = false;
+            show_logo = true;
+            ports
+            (
+                define "CNTHPIRQ"
+                (
+                x = 0;
+                y = 2;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+            expanded = true;
+                )
+                define "CNTHPIRQ[0]"
+                (
+                x = 0;
+                y = 2;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "CNTHPIRQ[1]"
+                (
+                x = 0;
+                y = 22;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "CNTHPIRQ[2]"
+                (
+                x = 0;
+                y = 42;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "CNTHPIRQ[3]"
+                (
+                x = 0;
+                y = 62;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "CNTPNSIRQ"
+                (
+                x = 0;
+                y = 82;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+            expanded = true;
+                )
+                define "CNTPNSIRQ[0]"
+                (
+                x = 0;
+                y = 82;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "CNTPNSIRQ[1]"
+                (
+                x = 0;
+                y = 102;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "CNTPNSIRQ[2]"
+                (
+                x = 0;
+                y = 122;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "CNTPNSIRQ[3]"
+                (
+                x = 0;
+                y = 142;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "CNTPSIRQ"
+                (
+                x = 0;
+                y = 162;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+            expanded = true;
+                )
+                define "CNTPSIRQ[0]"
+                (
+                x = 0;
+                y = 162;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "CNTPSIRQ[1]"
+                (
+                x = 0;
+                y = 182;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "CNTPSIRQ[2]"
+                (
+                x = 0;
+                y = 202;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "CNTPSIRQ[3]"
+                (
+                x = 0;
+                y = 222;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "CNTVIRQ"
+                (
+                x = 0;
+                y = 242;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+            expanded = true;
+                )
+                define "CNTVIRQ[0]"
+                (
+                x = 0;
+                y = 242;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "CNTVIRQ[1]"
+                (
+                x = 0;
+                y = 262;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "CNTVIRQ[2]"
+                (
+                x = 0;
+                y = 282;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "CNTVIRQ[3]"
+                (
+                x = 0;
+                y = 302;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "aa64naa32"
+                (
+                x = 0;
+                y = 2;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+            expanded = true;
+                )
+                define "aa64naa32[0]"
+                (
+                x = 0;
+                y = 2;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "aa64naa32[1]"
+                (
+                x = 0;
+                y = 22;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "aa64naa32[2]"
+                (
+                x = 0;
+                y = 42;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "aa64naa32[3]"
+                (
+                x = 0;
+                y = 62;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "acp_s"
+                (
+                x = 0;
+                y = 82;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+            expanded = false;
+                )
+                define "broadcastcachemaint"
+                (
+                x = 0;
+                y = 102;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+            expanded = false;
+                )
+                define "broadcastinner"
+                (
+                x = 0;
+                y = 122;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+            expanded = false;
+                )
+                define "broadcastouter"
+                (
+                x = 0;
+                y = 142;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+            expanded = false;
+                )
+                define "cfgend"
+                (
+                x = 0;
+                y = 162;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+            expanded = true;
+                )
+                define "cfgend[0]"
+                (
+                x = 0;
+                y = 162;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "cfgend[1]"
+                (
+                x = 0;
+                y = 182;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "cfgend[2]"
+                (
+                x = 0;
+                y = 202;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "cfgend[3]"
+                (
+                x = 0;
+                y = 222;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "cfgsdisable"
+                (
+                x = 0;
+                y = 242;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+            expanded = false;
+                )
+                define "cfgte"
+                (
+                x = 0;
+                y = 262;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+            expanded = true;
+                )
+                define "cfgte[0]"
+                (
+                x = 0;
+                y = 262;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "cfgte[1]"
+                (
+                x = 0;
+                y = 282;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "cfgte[2]"
+                (
+                x = 0;
+                y = 302;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "cfgte[3]"
+                (
+                x = 0;
+                y = 322;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "clk_in"
+                (
+                x = 0;
+                y = 2;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = false;
+                moved_by_user = true;
+            expanded = false;
+                )
+                define "clrexmonack"
+                (
+                x = 0;
+                y = 322;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+            expanded = false;
+                )
+                define "clrexmonreq"
+                (
+                x = 0;
+                y = 362;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+            expanded = false;
+                )
+                define "clusterid"
+                (
+                x = 0;
+                y = 382;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+            expanded = false;
+                )
+                define "cntvalueb"
+                (
+                x = 0;
+                y = 402;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+            expanded = false;
+                )
+                define "commirq"
+                (
+                x = 0;
+                y = 342;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+            expanded = true;
+                )
+                define "commirq[0]"
+                (
+                x = 0;
+                y = 342;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "commirq[1]"
+                (
+                x = 0;
+                y = 362;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "commirq[2]"
+                (
+                x = 0;
+                y = 382;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "commirq[3]"
+                (
+                x = 0;
+                y = 402;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "commrx"
+                (
+                x = 0;
+                y = 422;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+            expanded = true;
+                )
+                define "commrx[0]"
+                (
+                x = 0;
+                y = 422;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "commrx[1]"
+                (
+                x = 0;
+                y = 442;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "commrx[2]"
+                (
+                x = 0;
+                y = 462;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "commrx[3]"
+                (
+                x = 0;
+                y = 482;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "commtx"
+                (
+                x = 0;
+                y = 502;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+            expanded = true;
+                )
+                define "commtx[0]"
+                (
+                x = 0;
+                y = 502;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "commtx[1]"
+                (
+                x = 0;
+                y = 522;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "commtx[2]"
+                (
+                x = 0;
+                y = 542;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "commtx[3]"
+                (
+                x = 0;
+                y = 562;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "cp15sdisable"
+                (
+                x = 0;
+                y = 422;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+            expanded = true;
+                )
+                define "cp15sdisable[0]"
+                (
+                x = 0;
+                y = 422;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "cp15sdisable[1]"
+                (
+                x = 0;
+                y = 442;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "cp15sdisable[2]"
+                (
+                x = 0;
+                y = 462;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "cp15sdisable[3]"
+                (
+                x = 0;
+                y = 482;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "cpuporeset"
+                (
+                x = 0;
+                y = 502;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+            expanded = true;
+                )
+                define "cpuporeset[0]"
+                (
+                x = 0;
+                y = 502;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "cpuporeset[1]"
+                (
+                x = 0;
+                y = 522;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "cpuporeset[2]"
+                (
+                x = 0;
+                y = 542;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "cpuporeset[3]"
+                (
+                x = 0;
+                y = 562;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "cryptodisable"
+                (
+                x = 0;
+                y = 582;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+            expanded = true;
+                )
+                define "cryptodisable[0]"
+                (
+                x = 0;
+                y = 582;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "cryptodisable[1]"
+                (
+                x = 0;
+                y = 602;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "cryptodisable[2]"
+                (
+                x = 0;
+                y = 622;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "cryptodisable[3]"
+                (
+                x = 0;
+                y = 642;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "cti"
+                (
+                x = 0;
+                y = 582;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+            expanded = true;
+                )
+                define "cti[0]"
+                (
+                x = 0;
+                y = 582;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "cti[1]"
+                (
+                x = 0;
+                y = 602;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "cti[2]"
+                (
+                x = 0;
+                y = 622;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "cti[3]"
+                (
+                x = 0;
+                y = 642;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "ctidbgirq"
+                (
+                x = 0;
+                y = 662;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+            expanded = true;
+                )
+                define "ctidbgirq[0]"
+                (
+                x = 0;
+                y = 662;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "ctidbgirq[1]"
+                (
+                x = 0;
+                y = 682;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "ctidbgirq[2]"
+                (
+                x = 0;
+                y = 702;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "ctidbgirq[3]"
+                (
+                x = 0;
+                y = 722;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "dbgack"
+                (
+                x = 0;
+                y = 742;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+            expanded = true;
+                )
+                define "dbgack[0]"
+                (
+                x = 0;
+                y = 742;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "dbgack[1]"
+                (
+                x = 0;
+                y = 762;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "dbgack[2]"
+                (
+                x = 0;
+                y = 782;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "dbgack[3]"
+                (
+                x = 0;
+                y = 802;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "dbgen"
+                (
+                x = 0;
+                y = 662;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+            expanded = true;
+                )
+                define "dbgen[0]"
+                (
+                x = 0;
+                y = 662;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "dbgen[1]"
+                (
+                x = 0;
+                y = 682;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "dbgen[2]"
+                (
+                x = 0;
+                y = 702;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "dbgen[3]"
+                (
+                x = 0;
+                y = 722;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "dbgl1rstdisable"
+                (
+                x = 0;
+                y = 742;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+            expanded = false;
+                )
+                define "dbgnopwrdwn"
+                (
+                x = 0;
+                y = 822;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+            expanded = true;
+                )
+                define "dbgnopwrdwn[0]"
+                (
+                x = 0;
+                y = 822;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "dbgnopwrdwn[1]"
+                (
+                x = 0;
+                y = 842;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "dbgnopwrdwn[2]"
+                (
+                x = 0;
+                y = 862;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "dbgnopwrdwn[3]"
+                (
+                x = 0;
+                y = 882;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "dbgpwrupreq"
+                (
+                x = 0;
+                y = 902;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+            expanded = true;
+                )
+                define "dbgpwrupreq[0]"
+                (
+                x = 0;
+                y = 902;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "dbgpwrupreq[1]"
+                (
+                x = 0;
+                y = 922;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "dbgpwrupreq[2]"
+                (
+                x = 0;
+                y = 942;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "dbgpwrupreq[3]"
+                (
+                x = 0;
+                y = 962;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "dev_debug_s"
+                (
+                x = 0;
+                y = 742;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+            expanded = false;
+                )
+                define "edbgrq"
+                (
+                x = 0;
+                y = 762;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+            expanded = true;
+                )
+                define "edbgrq[0]"
+                (
+                x = 0;
+                y = 762;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "edbgrq[1]"
+                (
+                x = 0;
+                y = 782;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "edbgrq[2]"
+                (
+                x = 0;
+                y = 802;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "edbgrq[3]"
+                (
+                x = 0;
+                y = 822;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "event"
+                (
+                x = 0;
+                y = 982;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+            expanded = false;
+                )
+                define "fiq"
+                (
+                x = 0;
+                y = 842;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+            expanded = true;
+                )
+                define "fiq[0]"
+                (
+                x = 0;
+                y = 842;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "fiq[1]"
+                (
+                x = 0;
+                y = 862;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "fiq[2]"
+                (
+                x = 0;
+                y = 882;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "fiq[3]"
+                (
+                x = 0;
+                y = 902;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "gicv3_redistributor_s"
+                (
+                x = 0;
+                y = 922;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+            expanded = true;
+                )
+                define "gicv3_redistributor_s[0]"
+                (
+                x = 0;
+                y = 922;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "gicv3_redistributor_s[1]"
+                (
+                x = 0;
+                y = 942;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "gicv3_redistributor_s[2]"
+                (
+                x = 0;
+                y = 962;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "gicv3_redistributor_s[3]"
+                (
+                x = 0;
+                y = 982;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "irq"
+                (
+                x = 0;
+                y = 1002;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = false;
+                moved_by_user = false;
+            expanded = true;
+                )
+                define "irq[0]"
+                (
+                x = 10;
+                y = 102;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = false;
+                moved_by_user = true;
+                )
+                define "irq[1]"
+                (
+                x = 0;
+                y = 1022;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "irq[2]"
+                (
+                x = 0;
+                y = 1042;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "irq[3]"
+                (
+                x = 0;
+                y = 1062;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "l2flushdone"
+                (
+                x = 0;
+                y = 1002;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+            expanded = false;
+                )
+                define "l2flushreq"
+                (
+                x = 0;
+                y = 1082;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+            expanded = false;
+                )
+                define "l2reset"
+                (
+                x = 0;
+                y = 1102;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+            expanded = false;
+                )
+                define "l2rstdisable"
+                (
+                x = 0;
+                y = 1142;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+            expanded = false;
+                )
+                define "memorymapped_debug_s"
+                (
+                x = 0;
+                y = 1122;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+            expanded = false;
+                )
+                define "niden"
+                (
+                x = 0;
+                y = 1142;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+            expanded = true;
+                )
+                define "niden[0]"
+                (
+                x = 0;
+                y = 1142;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "niden[1]"
+                (
+                x = 0;
+                y = 1162;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "niden[2]"
+                (
+                x = 0;
+                y = 1182;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "niden[3]"
+                (
+                x = 0;
+                y = 1202;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "periphbase"
+                (
+                x = 0;
+                y = 1222;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+            expanded = false;
+                )
+                define "pmuirq"
+                (
+                x = 0;
+                y = 1022;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+            expanded = true;
+                )
+                define "pmuirq[0]"
+                (
+                x = 0;
+                y = 1022;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "pmuirq[1]"
+                (
+                x = 0;
+                y = 1042;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "pmuirq[2]"
+                (
+                x = 0;
+                y = 1062;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "pmuirq[3]"
+                (
+                x = 0;
+                y = 1082;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "presetdbg"
+                (
+                x = 0;
+                y = 1242;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+            expanded = false;
+                )
+                define "pvbus_m0"
+                (
+                x = 170;
+                y = 2;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = false;
+                moved_by_user = true;
+            expanded = false;
+                )
+                define "rei"
+                (
+                x = 0;
+                y = 1262;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+            expanded = true;
+                )
+                define "rei[0]"
+                (
+                x = 0;
+                y = 1262;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "rei[1]"
+                (
+                x = 0;
+                y = 1282;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "rei[2]"
+                (
+                x = 0;
+                y = 1302;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "rei[3]"
+                (
+                x = 0;
+                y = 1322;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "reset"
+                (
+                x = 0;
+                y = 1342;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+            expanded = true;
+                )
+                define "reset[0]"
+                (
+                x = 0;
+                y = 1342;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "reset[1]"
+                (
+                x = 0;
+                y = 1362;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "reset[2]"
+                (
+                x = 0;
+                y = 1382;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "reset[3]"
+                (
+                x = 0;
+                y = 1402;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "romaddr"
+                (
+                x = 0;
+                y = 1422;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+            expanded = false;
+                )
+                define "romaddrv"
+                (
+                x = 0;
+                y = 1442;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+            expanded = false;
+                )
+                define "rvbaraddr"
+                (
+                x = 0;
+                y = 1462;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+            expanded = true;
+                )
+                define "rvbaraddr[0]"
+                (
+                x = 0;
+                y = 1462;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "rvbaraddr[1]"
+                (
+                x = 0;
+                y = 1482;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "rvbaraddr[2]"
+                (
+                x = 0;
+                y = 1502;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "rvbaraddr[3]"
+                (
+                x = 0;
+                y = 1522;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "sei"
+                (
+                x = 0;
+                y = 1542;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+            expanded = true;
+                )
+                define "sei[0]"
+                (
+                x = 0;
+                y = 1542;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "sei[1]"
+                (
+                x = 0;
+                y = 1562;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "sei[2]"
+                (
+                x = 0;
+                y = 1582;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "sei[3]"
+                (
+                x = 0;
+                y = 1602;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "smpen"
+                (
+                x = 0;
+                y = 1122;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+            expanded = true;
+                )
+                define "smpen[0]"
+                (
+                x = 0;
+                y = 1122;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "smpen[1]"
+                (
+                x = 0;
+                y = 1142;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "smpen[2]"
+                (
+                x = 0;
+                y = 1162;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "smpen[3]"
+                (
+                x = 0;
+                y = 1182;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "spiden"
+                (
+                x = 0;
+                y = 1622;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+            expanded = true;
+                )
+                define "spiden[0]"
+                (
+                x = 0;
+                y = 1622;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "spiden[1]"
+                (
+                x = 0;
+                y = 1642;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "spiden[2]"
+                (
+                x = 0;
+                y = 1662;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "spiden[3]"
+                (
+                x = 0;
+                y = 1682;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "spniden"
+                (
+                x = 0;
+                y = 1702;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+            expanded = true;
+                )
+                define "spniden[0]"
+                (
+                x = 0;
+                y = 1702;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "spniden[1]"
+                (
+                x = 0;
+                y = 1722;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "spniden[2]"
+                (
+                x = 0;
+                y = 1742;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "spniden[3]"
+                (
+                x = 0;
+                y = 1762;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "standbywfe"
+                (
+                x = 0;
+                y = 1202;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+            expanded = true;
+                )
+                define "standbywfe[0]"
+                (
+                x = 0;
+                y = 1202;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "standbywfe[1]"
+                (
+                x = 0;
+                y = 1222;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "standbywfe[2]"
+                (
+                x = 0;
+                y = 1242;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "standbywfe[3]"
+                (
+                x = 0;
+                y = 1262;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "standbywfi"
+                (
+                x = 0;
+                y = 1282;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+            expanded = true;
+                )
+                define "standbywfi[0]"
+                (
+                x = 0;
+                y = 1282;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "standbywfi[1]"
+                (
+                x = 0;
+                y = 1302;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "standbywfi[2]"
+                (
+                x = 0;
+                y = 1322;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "standbywfi[3]"
+                (
+                x = 0;
+                y = 1342;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "standbywfil2"
+                (
+                x = 0;
+                y = 1362;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+            expanded = false;
+                )
+                define "ticks"
+                (
+                x = 0;
+                y = 1382;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+            expanded = true;
+                )
+                define "ticks[0]"
+                (
+                x = 0;
+                y = 1382;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "ticks[1]"
+                (
+                x = 0;
+                y = 1402;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "ticks[2]"
+                (
+                x = 0;
+                y = 1422;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "ticks[3]"
+                (
+                x = 0;
+                y = 1442;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "vcpumntirq"
+                (
+                x = 0;
+                y = 1462;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+            expanded = true;
+                )
+                define "vcpumntirq[0]"
+                (
+                x = 0;
+                y = 1462;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "vcpumntirq[1]"
+                (
+                x = 0;
+                y = 1482;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "vcpumntirq[2]"
+                (
+                x = 0;
+                y = 1502;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "vcpumntirq[3]"
+                (
+                x = 0;
+                y = 1522;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "vfiq"
+                (
+                x = 0;
+                y = 1782;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+            expanded = true;
+                )
+                define "vfiq[0]"
+                (
+                x = 0;
+                y = 1782;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "vfiq[1]"
+                (
+                x = 0;
+                y = 1802;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "vfiq[2]"
+                (
+                x = 0;
+                y = 1822;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "vfiq[3]"
+                (
+                x = 0;
+                y = 1842;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "vinithi"
+                (
+                x = 0;
+                y = 1862;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+            expanded = true;
+                )
+                define "vinithi[0]"
+                (
+                x = 0;
+                y = 1862;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "vinithi[1]"
+                (
+                x = 0;
+                y = 1882;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "vinithi[2]"
+                (
+                x = 0;
+                y = 1902;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "vinithi[3]"
+                (
+                x = 0;
+                y = 1922;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "virq"
+                (
+                x = 0;
+                y = 1942;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+            expanded = true;
+                )
+                define "virq[0]"
+                (
+                x = 0;
+                y = 1942;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "virq[1]"
+                (
+                x = 0;
+                y = 1962;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "virq[2]"
+                (
+                x = 0;
+                y = 1982;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "virq[3]"
+                (
+                x = 0;
+                y = 2002;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "virtio_s"
+                (
+                x = 0;
+                y = 2022;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+            expanded = false;
+                )
+                define "vsei"
+                (
+                x = 0;
+                y = 2042;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+            expanded = true;
+                )
+                define "vsei[0]"
+                (
+                x = 0;
+                y = 2042;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "vsei[1]"
+                (
+                x = 0;
+                y = 2062;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "vsei[2]"
+                (
+                x = 0;
+                y = 2082;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+                define "vsei[3]"
+                (
+                x = 0;
+                y = 2102;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = true;
+                moved_by_user = false;
+                )
+            )
+        )
+        instance "pvbus2ambapv"
+        (
+            x = 1280;
+            y = -70;
+            width = 171;
+            height = 81;
+            sheight = 41;
+            show_title = true;
+            show_name = true;
+            show_type = false;
+            show_logo = true;
+            ports
+            (
+                define "amba_pv_m"
+                (
+                x = 0;
+                y = 2;
+                side = 64;
+                clock_type = 0;
+                enabled = true;
+                hidden = false;
+                moved_by_user = false;
+            expanded = false;
+                )
+                define "pvbus_s"
+                (
+                x = 0;
+                y = 2;
+                side = 16;
+                clock_type = 0;
+                enabled = true;
+                hidden = false;
+                moved_by_user = false;
+            expanded = false;
+                )
+            )
+        )
+    )
+    ports
+    (
+        define "amba_pv_m"
+        (
+            x = 1510;
+            y = -30;
+            width = 101;
+            height = 21;
+            mirrored = false;
+            hidden = false;
+            expanded = false;
+        )
+        define "uart_intr"
+        (
+            x = 390;
+            y = 140;
+            width = 91;
+            height = 21;
+            mirrored = true;
+            hidden = false;
+            expanded = false;
+        )
+    )
+    connections
+    (
+        define "BusDecoder.pvbus_m_range=>Memory.pvbus"
+        (
+            point
+            (
+                x = 1240;
+                y = 50;
+                automatic = true;
+            )
+            point
+            (
+                x = 1240;
+                y = 99;
+                automatic = true;
+            )
+        )
+        define "BusDecoder.pvbus_m_range=>pvbus2ambapv.pvbus_s"
+        (
+            point
+            (
+                x = 1240;
+                y = 50;
+                automatic = true;
+            )
+            point
+            (
+                x = 1240;
+                y = -20;
+                automatic = true;
+            )
+        )
+        define "Clock100MHz.clk_out=>armcortexa53x1ct.clk_in"
+        (
+        )
+        define "Clock1Hz.clk_out=>Clock100MHz.clk_in"
+        (
+            point
+            (
+                x = 530;
+                y = 49;
+                automatic = true;
+            )
+            point
+            (
+                x = 530;
+                y = 50;
+                automatic = true;
+            )
+        )
+        define "ambapvsignal2sgsignal.sg_signal_m=>armcortexa53x1ct.irq"
+        (
+            point
+            (
+                x = 730;
+                y = 150;
+                automatic = true;
+            )
+            point
+            (
+                x = 730;
+                y = 1050;
+                automatic = true;
+            )
+        )
+        define "ambapvsignal2sgsignal.sg_signal_m=>armcortexa53x1ct.irq[0]"
+        (
+        )
+        define "armcortexa53x1ct.pvbus_m0=>BusDecoder.pvbus_s"
+        (
+        )
+    )
+    portmaps
+    (
+        define "pvbus2ambapv.amba_pv_m=>self.amba_pv_m"
+        (
+        )
+        define "self.uart_intr=>ambapvsignal2sgsignal.amba_pv_signal_s"
+        (
+        )
+    )
+    labels
+    (
+    )
+)
