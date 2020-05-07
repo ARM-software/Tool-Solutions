@@ -1,9 +1,7 @@
 sgproject "MyTopComponent.sgproj"
 {
 TOP_LEVEL_COMPONENT = "MyTopComponent";
-ACTIVE_CONFIG_LINUX = "Linux64-Release-GCC-6.4";
-ACTIVE_CONFIG_LINUX_ARMV8L = "Linux64_armv8l-Release-GCC-6.3";
-ACTIVE_CONFIG_WINDOWS = "Win64-Release-VC2015";
+ACTIVE_CONFIG_LINUX = "Linux64-Release-GCC-7.3";
 config "Linux64-Debug-GCC-4.9"
 {
     ADDITIONAL_COMPILER_SETTINGS = "-march=core2 -ggdb3 -Wall -std=c++11";
@@ -15,18 +13,10 @@ config "Linux64-Debug-GCC-4.9"
     ENABLE_DEBUG_SUPPORT = "1";
     PLATFORM = "Linux64";
     SIMGEN_WARNINGS_AS_ERRORS = "1";
-}
-config "Linux64-Debug-GCC-5.4"
-{
-    ADDITIONAL_COMPILER_SETTINGS = "-march=core2 -ggdb3 -Wall -std=c++11 -Wno-deprecated";
-    ADDITIONAL_LINKER_SETTINGS = "-Wl,--no-undefined";
-    BUILD_DIR = "./Linux64-Debug-GCC-5.4";
-    COMPILER = "gcc-5.4";
-    CONFIG_DESCRIPTION = "Default x86_64 Linux configuration for GCC 5.4 with debug information";
-    CONFIG_NAME = "Linux64-Debug-GCC-5.4";
-    ENABLE_DEBUG_SUPPORT = "1";
-    PLATFORM = "Linux64";
-    SIMGEN_WARNINGS_AS_ERRORS = "1";
+    TARGET_MAXVIEW = "0";
+    TARGET_SYSTEMC = "1";
+    TARGET_SYSTEMC_AUTO = "0";
+    TARGET_SYSTEMC_ISIM = "0";
 }
 config "Linux64-Debug-GCC-6.4"
 {
@@ -39,6 +29,10 @@ config "Linux64-Debug-GCC-6.4"
     ENABLE_DEBUG_SUPPORT = "1";
     PLATFORM = "Linux64";
     SIMGEN_WARNINGS_AS_ERRORS = "1";
+    TARGET_MAXVIEW = "0";
+    TARGET_SYSTEMC = "1";
+    TARGET_SYSTEMC_AUTO = "0";
+    TARGET_SYSTEMC_ISIM = "0";
 }
 config "Linux64-Debug-GCC-7.3"
 {
@@ -51,6 +45,10 @@ config "Linux64-Debug-GCC-7.3"
     ENABLE_DEBUG_SUPPORT = "1";
     PLATFORM = "Linux64";
     SIMGEN_WARNINGS_AS_ERRORS = "1";
+    TARGET_MAXVIEW = "0";
+    TARGET_SYSTEMC = "1";
+    TARGET_SYSTEMC_AUTO = "0";
+    TARGET_SYSTEMC_ISIM = "0";
 }
 config "Linux64-Release-GCC-4.9"
 {
@@ -63,18 +61,10 @@ config "Linux64-Release-GCC-4.9"
     PLATFORM = "Linux64";
     PREPROCESSOR_DEFINES = "NDEBUG";
     SIMGEN_WARNINGS_AS_ERRORS = "1";
-}
-config "Linux64-Release-GCC-5.4"
-{
-    ADDITIONAL_COMPILER_SETTINGS = "-march=core2 -O3 -Wall -std=c++11 -Wno-deprecated";
-    ADDITIONAL_LINKER_SETTINGS = "-Wl,--no-undefined";
-    BUILD_DIR = "./Linux64-Release-GCC-5.4";
-    COMPILER = "gcc-5.4";
-    CONFIG_DESCRIPTION = "Default x86_64 Linux configuration for GCC 5.4, optimized for speed";
-    CONFIG_NAME = "Linux64-Release-GCC-5.4";
-    PLATFORM = "Linux64";
-    PREPROCESSOR_DEFINES = "NDEBUG";
-    SIMGEN_WARNINGS_AS_ERRORS = "1";
+    TARGET_MAXVIEW = "0";
+    TARGET_SYSTEMC = "1";
+    TARGET_SYSTEMC_AUTO = "0";
+    TARGET_SYSTEMC_ISIM = "0";
 }
 config "Linux64-Release-GCC-6.4"
 {
@@ -103,76 +93,10 @@ config "Linux64-Release-GCC-7.3"
     PLATFORM = "Linux64";
     PREPROCESSOR_DEFINES = "NDEBUG";
     SIMGEN_WARNINGS_AS_ERRORS = "1";
-}
-config "Linux64_armv8l-Debug-GCC-6.3"
-{
-    ADDITIONAL_COMPILER_SETTINGS = "-march=armv8-a -ggdb3 -Wall -std=c++11 -Wno-deprecated -Wno-unused-function";
-    ADDITIONAL_LINKER_SETTINGS = "-Wl,--no-undefined";
-    BUILD_DIR = "./Linux64_armv8l-Debug-GCC-6.3";
-    COMPILER = "gcc-6.3";
-    CONFIG_DESCRIPTION = "Default armv8l Linux configuration for GCC 6.3 with debug information";
-    CONFIG_NAME = "Linux64_armv8l-Debug-GCC-6.3";
-    ENABLE_DEBUG_SUPPORT = "1";
-    PLATFORM = "Linux64_armv8l";
-    SIMGEN_WARNINGS_AS_ERRORS = "1";
-}
-config "Linux64_armv8l-Release-GCC-6.3"
-{
-    ADDITIONAL_COMPILER_SETTINGS = "-march=armv8-a -O3 -fomit-frame-pointer -Wall -std=c++11 -Wno-deprecated -Wno-unused-function";
-    ADDITIONAL_LINKER_SETTINGS = "-Wl,--no-undefined";
-    BUILD_DIR = "./Linux64_armv8l-Release-GCC-6.3";
-    COMPILER = "gcc-6.3";
-    CONFIG_DESCRIPTION = "Default armv8l Linux configuration for GCC 6.3, optimized for speed";
-    CONFIG_NAME = "Linux64_armv8l-Release-GCC-6.3";
-    PLATFORM = "Linux64_armv8l";
-    PREPROCESSOR_DEFINES = "NDEBUG";
-    SIMGEN_WARNINGS_AS_ERRORS = "1";
-}
-config "Win64-Debug-VC2015"
-{
-    ADDITIONAL_COMPILER_SETTINGS = "/Od /RTCsu /Zi";
-    ADDITIONAL_LINKER_SETTINGS = "/DEBUG";
-    BUILD_DIR = "./Win64-Debug-VC2015";
-    COMPILER = "VC2015";
-    CONFIG_DESCRIPTION = "Default x86_64 Windows configuration for Visual Studio 2015 with debug information";
-    CONFIG_NAME = "Win64-Debug-VC2015";
-    ENABLE_DEBUG_SUPPORT = "1";
-    PLATFORM = "Win64D";
-    SIMGEN_WARNINGS_AS_ERRORS = "1";
-}
-config "Win64-Debug-VC2017"
-{
-    ADDITIONAL_COMPILER_SETTINGS = "/Od /RTCsu /Zi";
-    ADDITIONAL_LINKER_SETTINGS = "/DEBUG";
-    BUILD_DIR = "./Win64-Debug-VC2017";
-    COMPILER = "VC2017";
-    CONFIG_DESCRIPTION = "Default x86_64 Windows configuration for Visual Studio 2017 with debug information";
-    CONFIG_NAME = "Win64-Debug-VC2017";
-    ENABLE_DEBUG_SUPPORT = "1";
-    PLATFORM = "Win64D";
-    SIMGEN_WARNINGS_AS_ERRORS = "1";
-}
-config "Win64-Release-VC2015"
-{
-    ADDITIONAL_COMPILER_SETTINGS = "/O2";
-    BUILD_DIR = "./Win64-Release-VC2015";
-    COMPILER = "VC2015";
-    CONFIG_DESCRIPTION = "Default x86_64 Windows configuration for Visual Studio 2015, optimized for speed";
-    CONFIG_NAME = "Win64-Release-VC2015";
-    PLATFORM = "Win64";
-    PREPROCESSOR_DEFINES = "NDEBUG";
-    SIMGEN_WARNINGS_AS_ERRORS = "1";
-}
-config "Win64-Release-VC2017"
-{
-    ADDITIONAL_COMPILER_SETTINGS = "/O2";
-    BUILD_DIR = "./Win64-Release-VC2017";
-    COMPILER = "VC2017";
-    CONFIG_DESCRIPTION = "Default x86_64 Windows configuration for Visual Studio 2017, optimized for speed";
-    CONFIG_NAME = "Win64-Release-VC2017";
-    PLATFORM = "Win64";
-    PREPROCESSOR_DEFINES = "NDEBUG";
-    SIMGEN_WARNINGS_AS_ERRORS = "1";
+    TARGET_MAXVIEW = "0";
+    TARGET_SYSTEMC = "1";
+    TARGET_SYSTEMC_AUTO = "0";
+    TARGET_SYSTEMC_ISIM = "0";
 }
 files
 {

@@ -6,7 +6,7 @@
 #define EXTERNAL_COUNTER_H
 
 #include <iostream>
-#include "amba_pv.h"
+#include "amba_pv.h" 
 #include "sockets/amba_pv_slave_socket.h"
 
 using namespace amba_pv;
