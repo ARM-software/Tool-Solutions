@@ -2,9 +2,9 @@
  * Copyright (c) 2020 Arm Limited. All rights reserved.
  */
 
+#include <scx_evs_MyTopComponent.h>
 #include <amba_pv.h> 
 #include "external_counter.h"
-#include <scx_evs_MyTopComponent.h>
 
 int sc_main(int argc, char *argv[])
 {

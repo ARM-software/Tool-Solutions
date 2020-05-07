@@ -5,6 +5,8 @@
 #ifndef EXTERNAL_COUNTER_H
 #define EXTERNAL_COUNTER_H
 
+#include <sg/IncludeMeFirst.h>
+#include <sg/SystemCInclude.h>
 #include <iostream>
 #include "amba_pv.h" 
 #include "sockets/amba_pv_slave_socket.h"

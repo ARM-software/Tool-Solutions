@@ -1,0 +1,130 @@
+#
+# nMakefile-common - Common defines for building SystemC systems.
+#
+# Copyright 2012 ARM Limited.
+# All rights reserved.
+#
+
+# Environment checks
+!ifndef MAXCORE_HOME
+!error MAXCORE_HOME: undefined variable
+!endif
+!ifndef PVLIB_HOME
+!error PVLIB_HOME: undefined variable
+!endif
+!ifndef SYSTEMC_HOME
+!error SYSTEMC_HOME: undefined variable
+!endif
+TLM_INCLUDE=
+!ifdef TLM_HOME
+!if "$(TLM_HOME)" != "$(SYSTEMC_HOME)"
+TLM_INCLUDE=/I"$(TLM_HOME)\include\tlm"
+!endif
+!endif
+
+# Globals
+OS = Win
+
+# Number of cpus to build
+J = $(NUMBER_OF_PROCESSORS)
+
+# Bitness in name
+BITNESS_IN_NAME_rel_vs14_64=64
+BITNESS_IN_NAME_rel_vs141_64=64
+BITNESS_IN_NAME_dbg_vs14_64=64
+BITNESS_IN_NAME_dbg_vs141_64=64
+
+# Regime
+REGIME_rel_vs14_64=Release
+REGIME_rel_vs141_64=Release
+REGIME_dbg_vs14_64=Debug
+REGIME_dbg_vs141_64=Debug
+
+# VC version to use
+VC_VER_rel_vs14_64=2015
+VC_VER_rel_vs141_64=2017
+VC_VER_dbg_vs14_64=2015
+VC_VER_dbg_vs141_64=2017
+
+# Configuration
+CONFIG_rel_vs14_64=Win$(BITNESS_IN_NAME_rel_vs14_64)-$(REGIME_rel_vs14_64)-VC$(VC_VER_rel_vs14_64)
+CONFIG_rel_vs141_64=Win$(BITNESS_IN_NAME_rel_vs141_64)-$(REGIME_rel_vs141_64)-VC$(VC_VER_rel_vs141_64)
+CONFIG_dbg_vs14_64=Win$(BITNESS_IN_NAME_dbg_vs14_64)-$(REGIME_dbg_vs14_64)-VC$(VC_VER_dbg_vs14_64)
+CONFIG_dbg_vs141_64=Win$(BITNESS_IN_NAME_dbg_vs141_64)-$(REGIME_dbg_vs141_64)-VC$(VC_VER_dbg_vs141_64)
+
+# Compiler flags
+INCLUDES = /I"$(PVLIB_HOME)\include\fmruntime" \
+    /I"$(PVLIB_HOME)\include\fmruntime\eslapi" \
+    /I"$(PVLIB_HOME)\Iris\include" \
+    /I"$(SYSTEMC_HOME)\include" \
+	$(TLM_INCLUDE) \
+    /I"$(MAXCORE_HOME)\AMBA-PV\include"
+
+CXXFLAGS_common=$(INCLUDES) /nologo /DSC_INCLUDE_DYNAMIC_PROCESSES /DWIN32 \
+    /D_CONSOLE /D_CRT_SECURE_NO_WARNINGS /D_MBCS /FD /EHsc /W3 /TP /vmg
+
+CXXFLAGS_common_vs14=$(CXXFLAGS_common) /MP$(J)
+
+CXXFLAGS_rel_vs14_64=$(CXXFLAGS_common_vs14) /O2 /DNDEBUG /MD \
+	/I.\$(CONFIG_rel_vs14_64)\gen /Fo.\$(CONFIG_rel_vs14_64)\\ \
+	/Fd.\$(CONFIG_rel_vs14_64)\\
+CXXFLAGS_dbg_vs14_64=$(CXXFLAGS_common_vs14) /Od /D_DEBUG /Zi /RTCsu /MDd \
+	/I.\$(CONFIG_dbg_vs14_64)\gen /Fo.\$(CONFIG_dbg_vs14_64)\\ \
+	/Fd.\$(CONFIG_dbg_vs14_64)\\
+
+CXXFLAGS_rel_vs141_64=$(CXXFLAGS_common_vs14) /O2 /DNDEBUG /MD \
+	/I.\$(CONFIG_rel_vs141_64)\gen /Fo.\$(CONFIG_rel_vs141_64)\\ \
+	/Fd.\$(CONFIG_rel_vs141_64)\\
+CXXFLAGS_dbg_vs141_64=$(CXXFLAGS_common_vs14) /Od /D_DEBUG /Zi /RTCsu /MDd \
+	/I.\$(CONFIG_dbg_vs141_64)\gen /Fo.\$(CONFIG_dbg_vs141_64)\\ \
+	/Fd.\$(CONFIG_dbg_vs141_64)\\
+
+# Linker flags
+LIBDIR_rel_vs14_64=Win$(BITNESS_IN_NAME_rel_vs14_64)_VC$(VC_VER_rel_vs14_64)\$(REGIME_rel_vs14_64)
+LIBDIR_rel_vs141_64=Win$(BITNESS_IN_NAME_rel_vs141_64)_VC$(VC_VER_rel_vs141_64)\$(REGIME_rel_vs141_64)
+LIBDIR_dbg_vs14_64=Win$(BITNESS_IN_NAME_dbg_vs14_64)_VC$(VC_VER_dbg_vs14_64)\$(REGIME_dbg_vs14_64)
+LIBDIR_dbg_vs141_64=Win$(BITNESS_IN_NAME_dbg_vs141_64)_VC$(VC_VER_dbg_vs141_64)\$(REGIME_dbg_vs141_64)
+
+LDFLAGS_common=/nologo /SUBSYSTEM:CONSOLE /DYNAMICBASE:NO
+
+LDFLAGS_rel_vs14_64=/link $(LDFLAGS_common) /LIBPATH:.\$(CONFIG_rel_vs14_64) \
+	/LIBPATH:"$(PVLIB_HOME)\lib\$(LIBDIR_rel_vs14_64)" \
+	/LIBPATH:"$(PVLIB_HOME)\Iris\$(LIBDIR_rel_vs14_64)" \
+	/LIBPATH:"$(SYSTEMC_HOME)\lib\$(LIBDIR_rel_vs14_64)" \
+	/MACHINE:x64
+LDFLAGS_rel_vs141_64=/link $(LDFLAGS_common) /LIBPATH:.\$(CONFIG_rel_vs141_64) \
+	/LIBPATH:"$(PVLIB_HOME)\lib\$(LIBDIR_rel_vs141_64)" \
+	/LIBPATH:"$(PVLIB_HOME)\Iris\$(LIBDIR_rel_vs141_64)" \
+	/LIBPATH:"$(SYSTEMC_HOME)\lib\$(LIBDIR_rel_vs141_64)" \
+	/MACHINE:x64
+LDFLAGS_dbg_vs14_64=/link $(LDFLAGS_common) /LIBPATH:.\$(CONFIG_dbg_vs14_64) \
+	/LIBPATH:"$(PVLIB_HOME)\lib\$(LIBDIR_dbg_vs14_64)" \
+	/LIBPATH:"$(PVLIB_HOME)\Iris\$(LIBDIR_dbg_vs14_64)" \
+	/LIBPATH:"$(SYSTEMC_HOME)\lib\$(LIBDIR_dbg_vs14_64)" \
+	/MACHINE:x64
+LDFLAGS_dbg_vs141_64=/link $(LDFLAGS_common) /LIBPATH:.\$(CONFIG_dbg_vs141_64) \
+	/LIBPATH:"$(PVLIB_HOME)\lib\$(LIBDIR_dbg_vs141_64)" \
+	/LIBPATH:"$(PVLIB_HOME)\Iris\$(LIBDIR_dbg_vs141_64)" \
+	/LIBPATH:"$(SYSTEMC_HOME)\lib\$(LIBDIR_dbg_vs141_64)" \
+	/MACHINE:x64
+
+# Libraries
+LIBS_common=user32.lib components.lib pvbus.lib libarmctmodel.lib scx.lib \
+    fmruntime.lib IrisSupport.lib systemc.lib ws2_32.lib imagehlp.lib \
+    advapi32.lib
+
+# Default targets
+
+
+# Default rules
+all: rel
+
+dbg:
+	$(MAKE) /$(MAKEFLAGS) /F nMakefile $(DBG)
+
+rel:
+    $(MAKE) /$(MAKEFLAGS) /F nMakefile $(REL)
+
+clean:
+	$(MAKE) /$(MAKEFLAGS) /F nMakefile $(DBG)_clean
+	$(MAKE) /$(MAKEFLAGS) /F nMakefile $(REL)_clean
