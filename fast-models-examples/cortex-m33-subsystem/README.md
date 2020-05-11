@@ -45,6 +45,6 @@ $ ./Cortex-M33-example.x -a ../../software/test.axf
 ```
 on windows
 ```
-$ ./Cortex-M33-example.exe -a ../../software/test.axf
+$ Cortex-M33-example.exe -a ..\..\software\test.axf
 ```
 
