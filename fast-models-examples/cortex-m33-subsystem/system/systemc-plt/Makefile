@@ -1,18 +1,69 @@
-CC=g++
-CXXVER=6.4
-PLT_EXPORT=../subsystem/Linux64-Release-GCC-$(CXXVER)
-INC=-I . -I ${SYSTEMC_HOME}/include -I ${MAXCORE_HOME}/AMBA-PV/include -I ${PLT_EXPORT}/ -I ${PVLIB_HOME}/include/fmruntime -I ${PVLIB_HOME}/Iris/include
-CFLAGS=-m64 -O3 -Wall -Werror -std=c++11 -pedantic -Wno-long-long -pthread -Wno-deprecated
-LDFLAGS=-L${PLT_EXPORT}/ -lMyTopComponent-Linux64-Release-GCC-$(CXXVER) -lscx-MyTopComponent-Linux64-Release-GCC-$(CXXVER) -lscx -larmfastmodelsanalytics.1.1.0 -lrui_5.2.0.x64 -L${PVLIB_HOME}/lib/Linux64_GCC-$(CXXVER) -lpvbus -lfmruntime -lcomponents -lpvbus ${PVLIB_HOME}/lib/Linux64_GCC-$(CXXVER)/libarmctmodel.a -L${PVLIB_HOME}/Iris/Linux64_GCC-$(CXXVER) -lIrisSupport -L${SYSTEMC_HOME}/lib/Linux64_GCC-$(CXXVER) -lsystemc -lm -lpthread -lc -ldl -lrt
+#
+# Makefile
+#
+# Copyright 2019-2020 ARM Limited.
+# All rights reserved.
+#
 
-SRC=$(wildcard ./*.cpp)
-OBJ=$(SRC:.cpp=.o)
+PROJECT_PATH ?= .
 
-%.o: %.cpp
-	$(CC) -o $@ $(CFLAGS) $(INC) -c $<
+# Common rules
+include Makefile.common
 
-plt: $(OBJ)
-	$(CC) -o $@ $^ $(LDFLAGS)
+# Specify objects and target(s) to build
+SRCS = $(wildcard *.cpp)
+SUBSYSTEM = ./../subsystem
+TARGET = Cortex-M33-example.x
 
-clean:
-	rm -rf *.o plt
+# Determine others...
+GENDIR = $(CONFIG)/gen
+BUILDDIR = $(CONFIG)
+WRAPPERLIB = scx-MyTopComponent-$(CONFIG)
+EVSLIB = MyTopComponent-$(CONFIG)
+CXXFLAGS += -I$(GENDIR)c -I$(GENDIR) -Wno-deprecated -Wno-maybe-uninitialized -Wno-unused-variable
+LDFLAGS += -L$(BUILDDIR) -l$(WRAPPERLIB) -lcomponents -lpvbus \
+		 $(PVLIB_HOME)/lib/Linux$(BITNESS_IN_NAME)_GCC-$(GCC_VER)/libarmctmodel.a \
+		 -lscx -lfmruntime -lIrisSupport -lsystemc -l$(EVSLIB) -ldl -lrt \
+		 -Wl,-rpath,'$$ORIGIN'
+
+CXX_VER := $(shell $(CXX) -dumpversion 2> /dev/null | \
+                   sed -e "s/\([0-9]*\.[0-9]*\)\.[0-9]*/\1/")
+CXX_VER_MAJOR := $(word 1, $(subst ., ,$(CXX_VER)))
+
+ifeq ($(CXX_VER_MAJOR),7)
+LDFLAGS += -latomic
+endif
+
+# Determine commands
+SIMGEN_CMD = $(MAXCORE_HOME)/bin/simgen -p $(SUBSYSTEM)/MyTopComponent.sgproj \
+			 --num-build-cpus $(J) --configuration $(CONFIG) \
+			 $(SIMGENFLAGS)
+CXX_CMD = $(CXX) $(CXXFLAGS) -o $(TARGET) $(SRCS) $(LDFLAGS)
+
+.SUFFIXES:
+
+
+
+
+.PHONY: dbg_gcc49_64 rel_gcc49_64
+.PHONY: dbg_gcc53_64 rel_gcc53_64
+.PHONY: dbg_gcc64_64 rel_gcc64_64
+.PHONY: dbg_gcc73_64 rel_gcc73_64
+
+.PHONY: dbg_gcc49_64_clean rel_gcc49_64_clean
+.PHONY: dbg_gcc53_64_clean rel_gcc53_64_clean
+.PHONY: dbg_gcc64_64_clean rel_gcc64_64_clean
+.PHONY: dbg_gcc73_64_clean rel_gcc73_64_clean
+
+ dbg_gcc49_64 rel_gcc49_64 dbg_gcc53_64 rel_gcc53_64 dbg_gcc64_64 rel_gcc64_64 dbg_gcc73_64 rel_gcc73_64:
+	$(SIMGEN_CMD) -b
+	cp $(BUILDDIR)/lib$(EVSLIB).so ./
+	$(CXX_CMD)
+
+ dbg_gcc49_64_clean rel_gcc49_64_clean dbg_gcc73_64_clean rel_gcc73_64_clean dbg_gcc64_64_clean rel_gcc64_64_clean dbg_gcc53_64_clean rel_gcc53_64_clean:
+	-$(SIMGEN_CMD) --clean
+	-rm -f $(TARGET)
+	-rm -rf $(CONFIG)
+	-rm -f ./lib$(EVSLIB).so
+
+
