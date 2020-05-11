@@ -5,9 +5,9 @@ in this [blog](https://community.arm.com/developer/tools-software/tools/b/tools-
 
 For details on Fast Models, including pre-requisites for the the host workstation, please refer to the release notes available on the [Arm Developer](https://developer.arm.com/tools-and-software/simulation-models/fast-models/release-history) website.
 
-## Building the Fast Model Platform
+## Building the Fast Model Platform using the build scripts
 
-For convenience we have provided scripts to build execuatbles for both Linux and Windows host platforms.  To use these:
+For convenience we have provided scripts to build the Fast Models platforms for both Linux and Windows host platforms.  To use these:
 
 1. Change directory to system/systemc_plt
 2. To build the platform for Linux hosts, run the build_linux.sh script. Fast Models supports several versions of the gcc tool chain for building the platform.  To select which version of gcc you want to use edit the build_linux.sh script uncommenting the appropriate make command.  gcc 7.3 is initially enabled when you install the example.
@@ -16,7 +16,7 @@ For convenience we have provided scripts to build execuatbles for both Linux and
 
 The build scripts first call the Fast Models "simgen" command to generate the Cortex-M33 subsystem and then either gcc or Visual Studio to compile the SystemC with the exported Fast Model subsystem. As an alternative to using the scripts you run each step individually following the instructions below.
 
-## Generate the Cortex-M33 Subsystem
+## Generate the Cortex-M33 Subsystem (if not using the "build" script)
 
 1. To export the Cortex-M33 subsystem, change directory to "system/subsystem" and open "sgcanvas" (System Canvas).
 2. In System Canvas, open the project by clicking File then Load Project and open "MyTopComponent.sgproj". This loads the assembled subsystem in System Canvas.
@@ -24,7 +24,7 @@ The build scripts first call the Fast Models "simgen" command to generate the Co
 4. Then Select "SystemC component" as the Target from Targets window. De-select all other options. Then press "Apply" and "Ok" to continue.
 5. Final, step is to press the "Build" button from the Ribbon menu. This will start the build process and complete successfully.
 
-## Complete Platform generation
+## Compile the SystemC platform (if not using the "build" script)
 
 1. Change directory to "system/systemc-plt" folder.
 2. On a Linux host, run "make rel_gccNN_64" to build the platform, where NN is one of the supported gcc variants.  The options are currently "49", "64" or "73".
