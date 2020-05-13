@@ -1,6 +1,6 @@
 # How to port Tensorflow Lite for Microcontroller applications to the Arm Cortex-M55 Processor
 
-This Docker project goes with an Arm Community blog, [How to port TensorFlow Lite for Microcontroller applications to the Arm Cortex-M55 Processor(https://community.arm.com/developer/tools-software/tools/b/tools-software-ides-blog/posts/port-tensorflow-lite-for-cortex-m55)
+This Docker project goes with an Arm Community blog, [How to port TensorFlow Lite for Microcontroller applications to the Arm Cortex-M55 Processor](https://community.arm.com/developer/tools-software/tools/b/tools-software-ides-blog/posts/port-tensorflow-lite-for-cortex-m55)
 
 The article explains how to use Arm Compiler 6 to build and run performance analysis tests using Tensorflow Lite Applications and Arm Compiler 6. It requires version 6.14 or greater for support of the Cortex-M55 processor.
 
