@@ -39,11 +39,12 @@ The build scripts first call the Fast Models "simgen" command to generate the Co
 ## Executing the platform with RTX App
 
 1. Change directory to "system/systemc-plt" and execute the platform binary as follows:
-on linux
+
+on Linux
 ```bash
 $ ./Cortex-M33-example.x -a ../../software/test.axf
 ```
-on windows
+on Windows
 ```
 $ Cortex-M33-example.exe -a ..\..\software\test.axf
 ```
