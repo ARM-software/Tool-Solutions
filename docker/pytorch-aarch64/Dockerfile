@@ -184,7 +184,7 @@ ARG dnnl_opt
 ENV NP_MAKE="${njobs}"
 
 # Key version numbers
-ENV TORCH_VERSION=1.2.0
+ENV TORCH_VERSION=1.4.0
 
 # Use a PACKAGE_DIR in userspace
 WORKDIR /home/$DOCKER_USER
