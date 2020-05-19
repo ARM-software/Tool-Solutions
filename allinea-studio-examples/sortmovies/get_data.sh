@@ -7,4 +7,5 @@ wget https://datasets.imdbws.com/title.basics.tsv.gz
 wget https://datasets.imdbws.com/title.ratings.tsv.gz
 gunzip title.basics.tsv.gz
 gunzip title.ratings.tsv.gz
+echo "Dataset (title.basics.tsv and title.ratings.tsv) downloaded."
 

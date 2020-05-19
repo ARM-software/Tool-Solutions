@@ -27,3 +27,4 @@ esac
 head -n $NB_ELEM_R title.ratings.tsv > test.title.ratings.tsv
 head -n $NB_ELEM_B title.basics.tsv > test.title.basics.tsv
 
+echo "Dataset (title.test.basics.tsv and title.test.ratings.tsv) created."
