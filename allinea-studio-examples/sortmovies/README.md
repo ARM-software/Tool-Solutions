@@ -1,6 +1,6 @@
 # Sort movies code example
 
-This is an example of a C application sorting movies from a database by rating score. There are three versions of the same application in this repository:
+This is an example of a C application sorting movies from a database by rating score. A blog article based on this example code can be found on [community.arm.com](https://community.arm.com/developer/tools-software/tools/b/tools-software-ides-blog/posts/aws-graviton2-debugging-and-optimization.). There are three versions of the same application in this repository:
 
 - sortmovies_1.c: crashes for large data sets files,
 - sortmovies_2.c: fixes the issue in sortmovies_1 but has performance issues,
