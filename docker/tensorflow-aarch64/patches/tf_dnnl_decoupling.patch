@@ -17,7 +17,7 @@ index 25484734fc..1840ea944d 100755
 -            "https://github.com/intel/mkl-dnn/archive/v0.20.6.tar.gz",
 -        ],
 -    )
-+        path = '/opt/dnnl/0.20.6'
++        path = '/opt/dnnl/0.21.3'
 +    ) 
  
 -    tf_http_archive(

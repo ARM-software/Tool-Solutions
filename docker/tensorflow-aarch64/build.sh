@@ -29,12 +29,17 @@ function print_usage_and_exit {
 
 ################################################################################
 
+# Enable Buildkit
+# Required for advanced multi-stage builds
+# Requires Docker v 18.09.1
+export DOCKER_BUILDKIT=1
+
 # Default build flags
 build_base_image=
 build_libs_image=
 build_tools_image=
 build_dev_image=
-build_tensorflow_image=
+build_tensorflow_image=1
 readonly target_arch="aarch64"
 readonly host_arch=$(arch)
 
