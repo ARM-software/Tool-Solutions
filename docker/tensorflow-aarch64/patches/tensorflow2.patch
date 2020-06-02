@@ -1,0 +1,12 @@
+--- a/tensorflow/tensorflow.bzl	2020-05-27 14:30:31.557123726 +0100
++++ b/tensorflow/tensorflow.bzl	2020-05-27 14:31:58.726734569 +0100
+@@ -1652,7 +1652,8 @@
+     args.append(src.path)
+     outputs = [ctx.outputs.cc_out, ctx.outputs.py_out]
+     ctx.actions.run(
+-        executable = ctx.executable._swig,
++        use_default_shell_env = True,
++	executable = ctx.executable._swig,
+         arguments = args,
+         inputs = inputs,
+         outputs = outputs,

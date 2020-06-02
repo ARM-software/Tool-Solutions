@@ -123,7 +123,7 @@ ENV LD_LIBRARY_PATH=$OPENBLAS_DIR/lib:$LD_LIBRARY_PATH
 
 # Build DNNL from source
 COPY scripts/build-dnnl.sh $PACKAGE_DIR/.
-# Patch for MKL-DNN, v0.20.6
+# Patch for MKL-DNN, v0.21.3
 COPY patches/mkldnn.patch $PACKAGE_DIR/mkldnn.patch
 # Patch for DNNL  v1.1.2
 #COPY patches/dnnl.patch $PACKAGE_DIR/dnnl.patch
@@ -140,6 +140,7 @@ ENV NP_MAKE="${njobs}"
 
 # Key version numbers
 ENV NUMPY_VERSION=1.17.1 \
+    SCIPY_VERSION=1.4.1 \
     NPY_DISTUTILS_APPEND_FLAGS=1
 
 # Using venv means this can be done in userspace
@@ -163,12 +164,18 @@ COPY scripts/build-numpy.sh $PACKAGE_DIR/.
 COPY patches/site.cfg $PACKAGE_DIR/site.cfg
 RUN $PACKAGE_DIR/build-numpy.sh
 
+# Install some  basic python packages needed for SciPy
+RUN pip install --no-cache-dir pybind11 pyangbind
+# Build scipy from source, using OpenBLAS for BLAS calls
+COPY scripts/build-scipy.sh $PACKAGE_DIR/.
+COPY patches/site.cfg $PACKAGE_DIR/site.cfg
+RUN $PACKAGE_DIR/build-scipy.sh
+
 # Install some TensorFlow essentials
 RUN pip install --no-cache-dir keras_applications==1.0.8 --no-deps
-RUN pip install --no-cache-dir keras_preprocessing==1.0.5 --no-deps
+RUN pip install --no-cache-dir keras_preprocessing==1.1.0 --no-deps
 RUN HDF5_DIR=/usr/lib/aarch64-linux-gnu/hdf5/serial pip install h5py
 RUN pip install --no-cache-dir ck absl-py pycocotools
-
 # Install OpenCV into our venv,
 COPY scripts/build-opencv.sh $PACKAGE_DIR/.
 RUN $PACKAGE_DIR/build-opencv.sh
@@ -182,14 +189,19 @@ FROM tensorflow-libs AS tensorflow-dev
 ARG njobs
 ARG bazel_mem
 ARG dnnl_opt
+ARG tf_version
+ARG tf_id
+ARG bazel_version
+
 ENV NP_MAKE="${njobs}" \
     BZL_RAM="${bazel_mem}" \
     DNNL_BUILD="${dnnl_opt}"
-
+	
 # Key version numbers
-ENV BZL_VERSION=0.29.1 \
-    TF_VERSION=1.15.2
-
+ENV BZL_VERSION="${bazel_version}" \
+    TF_VERSION="${tf_version}" \
+    TF_VERSION_ID="${tf_id}"	
+	
 # Use a PACKAGE_DIR in userspace
 WORKDIR /home/$DOCKER_USER
 USER $DOCKER_USER
@@ -209,7 +221,9 @@ ENV PATH=$PACKAGE_DIR/bazel/output:$PATH
 # Build TensorFlow
 COPY scripts/build-tensorflow.sh $PACKAGE_DIR/.
 COPY patches/tf_dnnl_decoupling.patch $PACKAGE_DIR/tf_dnnl_decoupling.patch
+COPY patches/tf2_dnnl_decoupling.patch $PACKAGE_DIR/tf2_dnnl_decoupling.patch
 COPY patches/tensorflow.patch $PACKAGE_DIR/tensorflow.patch
+COPY patches/tensorflow2.patch $PACKAGE_DIR/tensorflow2.patch
 RUN $PACKAGE_DIR/build-tensorflow.sh
 
 CMD ["bash", "-l"]
