@@ -1,4 +1,4 @@
-# Build TensorFlow for AArch64 using Docker
+# Build TensorFlow (1.x or 2.x) for AArch64 using Docker
 
 A script to build a Docker image containing [TensorFlow](https://www.tensorflow.org/) and dependencies for the [Armv8-A architecture](https://developer.arm.com/architectures/cpu-architecture/a-profile) with AArch64 execution. 
 
@@ -14,9 +14,10 @@ aarch64
   * OS: Ubuntu 18.04
   * Compiler: GCC 9.2
   * Maths libraries: [Arm Optimized Routines](https://github.com/ARM-software/optimized-routines) and [OpenBLAS](https://www.openblas.net/) 0.3.7
+  * [oneDNN](https://github.com/oneapi-src/oneDNN) 0.21.3
   * Python3 environment built from CPython 3.7 and containing:
     - NumPy 1.17.1
-    - TensorFlow 1.15
+    - TensorFlow 1.15.2 or TensorFlow 2.2.0
   * TensorFlow Benchmarks
 
 A user account with username 'ubuntu' is created with sudo privaleges and password of 'Arm2020'. 
@@ -51,8 +52,6 @@ These steps may require root privlages and usermod requires logout and login to 
 
 See https://docs.docker.com for more information.
 
-Note: these scripts enable Docker BuildKit by default. This requires Docker verison 18.09.1 or newer and can be dissabled by removing `export DOCKER_BUILDKIT=1` from `build.sh`.
-
 
 ## Building the Docker image
 Use the build.sh script to build the image. This script implements a multi-stage build to minimise the size of the finished image:
@@ -82,10 +81,11 @@ For example:
 
     ```  > ./build.sh --build-type base ```
 
-    This will generate an image named 'DockerTest/ubuntu/base'. 
+  * To choose between the different tensorflow versions use '--tf_version 1' for TensorFlow 1.15.2 or '--tf_version 2' for TensorFlow 2.2.0. The default value is set to tf_version=1.
+    For the base build: This will generate an image named 'DockerTest/ubuntu/base-v$tf_version', hyphenated with the version of TensorFlow chosen. 
 
-Tensorflow can optionally be built with DNNL, using the '--dnnl' flag, either useing the C++ reference kernels throughout,
-'--dnnl reference', or with the addition of OpenBLAS for BLAS calls '--dnnl openblas'
+TensorFlow can optionally be built with DNNL, using the '--dnnl' flag, either using the C++ reference kernels throughout,
+'--dnnl reference', or with the addition of OpenBLAS for BLAS calls '--dnnl openblas'.
 
 Memory requirements for building TensorFlow can be singificant, and may exceed the available
 memory, paricuarly for parallel builds (the default). There are two flags which can be used to 
@@ -99,9 +99,9 @@ To run the finished image:
 
   ``` > docker run -it --init <image name> ```
 
-where <image name> is the name of the finished image, for example 'tensorflow'.
+where <image name> is the name of the finished image, for example 'tensorflow-v2'.
 
-  ``` > docker run -it --init tensorflow ```
+  ``` > docker run -it --init tensorflow-v2 ```
 
 To display available images use the Docker command:
 

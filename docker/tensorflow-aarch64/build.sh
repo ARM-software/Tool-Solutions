@@ -14,6 +14,7 @@ function print_usage_and_exit {
   echo "      --dnnl                   Build and link to MKL-DNN / DNNL"
   echo "                                 * reference  - use the C++ reference kernels throughout."
   echo "                                 * openblas   - use OpenBLAS rather than reference kernel where possibe"
+  echo "      --tf_version	       TensorFlow version (use 1 for TF=1.15.2 / 2 for TF=2.2.0)"
   echo "      --build-type             Type of build to perform:"
   echo "                                 * base       - build the basic portion of the image, OS and essential packages"
   echo "                                 * libs       - build image including maths libraries and Python3."
@@ -54,6 +55,7 @@ extra_args=""
 nproc_build=
 bazel_mem=
 dnnl_blas=
+tf_version=1
 
 while [ $# -gt 0 ]
 do
@@ -125,6 +127,11 @@ do
       shift
       ;;
 
+    --tf_version )
+      tf_version=$2
+      shift
+      ;;	
+
     -h | --help )
       print_usage_and_exit 0
       ;;
@@ -151,31 +158,50 @@ if [[ $dnnl_blas ]]; then
   extra_args="$extra_args --build-arg dnnl_opt=$dnnl_blas"
 fi
 
+echo 'TF Version:' $tf_version
+
+if [[ $tf_version == "1" ]]; then
+   # TF1 version 
+   version=1.15.2
+   bazel_version=0.29.1	
+   extra_args="$extra_args --build-arg tf_id=$tf_version"
+   extra_args="$extra_args --build-arg tf_version=$version"
+   extra_args="$extra_args --build-arg bazel_version=$bazel_version"	
+elif [[ $tf_version == "2" ]]; then
+   # TF2 version 
+   version=2.2.0
+   bazel_version=2.0.0
+   extra_args="$extra_args --build-arg tf_id=$tf_version"
+   extra_args="$extra_args --build-arg tf_version=$version"
+   extra_args="$extra_args --build-arg bazel_version=$bazel_version"	
+else
+   echo 'TensorFlow version set to invalid value'
+   exit 1	
+fi
 
 echo $extra_args
 
 if [[ $build_base_image ]]; then
   # Stage 1: Base image, Ubuntu with core packages and GCC9
-  docker build $extra_args --target tensorflow-base -t tensorflow-base:latest .
+  docker build $extra_args --target tensorflow-base -t tensorflow-base-v$tf_version:latest .
 fi
 
 if [[ $build_libs_image ]]; then
   # Stage 2: Libs image, essential maths libs and Python built and installed
-  docker build $extra_args --target tensorflow-libs -t tensorflow-libs:latest .
+  docker build $extra_args --target tensorflow-libs -t tensorflow-libs-v$tf_version:latest .
 fi
 
 if [[ $build_tools_image ]]; then
   # Stage 3: Tools image, Python3 venv added with additional Python essentials
-  docker build $extra_args --target tensorflow-tools -t tensorflow-tools:latest .
+  docker build $extra_args --target tensorflow-tools -t tensorflow-tools-v$tf_version:latest .
 fi
 
 if [[ $build_dev_image ]]; then
   # Stage 4: Adds bazel and TensorFlow builds with sources
-  docker build $extra_args --target tensorflow-dev -t tensorflow-dev:latest .
+  docker build $extra_args --target tensorflow-dev -t tensorflow-dev-v$tf_version:latest .
 fi
 
 if [[ $build_tensorflow_image ]]; then
   # Stage 5: Adds bazel and TensorFlow builds with sources
-  docker build $extra_args --target tensorflow -t tensorflow:latest .
+  docker build $extra_args --target tensorflow -t tensorflow-v$tf_version:latest .
 fi
-
