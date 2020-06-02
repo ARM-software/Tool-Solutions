@@ -1,5 +1,23 @@
 #!/usr/bin/env bash
 
+# *******************************************************************************
+# Copyright 2020 Arm Limited and affiliates.
+# SPDX-License-Identifier: Apache-2.0
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# *******************************************************************************
+
+
 # Staged docker build for PyTorch
 # ==================================
 
@@ -25,13 +43,17 @@ function print_usage_and_exit {
 
 ################################################################################
 
+# Enable Buildkit
+# Required for advanced multi-stage builds
+# Requires Docker v 18.09.1
+export DOCKER_BUILDKIT=1
 
 # Default build flags
 build_base_image=
 build_libs_image=
 build_tools_image=
 build_dev_image=
-build_pytorch_image=
+build_pytorch_image=1
 readonly target_arch="aarch64"
 readonly host_arch=$(arch)
 
