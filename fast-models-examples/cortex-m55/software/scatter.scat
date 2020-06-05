@@ -1,0 +1,29 @@
+;*******************************************************
+;
+; Copyright (c) 2018 Arm Limited. All rights reserved.
+;
+;*******************************************************
+
+; Scatter-file for Cortex-m7 bare-metal minimal example with MPS2 memory map
+
+
+ROM0_LOAD 0x0 0x400000
+{
+    CODE +0
+    {
+        startup.o (BOOT, +First)        
+        * (+RO)                             
+    }
+}
+
+RAM0_LOAD 0x21000000 0x100000
+{
+    DATA +0
+    {
+        * (+RW,+ZI)                         
+    }
+
+    ARM_LIB_STACKHEAP 0x21100000 ALIGN 64 EMPTY 0x10000 
+    {}
+}
+    
