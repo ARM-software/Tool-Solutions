@@ -78,6 +78,7 @@ To run from the command line, follow these steps.  From the "system" folder, ent
 
 You will see the following messages (the Fast Model version may be different according to your installation):
 
+```console
 Fast Models [11.10.42 (May 14 2020)]
 Copyright 2000-2020 ARM Limited.
 All Rights Reserved.
@@ -97,6 +98,7 @@ Wall time                               : 0.014826s
 Performance index                       : 0.00
 m55.armcortexm55ct                      :   0.41 MIPS (        4781 Inst)
 -------------------------------------------------------------------------------
+```
 
 This shows that the program executed correctly and gives some statistics on the run.
 
