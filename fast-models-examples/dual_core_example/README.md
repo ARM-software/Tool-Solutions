@@ -8,7 +8,7 @@ This example was built and tested with Fast Models 11.11 (released in June 2020)
 
 * Fast Models can be downloaded from: https://developer.arm.com/tools-and-software/simulation-models/fast-models
 
-* To obtain an evaluation license for the Cortex-M4 and Cortex-M0+ Fast Models, Contact [license.support@arm.com](mailto:license.support@arm.com) requesting a license for the Cortex-M55 Fast Model.
+* To obtain an evaluation license for the Cortex-M4 and Cortex-M0+ Fast Models, Contact [license.support@arm.com](mailto:license.support@arm.com) requesting a license for the Cortex-M4 and Cortex-M0+ Fast Models.
 
 * To rebuild the software examples, you will also need licenses for Arm Compiler 6 and optionally Arm DS (version 2020.0 or later).
 
