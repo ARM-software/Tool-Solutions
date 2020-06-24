@@ -1,0 +1,81 @@
+#
+# nMakefile - DualCore platform NMAKE makefile.
+#
+# Copyright 2012-2020 ARM Limited.
+# All rights reserved.
+#
+
+!IFNDEF PROJECT_PATH
+PROJECT_PATH=.
+!ENDIF
+
+# Common rules
+!include "$(PROJECT_PATH)\nMakefile.common"
+
+# Specify objects and target(s) to build
+SRCS = "$(PROJECT_PATH)\..\Source\Mailbox.cpp" "$(PROJECT_PATH)\..\Source\MainM0PlusM4.cpp"
+
+TARGET = EVS_Cortex-M0Plus-M4.exe
+
+# Determine others...
+LIBS_rel_vs141_64=/LIBPATH:"$(PROJECT_PATH)\EVS_DualCore_Cortex-M0Plus\$(CONFIG_rel_vs141_64)" \
+	/LIBPATH:"$(PROJECT_PATH)\EVS_DualCore_Cortex-M4\$(CONFIG_rel_vs141_64)" \
+	scx-EVS_Cortex_M4-$(CONFIG_rel_vs141_64).lib \
+	scx-EVS_Cortex_M0Plus-$(CONFIG_rel_vs141_64).lib \
+	EVS_Cortex_M4-$(CONFIG_rel_vs141_64).lib \
+	EVS_Cortex_M0Plus-$(CONFIG_rel_vs141_64).lib \
+	$(LIBS_common) 
+
+# Determine commands
+SIMGEN_CMD4 = "$(MAXCORE_HOME)\bin\simgen.exe" \
+			 -p "$(PROJECT_PATH)\..\..\dual_core_example\Build_Cortex-M4\EVS_Cortex-M4.sgproj" \
+			 --num-build-cpus $(J) $(SIMGENFLAGS)
+SIMGEN_CMD0Plus = "$(MAXCORE_HOME)\bin\simgen.exe" \
+			 -p "$(PROJECT_PATH)\..\..\dual_core_example\Build_Cortex-M0Plus\EVS_Cortex-M0Plus.sgproj" \
+			 --num-build-cpus $(J) $(SIMGENFLAGS)
+CXX_CMD = $(CXX) /Fe$(TARGET) $(SRCS) /I"$(PROJECT_PATH)\..\Source"
+MT_CMD = mt -nologo -manifest $(TARGET).manifest -outputresource:$(TARGET);1
+
+# Local rules
+
+.SUFFIXES:
+
+rel_vs141_64:
+	$(SIMGEN_CMD4) --configuration $(CONFIG_rel_vs141_64) -b
+	copy .\$(CONFIG_rel_vs141_64)\EVS_Cortex_M4-$(CONFIG_rel_vs141_64).dll .
+	$(SIMGEN_CMD0Plus) --configuration $(CONFIG_rel_vs141_64) -b
+	copy .\$(CONFIG_rel_vs141_64)\EVS_Cortex_M0Plus-$(CONFIG_rel_vs141_64).dll .
+	$(CXX_CMD) $(CXXFLAGS_rel_vs141_64) $(LDFLAGS_rel_vs141_64) $(LIBS_rel_vs141_64)
+
+
+rel_vs141_64_clean:
+	-$(SIMGEN_CMD4) --configuration $(CONFIG_rel_vs141_64) --clean
+	-$(SIMGEN_CMD0Plus) --configuration $(CONFIG_rel_vs141_64) --clean
+	-del /f $(TARGET) 2>nul
+	-del /f $(TARGET).manifest 2>nul
+	-rmdir /s /q $(CONFIG_rel_vs141_64) 2>nul
+	-del /f flex* 2>nul
+    	-del /f EVS* 2>nul	
+	-del /f *.dll
+
+rel_vs14_64:
+	$(SIMGEN_CMD4) --configuration $(CONFIG_rel_vs141_64) -b
+	copy .\$(CONFIG_rel_vs141_64)\EVS_Cortex_M4-$(CONFIG_rel_vs141_64).dll .
+	$(SIMGEN_CMD0Plus) --configuration $(CONFIG_rel_vs141_64) -b
+	copy .\$(CONFIG_rel_vs141_64)\EVS_Cortex_M0Plus-$(CONFIG_rel_vs141_64).dll .
+	$(CXX_CMD) $(CXXFLAGS_rel_vs141_64) $(LDFLAGS_rel_vs141_64) $(LIBS_rel_vs141_64)
+
+
+rel_vs14_64_clean:
+	-$(SIMGEN_CMD4) --configuration $(CONFIG_rel_vs141_64) --clean
+	-$(SIMGEN_CMD0Plus) --configuration $(CONFIG_rel_vs141_64) --clean
+	-del /f $(TARGET) 2>nul
+	-del /f $(TARGET).manifest 2>nul
+	-rmdir /s /q $(CONFIG_rel_vs14_64) 2>nul
+	-del /f flex* 2>nul
+    	-del /f EVS* 2>nul	
+	-del /f *.dll
+
+
+
+
