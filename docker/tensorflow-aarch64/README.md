@@ -14,7 +14,7 @@ aarch64
 ## What's in the final image?
   * OS: Ubuntu 18.04
   * Compiler: GCC 9.2
-  * Maths libraries: [Arm Optimized Routines](https://github.com/ARM-software/optimized-routines) and [OpenBLAS](https://www.openblas.net/) 0.3.7
+  * Maths libraries: [Arm Optimized Routines](https://github.com/ARM-software/optimized-routines) and [OpenBLAS](https://www.openblas.net/) 0.3.9
   * [oneDNN](https://github.com/oneapi-src/oneDNN) 0.21.3
   * Python3 environment built from CPython 3.7 and containing:
     - NumPy 1.17.1
