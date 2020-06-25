@@ -99,7 +99,7 @@ ENV NP_MAKE="${njobs}"
 
 # Key version numbers
 ENV PY_VERSION=3.7.0 \
-    OPENBLAS_VERSION=0.3.7 \
+    OPENBLAS_VERSION=0.3.9 \
     NINJA_VERSION=1.9.0
 
 # Package build parameters

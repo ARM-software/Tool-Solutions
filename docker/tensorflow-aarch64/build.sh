@@ -26,20 +26,23 @@ function print_usage_and_exit {
   echo "Usage: build.sh [OPTIONS]"
   echo ""
   echo "Options:"
-  echo "  -h, --help                   Display this message"
-  echo "      --jobs                   Specify number of jobs to run in parallel during the build"
-  echo "      --bazel_memory_limit     Set a memory limit for Bazel build"
-  echo "      --dnnl                   Build and link to MKL-DNN / DNNL"
+  echo "  -h, --help                   Display this message."
+  echo "      --jobs                   Specify number of jobs to run in parallel during the build."
+  echo "      --bazel_memory_limit     Set a memory limit for Bazel build."
+  echo "      --dnnl                   Build and link to MKL-DNN / DNNL:"
   echo "                                 * reference  - use the C++ reference kernels throughout."
-  echo "                                 * openblas   - use OpenBLAS rather than reference kernel where possibe"
-  echo "      --tf_version	       TensorFlow version (use 1 for TF=1.15.2 / 2 for TF=2.2.0)"
+  echo "                                 * openblas   - use OpenBLAS rather than reference kernel where possibe."
+  echo "      --tf_version             TensorFlow version:"
+  echo "                                 * 1          - TensorFlow v1.15.2 build."
+  echo "                                 * 2          - TensorFlow 2.2.0 build."
   echo "      --build-type             Type of build to perform:"
-  echo "                                 * base       - build the basic portion of the image, OS and essential packages"
+  echo "                                 * base       - build the basic portion of the image, OS and essential packages."
   echo "                                 * libs       - build image including maths libraries and Python3."
   echo "                                 * tools      - build image including Python3 venv, with numpy."
   echo "                                 * dev        - build image including Bazel and TensorFlow, with sources."
-  echo "                                 * tensorflow - build image including TensorFlow build and benchmarks installed"
+  echo "                                 * tensorflow - build image including TensorFlow build and benchmarks installed."
   echo "                                 * full       - build all images."
+  echo "      --clean                  Pull a new base image and build without using any cached images."
   echo ""
   echo "Example:"
   echo "  build.sh --build-type full"
@@ -74,6 +77,7 @@ nproc_build=
 bazel_mem=
 dnnl_blas=
 tf_version=1
+clean_build=
 
 while [ $# -gt 0 ]
 do
@@ -92,9 +96,9 @@ do
           build_libs_image=1
           build_tools_image=
           build_dev_image=
-          build_tensorflow_image= 
+          build_tensorflow_image=
           ;;
-         tools )
+        tools )
           build_base_image=
           build_libs_image=
           build_tools_image=1
@@ -148,7 +152,11 @@ do
     --tf_version )
       tf_version=$2
       shift
-      ;;	
+      ;;
+
+    --clean )
+      clean_build=1
+      ;;
 
     -h | --help )
       print_usage_and_exit 0
@@ -172,29 +180,35 @@ if [[ $bazel_mem ]]; then
 fi
 
 if [[ $dnnl_blas ]]; then
-  # DNNL based build 
+  # DNNL based build
   extra_args="$extra_args --build-arg dnnl_opt=$dnnl_blas"
 fi
+
+if [[ $clean_build ]]; then
+  # Pull a new base image, and don't use any caches
+  extra_args="--pull --no-cache $extra_args"
+fi
+
 
 echo 'TF Version:' $tf_version
 
 if [[ $tf_version == "1" ]]; then
-   # TF1 version 
+   # TF1 version
    version=1.15.2
-   bazel_version=0.29.1	
+   bazel_version=0.29.1
    extra_args="$extra_args --build-arg tf_id=$tf_version"
    extra_args="$extra_args --build-arg tf_version=$version"
-   extra_args="$extra_args --build-arg bazel_version=$bazel_version"	
+   extra_args="$extra_args --build-arg bazel_version=$bazel_version"
 elif [[ $tf_version == "2" ]]; then
-   # TF2 version 
+   # TF2 version
    version=2.2.0
    bazel_version=2.0.0
    extra_args="$extra_args --build-arg tf_id=$tf_version"
    extra_args="$extra_args --build-arg tf_version=$version"
-   extra_args="$extra_args --build-arg bazel_version=$bazel_version"	
+   extra_args="$extra_args --build-arg bazel_version=$bazel_version"
 else
    echo 'TensorFlow version set to invalid value'
-   exit 1	
+   exit 1
 fi
 
 echo $extra_args

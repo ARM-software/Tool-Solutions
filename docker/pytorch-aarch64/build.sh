@@ -35,6 +35,7 @@ function print_usage_and_exit {
   echo "                                 * dev        - build image including Bazel and PyTorch, with sources."
   echo "                                 * pytorch - build image including PyTorch build and benchmarks installed"
   echo "                                 * full       - build all images."
+  echo "      --clean                  Pull a new base image and build without using any cached images."
   echo ""
   echo "Example:"
   echo "  build.sh --build-type full"
@@ -66,6 +67,7 @@ fi
 # Default args
 extra_args=""
 nproc_build=
+clean_build=
 
 while [ $# -gt 0 ]
 do
@@ -127,6 +129,10 @@ do
       shift
       ;;
 
+    --clean )
+      clean_build=1
+      ;;
+
     -h | --help )
       print_usage_and_exit 0
       ;;
@@ -141,6 +147,11 @@ exec 2>&1
 if [[ $nproc_build ]]; then
   # Set -j to use for builds, if specified
   extra_args="$extra_args --build-arg njobs=$nproc_build"
+fi
+
+if [[ $clean_build ]]; then
+  # Pull a new base image, and don't use any caches
+  extra_args="--pull --no-cache $extra_args"
 fi
 
 echo $extra_args

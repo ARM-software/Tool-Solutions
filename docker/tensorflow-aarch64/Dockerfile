@@ -214,12 +214,12 @@ ARG bazel_version
 ENV NP_MAKE="${njobs}" \
     BZL_RAM="${bazel_mem}" \
     DNNL_BUILD="${dnnl_opt}"
-	
+
 # Key version numbers
 ENV BZL_VERSION="${bazel_version}" \
     TF_VERSION="${tf_version}" \
-    TF_VERSION_ID="${tf_id}"	
-	
+    TF_VERSION_ID="${tf_id}"
+
 # Use a PACKAGE_DIR in userspace
 WORKDIR /home/$DOCKER_USER
 USER $DOCKER_USER

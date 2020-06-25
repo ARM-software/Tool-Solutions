@@ -1,6 +1,7 @@
 # Build PyTorch for AArch64 using Docker
 
 A script to build a Docker image containing [PyTorch](https://www.pytorch.org/) and dependencies for the [Armv8-A architecture](https://developer.arm.com/architectures/cpu-architecture/a-profile) with AArch64 execution. 
+For more information, see this Arm Developer Community [blog post](https://community.arm.com/developer/tools-software/tools/b/tools-software-ides-blog/posts/aarch64-docker-images-for-pytorch-and-tensorflow).
 
 Before using this project run the uname command to confirm the machine is aarch64. Other architectures will not work.
 
