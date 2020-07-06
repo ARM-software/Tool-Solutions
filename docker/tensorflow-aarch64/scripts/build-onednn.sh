@@ -21,12 +21,14 @@
 set -euo pipefail
 
 cd $PACKAGE_DIR
-readonly package=dnnl
-readonly version=$DNNL_VERSION
+readonly package=onednn
+readonly version=$ONEDNN_VERSION
+readonly tf_id=$TF_VERSION_ID
 readonly src_host=https://github.com/intel
 readonly src_repo=mkl-dnn
 
-# Clone tensorflow and benchmarks
+# Clone oneDNN
+echo "oneDNN VERSION" $version
 git clone ${src_host}/${src_repo}.git
 cd ${src_repo}
 git checkout v$version -b v$version
@@ -35,20 +37,25 @@ export CMAKE_INSTALL_PREFIX=$PROD_DIR/$package/$version
 export CMAKE_BUILD_TYPE=Release
 
 # Apply patch to add AArch64 flags, and OpenBLAS lib
-# This patch is for version 0.20.6
-patch -p1 < ../mkldnn.patch
-
-# This patch should be used for version 1.1.2 
-#patch -p1 < ../dnnl.patch
+if [[ $tf_id == '1' ]]; then
+   # This patch is for version 0.21.3
+   patch -p1 < ../mkldnn.patch
+elif [[ $tf_id == '2' ]]; then
+   # This patch is for version 1.4
+   patch -p1 < ../onednn.patch
+else
+   echo 'Invalid TensorFlow version when applying patches to the oneDNN repository'
+   exit 1
+fi
 
 mkdir -p build
 cd build
 
 blas_flag=""
-[[ $DNNL_BUILD = "openblas" ]] && blas_flag="-DUSE_CBLAS -I$OPENBLAS_DIR/include"
+[[ $ONEDNN_BUILD = "openblas" ]] && blas_flag="-DUSE_CBLAS -I$OPENBLAS_DIR/include"
 
 CFLAGS="$BASE_CFLAGS $blas_flag" CXXFLAGS="$BASE_CFLAGS $blas_flag" \
-  cmake -DCMAKE_INSTALL_PREFIX=$PROD_DIR/$package/$version  .. 
+  cmake -DCMAKE_INSTALL_PREFIX=$PROD_DIR/$package/$version  ..
 
 make -j $NP_MAKE
 make install

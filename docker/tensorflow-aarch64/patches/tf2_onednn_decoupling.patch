@@ -15,24 +15,10 @@
  limitations under the License.
  *******************************************************************************
 
-
---- a/tensorflow/workspace.bzl	2020-05-27 16:13:18.391287600 +0100
-+++ b/tensorflow/workspace.bzl	2020-05-27 16:16:01.170799341 +0100
-@@ -161,26 +161,16 @@
-     # MKL-DNN might require upgrading MKL ML libraries also. If they need to be
-     # upgraded then update the version numbers on all three versions above
-     # (Linux, Mac, Windows).
--    tf_http_archive(
-+    native.new_local_repository(
-         name = "mkl_dnn",
-         build_file = clean_dep("//third_party/mkl_dnn:mkldnn.BUILD"),
--        sha256 = "31e78581e59d7e60d4becaba3834fc6a5bf2dccdae3e16b7f70d89ceab38423f",
--        strip_prefix = "mkl-dnn-0.21.3",
--        urls = [
--            "https://storage.googleapis.com/mirror.tensorflow.org/github.com/intel/mkl-dnn/archive/v0.21.3.tar.gz",
--            "https://github.com/intel/mkl-dnn/archive/v0.21.3.tar.gz",
--        ],
-+    	path = '/opt/dnnl/0.21.3'
+--- a/tensorflow/workspace.bzl	2020-07-02 17:26:44.891394118 +0100
++++ b/tensorflow/workspace.bzl	2020-07-02 17:29:52.660850305 +0100
+@@ -172,15 +172,10 @@
+         ],
      )
  
 -    tf_http_archive(
@@ -45,42 +31,44 @@
 -            "https://storage.googleapis.com/mirror.tensorflow.org/github.com/intel/mkl-dnn/archive/v1.2.2.tar.gz",
 -            "https://github.com/intel/mkl-dnn/archive/v1.2.2.tar.gz",
 -        ],
-+        path = '/opt/dnnl/1.1.2'
++    	path = '/opt/onednn/1.4'
      )
  
      tf_http_archive(
---- a/third_party/mkl_dnn/mkldnn.BUILD	2020-05-27 16:07:07.902398888 +0100
-+++ b/third_party/mkl_dnn/mkldnn.BUILD	2020-05-27 16:11:36.971591810 +0100
-@@ -18,16 +18,6 @@
+--- a/third_party/mkl_dnn/mkldnn_v1.BUILD	2020-07-02 18:44:14.727373197 +0100
++++ b/third_party/mkl_dnn/mkldnn_v1.BUILD	2020-07-02 18:50:31.006202548 +0100
+@@ -18,18 +18,6 @@
      },
  )
  
 -template_rule(
--    name = "mkldnn_config_h",
--    src = "include/mkldnn_config.h.in",
--    out = "include/mkldnn_config.h",
+-    name = "dnnl_config_h",
+-    src = "include/dnnl_config.h.in",
+-    out = "include/dnnl_config.h",
 -    substitutions = {
--        "#cmakedefine MKLDNN_CPU_BACKEND MKLDNN_BACKEND_${MKLDNN_CPU_BACKEND}": "#define MKLDNN_CPU_BACKEND MKLDNN_BACKEND_NATIVE",
--        "#cmakedefine MKLDNN_GPU_BACKEND MKLDNN_BACKEND_${MKLDNN_GPU_BACKEND}": "#define MKLDNN_GPU_BACKEND MKLDNN_BACKEND_NONE",
+-        "#cmakedefine DNNL_CPU_THREADING_RUNTIME DNNL_RUNTIME_${DNNL_CPU_THREADING_RUNTIME}": "#define DNNL_CPU_THREADING_RUNTIME DNNL_RUNTIME_OMP",
+-        "#cmakedefine DNNL_CPU_RUNTIME DNNL_RUNTIME_${DNNL_CPU_RUNTIME}": "#define DNNL_CPU_RUNTIME DNNL_RUNTIME_OMP",
+-        "#cmakedefine DNNL_GPU_RUNTIME DNNL_RUNTIME_${DNNL_GPU_RUNTIME}": "#define DNNL_GPU_RUNTIME DNNL_RUNTIME_NONE",
 -    },
 -)
 -
- # Create the file mkldnn_version.h with MKL-DNN version numbers.
+-# Create the file mkldnn_version.h with MKL-DNN version numbers.
  # Currently, the version numbers are hard coded here. If MKL-DNN is upgraded then
  # the version numbers have to be updated manually. The version numbers can be
-@@ -38,61 +28,25 @@
- # TODO(bhavanis): MKL-DNN minor version needs to be updated for MKL-DNN v1.x.
- # The current version numbers will work only if MKL-DNN v0.21 is used.
+ # obtained from the PROJECT_VERSION settings in CMakeLists.txt. The variable is
+@@ -37,61 +25,24 @@
+ # be set to NA.
+ # TODO(agramesh1) Automatically get the version numbers from CMakeLists.txt.
  
 -template_rule(
--    name = "mkldnn_version_h",
--    src = "include/mkldnn_version.h.in",
--    out = "include/mkldnn_version.h",
+-    name = "dnnl_version_h",
+-    src = "include/dnnl_version.h.in",
+-    out = "include/dnnl_version.h",
 -    substitutions = {
--        "@MKLDNN_VERSION_MAJOR@": "0",
--        "@MKLDNN_VERSION_MINOR@": "21",
--        "@MKLDNN_VERSION_PATCH@": "3",
--        "@MKLDNN_VERSION_HASH@": "N/A",
+-        "@DNNL_VERSION_MAJOR@": "1",
+-        "@DNNL_VERSION_MINOR@": "2",
+-        "@DNNL_VERSION_PATCH@": "0",
+-        "@DNNL_VERSION_HASH@": "N/A",
 -    },
 +cc_library(
 +    name = "mkldnn_headers",
@@ -88,14 +76,14 @@
 +    includes = ["include"],
 +    visibility = ["//visibility:public"],
  )
- 
- cc_library(
+-
++cc_library(
 +    name = "mkldnn_libs",
 +    srcs = glob(["lib/*"]),
 +    visibility = ["//visibility:public"],
-+ )
-+
-+cc_library(
++)
++ 
+ cc_library(
      name = "mkl_dnn",
 -    srcs = glob([
 -        "src/common/*.cpp",
@@ -106,8 +94,8 @@
 -        "src/cpu/**/*.hpp",
 -        "src/cpu/xbyak/*.h",
 -    ]) + if_mkl_v1_open_source_only([
--        ":mkldnn_config_h",
--    ]) + [":mkldnn_version_h"],
+-        ":dnnl_config_h",
+-    ]) + [":dnnl_version_h"],
 -    hdrs = glob(["include/*"]),
 -    copts = [
 -        "-fexceptions",
@@ -138,9 +126,9 @@
 -    ],
      visibility = ["//visibility:public"],
 -    deps = select({
-+    deps = ["@mkl_dnn//:mkldnn_headers",
-+            "@mkl_dnn//:mkldnn_libs",
-+           ] +  select({
++    deps = ["@mkl_dnn_v1//:mkldnn_headers",
++	    "@mkl_dnn_v1//:mkldnn_libs",
++ 	] + select({
          "@org_tensorflow//tensorflow:linux_x86_64": [
              "@mkl_linux//:mkl_headers",
              "@mkl_linux//:mkl_libs_linux",

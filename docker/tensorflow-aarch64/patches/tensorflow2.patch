@@ -24,7 +24,7 @@
      ctx.actions.run(
 -        executable = ctx.executable._swig,
 +        use_default_shell_env = True,
-+	executable = ctx.executable._swig,
++        executable = ctx.executable._swig,
          arguments = args,
          inputs = inputs,
          outputs = outputs,

@@ -29,9 +29,9 @@ function print_usage_and_exit {
   echo "  -h, --help                   Display this message."
   echo "      --jobs                   Specify number of jobs to run in parallel during the build."
   echo "      --bazel_memory_limit     Set a memory limit for Bazel build."
-  echo "      --dnnl                   Build and link to MKL-DNN / DNNL:"
+  echo "      --onednn/--dnnl          Build and link to oneDNN / DNNL:"
   echo "                                 * reference  - use the C++ reference kernels throughout."
-  echo "                                 * openblas   - use OpenBLAS rather than reference kernel where possibe."
+  echo "                                 * openblas   - use OpenBLAS rather than reference kernel where possible."
   echo "      --tf_version             TensorFlow version:"
   echo "                                 * 1          - TensorFlow v1.15.2 build."
   echo "                                 * 2          - TensorFlow 2.2.0 build."
@@ -65,7 +65,7 @@ build_tensorflow_image=1
 readonly target_arch="aarch64"
 readonly host_arch=$(arch)
 
-if ! [ "$host_arch" == "$target_arch" ]; then 
+if ! [ "$host_arch" == "$target_arch" ]; then
    echo "Error: $(arch) is not supported"
    print_usage_and_exit 1
 fi
@@ -75,7 +75,7 @@ fi
 extra_args=""
 nproc_build=
 bazel_mem=
-dnnl_blas=
+onednn_blas=
 tf_version=1
 clean_build=
 
@@ -144,8 +144,13 @@ do
       shift
       ;;
 
+    --onednn )
+      onednn_blas=$2
+      shift
+      ;;
+
     --dnnl )
-      dnnl_blas=$2
+      onednn_blas=$2
       shift
       ;;
 
@@ -166,7 +171,7 @@ do
   shift
 done
 
-exec > >(tee -i build.log)
+exec > >(tee -i build-tfv$tf_version$onednn_blas.log)
 exec 2>&1
 
 if [[ $nproc_build ]]; then
@@ -179,9 +184,9 @@ if [[ $bazel_mem ]]; then
   extra_args="$extra_args --build-arg bazel_mem=$bazel_mem"
 fi
 
-if [[ $dnnl_blas ]]; then
-  # DNNL based build
-  extra_args="$extra_args --build-arg dnnl_opt=$dnnl_blas"
+# Add oneDNN build options
+if [[ $onednn_blas ]]; then
+  extra_args="$extra_args --build-arg onednn_opt=$onednn_blas"
 fi
 
 if [[ $clean_build ]]; then
@@ -189,25 +194,27 @@ if [[ $clean_build ]]; then
   extra_args="--pull --no-cache $extra_args"
 fi
 
-
-echo 'TF Version:' $tf_version
-
+# Set TensorFlow, bazel and oneDNN version
 if [[ $tf_version == "1" ]]; then
    # TF1 version
    version=1.15.2
    bazel_version=0.29.1
-   extra_args="$extra_args --build-arg tf_id=$tf_version"
-   extra_args="$extra_args --build-arg tf_version=$version"
-   extra_args="$extra_args --build-arg bazel_version=$bazel_version"
+   onednn_version=0.21.3
+   extra_args="$extra_args --build-arg tf_id=$tf_version \
+      --build-arg tf_version=$version \
+      --build-arg bazel_version=$bazel_version \
+      --build-arg onednn_version=$onednn_version"
 elif [[ $tf_version == "2" ]]; then
    # TF2 version
    version=2.2.0
    bazel_version=2.0.0
-   extra_args="$extra_args --build-arg tf_id=$tf_version"
-   extra_args="$extra_args --build-arg tf_version=$version"
-   extra_args="$extra_args --build-arg bazel_version=$bazel_version"
+   onednn_version=1.4
+   extra_args="$extra_args --build-arg tf_id=$tf_version \
+      --build-arg tf_version=$version \
+      --build-arg bazel_version=$bazel_version \
+      --build-arg onednn_version=$onednn_version"
 else
-   echo 'TensorFlow version set to invalid value'
+   echo 'TensorFlow version set to invalid value.'
    exit 1
 fi
 
@@ -229,11 +236,11 @@ if [[ $build_tools_image ]]; then
 fi
 
 if [[ $build_dev_image ]]; then
-  # Stage 4: Adds bazel and TensorFlow builds with sources
-  docker build $extra_args --target tensorflow-dev -t tensorflow-dev-v$tf_version:latest .
+  # Stage 4: Adds bazel and TensorFlow builds with sources. Installs Tensorflow from whl.
+  docker build $extra_args --target tensorflow-dev -t tensorflow-dev-v$tf_version$onednn_blas:latest .
 fi
 
 if [[ $build_tensorflow_image ]]; then
-  # Stage 5: Adds bazel and TensorFlow builds with sources
-  docker build $extra_args --target tensorflow -t tensorflow-v$tf_version:latest .
+  # Stage 5: Clone Tensorflow benchmarks with Tensorflow installed.
+  docker build $extra_args --target tensorflow -t tensorflow-v$tf_version$onednn_blas:latest .
 fi

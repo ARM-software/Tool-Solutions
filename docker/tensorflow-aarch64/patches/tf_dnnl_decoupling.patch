@@ -16,11 +16,9 @@
  *******************************************************************************
 
 
-diff --git a/tensorflow/workspace.bzl b/tensorflow/workspace.bzl
-index 25484734fc..1840ea944d 100755
---- a/tensorflow/workspace.bzl
-+++ b/tensorflow/workspace.bzl
-@@ -132,26 +132,16 @@ def tf_repositories(path_prefix = "", tf_repo_name = ""):
+--- a/tensorflow/workspace.bzl	2020-07-08 10:24:27.672149000 +0100
++++ b/tensorflow/workspace.bzl	2020-07-08 10:24:41.020335000 +0100
+@@ -132,15 +132,10 @@
      # MKL-DNN might require upgrading MKL ML libraries also. If they need to be
      # upgraded then update the version numbers on all three versions above
      # (Linux, Mac, Windows).
@@ -34,32 +32,16 @@ index 25484734fc..1840ea944d 100755
 -            "https://storage.googleapis.com/mirror.tensorflow.org/github.com/intel/mkl-dnn/archive/v0.20.6.tar.gz",
 -            "https://github.com/intel/mkl-dnn/archive/v0.20.6.tar.gz",
 -        ],
--    )
-+        path = '/opt/dnnl/0.21.3'
-+    ) 
- 
--    tf_http_archive(
-+    native.new_local_repository(
-         name = "mkl_dnn_v1",
-         build_file = clean_dep("//third_party/mkl_dnn:mkldnn.BUILD"),
--        sha256 = "fcc2d951f7170eade0cfdd0d8d1d58e3e7785bd326bca6555f3722f8cba71811",
--        strip_prefix = "mkl-dnn-1.0-pc2",
--        urls = [
--            "https://storage.googleapis.com/mirror.tensorflow.org/github.com/intel/mkl-dnn/archive/v1.0-pc2.tar.gz",
--            "https://github.com/intel/mkl-dnn/archive/v1.0-pc2.tar.gz",
--        ],
-+        path = '/opt/dnnl/1.1.2'
++        path = '/opt/onednn/0.21.3'
      )
  
      tf_http_archive(
-diff --git a/third_party/mkl_dnn/mkldnn.BUILD b/third_party/mkl_dnn/mkldnn.BUILD
-index 35832ffcef..03f7645a1a 100644
---- a/third_party/mkl_dnn/mkldnn.BUILD
-+++ b/third_party/mkl_dnn/mkldnn.BUILD
-@@ -18,16 +18,6 @@ config_setting(
+--- a/third_party/mkl_dnn/mkldnn.BUILD	2020-07-08 10:25:04.878131000 +0100
++++ b/third_party/mkl_dnn/mkldnn.BUILD	2020-07-08 10:31:41.261234000 +0100
+@@ -18,16 +18,6 @@
      },
  )
-
+ 
 -template_rule(
 -    name = "mkldnn_config_h",
 -    src = "include/mkldnn_config.h.in",
@@ -73,10 +55,10 @@ index 35832ffcef..03f7645a1a 100644
  # Create the file mkldnn_version.h with MKL-DNN version numbers.
  # Currently, the version numbers are hard coded here. If MKL-DNN is upgraded then
  # the version numbers have to be updated manually. The version numbers can be
-@@ -38,61 +28,25 @@ template_rule(
+@@ -38,61 +28,25 @@
  # TODO(bhavanis): MKL-DNN minor version needs to be updated for MKL-DNN v1.x.
  # The current version numbers will work only if MKL-DNN v0.20 is used.
-
+ 
 -template_rule(
 -    name = "mkldnn_version_h",
 -    src = "include/mkldnn_version.h.in",
@@ -99,7 +81,7 @@ index 35832ffcef..03f7645a1a 100644
 +    srcs = glob(["lib/*"]),
 +    visibility = ["//visibility:public"],
  )
-
+ 
  cc_library(
      name = "mkl_dnn",
 -    srcs = glob([
