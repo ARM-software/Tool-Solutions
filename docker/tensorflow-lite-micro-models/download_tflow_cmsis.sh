@@ -28,4 +28,6 @@ fi
 cp -r $PWD/TFLite_micro_IPSS_Support/helper_functions.inc $PWD/tensorflow/tensorflow/lite/micro/tools/make/
 cp -r $PWD/TFLite_micro_IPSS_Support/armclang $PWD/tensorflow/tensorflow/lite/micro/tools/make/templates
 cp -r $PWD/TFLite_micro_IPSS_Support/ipss* $PWD/tensorflow/tensorflow/lite/micro/tools/make/targets/
+cp -r $PWD/TFLite_micro_IPSS_Support/cmsis.inc $PWD/tensorflow/tensorflow/lite/micro/tools/make/ext_libs/
+
 

@@ -91,6 +91,7 @@ ifeq ($(TARGET),$(filter $(TARGET),ipss model))
 
   GENERATED_PROJECT_INCLUDES += \
     -I$(MAKEFILE_DIR)/targets/ipss \
+    -I$(MAKEFILE_DIR)/downloads/ \
     -I$(MAKEFILE_DIR)/downloads/cmsis/CMSIS/Core/Include/ \
     -I$(MAKEFILE_DIR)/downloads/cmsis/CMSIS/DSP/Include/ \
     -I$(MAKEFILE_DIR)/downloads/cmsis/CMSIS/NN/Include/
@@ -111,6 +112,7 @@ ifeq ($(TARGET),$(filter $(TARGET),ipss model))
     $(MAKEFILE_DIR)/downloads/cmsis/CMSIS/NN/Include/arm_nnfunctions.h \
     $(MAKEFILE_DIR)/downloads/cmsis/CMSIS/NN/Include/arm_nnsupportfunctions.h \
     $(MAKEFILE_DIR)/downloads/cmsis/CMSIS/NN/Include/arm_nn_tables.h \
+    $(MAKEFILE_DIR)/downloads/cmsis/CMSIS/NN/Include/arm_nn_types.h \
     $(MAKEFILE_DIR)/downloads/cmsis/CMSIS/DSP/Include/arm_common_tables.h \
     $(MAKEFILE_DIR)/downloads/cmsis/CMSIS/DSP/Include/arm_const_structs.h \
     $(MAKEFILE_DIR)/downloads/cmsis/CMSIS/DSP/Include/arm_helium_utils.h \
