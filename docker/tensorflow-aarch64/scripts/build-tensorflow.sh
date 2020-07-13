@@ -32,15 +32,25 @@ git clone ${src_host}/${src_repo}.git
 cd ${src_repo}
 git checkout v$version -b v$version
 
+# Checking out mkl_matmul_op.cc from master branch as it has API and code changes for oneDNN 1.x compared with Tensorflow 2.2.0.
+if [[ $tf_id == '2' ]]; then
+	git checkout master -- tensorflow/core/kernels/mkl_matmul_op.cc
+fi
+
 # Apply path to allow use of newer Bazel build.
-if [[ $tf_id == '1' ]]; then 
-   patch -p1 < ../tf_dnnl_decoupling.patch
+if [[ $tf_id == '1' ]]; then
+   if [[ $ONEDNN_BUILD ]]; then
+       patch -p1 < ../tf_dnnl_decoupling.patch
+   fi
    patch -p1 < ../tensorflow.patch
 elif [[ $tf_id == '2' ]]; then
-   patch -p1 < ../tf2_dnnl_decoupling.patch
+   if [[ $ONEDNN_BUILD ]]; then
+   	patch -p1 < ../tf2_onednn_decoupling.patch
+   	patch -p1 <../oneDNN-header.patch
+   fi
    patch -p1 < ../tensorflow2.patch
 else
-   echo 'Invalid TensorFlow version for patches'
+   echo 'Invalid TensorFlow version when applying patches to the TensorFlow repository'
    exit 1
 fi
 
@@ -66,26 +76,39 @@ extra_args=""
 if [[ $BZL_RAM ]]; then extra_args="$extra_args --local_ram_resources=$BZL_RAM"; fi
 if [[ $NP_MAKE ]]; then extra_args="$extra_args --jobs=$NP_MAKE"; fi
 
-if [[ $DNNL_BUILD ]]; then 
-  echo "$DNNL_BUILD build"
-  bazel build $extra_args \
-    --define=build_with_mkl_dnn_only=true --define=build_with_mkl=true \
-    --define=tensorflow_mkldnn_contraction_kernel=1 \
-    --copt="-mtune=native" --copt="-march=armv8-a" --copt="-O3" --copt="-fopenmp" \
-    --cxxopt="-mtune=native" --cxxopt="-march=armv8-a" --cxxopt="-O3" --cxxopt="-fopenmp" \
-    --linkopt="-L$PROD_DIR/arm_opt_routines/lib -lmathlib -lm" --linkopt="-fopenmp" \
-    --config=noaws --config=v$tf_id  --cxxopt="-D_GLIBCXX_USE_CXX11_ABI=0" \
-    //tensorflow/tools/pip_package:build_pip_package
+if [[ $ONEDNN_BUILD ]]; then
+   echo "$ONEDNN_BUILD build for $TF_VERSION"
+   if [[ $tf_id == '1' ]]; then
+       bazel build $extra_args \
+        --define=build_with_mkl_dnn_only=true --define=build_with_mkl=true \
+        --define=tensorflow_mkldnn_contraction_kernel=1 \
+        --copt="-mtune=native" --copt="-march=armv8-a" --copt="-O3" --copt="-fopenmp" \
+        --cxxopt="-mtune=native" --cxxopt="-march=armv8-a" --cxxopt="-O3" --cxxopt="-fopenmp" \
+        --linkopt="-L$PROD_DIR/arm_opt_routines/lib -lmathlib -lm" --linkopt="-fopenmp" \
+        --config=noaws --config=v$tf_id  --cxxopt="-D_GLIBCXX_USE_CXX11_ABI=0" \
+        //tensorflow/tools/pip_package:build_pip_package
+   elif [[ $tf_id == '2' ]]; then
+       bazel build $extra_args \
+        --define=build_with_mkl_dnn_v1_only=true --define=build_with_mkl=true \
+        --define=tensorflow_mkldnn_contraction_kernel=1 \
+        --copt="-mtune=native" --copt="-march=armv8-a" --copt="-O3" --copt="-fopenmp" \
+        --cxxopt="-mtune=native" --cxxopt="-march=armv8-a" --cxxopt="-O3" --cxxopt="-fopenmp" \
+        --linkopt="-L$PROD_DIR/arm_opt_routines/lib -lmathlib -lm" --linkopt="-fopenmp" \
+        --config=noaws --config=v$tf_id  --cxxopt="-D_GLIBCXX_USE_CXX11_ABI=0" \
+        //tensorflow/tools/pip_package:build_pip_package
+   else
+       echo 'Invalid TensorFlow version when building tensorflow'
+       exit 1
+   fi
 else
-   echo "Eigen-only build"
-   bazel build $extra_args --define tensorflow_mkldnn_contraction_kernel=0 \
-    --copt="-mtune=native" --copt="-march=armv8-a" --copt="-O3" \
-    --cxxopt="-mtune=native" --cxxopt="-march=armv8-a" --cxxopt="-O3" \
-    --copt="-L$PROD_DIR/arm_opt_routines/lib -lmathlib -lm" \
-    --config=noaws --config=v$tf_id --cxxopt="-D_GLIBCXX_USE_CXX11_ABI=0" \
-    //tensorflow/tools/pip_package:build_pip_package
+    echo "Eigen-only build for $TF_VERSION"
+    bazel build $extra_args --define tensorflow_mkldnn_contraction_kernel=0 \
+     --copt="-mtune=native" --copt="-march=armv8-a" --copt="-O3" \
+     --cxxopt="-mtune=native" --cxxopt="-march=armv8-a" --cxxopt="-O3" \
+     --copt="-L$PROD_DIR/arm_opt_routines/lib -lmathlib -lm" \
+     --config=noaws --config=v$tf_id --cxxopt="-D_GLIBCXX_USE_CXX11_ABI=0" \
+     //tensorflow/tools/pip_package:build_pip_package
 fi
-
 ./bazel-bin/tensorflow/tools/pip_package/build_pip_package ./wheel-TF$TF_VERSION-py$PY_VERSION-$CC
 
 pip install $(ls -tr wheel-TF$TF_VERSION-py$PY_VERSION-$CC/*.whl | tail)

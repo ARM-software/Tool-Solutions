@@ -1,0 +1,96 @@
+ *******************************************************************************
+ Copyright 2020 Arm Limited and affiliates.
+ SPDX-License-Identifier: Apache-2.0
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+ *******************************************************************************
+
+
+--- a/tensorflow/core/kernels/mkl_batch_matmul_op.cc	2020-07-02 18:52:22.615849143 +0100
++++ b/tensorflow/core/kernels/mkl_batch_matmul_op.cc	2020-07-02 18:56:20.805094932 +0100
+@@ -25,7 +25,7 @@
+ 
+ #define EIGEN_USE_THREADS
+ 
+-#if defined(INTEL_MKL) && !defined(INTEL_MKL_DNN_ONLY)
++#if defined(INTEL_MKL) && !defined(ENABLE_MKLDNN_V1)
+ #include <vector>
+ 
+ #include "mkl_cblas.h"
+--- a/tensorflow/core/kernels/mkl_transpose_op.cc	2020-07-02 19:04:36.013531269 +0100
++++ b/tensorflow/core/kernels/mkl_transpose_op.cc	2020-07-02 19:09:48.412553051 +0100
+@@ -19,7 +19,7 @@
+ 
+ #define EIGEN_USE_THREADS
+ 
+-#if !defined(INTEL_MKL_DNN_ONLY)
++#if !defined(ENABLE_MKLDNN_V1)
+ #include "mkl_trans.h"
+ #endif
+ 
+@@ -50,7 +50,7 @@
+ // REQUIRES: perm is a permutation.
+ 
+ namespace {
+-#if !defined(INTEL_MKL_DNN_ONLY)
++#if !defined(ENABLE_MKLDNN_V1)
+ template <typename T>
+ Status MKLTranspose2D(const char trans, const Tensor& in, Tensor* out);
+ 
+@@ -104,7 +104,7 @@
+ static const char kMKLTranspose = 'T';
+ static const char kMKLConjugateTranspose = 'C';
+ 
+-#endif  // if !defined(INTEL_MKL_DNN_ONLY)
++#endif  // #if !defined(ENABLE_MKLDNN_V1)
+ 
+ // MKL-DNN based Transpose implementation
+ template <typename T>
+@@ -171,7 +171,7 @@
+ Status MklTransposeCpuOp::DoTranspose(OpKernelContext* ctx, const Tensor& in,
+                                       gtl::ArraySlice<int32> perm,
+                                       Tensor* out) {
+-#if !defined(INTEL_MKL_DNN_ONLY)
++#if !defined(ENABLE_MKLDNN_V1)
+   if (in.dims() == 2) {
+     if (perm[0] == 0 && perm[1] == 1) {
+       return Status::OK();
+@@ -217,7 +217,7 @@
+                                                const Tensor& in,
+                                                gtl::ArraySlice<int32> perm,
+                                                Tensor* out) {
+-#if !defined(INTEL_MKL_DNN_ONLY)
++#if !defined(ENABLE_MKLDNN_V1)
+   if (in.dims() == 2 && perm[0] == 1 && perm[1] == 0) {
+     // TODO(rmlarsen): By setting lda and ldb, we could use the MKL kernels
+     // for any transpose that can be reduced to swapping the last two
+--- a/tensorflow/core/common_runtime/mkl_cpu_allocator.h	2020-07-02 19:00:22.934328245 +0100
++++ b/tensorflow/core/common_runtime/mkl_cpu_allocator.h	2020-07-02 19:02:32.083919332 +0100
+@@ -29,7 +29,7 @@
+ #include "tensorflow/core/platform/mem.h"
+ #include "tensorflow/core/platform/numa.h"
+ 
+-#ifndef INTEL_MKL_DNN_ONLY
++#ifndef ENABLE_MKLDNN_V1
+ #include "i_malloc.h"
+ #endif
+ 
+@@ -186,7 +186,7 @@
+         new MklSmallSizeAllocator(sub_allocator_, max_mem_bytes, kName);
+     large_size_allocator_ =
+         new BFCAllocator(sub_allocator_, max_mem_bytes, kAllowGrowth, kName);
+-#ifndef INTEL_MKL_DNN_ONLY
++#ifndef ENABLE_MKLDNN_V1
+     // For redirecting all allocations from MKL to this allocator
+     // From: http://software.intel.com/en-us/node/528565
+     i_malloc = MallocHook;

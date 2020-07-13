@@ -96,14 +96,18 @@ RUN chown $DOCKER_USER:$DOCKER_USER /home/$DOCKER_USER/.bash_profile
 # ========
 FROM tensorflow-base AS tensorflow-libs
 ARG njobs
-ARG dnnl_opt
+ARG onednn_opt
+ARG onednn_version
+ARG tf_id
+
 ENV NP_MAKE="${njobs}" \
-    DNNL_BUILD="${dnnl_opt}"
+    ONEDNN_BUILD="${onednn_opt}" \
+    ONEDNN_VERSION="${onednn_version}" \
+    TF_VERSION_ID="${tf_id}"
 
 # Key version numbers
 ENV PY_VERSION=3.7.0 \
-    OPENBLAS_VERSION=0.3.7 \
-    DNNL_VERSION=0.21.3
+    OPENBLAS_VERSION=0.3.9
 
 # Package build parameters
 ENV PROD_DIR=/opt \
@@ -139,15 +143,15 @@ RUN $PACKAGE_DIR/build-openblas.sh
 ENV OPENBLAS_DIR=$PROD_DIR/openblas/$OPENBLAS_VERSION
 ENV LD_LIBRARY_PATH=$OPENBLAS_DIR/lib:$LD_LIBRARY_PATH
 
-# Build DNNL from source
-COPY scripts/build-dnnl.sh $PACKAGE_DIR/.
-# Patch for MKL-DNN, v0.21.3
+# Build oneDNN from source
+COPY scripts/build-onednn.sh $PACKAGE_DIR/.
+# Patch for oneDNN (MKL-DNN), v0.21.3
 COPY patches/mkldnn.patch $PACKAGE_DIR/mkldnn.patch
-# Patch for DNNL  v1.1.2
-#COPY patches/dnnl.patch $PACKAGE_DIR/dnnl.patch
-RUN $PACKAGE_DIR/build-dnnl.sh
-ENV DNNL_DIR=$PROD_DIR/dnnl/$DNNL_VERSION
-ENV LD_LIBRARY_PATH=$DNNL_DIR/lib:$LD_LIBRARY_PATH
+# Patch for oneDNN  v1.4
+COPY patches/onednn.patch $PACKAGE_DIR/onednn.patch
+RUN $PACKAGE_DIR/build-onednn.sh
+ENV ONEDNN_DIR=$PROD_DIR/onednn/$ONEDNN_VERSION
+ENV LD_LIBRARY_PATH=$ONEDNN_DIR/lib:$LD_LIBRARY_PATH
 
 # ========
 # Stage 3: install essential python dependencies into a venv
@@ -206,14 +210,14 @@ CMD ["bash", "-l"]
 FROM tensorflow-libs AS tensorflow-dev
 ARG njobs
 ARG bazel_mem
-ARG dnnl_opt
+ARG onednn_opt
 ARG tf_version
 ARG tf_id
 ARG bazel_version
 
 ENV NP_MAKE="${njobs}" \
     BZL_RAM="${bazel_mem}" \
-    DNNL_BUILD="${dnnl_opt}"
+    ONEDNN_BUILD="${onednn_opt}"
 
 # Key version numbers
 ENV BZL_VERSION="${bazel_version}" \
@@ -239,9 +243,11 @@ ENV PATH=$PACKAGE_DIR/bazel/output:$PATH
 # Build TensorFlow
 COPY scripts/build-tensorflow.sh $PACKAGE_DIR/.
 COPY patches/tf_dnnl_decoupling.patch $PACKAGE_DIR/tf_dnnl_decoupling.patch
-COPY patches/tf2_dnnl_decoupling.patch $PACKAGE_DIR/tf2_dnnl_decoupling.patch
+COPY patches/tf2_onednn_decoupling.patch $PACKAGE_DIR/tf2_onednn_decoupling.patch
 COPY patches/tensorflow.patch $PACKAGE_DIR/tensorflow.patch
 COPY patches/tensorflow2.patch $PACKAGE_DIR/tensorflow2.patch
+# Patches to unlink MKL-ML header files for TensorFlow 2.x - oneDNN 1.x builds
+COPY patches/oneDNN-header.patch $PACKAGE_DIR/oneDNN-header.patch
 RUN $PACKAGE_DIR/build-tensorflow.sh
 
 CMD ["bash", "-l"]
