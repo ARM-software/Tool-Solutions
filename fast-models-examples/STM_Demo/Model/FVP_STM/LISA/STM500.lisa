@@ -1,0 +1,827 @@
+/*
+ * The confidential and proprietary information contained in this file may
+ * only be used by a person authorised under and to the extent permitted
+ * by a subsisting licensing agreement from Arm Limited.
+ *
+ * Copyright 2020 Arm Limited.
+ * All rights reserved.
+ *
+ * This entire notice must be reproduced on all copies of this file
+ * and copies of this file may only be made by a person if such person is
+ * permitted to do so under the terms of a subsisting license agreement
+ * from Arm Limited.
+ *
+ * 
+ */
+component STM500
+{
+    properties
+    {
+        version = "unreleased";
+        component_type = "Peripheral";
+        description = "STM 500 Model";
+    }
+
+    includes
+    {
+
+        #include "sg/SGComponentWithSchedulerAccess.h"
+
+            typedef unsigned int			STM_RO;
+            typedef STM_RO 		            STM_RW;
+            typedef STM_RW					STM_NA;
+
+        struct stmAPB {
+            STM_RW STMSTIMR[32];
+            STM_NA RSVD_0[608];
+            STM_NA IMPDEF[4][64];
+            STM_RW STMSPER;
+            STM_NA RSVD_2[7];
+            STM_RW STMSPTER;
+            STM_NA RSVD_3[7];
+            STM_RW STMPRIVMASKR;
+            STM_NA RSVD_4[7];
+            STM_RW STMSPSCR;
+            STM_RW STMSPMSCR;
+            STM_RW STMSPOVERRIDER;
+            STM_RW STMSPMOVERRIDER;
+            STM_RW STMSPTRIGCSR;
+            STM_NA RSVD_5[3];
+            STM_RW STMTCSR;
+        #define STMTCSR_EN		(1 << 0)
+        #define STMTCSR_TSEN	(1 << 1)
+        #define STMTCSR_SYNCEN	(1 << 2)
+        #define STMTCSR_HWTEN	(1 << 3)
+        #define STMTCSR_COMPEN	(1 << 5)
+        #define STMTCSR_BUSY	(1 << 23)
+            STM_RW STMTSSTIMR;
+            STM_NA RSVD_6;
+            STM_RW STMTSFREQR;
+            STM_RW STMSYNCR;
+            STM_RW STMAUXCR;
+            STM_NA RSVD_7[2];
+            STM_RO STMFEAT1R             = {0x006587D1};
+            STM_RO STMFEAT2R             = {0x000104F2};
+            STM_RO STMFEAT3R             = {0x0000007F};
+            STM_RO RSVD_8[15];
+            union {
+                STM_NA RSVD[6];
+                struct STM_IT {
+                    STM_RW STMITTRIGGER;
+                    STM_RW STMITATBDATA0;
+                    STM_RW STMITATBCTR2;
+                    STM_RW STMITATBID;
+                    STM_RW STMITATBCTR0;
+                    STM_NA RSVD;
+                } STMIT;
+            } RSVD_9;
+            STM_RW STMITCTRL;
+            STM_NA RSVD_A[39];
+            STM_RW STMCLAIMSET;
+            STM_RW STMCLAIMCLR;
+            STM_NA RSVD_B[2];
+            STM_RW STMLAR;
+        #define STMLAR_UNLOCK	(0xc5acce55)
+        #define STMLAR_LOCK		(0x00000000)
+            STM_RW STMLSR;
+        #define STMLSR_SLI		(1 << 0)
+        #define STMLSR_SLK		(1 << 1)
+            STM_RW STMAUTHSTATUS         = {0x000000AA};
+            STM_RO STMDEVARCH            = {0x0};
+            STM_RO RSVD_C[2]             = {0x0,0x0};
+            STM_RO STMDEVID              = {0x00010000};
+            STM_RO STMDEVTYPE            = {0x00000063};
+            STM_RO STMPIDR[8]            = {0x62, 0xB9, 0x1B, 0x00, 0x04, 0x0, 0x0, 0x0};
+            STM_RO STMCIDR[4]            = {0x0D, 0x90, 0x05, 0xB1}; 
+        };
+
+
+        /*
+        * Packet : 
+        * https://static.docs.arm.com/ihi0032/b/IHI0032B_amba_atb_protocol_spec.pdf
+        * 64 bit value
+        * send_packet()
+        */
+
+        /* STPv2
+        * Doc : 
+        *      1. MIPI Alliance Specification for System Trace Protocol (STP), version 2.1
+        *      2. STPv2 Trace Protocol for ARM CoreSight STMs
+        *
+        *
+        *     STPv2: VERSION / MASTER_PACKET / CHANNEL_PACKET / DATA_PACKET / FLAG_PACKET / ERROR_PACKET / NULL_PACKET / FREQ_PACKET / TRIG_PACKET
+        *     The STM-500 only generates STPv2NAT timestamps.
+        */
+        
+        class STPv2
+        {
+            
+            private:
+
+                uint64_t data_to_send = {0};
+                uint32_t data_completed = {0};
+
+                uint8_t current_master   = {0};
+                uint16_t current_channel = {0}; 
+
+                template<typename T>
+                void add_data(T data, int size)
+                {
+                    // printf(" data_completed = %d, data_to_send = %lx size = %d data = %lx \n", data_completed, data_to_send, size, (uint64_t )data);
+                    if (size + data_completed > 64 )
+                    {
+                        int space = 64 - data_completed;
+                        data_to_send |= ((data & ((1ULL<<space)-1)) << data_completed);
+                        send_data(data_to_send);
+                        data_completed = 0x0;
+                        data_to_send = 0;
+                        data = data >> space;
+                        size = size - space;
+                    }
+
+                    data_to_send |= ((data & ((1ULL<<size)-1)) << data_completed);
+                    data_completed +=  size;
+                    if (data_completed == 64)
+                    {
+                        send_data(data_to_send);
+                        data_completed = 0x0;
+                        data_to_send = 0;
+                    }
+                }
+
+            template<typename T>
+            T nibbles_revers(T num)
+            {
+                    uint64_t const_mask[] = {  0x0F0F0F0F0F0F0F0F
+                                            , 0xF0F0F0F0F0F0F0F0
+                                            , 0x00FF00FF00FF00FF
+                                            , 0xFF00FF00FF00FF00
+                                            , 0x0000FFFF0000FFFF
+                                            , 0xFFFF0000FFFF0000
+                                            , 0x00000000FFFFFFFF
+                                            , 0xFFFFFFFF00000000 };
+
+                    int shift = 4;
+                    for (unsigned int i =0; ((unsigned int) (1<<i)) <= sizeof(T); i++)
+                    {
+                        num = ((num & const_mask[2*i])<<shift) | ((num & const_mask[2*i+1])>>shift);
+                        shift *= 2;
+                    }
+                    return num;
+            }
+
+            public:
+                    std::function<void(uint64_t)> send_data;
+                    
+                    
+                    enum STPv2_OPCODE
+                    {
+                        NUL          = 0x0,
+                        M8           = 0x1,
+                        MERR         = 0x2,
+                        C8           = 0x3,
+                        D8           = 0x4,
+                        D16          = 0x5,
+                        D32          = 0x6,
+                        D64          = 0x7,
+                        D8MTS        = 0x8,
+                        D16MTS       = 0x9,
+                        D32MTS       = 0xA,
+                        D64MTS       = 0xB,
+                        FLAG_TS      = 0xE,
+                        Extension    = 0xF,
+                        VERSION       = 0xF00,
+                        TRIG          = 0xF06,
+                        TRIG_TS       = 0xF07,
+                        FREQ          = 0xF08,
+                        GERR          = 0xF2,
+                        C16           = 0xF3,
+                        D8TS          = 0xF4,
+                        D16TS         = 0xF5,
+                        D32TS         = 0xF6,
+                        D64TS         = 0xF7,
+                        D8M           = 0xF8,
+                        D16M          = 0xF9,
+                        D32M          = 0xFA,
+                        D64M          = 0xFB,
+                        FLAG          = 0xFE,
+                        ASYNC         = 0xFFFF,
+                    };
+
+
+                void reset()
+                {
+                    data_to_send = 0x0;
+                    data_completed = 0x0;
+                    current_master = 0x0;
+                    current_channel = 0x0;
+                }
+
+
+                template<typename T>
+                void send_packet(STPv2_OPCODE opcode, T payloads)
+                {
+                    if (opcode > 0xF)
+                    {
+                        add_data(0xF, 4);
+                    }
+                    add_data((opcode) & 0xF, 4);
+
+                    add_data(nibbles_revers(payloads), sizeof(T)*8);
+                }
+
+                void send_flag_packet(uint8_t master_id, uint16_t channel_id,  bool is_trigger, uint64_t time_stamp = 0)
+                {
+                    if (master_id != current_master)
+                    {
+                        // send master id
+                        current_master  = master_id;
+                        current_channel = 0x0;
+                        send_packet(STPv2::STPv2_OPCODE::M8, (uint8_t)current_master);
+
+                    }
+
+                    if (channel_id != current_channel)
+                    {
+                        // channel id
+                        current_channel = channel_id;
+                        send_packet(STPv2::STPv2_OPCODE::C8, (uint8_t)current_channel);
+                    }
+
+
+                    if (is_trigger)
+                    {
+                        // Not Supported
+                    }
+                    else 
+                    {
+                        if(time_stamp != 0)
+                        {
+                            add_data(FLAG_TS & 0xF, 4);
+                            send_timestamp(16, time_stamp);
+                        }
+                        else
+                        {
+                            add_data(0xF,4);
+                            add_data(0xE,4);
+                        }
+                    }
+
+                }
+
+                template<typename T>
+                void send_data_packet(uint8_t master_id, uint16_t channel_id, T data, bool is_mark, uint64_t time_stamp = 0)
+                {
+                    STPv2_OPCODE opcode[2][2][4] = { {
+                                                         {D8, D16, D32, D64}, 
+                                                         {D8M, D16M, D32M, D64M}
+                                                     },
+                                                     {
+                                                         {D8TS, D16TS, D32TS, D64TS}, 
+                                                         {D8MTS, D16MTS, D32MTS, D64MTS}
+                                                     }
+                                                   };
+                    
+                    if (master_id != current_master)
+                    {
+                        // send master id
+                        current_master  = master_id;
+                        current_channel = 0x0;
+                        send_packet(STPv2::STPv2_OPCODE::M8, (uint8_t)current_master);
+
+                    }
+
+                    if (channel_id != current_channel)
+                    {
+                        // channel id
+                        current_channel = channel_id;
+                        send_packet(STPv2::STPv2_OPCODE::C8, (uint8_t)current_channel);
+                    }
+                    int index = sizeof(T) == 1 ? 0 : sizeof(T) == 2 ? 1 : sizeof(T) == 4 ? 2 : 3;
+                    send_packet(opcode[time_stamp != 0][is_mark][index], data);
+
+                    
+                    if(time_stamp != 0)
+                    {
+                        send_timestamp(16, time_stamp);
+                    }
+                }
+
+                template<typename T>
+                void send_timestamp(int size, T data)
+                {
+                    // The STM-500 only generates STPv2NAT timestamps
+                    // TS_PACKET = size ( number of nibbles) , nibbles1, ... 
+                    // Max size = 16
+                    if (size == 16)
+                    {
+                        add_data(0xE, 4);
+                    }
+                    else if (size == 14)
+                    {
+                        add_data(0xD, 4);
+                    }
+                    else
+                    {
+                         add_data(size & 0xF, 4);
+                    }
+
+                    if (size != 0)
+                    {
+                        add_data(nibbles_revers(data), sizeof(T)*8);
+                    }
+                }
+            };
+    }
+
+
+
+
+
+    //! AXI
+    slave port<PVBus> AXI;
+    //! HWE0
+    slave port<Signal> HWE0;
+    //! HWE1
+    slave port<Signal> HWE1;
+    //! HWE2
+    slave port<Signal> HWE2;
+    //! HWE3
+    slave port<Signal> HWE3;
+    //! HWE4
+    slave port<Signal> HWE4;
+    //! HWE5
+    slave port<Signal> HWE5;
+    //! HWE6
+    slave port<Signal> HWE6;
+    //! HWE7
+    slave port<Signal> HWE7;
+    //! HWE8
+    slave port<Signal> HWE8;
+    //! HWE9
+    slave port<Signal> HWE9;
+    //! HWE10
+    slave port<Signal> HWE10;
+    //! HWE11
+    slave port<Signal> HWE11;
+    //! HWE12
+    slave port<Signal> HWE12;
+    //! HWE13
+    slave port<Signal> HWE13;
+    //! HWE14
+    slave port<Signal> HWE14;
+    //! HWE15
+    slave port<Signal> HWE15;
+    //! HWE16
+    slave port<Signal> HWE16;
+    //! HWE17
+    slave port<Signal> HWE17;
+    //! HWE18
+    slave port<Signal> HWE18;
+    //! HWE19
+    slave port<Signal> HWE19;
+    //! HWE20
+    slave port<Signal> HWE20;
+    //! HWE21
+    slave port<Signal> HWE21;
+    //! HWE22
+    slave port<Signal> HWE22;
+    //! HWE23
+    slave port<Signal> HWE23;
+    //! HWE24
+    slave port<Signal> HWE24;
+    //! HWE25
+    slave port<Signal> HWE25;
+    //! HWE26
+    slave port<Signal> HWE26;
+    //! HWE27
+    slave port<Signal> HWE27;
+    //! HWE28
+    slave port<Signal> HWE28;
+    //! HWE29
+    slave port<Signal> HWE29;
+    //! HWE30
+    slave port<Signal> HWE30;
+    //! HWE31
+    slave port<Signal> HWE31;
+    //! HWE32
+    slave port<Signal> HWE32;
+    //! HWE33
+    slave port<Signal> HWE33;
+    //! HWE34
+    slave port<Signal> HWE34;
+    //! HWE35
+    slave port<Signal> HWE35;
+    //! HWE36
+    slave port<Signal> HWE36;
+    //! HWE37
+    slave port<Signal> HWE37;
+    //! HWE38
+    slave port<Signal> HWE38;
+    //! HWE39
+    slave port<Signal> HWE39;
+    //! HWE40
+    slave port<Signal> HWE40;
+    //! HWE41
+    slave port<Signal> HWE41;
+    //! HWE42
+    slave port<Signal> HWE42;
+    //! HWE43
+    slave port<Signal> HWE43;
+    //! HWE44
+    slave port<Signal> HWE44;
+    //! HWE45
+    slave port<Signal> HWE45;
+    //! HWE46
+    slave port<Signal> HWE46;
+    //! HWE47
+    slave port<Signal> HWE47;
+    //! HWE48
+    slave port<Signal> HWE48;
+    //! HWE49
+    slave port<Signal> HWE49;
+    //! HWE50
+    slave port<Signal> HWE50;
+    //! HWE51
+    slave port<Signal> HWE51;
+    //! HWE52
+    slave port<Signal> HWE52;
+    //! HWE53
+    slave port<Signal> HWE53;
+    //! HWE54
+    slave port<Signal> HWE54;
+    //! HWE55
+    slave port<Signal> HWE55;
+    //! HWE56
+    slave port<Signal> HWE56;
+    //! HWE57
+    slave port<Signal> HWE57;
+    //! HWE58
+    slave port<Signal> HWE58;
+    //! HWE59
+    slave port<Signal> HWE59;
+    //! HWE60
+    slave port<Signal> HWE60;
+    //! HWE61
+    slave port<Signal> HWE61;
+    //! HWE62
+    slave port<Signal> HWE62;
+    //! HWE63
+    slave port<Signal> HWE63;
+    //! DebugAPB
+    slave port<PVBus> DebugAPB;
+    //! TRIGOUTSPTE
+    master port<Signal> TRIGOUTSPTE;
+    //! TRIGOUTSW
+    master port<Signal> TRIGOUTSW;
+    //! TRIGOUTHETE
+    master port<Signal> TRIGOUTHETE;
+    //! ASYNCOUT
+    master port<Signal> ASYNCOUT;
+
+    // 64bit ATB Packet
+    master port<Value_64> ATB;
+
+
+    composition
+    {
+        // TODO
+        // There are 65,536 channels implemented as a stimulus port per channel
+        // 16MB in the AXI memory space
+        axi_busslave : PVBusSlave(size = 0x100000000); // Max 32 bit address space
+
+        debug_apb_busslave : PVBusSlave(size = 0x1000);
+    }
+
+    resources
+    {
+        sg::EventSource<uint64_t>* trace;
+        sg::EventSource<uint8_t, uint8_t, uint64_t, bool, uint64_t>* trace_stm;
+        STPv2 stp;
+        stmAPB stm_reg;
+        sg::SchedulerInterfaceForComponents* sci;
+        uint64_t stm_local_time;
+    }
+
+    behavior reset(int level)
+    {
+        composition.reset(level);
+        stp.reset();
+        stm_local_time = 0x0;
+
+    }
+    behavior init()
+    {
+        composition.init();
+
+        // create EventSource object
+        trace = new sg::EventSource<uint64_t>();
+
+        // provide trace name and description
+        trace->setName( "STM_ATB_VALUE" );
+        trace->setDescription( "ATB 64 bit value from STM" );
+
+        trace->AddField("ATB",
+                        "Value of ATB 64 bit data from STM",
+                        MTI::EventFieldType::MTI_UNSIGNED_INT,
+                        sizeof(uint64_t) );
+
+
+        // create EventSource object
+        trace_stm = new sg::EventSource<uint8_t, uint8_t, uint64_t, bool, uint64_t>();
+
+        // provide trace name and description
+        trace_stm->setName( "STM_PORT" );
+        trace_stm->setDescription( "STM stimulus Port" );
+
+        trace_stm->AddField("MasterID",
+                        "Master ID",
+                        MTI::EventFieldType::MTI_UNSIGNED_INT,
+                        sizeof(uint8_t));
+        trace_stm->AddField("channelID",
+                        "channel ID",
+                        MTI::EventFieldType::MTI_UNSIGNED_INT,
+                        sizeof(uint8_t));
+        trace_stm->AddField("DATA",
+                        "Data Written to stimulus port",
+                        MTI::EventFieldType::MTI_UNSIGNED_INT,
+                        sizeof(uint64_t));
+        trace_stm->AddField("MARK",
+                        "Is Mark Data",
+                        MTI::EventFieldType::MTI_BOOL,
+                        sizeof(bool));
+        trace_stm->AddField("Timestamp",
+                        "Timestamp of STM packet, zero mean no Timestamp packet",
+                        MTI::EventFieldType::MTI_UNSIGNED_INT,
+                        sizeof(uint64_t));
+
+
+
+        addTraceSource( trace );
+
+        addTraceSource( trace_stm );
+
+        sci = getSchedulerInterfaceForComponents(
+            getSimulationContext(), getHierarchicalName().c_str(), getInstancePath());
+
+        stp.send_data = std::bind(&COMPONENT_CLASS_NAME(STM500)::send_data, this, std::placeholders::_1);
+    }
+
+    behavior is_ATB_active() : bool
+    {
+        return trace->isActive() || ATB.setValue.implemented();
+    }    
+
+    behavior send_data(uint64_t data):void
+    {
+        // printf("Sending ATB = %lx", data);
+
+        if (trace->isActive())
+        {
+            trace->fire(data);
+        }
+
+        if (ATB.setValue.implemented())
+        {
+            ATB.setValue(data);
+        }
+    }
+
+    
+
+    connection
+    {
+        self.AXI => axi_busslave.pvbus_s;
+        axi_busslave.device => self.AXIdevice;
+
+        self.DebugAPB => debug_apb_busslave.pvbus_s;
+        debug_apb_busslave.device => self.DebugAPBdevice;
+    }
+    behavior AXIRead(pv::bus_addr_t addr) : uint32_t
+    {
+        uint32_t data = 0; // All locations are write-only. Read accesses return zero
+        
+        // printf(" [%s] Called addr = %lx data = %x \n", __FUNCTION__, addr, data);
+        return data;
+    }
+
+    behavior AXIWrite(pv::bus_addr_t addr, uint32_t data)
+    {
+        // printf(" [%s] Called addr = %lx data = %c \n", __FUNCTION__, addr, (uint8_t)data);
+    }
+
+    behavior DebugAPBRead(pv::bus_addr_t addr) : uint32_t
+    {
+        uint32_t data = 0;
+        if ( (addr + 4) <= sizeof(stm_reg))
+        {
+            memcpy(&data, (uint8_t *)&stm_reg + addr, 4);
+        }
+        // printf(" [%s] Called addr = %lx data = %x\n", __FUNCTION__, addr, data);
+
+        return data;
+    }
+
+    behavior DebugAPBWrite(pv::bus_addr_t addr, uint32_t data)
+    {
+        if ( (addr + 4) <= sizeof(stm_reg))
+        {
+            memcpy((uint8_t *)&stm_reg + addr, &data, 4);
+        }
+        // printf(" [%s] Called addr = %lx data = %x\n", __FUNCTION__, addr, data);
+
+    }
+
+    internal slave port<PVDevice> AXIdevice
+    {
+        // Pass on read/write requests to registerRead()/registerWrite().
+        behavior read(pv::ReadTransaction tx)
+                    : pv::Tx_Result
+        {
+            // Unaligned accesses are not supported. All accesses must be aligned to the access size.
+            if (tx.getAccessWidth() > pv::ACCESS_32_BITS || !tx.isAligned()) return tx.generateAbort();
+            // Always do an aligned 32-bit read and let the bus extract the appropriate data
+            return tx.setReturnData32((uint32_t)AXIRead(tx.getAddress() & ~3));
+        }
+
+        behavior write(pv::WriteTransaction tx)
+                    : pv::Tx_Result
+        {
+            
+            if (!is_ATB_active() || ( (stm_reg.STMTCSR & STMTCSR_EN) == 0x0))
+            {
+                return tx.writeComplete();
+            }
+
+            // Data accesses must be aligned to the bottom of the 8-byte
+            // every data packet access must have address bits[2:0] == 0b000
+            // bool access_aligned = ((tx.getAddress() & 0x7) != 0);
+
+
+
+            // Non-data accesses must be written as zero and the implementation must ignore the data value.
+            // bool data_written_is_zero = (tx.getData32() == 0x0);
+
+            // pv::AccessWidth = tx.getAccessWidth();
+
+            // uint32_t size = tx.getTransactionByteSize();
+
+            // Unaligned accesses are not supported. All accesses must be aligned to the access size.
+
+
+            /* The master identification is based on all of the following:
+             *  1. Whether the access is Secure or Non-secure.
+             *  2. The upper bits of the AXI address.
+             *
+             * MasterID
+             *   Bit[7]     : 0
+             *   Bit[6]     : AWPROTS[1]
+             *   Bits[5:0]  : AWADDRS[29:24]
+             */
+            uint8_t masterID = ((tx.getAddress() & (0x3F<<24)) >> 24) | ((tx.isNonSecure() ? 0x1 : 0x0)<<6);
+
+
+
+            // Each extended stimulus port occupies 256 consecutive bytes in the memory map.
+            // 1 stimulus port = 0x00 - 0xFF
+            // 16 * 256 = 4KB
+            // 16 stimulus ports occupy a 4KB
+
+            // 
+
+            // 16MB of address space
+            // 
+
+            uint8_t stimulus_port_reg = tx.getAddress() & 0xFF;
+
+            uint16_t port_num = (tx.getAddress() >> 8) & 0xF;
+
+
+             // Bit 7 : 1: Invariant Timing data accesses, 0: Guaranteed
+             // Bit 5 : 1: No Data (Flag, Triger) , 0 : Data
+             // Bit 4 : 1: Not Marked , 0: Marked
+             // Bit 3 : 1: No Timestamp, 0: Timestamped
+
+             bool is_no_data = (stimulus_port_reg & 0x1<<5) ? true : false;
+             bool is_mark = (stimulus_port_reg & 0x1<<4) ? false : true;
+             bool enableTimestamp = (stimulus_port_reg & 0x1<<3) ? false : true;
+
+             
+             uint64_t time_stamp = 0x0;
+             if (enableTimestamp)
+             {
+
+                 uint64_t              global_time    = sci->getCurrentSimulatedTime(nullptr);
+                 uint64_t local_time = 0;
+
+                 sg::SchedulerThread * current_thread = sci->currentThread();
+                 if(current_thread)
+                 {
+                    sg::SchedulerRunnable * runnable = current_thread->getRunnable();
+                    runnable->getThreadProperty(sg::SchedulerRunnable::TP_LOCAL_TIME, local_time);
+                    runnable->setThreadProperty(sg::SchedulerRunnable::TP_LOCAL_TIME, local_time+1);
+                    runnable->getThreadProperty(sg::SchedulerRunnable::TP_LOCAL_TIME, local_time);
+                 }
+
+                 // printf(" global_time = %lx, local_time = %lx \n", global_time, local_time);
+                 time_stamp = global_time + local_time + stm_local_time;
+                 stm_local_time++;   
+             }
+             // printf("Time : %lx \n", time_stamp);
+
+             if (!is_no_data)
+             {
+                 switch(tx.getAccessWidth())
+                 {
+                     case pv::ACCESS_8_BITS:
+                      {
+                         stp.send_data_packet(masterID, port_num, (uint8_t)tx.getData8(), is_mark,  time_stamp );
+                         break;        
+                     }
+                     case pv::ACCESS_16_BITS:
+                     {
+                         stp.send_data_packet(masterID, port_num, (uint16_t)tx.getData16(), is_mark,  time_stamp );
+                         break;        
+                     }                    
+                     case pv::ACCESS_32_BITS:
+                     {
+                         stp.send_data_packet(masterID, port_num, (uint32_t)tx.getData32(), is_mark,  time_stamp );
+                         break;        
+                     }
+                     case pv::ACCESS_64_BITS:
+                     {
+                         stp.send_data_packet(masterID, port_num, (uint64_t)tx.getData64(), is_mark,  time_stamp );
+                         break;        
+                     }
+                     default:
+                     stp.send_data_packet(masterID, port_num, (uint8_t)tx.getData32(), is_mark,  time_stamp );
+
+                 }
+                 stp.send_data_packet(masterID, port_num, (uint8_t)tx.getData32(), is_mark,  time_stamp );
+             }
+             else
+             {
+                 stp.send_flag_packet(masterID, port_num,  is_mark, time_stamp);
+             }
+
+             if(trace_stm->isActive())
+             {
+                 if (!is_no_data)
+                 {
+                     trace_stm->fire(masterID, port_num, (uint64_t)tx.getData32(), is_mark, time_stamp );
+                 }
+                 else
+                 {
+                     trace_stm->fire(masterID, port_num, 0x0, is_mark, time_stamp);
+                 }
+             }
+            
+
+            AXIWrite(tx.getAddress(),
+                          tx.getData32());
+            return tx.writeComplete();
+        }
+
+        behavior debugRead(pv::ReadTransaction tx) : pv::Tx_Result
+        {
+            return AXIdevice.read(tx);
+        }
+
+        behavior debugWrite(pv::WriteTransaction tx) : pv::Tx_Result
+        {
+            return AXIdevice.write(tx);
+        }
+    }
+
+
+    internal slave port<PVDevice> DebugAPBdevice
+    {
+        // Pass on read/write requests to registerRead()/registerWrite().
+        behavior read(pv::ReadTransaction tx)
+                    : pv::Tx_Result
+        {
+            if (tx.getAccessWidth() > pv::ACCESS_32_BITS || !tx.isAligned()) return tx.generateAbort();
+            // Always do an aligned 32-bit read and let the bus extract the appropriate data
+            return tx.setReturnData32((uint32_t)DebugAPBRead(tx.getAddress() & ~3));
+        }
+
+        behavior write(pv::WriteTransaction tx)
+                    : pv::Tx_Result
+        {
+            DebugAPBWrite(tx.getAddress(),
+                          tx.getData32());
+            return tx.writeComplete();
+        }
+
+        behavior debugRead(pv::ReadTransaction tx) : pv::Tx_Result
+        {
+            return DebugAPBdevice.read(tx);
+        }
+
+        behavior debugWrite(pv::WriteTransaction tx) : pv::Tx_Result
+        {
+            return DebugAPBdevice.write(tx);
+        }
+    }
+
+}
