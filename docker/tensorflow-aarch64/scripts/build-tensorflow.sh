@@ -34,7 +34,7 @@ git checkout v$version -b v$version
 
 # Checking out mkl_matmul_op.cc from master branch as it has API and code changes for oneDNN 1.x compared with Tensorflow 2.2.0.
 if [[ $tf_id == '2' ]]; then
-	git checkout master -- tensorflow/core/kernels/mkl_matmul_op.cc
+	git checkout 00dbf072dbe69521ae2170a9fac4052187d187d6  -- tensorflow/core/kernels/mkl_matmul_op.cc
 fi
 
 # Apply path to allow use of newer Bazel build.
