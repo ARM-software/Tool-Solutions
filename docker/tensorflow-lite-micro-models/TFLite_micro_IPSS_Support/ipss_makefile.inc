@@ -29,7 +29,7 @@ ifeq ($(TARGET),$(filter $(TARGET),ipss model))
         $(MAKEFILE_DIR)/downloads/cmsis/CMSIS/Core/Include/core_armv81mml.h \
         $(MAKEFILE_DIR)/downloads/cmsis/CMSIS/Core/Include/mpu_armv8.h
     LDFLAGS+=--cpu=8.1-M.Main.dsp -Omax --entry=__start
-    TARGET_SPECIFIC_FLAGS=-D__DSP_PRESENT=1
+    TARGET_SPECIFIC_FLAGS=
     FLOAT=hard
   else ifeq ($(TARGET_ARCH), cortex-m33+nodsp)
     CORE=M33
