@@ -1,7 +1,8 @@
 #!/bin/bash
 
 #CMSIS-repo location
-CMSIS_DIR=./CMSIS_REPO
+CMSIS_DIR=./CMSIS_REPO/cmsis
+#TensorFlow Lite Micro location
 TFLM_ROOT=$PWD/tensorflow/tensorflow/lite/micro
 
 #Clone the tensorflow git repo if you haven't already
@@ -14,15 +15,13 @@ fi
 
 
 #Clone CMSIS repo if you haven't already
-if [ ! -d "./CMSIS_REPO/CMSIS_5" ]
+if [ ! -d $CMSIS_DIR ]
 then
-    mkdir $CMSIS_DIR
-    pushd $CMSIS_DIR
-    git clone https://github.com/ARM-software/CMSIS_5.git
-    popd
+    git clone https://github.com/ARM-software/CMSIS_5.git $CMSIS_DIR
 else
     echo "CMSIS repo already cloned"
 fi
+
 
 
 #Copy the files to the right locations
