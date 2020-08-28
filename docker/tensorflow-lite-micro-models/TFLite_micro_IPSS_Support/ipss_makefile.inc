@@ -27,7 +27,7 @@ ifeq ($(TARGET),$(filter $(TARGET),ipss model))
         $(CMSIS_PATH)/CMSIS/Core/Include/core_armv81mml.h \
         $(CMSIS_PATH)/CMSIS/Core/Include/mpu_armv8.h
     LDFLAGS+=--cpu=8.1-M.Main.dsp -Omax --entry=__start
-    TARGET_SPECIFIC_FLAGS=
+    TARGET_SPECIFIC_FLAGS=-D__DSP_PRESENT=1
     FLOAT=hard
   else ifeq ($(TARGET_ARCH), cortex-m33+nodsp)
     CORE=M33
@@ -82,11 +82,17 @@ ifeq ($(TARGET),$(filter $(TARGET),ipss model))
     $(OPTIMIZATION)
 
   INCLUDES += \
-    -I$(MAKEFILE_DIR)/targets/ipss 
+    -I$(MAKEFILE_DIR)/targets/ipss \
+    -I$(CMSIS_PATH)/CMSIS/Core/Include/ \
+    -I$(CMSIS_PATH)/CMSIS/DSP/Include/ \
+    -I$(CMSIS_PATH)/CMSIS/CMSIS/NN/Include/
 
   GENERATED_PROJECT_INCLUDES += \
     -I$(MAKEFILE_DIR)/targets/ipss \
-    -I$(MAKEFILE_DIR)/downloads/
+    -I$(MAKEFILE_DIR)/downloads/ \
+    -I$(CMSIS_PATH)/CMSIS/Core/Include/ \
+    -I$(CMSIS_PATH)/CMSIS/DSP/Include/ \
+    -I$(CMSIS_PATH)/CMSIS/CMSIS/NN/Include/
 
   THIRD_PARTY_CC_SRCS += \
     $(MAKEFILE_DIR)/targets/ipss/flatbuffer_version_dummy.cc \

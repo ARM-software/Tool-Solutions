@@ -40,20 +40,3 @@ sed -i '/fc_params.input_offset = -data.input_zero_point;/\,/fc_params.output_of
     fc_params.filter_offset = -data.filter_zero_point;\
     fc_params.output_offset = data.output_zero_point;' \
     ${TFLM_ROOT}/kernels/cmsis-nn/fully_connected.cc
-
-# Fix double-promotion warning in mul.cc
-sed -i -E 's#input1->params.scale \* input2->params.scale \/ output->params.scale;#static_cast<double>\(input1->params.scale\) \*\
-        static_cast<double>\(input2->params.scale\) \/\
-        static_cast<double>\(output->params.scale\);#' \
-        ${TFLM_ROOT}/kernels/cmsis-nn/mul.cc
-
-# Fix missing-field-initializers warning in mul.cc
-sed -i -E 's#return \{mul::Init, nullptr \/\* Free \*\/, mul::Prepare, mul::Eval\};#return \{mul::Init,\
-        nullptr \/\* Free \*\/,\
-        mul::Prepare,\
-        mul::Eval, \
-        \/\*profiling_string=\*\/nullptr,\
-        \/\*builtin_code=\*\/0,\
-        \/\*custom_name=\*\/nullptr,\
-        \/\*version=\*\/0\};#' \
-        ${TFLM_ROOT}/kernels/cmsis-nn/mul.cc
