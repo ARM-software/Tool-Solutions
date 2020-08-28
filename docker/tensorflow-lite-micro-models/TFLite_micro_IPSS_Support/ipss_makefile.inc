@@ -18,15 +18,15 @@ ifeq ($(TARGET),$(filter $(TARGET),ipss model))
       OPTIMIZATION := -O3
     endif
   endif
-
+  
   FLOAT := soft
 
   ifeq ($(TARGET_ARCH), cortex-m55)
     CORE=M55
     THIRD_PARTY_CC_HDRS += \
-        $(CMSIS_PATH)/CMSIS/Core/Include/core_cm55.h \
+        $(CMSIS_PATH)/CMSIS/Core/Include/core_armv81mml.h \
         $(CMSIS_PATH)/CMSIS/Core/Include/mpu_armv8.h
-    LDFLAGS+=--cpu=Cortex-M55 -Omax --entry=__start
+    LDFLAGS+=--cpu=8.1-M.Main.dsp -Omax --entry=__start
     TARGET_SPECIFIC_FLAGS=
     FLOAT=hard
   else ifeq ($(TARGET_ARCH), cortex-m33+nodsp)
@@ -82,18 +82,11 @@ ifeq ($(TARGET),$(filter $(TARGET),ipss model))
     $(OPTIMIZATION)
 
   INCLUDES += \
-    -I$(MAKEFILE_DIR)/targets/ipss \
-    -I$(CMSIS_PATH)/CMSIS/Core/Include/ \
-    -I$(CMSIS_PATH)/CMSIS/DSP/Include/ \
-    -I$(CMSIS_PATH)/CMSIS/NN/Include/
+    -I$(MAKEFILE_DIR)/targets/ipss 
 
   GENERATED_PROJECT_INCLUDES += \
     -I$(MAKEFILE_DIR)/targets/ipss \
-    -I$(MAKEFILE_DIR)/downloads/ \
-    -I$(CMSIS_PATH)/../ \
-    -I$(CMSIS_PATH)/CMSIS/Core/Include/ \
-    -I$(CMSIS_PATH)/CMSIS/DSP/Include/ \
-    -I$(CMSIS_PATH)/CMSIS/NN/Include/
+    -I$(MAKEFILE_DIR)/downloads/
 
   THIRD_PARTY_CC_SRCS += \
     $(MAKEFILE_DIR)/targets/ipss/flatbuffer_version_dummy.cc \

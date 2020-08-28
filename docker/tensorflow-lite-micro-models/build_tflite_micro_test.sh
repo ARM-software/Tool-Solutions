@@ -47,7 +47,7 @@ mkdir -p $SW
 
 # Build the make files for the tflite-micro example selected
 cd tensorflow/
-make -f tensorflow/lite/micro/tools/make/Makefile TARGET=ipss TARGET_ARCH=cortex-m55 TAGS="armclang cmsis-nn" CMSIS_PATH=$CMSIS_DIR generate_"$APP"_test_make_project
+make -f tensorflow/lite/micro/tools/make/Makefile TARGET=ipss TARGET_ARCH=cortex-m55 TAGS="armclang cmsis-nn"  generate_"$APP"_test_make_project
 
 pushd tensorflow/lite/micro/tools/make/gen/ipss_cortex-m55/prj/"$APP"_test/make
 make -j8 
