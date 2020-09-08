@@ -26,6 +26,10 @@ readonly version=$OPENBLAS_VERSION
 readonly src_host="https://github.com/xianyi"
 readonly src_repo="OpenBLAS"
 
+# Arm Performance Libaries are used by default unless "openblas" is selected
+# for the oneDNN build.
+[[ $ONEDNN_BUILD = "openblas" ]] || exit 0
+
 git clone ${src_host}/${src_repo}.git
 cd ${src_repo}
 git checkout v$version -b v$version

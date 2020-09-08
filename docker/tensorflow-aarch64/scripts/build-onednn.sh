@@ -24,38 +24,59 @@ cd $PACKAGE_DIR
 readonly package=onednn
 readonly version=$ONEDNN_VERSION
 readonly tf_id=$TF_VERSION_ID
-readonly src_host=https://github.com/intel
-readonly src_repo=mkl-dnn
+readonly src_host=https://github.com/oneapi-src
+readonly src_repo=oneDNN
 
 # Clone oneDNN
 echo "oneDNN VERSION" $version
 git clone ${src_host}/${src_repo}.git
 cd ${src_repo}
-git checkout v$version -b v$version
-
-export CMAKE_INSTALL_PREFIX=$PROD_DIR/$package/$version
-export CMAKE_BUILD_TYPE=Release
+git checkout $version
 
 # Apply patch to add AArch64 flags, and OpenBLAS lib
 if [[ $tf_id == '1' ]]; then
    # This patch is for version 0.21.3
    patch -p1 < ../mkldnn.patch
 elif [[ $tf_id == '2' ]]; then
-   # This patch is for version 1.4
-   patch -p1 < ../onednn.patch
+   # This patch is for version 1.4+
+   patch -p1 < ../oneDNN.patch
 else
    echo 'Invalid TensorFlow version when applying patches to the oneDNN repository'
    exit 1
 fi
 
+cmake_options="-DCMAKE_BUILD_TYPE=release \
+  -DDNNL_CPU_RUNTIME=OMP \
+  -DCMAKE_INSTALL_PREFIX=$PROD_DIR/$package/release"
+
+cxx_flags="${BASE_CFLAGS} -O3"
+blas_flags=""
+blas_libs=""
+
+if [[ $ONEDNN_BUILD = "openblas" ]]; then
+  blas_flags="-DUSE_CBLAS -I${OPENBLAS_DIR}/include"
+  blas_libs="-L${OPENBLAS_DIR}/lib -lopenblas"
+elif [[ $ONEDNN_BUILD = "armpl" ]]; then
+  blas_flags="-DUSE_CBLAS -I${ARMPL_DIR}/include"
+  blas_libs="-L${ARMPL_DIR}/lib -larmpl_lp64_mp -lgfortran -lamath -lm"
+fi
+
+echo "CMake options: $cmake_options"
+echo "Compiler flags: $cxx_flags"
+echo "BLAS flags: $blas_libs $blas_flags"
+
 mkdir -p build
 cd build
 
-blas_flag=""
-[[ $ONEDNN_BUILD = "openblas" ]] && blas_flag="-DUSE_CBLAS -I$OPENBLAS_DIR/include"
+# TODO: Update the BLAS selection options to use
+# FindBLAS.cmake.
+# From oneDNN v1.6 onwards, OpenBLAS and ArmPL
+# BLAS libraries can be selected using the
+# -DDNNL_BLAS_VENDOR=OPENBLAS / ARMPL cmake option
+# Subsequent releases will support the free-of-charge
+# version of ArmPL.
+APPEND_SHARED_LIBS="$blas_libs" CXXFLAGS="$cxx_flags $blas_flags" \
+  cmake ../. $cmake_options
 
-CFLAGS="$BASE_CFLAGS $blas_flag" CXXFLAGS="$BASE_CFLAGS $blas_flag" \
-  cmake -DCMAKE_INSTALL_PREFIX=$PROD_DIR/$package/$version  ..
-
-make -j $NP_MAKE
+make -j $NP_MAKE VERBOSE=1
 make install

@@ -89,7 +89,8 @@ RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selectio
 # Import profile for bash
 COPY bash_profile /home/$DOCKER_USER/.bash_profile
 RUN chown $DOCKER_USER:$DOCKER_USER /home/$DOCKER_USER/.bash_profile
-
+COPY patches/welcome.txt /home/$DOCKER_USER/.
+RUN echo '[ ! -z "$TERM" -a -r /home/$DOCKER_USER/welcome.txt ] && cat /home/$DOCKER_USER/welcome.txt' >> /etc/bash.bashrc
 
 # ========
 # Stage 2: augment the base image with some essential libs
@@ -98,15 +99,18 @@ FROM tensorflow-base AS tensorflow-libs
 ARG njobs
 ARG onednn_opt
 ARG onednn_version
+ARG cpu
 ARG tf_id
 
 ENV NP_MAKE="${njobs}" \
     ONEDNN_BUILD="${onednn_opt}" \
     ONEDNN_VERSION="${onednn_version}" \
+    CPU="${cpu}" \
     TF_VERSION_ID="${tf_id}"
 
 # Key version numbers
 ENV PY_VERSION=3.7.0 \
+    ARMPL_VERSION=20.2.1 \
     OPENBLAS_VERSION=0.3.9
 
 # Package build parameters
@@ -118,20 +122,20 @@ ENV PROD_DIR=/opt \
 RUN mkdir -p $PACKAGE_DIR && \
     mkdir -p $PROD_DIR
 
-# Build Arm Optimized Routines from source
-# provides optimised maths library fucntions for Aarch64
-# see https://github.com/ARM-software/optimized-routines
-COPY scripts/build-arm_opt_routines.sh $PACKAGE_DIR/.
-COPY patches/config.mk $PACKAGE_DIR/.
-RUN $PACKAGE_DIR/build-arm_opt_routines.sh
-
-# Common compiler settings for remaining builds
-# this ads arm_opt_routined into the LDFLAGS by default.
+# Common compiler settings
 ENV CC=gcc \
     CXX=g++ \
-    BASE_CFLAGS="-mcpu=native" \
-    BASE_LDFLAGS="-L$PROD_DIR/arm_opt_routines/lib -lmathlib -lm" \
-    LD_LIBRARY_PATH="$PROD_DIR/arm_opt_routines/lib"
+    BASE_CFLAGS="-mcpu=${CPU}  -moutline-atomics"
+
+# Install Arm Performance Libraries
+COPY scripts/build-armpl.sh $PACKAGE_DIR/.
+RUN $PACKAGE_DIR/build-armpl.sh
+ENV ARMPL_DIR=$PROD_DIR/armpl/armpl_${ARMPL_VERSION}_gcc-9.3
+
+# Add libamath into the default LDFLAGS and set the
+# initial LD_LIBRARY_PATH to inlcude ArmPL.
+ENV BASE_LDFLAGS="-L$ARMPL_DIR/lib -lamath -lm" \
+    LD_LIBRARY_PATH=$ARMPL_DIR/lib
 
 # Build python from source
 COPY scripts/build-cpython.sh $PACKAGE_DIR/.
@@ -147,10 +151,10 @@ ENV LD_LIBRARY_PATH=$OPENBLAS_DIR/lib:$LD_LIBRARY_PATH
 COPY scripts/build-onednn.sh $PACKAGE_DIR/.
 # Patch for oneDNN (MKL-DNN), v0.21.3
 COPY patches/mkldnn.patch $PACKAGE_DIR/mkldnn.patch
-# Patch for oneDNN  v1.4
-COPY patches/onednn.patch $PACKAGE_DIR/onednn.patch
+# Patch for oneDNN  v1.x
+COPY patches/oneDNN.patch $PACKAGE_DIR/oneDNN.patch
 RUN $PACKAGE_DIR/build-onednn.sh
-ENV ONEDNN_DIR=$PROD_DIR/onednn/$ONEDNN_VERSION
+ENV ONEDNN_DIR=$PROD_DIR/onednn/release
 ENV LD_LIBRARY_PATH=$ONEDNN_DIR/lib:$LD_LIBRARY_PATH
 
 # ========

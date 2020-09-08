@@ -21,12 +21,12 @@
 set -euo pipefail
 
 cd $PACKAGE_DIR
-readonly package=opencv 
+readonly package=opencv
 readonly src_host=https://github.com/opencv
 readonly src_repo=opencv
 readonly num_cpus=$(grep -c ^processor /proc/cpuinfo)
 
-git clone ${src_host}/${src_repo}.git 
+git clone ${src_host}/${src_repo}.git
 
 cd $PACKAGE_DIR/$package
 mkdir -p build

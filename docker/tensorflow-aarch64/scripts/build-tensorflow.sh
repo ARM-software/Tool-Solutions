@@ -30,23 +30,25 @@ readonly src_repo=tensorflow
 # Clone tensorflow and benchmarks
 git clone ${src_host}/${src_repo}.git
 cd ${src_repo}
-git checkout v$version -b v$version
+git checkout $version -b $version
 
-# Checking out mkl_matmul_op.cc from master branch as it has API and code changes for oneDNN 1.x compared with Tensorflow 2.2.0.
+# Checking out mkl_matmul_op.cc from a newer commit, prior to the reorganisation of core/kernels.
+# See: https://github.com/tensorflow/tensorflow/pull/41232#issuecomment-670049428
+
 if [[ $tf_id == '2' ]]; then
-	git checkout 00dbf072dbe69521ae2170a9fac4052187d187d6  -- tensorflow/core/kernels/mkl_matmul_op.cc
+ git checkout 00dbf072dbe69521ae2170a9fac4052187d187d6 -- tensorflow/core/kernels/mkl_matmul_op.cc
 fi
 
 # Apply path to allow use of newer Bazel build.
 if [[ $tf_id == '1' ]]; then
    if [[ $ONEDNN_BUILD ]]; then
-       patch -p1 < ../tf_dnnl_decoupling.patch
+      patch -p1 < ../tf_dnnl_decoupling.patch
    fi
    patch -p1 < ../tensorflow.patch
 elif [[ $tf_id == '2' ]]; then
    if [[ $ONEDNN_BUILD ]]; then
-   	patch -p1 < ../tf2_onednn_decoupling.patch
-   	patch -p1 <../oneDNN-header.patch
+      patch -p1 < ../tf2_onednn_decoupling.patch
+      patch -p1 < ../oneDNN-header.patch
    fi
    patch -p1 < ../tensorflow2.patch
 else
@@ -77,37 +79,37 @@ if [[ $BZL_RAM ]]; then extra_args="$extra_args --local_ram_resources=$BZL_RAM";
 if [[ $NP_MAKE ]]; then extra_args="$extra_args --jobs=$NP_MAKE"; fi
 
 if [[ $ONEDNN_BUILD ]]; then
-   echo "$ONEDNN_BUILD build for $TF_VERSION"
-   if [[ $tf_id == '1' ]]; then
-       bazel build $extra_args \
-        --define=build_with_mkl_dnn_only=true --define=build_with_mkl=true \
-        --define=tensorflow_mkldnn_contraction_kernel=1 \
-        --copt="-mtune=native" --copt="-march=armv8-a" --copt="-O3" --copt="-fopenmp" \
-        --cxxopt="-mtune=native" --cxxopt="-march=armv8-a" --cxxopt="-O3" --cxxopt="-fopenmp" \
-        --linkopt="-L$PROD_DIR/arm_opt_routines/lib -lmathlib -lm" --linkopt="-fopenmp" \
-        --config=noaws --config=v$tf_id  --cxxopt="-D_GLIBCXX_USE_CXX11_ABI=0" \
-        //tensorflow/tools/pip_package:build_pip_package
+  echo "$ONEDNN_BUILD build for $TF_VERSION"
+  if [[ $tf_id == '1' ]]; then
+    bazel build $extra_args \
+      --define=build_with_mkl_dnn_only=true --define=build_with_mkl=true \
+      --define=tensorflow_mkldnn_contraction_kernel=1 \
+      --copt="-mtune=${CPU}" --copt="-march=armv8-a" --copt="-moutline-atomics" \
+      --cxxopt="-mtune=${CPU}" --cxxopt="-march=armv8-a" --cxxopt="-moutline-atomics" \
+      --linkopt="-L$ARMPL_DIR/lib -lamath -lm" --linkopt="-fopenmp" \
+      --config=noaws --config=v$tf_id  --cxxopt="-D_GLIBCXX_USE_CXX11_ABI=0" \
+      //tensorflow/tools/pip_package:build_pip_package
    elif [[ $tf_id == '2' ]]; then
-       bazel build $extra_args \
-        --define=build_with_mkl_dnn_v1_only=true --define=build_with_mkl=true \
-        --define=tensorflow_mkldnn_contraction_kernel=1 \
-        --copt="-mtune=native" --copt="-march=armv8-a" --copt="-O3" --copt="-fopenmp" \
-        --cxxopt="-mtune=native" --cxxopt="-march=armv8-a" --cxxopt="-O3" --cxxopt="-fopenmp" \
-        --linkopt="-L$PROD_DIR/arm_opt_routines/lib -lmathlib -lm" --linkopt="-fopenmp" \
-        --config=noaws --config=v$tf_id  --cxxopt="-D_GLIBCXX_USE_CXX11_ABI=0" \
-        //tensorflow/tools/pip_package:build_pip_package
+     bazel build $extra_args \
+       --define=build_with_mkl_dnn_v1_only=true --define=build_with_mkl=true \
+       --define=tensorflow_mkldnn_contraction_kernel=1 \
+       --copt="-mcpu=${CPU}" --copt="-flax-vector-conversions" --copt="-moutline-atomics" --copt="-O3" \
+       --cxxopt="-mcpu=${CPU}" --cxxopt="-flax-vector-conversions" --cxxopt="-moutline-atomics" --cxxopt="-O3" \
+       --linkopt="-L$ARMPL_DIR/lib -lamath -lm" --linkopt="-fopenmp" \
+       --config=noaws --config=v$tf_id  --cxxopt="-D_GLIBCXX_USE_CXX11_ABI=0" \
+       //tensorflow/tools/pip_package:build_pip_package
    else
-       echo 'Invalid TensorFlow version when building tensorflow'
-       exit 1
+     echo 'Invalid TensorFlow version when building tensorflow'
+     exit 1
    fi
 else
-    echo "Eigen-only build for $TF_VERSION"
-    bazel build $extra_args --define tensorflow_mkldnn_contraction_kernel=0 \
-     --copt="-mtune=native" --copt="-march=armv8-a" --copt="-O3" \
-     --cxxopt="-mtune=native" --cxxopt="-march=armv8-a" --cxxopt="-O3" \
-     --copt="-L$PROD_DIR/arm_opt_routines/lib -lmathlib -lm" \
-     --config=noaws --config=v$tf_id --cxxopt="-D_GLIBCXX_USE_CXX11_ABI=0" \
-     //tensorflow/tools/pip_package:build_pip_package
+  echo "Eigen-only build for $TF_VERSION"
+  bazel build $extra_args --define tensorflow_mkldnn_contraction_kernel=0 \
+    --copt="-mcpu=${CPU}" --copt="-flax-vector-conversions" --copt="-moutline-atomics" --copt="-O3" \
+    --cxxopt="-mcpu=${CPU}" --cxxopt="-flax-vector-conversions" --cxxopt="-moutline-atomics" --cxxopt="-O3" \
+    --linkopt="-L$ARMPL_DIR/lib -lamath -lm" \
+    --config=noaws --config=v$tf_id --cxxopt="-D_GLIBCXX_USE_CXX11_ABI=0" \
+    //tensorflow/tools/pip_package:build_pip_package
 fi
 ./bazel-bin/tensorflow/tools/pip_package/build_pip_package ./wheel-TF$TF_VERSION-py$PY_VERSION-$CC
 
@@ -115,14 +117,12 @@ pip install $(ls -tr wheel-TF$TF_VERSION-py$PY_VERSION-$CC/*.whl | tail)
 
 # Check the installation was sucessfull
 cd $HOME
-python -c 'import tensorflow; print(tensorflow.__version__)' > version.log
 
-if grep -qx $version version.log; then
-  echo "TensorFlow $TF_VERSION package installed."
-  # Clean up Bazel cache
+if python -c 'import tensorflow; print(tensorflow.__version__)' > version.log; then
+  echo "TensorFlow $(cat version.log) package installed from $TF_VERSION branch."
 else
   echo "TensorFlow package installation failed."
   exit 1
 fi
 
-rm $HOME/version.log 
+rm $HOME/version.log

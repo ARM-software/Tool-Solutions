@@ -15,9 +15,12 @@
  limitations under the License.
  *******************************************************************************
 
---- a/tensorflow/workspace.bzl	2020-07-02 17:26:44.891394118 +0100
-+++ b/tensorflow/workspace.bzl	2020-07-02 17:29:52.660850305 +0100
-@@ -172,15 +172,10 @@
+
+diff --git a/tensorflow/workspace.bzl b/tensorflow/workspace.bzl
+index 24446d846c..f9b1122ee9 100755
+--- a/tensorflow/workspace.bzl
++++ b/tensorflow/workspace.bzl
+@@ -208,15 +208,10 @@ def tf_repositories(path_prefix = "", tf_repo_name = ""):
          ],
      )
  
@@ -25,64 +28,63 @@
 +    native.new_local_repository(
          name = "mkl_dnn_v1",
          build_file = clean_dep("//third_party/mkl_dnn:mkldnn_v1.BUILD"),
--        sha256 = "a71ec1f27c30b8a176605e8a78444f1f12301a3c313b70ff93290926c140509c",
--        strip_prefix = "mkl-dnn-1.2.2",
+-        sha256 = "54737bcb4dc1961d32ee75da3ecc529fa48198f8b2ca863a079e19a9c4adb70f",
+-        strip_prefix = "oneDNN-1.4",
 -        urls = [
--            "https://storage.googleapis.com/mirror.tensorflow.org/github.com/intel/mkl-dnn/archive/v1.2.2.tar.gz",
--            "https://github.com/intel/mkl-dnn/archive/v1.2.2.tar.gz",
+-            "https://storage.googleapis.com/mirror.tensorflow.org/github.com/oneapi-src/oneDNN/archive/v1.4.tar.gz",
+-            "https://github.com/oneapi-src/oneDNN/archive/v1.4.tar.gz",
 -        ],
-+    	path = '/opt/onednn/1.4'
++        path = '/opt/onednn/release'
      )
  
      tf_http_archive(
---- a/third_party/mkl_dnn/mkldnn_v1.BUILD	2020-07-02 18:44:14.727373197 +0100
-+++ b/third_party/mkl_dnn/mkldnn_v1.BUILD	2020-07-02 18:50:31.006202548 +0100
-@@ -18,18 +18,6 @@
-     },
- )
+diff --git a/third_party/mkl_dnn/mkldnn_v1.BUILD b/third_party/mkl_dnn/mkldnn_v1.BUILD
+index 7bdec138b9..b833156fb7 100644
+--- a/third_party/mkl_dnn/mkldnn_v1.BUILD
++++ b/third_party/mkl_dnn/mkldnn_v1.BUILD
+@@ -31,85 +31,25 @@ _DNNL_RUNTIME_THREADPOOL = {
+     "#cmakedefine DNNL_GPU_RUNTIME DNNL_RUNTIME_${DNNL_GPU_RUNTIME}": "#define DNNL_GPU_RUNTIME DNNL_RUNTIME_NONE",
+ }
  
 -template_rule(
 -    name = "dnnl_config_h",
 -    src = "include/dnnl_config.h.in",
 -    out = "include/dnnl_config.h",
--    substitutions = {
--        "#cmakedefine DNNL_CPU_THREADING_RUNTIME DNNL_RUNTIME_${DNNL_CPU_THREADING_RUNTIME}": "#define DNNL_CPU_THREADING_RUNTIME DNNL_RUNTIME_OMP",
--        "#cmakedefine DNNL_CPU_RUNTIME DNNL_RUNTIME_${DNNL_CPU_RUNTIME}": "#define DNNL_CPU_RUNTIME DNNL_RUNTIME_OMP",
--        "#cmakedefine DNNL_GPU_RUNTIME DNNL_RUNTIME_${DNNL_GPU_RUNTIME}": "#define DNNL_GPU_RUNTIME DNNL_RUNTIME_NONE",
--    },
--)
--
--# Create the file mkldnn_version.h with MKL-DNN version numbers.
- # Currently, the version numbers are hard coded here. If MKL-DNN is upgraded then
- # the version numbers have to be updated manually. The version numbers can be
- # obtained from the PROJECT_VERSION settings in CMakeLists.txt. The variable is
-@@ -37,61 +25,24 @@
- # be set to NA.
- # TODO(agramesh1) Automatically get the version numbers from CMakeLists.txt.
- 
--template_rule(
--    name = "dnnl_version_h",
--    src = "include/dnnl_version.h.in",
--    out = "include/dnnl_version.h",
--    substitutions = {
--        "@DNNL_VERSION_MAJOR@": "1",
--        "@DNNL_VERSION_MINOR@": "2",
--        "@DNNL_VERSION_PATCH@": "0",
--        "@DNNL_VERSION_HASH@": "N/A",
--    },
+-    substitutions = if_mkldnn_threadpool(
+-        _DNNL_RUNTIME_THREADPOOL,
+-        if_false = _DNNL_RUNTIME_OMP,
+-    ),
 +cc_library(
 +    name = "mkldnn_headers",
 +    srcs = glob(["include/*"]),
 +    includes = ["include"],
 +    visibility = ["//visibility:public"],
  )
+ 
+-# Create the file mkldnn_version.h with MKL-DNN version numbers.
+-# Currently, the version numbers are hard coded here. If MKL-DNN is upgraded then
+-# the version numbers have to be updated manually. The version numbers can be
+-# obtained from the PROJECT_VERSION settings in CMakeLists.txt. The variable is
+-# set to "version_major.version_minor.version_patch". The git hash version can
+-# be set to NA.
+-# TODO(agramesh1) Automatically get the version numbers from CMakeLists.txt.
 -
+-template_rule(
+-    name = "dnnl_version_h",
+-    src = "include/dnnl_version.h.in",
+-    out = "include/dnnl_version.h",
+-    substitutions = {
+-        "@DNNL_VERSION_MAJOR@": "1",
+-        "@DNNL_VERSION_MINOR@": "4",
+-        "@DNNL_VERSION_PATCH@": "0",
+-        "@DNNL_VERSION_HASH@": "N/A",
+-    },
 +cc_library(
 +    name = "mkldnn_libs",
 +    srcs = glob(["lib/*"]),
 +    visibility = ["//visibility:public"],
-+)
-+ 
+ )
+ 
  cc_library(
      name = "mkl_dnn",
 -    srcs = glob([
@@ -93,9 +95,12 @@
 -        "src/cpu/**/*.cpp",
 -        "src/cpu/**/*.hpp",
 -        "src/cpu/xbyak/*.h",
--    ]) + if_mkl_v1_open_source_only([
+-        "src/cpu/jit_utils/jitprofiling/*.c",
+-        "src/cpu/jit_utils/jitprofiling/*.h",
+-    ]) + [
 -        ":dnnl_config_h",
--    ]) + [":dnnl_version_h"],
+-        ":dnnl_version_h",
+-    ],
 -    hdrs = glob(["include/*"]),
 -    copts = [
 -        "-fexceptions",
@@ -105,6 +110,9 @@
 -        "-UUSE_MKL",
 -        "-UUSE_CBLAS",
 -    ]) + if_mkl_v1_open_source_only([
+-        "-UUSE_MKL",
+-        "-UUSE_CBLAS",
+-    ]) + if_mkldnn_threadpool([
 -        "-UUSE_MKL",
 -        "-UUSE_CBLAS",
 -    ]) + select({
@@ -127,8 +135,8 @@
      visibility = ["//visibility:public"],
 -    deps = select({
 +    deps = ["@mkl_dnn_v1//:mkldnn_headers",
-+	    "@mkl_dnn_v1//:mkldnn_libs",
-+ 	] + select({
++        "@mkl_dnn_v1//:mkldnn_libs",
++        ] + select({
          "@org_tensorflow//tensorflow:linux_x86_64": [
              "@mkl_linux//:mkl_headers",
              "@mkl_linux//:mkl_libs_linux",

@@ -1,0 +1,28 @@
+
+================================================================================
+TensorFlow for AArch64
+Built using:
+ https://github.com/ARM-software/Tool-Solutions
+For more details, see:
+ https://github.com/ARM-software/Tool-Solutions/blob/master/docker/tensorflow-aarch64/README.md
+================================================================================
+
+This image includes Arm Performance Libraries:
+ https://developer.arm.com/tools-and-software/server-and-hpc/compile/arm-compiler-for-linux/arm-performance-libraries
+
+Arm Performance Libraries provides optimized standard core math libraries
+for high-performance computing applications on Arm 64-bit
+AArch64-based processors.
+
+Use of this free of charge version of Arm Performance Libraries is
+subject to the terms and conditions of the applicable
+End User License Agreement (“EULA”).
+
+A copy of the EULA can be found here:
+https://developer.arm.com/tools-and-software/server-and-hpc/downloads/arm-performance-libraries/eula
+
+The accompanying Third Party IP statement can be found here:
+https://developer.arm.com/tools-and-software/server-and-hpc/downloads/arm-performance-libraries/third-party-ip
+--------------------------------------------------------------------------------
+
+

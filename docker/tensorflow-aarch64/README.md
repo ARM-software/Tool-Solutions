@@ -13,15 +13,21 @@ aarch64
 
 ## What's in the final image?
   * OS: Ubuntu 18.04
-  * Compiler: GCC 9.2
-  * Maths libraries: [Arm Optimized Routines](https://github.com/ARM-software/optimized-routines) and [OpenBLAS](https://www.openblas.net/) 0.3.9
-  * [oneDNN](https://github.com/oneapi-src/oneDNN) 0.21.3 or 1.4. Previously known as (MKL-DNN/DNNL).
+  * Compiler: GCC 9.3.0
+  * Maths libraries: [Arm Performance Libraries](https://developer.arm.com/tools-and-software/server-and-hpc/compile/arm-compiler-for-linux/arm-performance-libraries) 20.2.1 and [OpenBLAS](https://www.openblas.net/) 0.3.9
+  * [oneDNN](https://github.com/oneapi-src/oneDNN) 0.21.3 or 1.5. Previously known as (MKL-DNN/DNNL).
   * Python3 environment built from CPython 3.7 and containing:
     - NumPy 1.17.1
-    - TensorFlow 1.15.2 or TensorFlow 2.2.0
+    - TensorFlow 1.15.2 or TensorFlow 2.3.0
   * TensorFlow Benchmarks
 
-A user account with username 'ubuntu' is created with sudo privaleges and password of 'Arm2020'.
+**Note: Arm Performance Libraries provides optimized standard core math libraries for high-performance computing applications on Arm processors. This free version of the libraries provides optimized libraries for Arm Neoverse N1-based Armv8 AArch64 implementations that are compatible with various versions of GCC.
+
+Use of the free of charge version of Arm Performance Libraries is subject to the terms and conditions of the applicable End User License Agreement (“EULA”).
+A copy of the EULA can be found [here](https://developer.arm.com/tools-and-software/server-and-hpc/downloads/arm-performance-libraries/eula)
+The acompanying Third Party IP statement can be found [here](https://developer.arm.com/tools-and-software/server-and-hpc/downloads/arm-performance-libraries/third-party-ip).**
+
+A user account with username 'ubuntu' is created with sudo privileges and password of 'Arm2020'.
 
 The TensorFlow Benchmarks repository are installed into the user home directory.
 
@@ -31,7 +37,7 @@ For example, to run the tf_cnn_benchmark for ResNet50:
 
 ``` > python tf_cnn_benchmarks.py --device=CPU --batch_size=64 --model=resnet50 --variable_update=parameter_server --data_format=NHWC ```
 
-In addition to the Dockerfile, please look at the files in the scripts/ directory and the patches/ directory too see how the software is built.
+In addition to the Dockerfile, please look at the files in the scripts/ directory and the patches/ directory to see how the software is built.
 
 
 ## Installing Docker
@@ -49,7 +55,7 @@ and make sure you are in the Docker group:
 
 ```  > usermod -aG docker $USER ```
 
-These steps may require root privlages and usermod requires logout and login to take effect.
+These steps may require root privileges and usermod requires logout and login to take effect.
 
 See https://docs.docker.com for more information.
 
@@ -57,8 +63,8 @@ See https://docs.docker.com for more information.
 ## Building the Docker image
 Use the build.sh script to build the image. This script implements a multi-stage build to minimise the size of the finished image:
   * Stage 1: 'base' image including Ubuntu with core packages and GCC9.
-  * Stage 2: 'libs' image including essential tools and libraries such as Python and OpenBLAS.
-  * Stage 3: 'tools' image, including a Python3 virtual environment in userspace and a build of NumPy against OpenBLAS, as well as other Python essentials.
+  * Stage 2: 'libs' image including essential tools and libraries such as Python, Arm Performance Libraries and OpenBLAS.
+  * Stage 3: 'tools' image, including a Python3 virtual environment in userspace and a build of NumPy and SciPy against Arm Performance Libraries (or optionally OpenBLAS), as well as other Python essentials.
   * Stage 4: 'dev' image, including Bazel and TensorFlow and the source code
   * Stage 5: 'tensorflow' image, including only the Python3 virtual environment, the TensorFlow module, and the basic benchmarks. Bazel and TensorFlow sources are not included in this image.
 
@@ -82,18 +88,32 @@ For example:
 
     ```  > ./build.sh --build-type base ```
 
-  * To choose between the different tensorflow versions use '--tf_version 1' for TensorFlow 1.15.2 or '--tf_version 2' for TensorFlow 2.2.0. The default value is set to tf_version=1.
-    For the base build: This will generate an image named 'DockerTest/ubuntu/base-v$tf_version', hyphenated with the version of TensorFlow chosen.
+To choose between the different tensorflow versions use '--tf_version 1' for TensorFlow 1.15.2 or '--tf_version 2' for TensorFlow 2.3.0. The default value is set to tf_version=2.
+For the base build: This will generate an image named 'DockerTest/ubuntu/base-v$tf_version', hyphenated with the version of TensorFlow chosen.
 
-TensorFlow can optionally be built with oneDNN, using the '--onednn' or '--dnnl' flag, either using the C++ reference kernels throughout,
-'--onednn reference', or with the addition of OpenBLAS for BLAS calls '--onednn openblas'. Tensorflow 1.x is built with oneDNN 0.21.3 (MKL-DNN) and Tensorflow 2.x is built with oneDNN 1.4.
+TensorFlow can optionally be built with oneDNN, using the '--onednn' or '--dnnl' flag. Tensorflow 1.x is built with oneDNN 0.21.3 (MKL-DNN) and Tensorflow 2.x is built with oneDNN 1.5.1.
 Without the '--onednn' flag, the default Eigen backend of Tensorflow is chosen. For the final TensorFlow image with oneDNN: This will generate an image 'tensorflow-v$tf_version$onednn_blas with the type of onednn backend chosen.
 
-Memory requirements for building TensorFlow can be singificant, and may exceed the available
+The BLAS backend for oneDNN can also be selected using the '--onednn' or '--dnnl' flags:
+For TensorFlow 1.x builds, this defaults to the C++ reference kernels, setting '--dnnl openblas' will use the OpenBLAS libary where possible.
+For TensorFlow 2.x builds, this defaults to using Arm Performance Libraries, but '--onednn reference' and '--onednn openblas' can also be selected to use the reference C++ kernels, or OpenBLAS respectively.
+_Note: The oneDNN backend chosen will be apended to the image name: `tensorflow-v$tf_version$onednn_blas`._
+_Note: selecting OpenBLAS will also cause other dependencies (NumPy and SciPy) to be built against OpenBLAS rather than Arm Performance Libraries._
+
+By default, all packages will built with optimisations for the host machine, equivalent to setting `-mcpu=native` at compile time for each component build.
+It is possible to choose a specific build target using the `--build-target` flag:
+  * native       - optimize for the current host machine (default).
+  * neoverse-n1  - optimize for Neoverse-N1.
+  * thunderx2t99 - optimize for Marvell ThunderX2.
+  * generic      - generate portable build suitable for any Armv8a target.
+_Note: The version of Arm Performance Libaries included will execute on any Armv8a target, but only includes optimisations for Neoverse-N1._
+
+
+Memory requirements for building TensorFlow can be significant, and may exceed the available
 memory, particularly for parallel builds (the default). There are two flags which can be used to
 control the resources Bazel consumes:
 
-  * --jobs sets the number of jobs to run in parallel during the build, this will apply to all parallel builds/
+  * --jobs sets the number of jobs to run in parallel during the build, this will apply to all parallel builds
   * --bazel_memory_limit sets a memory limit for Bazel build, in MiB
 
 ## Running the Docker image

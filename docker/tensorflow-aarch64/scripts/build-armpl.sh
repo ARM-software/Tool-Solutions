@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 # *******************************************************************************
 # Copyright 2020 Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
@@ -16,17 +18,21 @@
 # *******************************************************************************
 
 
-HOST_CC = /usr/bin/gcc-7
-HOST_CFLAGS = -std=c99 -O2
-HOST_CFLAGS += -Wall -Wno-unused-function
+set -euo pipefail
 
-CC = /usr/bin/gcc-7
-CFLAGS = -std=c99 -pipe -O3
-CFLAGS += -Wall -Wno-missing-braces
-CFLAGS += -Werror=implicit-function-declaration
+cd $PACKAGE_DIR
+readonly package=armpl
+readonly version=$ARMPL_VERSION
+readonly tar_host="https://developer.arm.com/-/media/Files/downloads/hpc/arm-performance-libraries/$(echo $version | sed "s/\./-/g")/Ubuntu16.04"
+readonly tar_name="arm-performance-libraries_${version}_Ubuntu-16.04_gcc-9.3"
 
-HOST_CFLAGS += -g
-CFLAGS += -g
+mkdir -p $package
+cd $package
 
-CFLAGS += -frounding-math -fexcess-precision=standard -fno-stack-protector
-CFLAGS += -ffp-contract=fast -fno-math-errno
+# Download, untar and install ArmPL
+wget ${tar_host}/${tar_name}".tar"
+tar -xvf ${tar_name}.tar
+rm ${tar_name}.tar
+cd ${tar_name}
+
+./arm-performance-libraries_${version}_Ubuntu-16.04.sh --accept --install-to $PROD_DIR/$package
