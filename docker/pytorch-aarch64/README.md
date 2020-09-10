@@ -5,9 +5,9 @@ For more information, see this Arm Developer Community [blog post](https://commu
 
 Before using this project run the uname command to confirm the machine is aarch64. Other architectures will not work.
 
-``` 
-> uname -m 
-aarch64 
+```
+> uname -m
+aarch64
 ```
 
 
@@ -21,15 +21,15 @@ aarch64
     - PyTorch 1.6
   * PyTorch examples, and some key dependencies such as Matplolib.
 
-A user account with username 'ubuntu' is created with sudo privaleges and password of 'Arm2020'. 
+A user account with username 'ubuntu' is created with sudo privaleges and password of 'Arm2020'.
 
-In addition to the Dockerfile, please look at the files in the scripts/ directory and the patches/ directory too see how the software is built. 
+In addition to the Dockerfile, please look at the files in the scripts/ directory and the patches/ directory too see how the software is built.
 
 
 ## Installing Docker
 The [Docker Community Engine](https://docs.docker.com/install/) is used. Instructions on how to install Docker CE are available for various Linux distributions such as [CentOS](https://docs.docker.com/install/linux/docker-ce/centos/) and [Ubuntu](https://docs.docker.com/install/linux/docker-ce/ubuntu/).
 
-Confirm Docker is working: 
+Confirm Docker is working:
 
 ``` > docker run hello-world ```
 
@@ -51,7 +51,7 @@ Use the build.sh script to build the image. This script implements a multi-stage
   * Stage 1: 'base' image including Ubuntu with core packages and GCC9.
   * Stage 2: 'libs' image including essential tools and libraries such as Python and OpenBLAS.
   * Stage 3: 'tools' image, including a Python3 virtual environment in userspace and a build of NumPy against OpenBLAS, as well as other Python essentials.
-  * Stage 4: 'dev' image, including Bazel and PyTorvh and the source code
+  * Stage 4: 'dev' image, including PyTorch with source code.
   * Stage 5: 'pytorch' image, including only the Python3 virtual environment, the PyTorch module, and the basic examples. PyTorch sources are not included in this image.
 
 To see the command line options for build.sh use:
@@ -73,8 +73,6 @@ For example:
   * For a base build:
 
     ```  > ./build.sh --build-type base ```
-
-    This will generate an image named 'DockerTest/ubuntu/base'. 
 
 ## Running the Docker image
 To run the finished image:
