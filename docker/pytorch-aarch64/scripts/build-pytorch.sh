@@ -33,7 +33,10 @@ git checkout v$version -b v$version
 git submodule sync
 git submodule update --init --recursive
 
-MAX_JOBS=${NP_MAKE:-$((num_cpus / 2))} OpenBLAS_HOME=$OPENBLAS_DIR/lib USE_LAPACK=1 USE_CUDA=0 USE_FBGEMM=0 USE_DISTRIBUTED=0 python setup.py install
+# Patch to avoid using asm not supported for GCC builds.
+curl https://patch-diff.githubusercontent.com/raw/pytorch/pytorch/pull/35157.patch | patch -p1
+
+MAX_JOBS=${NP_MAKE:-$((num_cpus / 2))} OpenBLAS_HOME=$OPENBLAS_DIR/lib CXX_FLAGS="$BASE_CFLAGS -O3" LDFLAGS=$BASE_LDFLAGS USE_OPENMP=1 USE_LAPACK=1 USE_CUDA=0 USE_FBGEMM=0 USE_DISTRIBUTED=0 python setup.py install
 
 # Check the installation was sucessfull
 cd $HOME

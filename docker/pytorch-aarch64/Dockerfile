@@ -148,8 +148,8 @@ ARG njobs
 ENV NP_MAKE="${njobs}"
 
 # Key version numbers
-ENV NUMPY_VERSION=1.17.1 \
-    SCIPY_VERSION=1.4.0 \
+ENV NUMPY_VERSION=1.19.1 \
+    SCIPY_VERSION=1.5.2 \
     NPY_DISTUTILS_APPEND_FLAGS=1
 
 # Using venv means this can be done in userspace
@@ -201,7 +201,7 @@ ARG dnnl_opt
 ENV NP_MAKE="${njobs}"
 
 # Key version numbers
-ENV TORCH_VERSION=1.4.0
+ENV TORCH_VERSION=1.6.0
 
 # Use a PACKAGE_DIR in userspace
 WORKDIR /home/$DOCKER_USER

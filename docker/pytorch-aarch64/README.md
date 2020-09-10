@@ -16,9 +16,9 @@ aarch64
   * Compiler: GCC 9.2
   * Maths libraries: [Arm Optimized Routines](https://github.com/ARM-software/optimized-routines) and [OpenBLAS](https://www.openblas.net/) 0.3.9
   * Python3 environment built from CPython 3.7 and containing:
-    - NumPy 1.17.1
-    - SciPy 1.4.0
-    - PyTorch 1.2
+    - NumPy 1.19.1
+    - SciPy 1.5.2
+    - PyTorch 1.6
   * PyTorch examples, and some key dependencies such as Matplolib.
 
 A user account with username 'ubuntu' is created with sudo privaleges and password of 'Arm2020'. 
@@ -53,7 +53,7 @@ Use the build.sh script to build the image. This script implements a multi-stage
   * Stage 3: 'tools' image, including a Python3 virtual environment in userspace and a build of NumPy against OpenBLAS, as well as other Python essentials.
   * Stage 4: 'dev' image, including Bazel and PyTorvh and the source code
   * Stage 5: 'pytorch' image, including only the Python3 virtual environment, the PyTorch module, and the basic examples. PyTorch sources are not included in this image.
-      
+
 To see the command line options for build.sh use:
 
 ``` > ./build.sh -h ```
