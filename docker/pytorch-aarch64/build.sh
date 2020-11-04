@@ -28,12 +28,15 @@ function print_usage_and_exit {
   echo "Options:"
   echo "  -h, --help                   Display this message"
   echo "      --jobs                   Specify number of jobs to run in parallel during the build"
+  echo "      --onednn/--dnnl          Build and link to oneDNN / DNNL:"
+  echo "                                 * reference    - use the C++ reference kernels throughout."
+  echo "                                 * acl          - use Arm Copmute Library primitives where available (default)."
   echo "      --build-type             Type of build to perform:"
   echo "                                 * base       - build the basic portion of the image, OS and essential packages"
   echo "                                 * libs       - build image including maths libraries and Python3."
   echo "                                 * tools      - build image including Python3 venv, with numpy."
   echo "                                 * dev        - build image including Bazel and PyTorch, with sources."
-  echo "                                 * pytorch - build image including PyTorch build and benchmarks installed"
+  echo "                                 * pytorch    - build image including PyTorch build and benchmarks installed"
   echo "                                 * full       - build all images."
   echo "      --clean                  Pull a new base image and build without using any cached images."
   echo ""
@@ -55,10 +58,11 @@ build_libs_image=
 build_tools_image=
 build_dev_image=
 build_pytorch_image=1
+
 readonly target_arch="aarch64"
 readonly host_arch=$(arch)
 
-if ! [ "$host_arch" == "$target_arch" ]; then 
+if ! [ "$host_arch" == "$target_arch" ]; then
    echo "Error: $(arch) is not supported"
    print_usage_and_exit 1
 fi
@@ -68,6 +72,7 @@ fi
 extra_args=""
 nproc_build=
 clean_build=
+onednn=
 
 while [ $# -gt 0 ]
 do
@@ -86,7 +91,7 @@ do
           build_libs_image=1
           build_tools_image=
           build_dev_image=
-          build_pytorch_image= 
+          build_pytorch_image=
           ;;
          tools )
           build_base_image=
@@ -133,6 +138,23 @@ do
       clean_build=1
       ;;
 
+    --onednn | --dnnl )
+      case $2 in
+        reference )
+          onednn="reference"
+          shift
+        ;;
+        acl )
+          onednn="acl"
+          shift
+        ;;
+        * )
+          onednn="acl"
+          ;;
+      esac
+      ;;
+
+
     -h | --help )
       print_usage_and_exit 0
       ;;
@@ -152,6 +174,11 @@ fi
 if [[ $clean_build ]]; then
   # Pull a new base image, and don't use any caches
   extra_args="--pull --no-cache $extra_args"
+fi
+
+if [[ $onednn ]]; then
+  # Use oneDNN backend
+  extra_args="--build-arg onednn_opt=$onednn $extra_args"
 fi
 
 echo $extra_args

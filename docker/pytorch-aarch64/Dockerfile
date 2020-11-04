@@ -62,6 +62,7 @@ RUN apt-get -y update && \
       openssl \
       python-openssl \
       rsync \
+      scons \
       ssh \
       sudo \
       time \
@@ -98,7 +99,8 @@ ARG njobs
 ENV NP_MAKE="${njobs}"
 
 # Key version numbers
-ENV PY_VERSION=3.7.0 \
+ENV PY_VERSION=3.8.5 \
+    ACL_VERSION="v20.08" \
     OPENBLAS_VERSION=0.3.9 \
     NINJA_VERSION=1.9.0
 
@@ -134,6 +136,11 @@ COPY scripts/build-openblas.sh $PACKAGE_DIR/.
 RUN $PACKAGE_DIR/build-openblas.sh
 ENV OPENBLAS_DIR=$PROD_DIR/openblas/$OPENBLAS_VERSION
 ENV LD_LIBRARY_PATH=$OPENBLAS_DIR/lib:$LD_LIBRARY_PATH
+
+# Build Arm Compute Library from source
+COPY scripts/build-acl.sh $PACKAGE_DIR/.
+RUN $PACKAGE_DIR/build-acl.sh
+ENV ACL_ROOT_DIR=$PROD_DIR/ComputeLibrary
 
 # Build ninja from source
 COPY scripts/build-ninja.sh $PACKAGE_DIR/.
@@ -186,8 +193,23 @@ RUN pip install --no-cache-dir matplotlib
 RUN pip install --no-cache-dir pillow==6.1 lmdb
 
 # Install OpenCV into our venv,
-COPY scripts/build-opencv.sh $PACKAGE_DIR/.
-RUN $PACKAGE_DIR/build-opencv.sh
+# Note: Scripts are provided to build and install OpenCV from the
+# GitHub repository. These are no longer used by default in favour of the
+# opencv-python package, in this case opencv-python-headless.
+# Uncomment code block '1' below, and comment out code block '2' to build
+# from the GitHub sources.
+# --
+# 1 - build from GitHub sources:
+#COPY scripts/build-opencv.sh $PACKAGE_DIR/.
+#RUN $PACKAGE_DIR/build-opencv.sh
+# --
+# 2 - install opencv-python-headless
+RUN pip install --no-cache-dir scikit-build
+# enum34 is not compatable with Python 3.6+, and not required
+# it is installed as a dependency for an earlier package and needs
+# to be removed in order for the OpenCV build to complete.
+RUN pip uninstall enum34 -y
+RUN pip install --no-cache-dir --no-binary :all: opencv-python-headless
 
 CMD ["bash", "-l"]
 
@@ -196,12 +218,13 @@ CMD ["bash", "-l"]
 # ========
 FROM pytorch-libs AS pytorch-dev
 ARG njobs
-ARG bazel_mem
-ARG dnnl_opt
-ENV NP_MAKE="${njobs}"
+ARG onednn_opt
+ENV ONEDNN_BUILD="${onednn_opt}" \
+    NP_MAKE="${njobs}"
 
 # Key version numbers
 ENV TORCH_VERSION=1.6.0
+ENV ONEDNN_VERSION=v1.7
 
 # Use a PACKAGE_DIR in userspace
 WORKDIR /home/$DOCKER_USER
@@ -216,6 +239,8 @@ ENV PATH="$VENV_DIR/bin:$PATH"
 
 # Build PyTorch
 COPY scripts/build-pytorch.sh $PACKAGE_DIR/.
+COPY patches/pytorch_onednn.patch $PACKAGE_DIR/.
+COPY patches/onednn_acl_verbose.patch $PACKAGE_DIR/.
 RUN $PACKAGE_DIR/build-pytorch.sh
 RUN pip install --no-cache-dir torchvision
 

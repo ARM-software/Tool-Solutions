@@ -33,8 +33,7 @@ cd build
 export CFLAGS="${BASE_CFLAGS} -O3"
 export LDFLAGS="${BASE_LDFLAGS}"
 
-py_inc=/usr/local/include/python${PY_VERSION:0:3}m
-
+py_inc=/usr/local/include/python${PY_VERSION:0:3}
 py_bin=$VENV_DIR/bin/python
 py_site_packages=$VENV_DIR/lib64/python${PY_VERSION:0:3}/site-packages/
 install_dir=$VENV_DIR/$package
