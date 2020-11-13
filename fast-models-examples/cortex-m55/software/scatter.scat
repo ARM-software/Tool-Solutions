@@ -7,7 +7,7 @@
 ; Scatter-file for Cortex-m7 bare-metal minimal example with MPS2 memory map
 
 
-ROM0_LOAD 0x0 0x400000
+ROM0_LOAD 0x0 0x100000
 {
     CODE +0
     {
@@ -16,14 +16,14 @@ ROM0_LOAD 0x0 0x400000
     }
 }
 
-RAM0_LOAD 0x21000000 0x100000
+RAM0_LOAD 0x21000000 0x80000
 {
     DATA +0
     {
         * (+RW,+ZI)                         
     }
 
-    ARM_LIB_STACKHEAP 0x21100000 ALIGN 64 EMPTY 0x10000 
+    ARM_LIB_STACKHEAP 0x21070000 ALIGN 64 EMPTY 0x10000 
     {}
 }
     

@@ -7,14 +7,16 @@ component m55
 {
     composition
     {
-		ssram2 : RAMDevice("size"=0x800000);
-		ssram1 : RAMDevice("size"=0x800000);
-	    armcortexm55ct : ARMCortexM55CT("NUMIRQ"=64,"SAU"=8,"MVE"=2,"master_id"=0x1,"CFGITCMSZ"=0xf,"CFGDTCMSZ"=0xf);
+        armcortexm55ct : ARMCortexM55CT("NUMIRQ"=64,"SAU"=8,"MVE"=2,"master_id"=0x1,"CFGITCMSZ"=0xf,"CFGDTCMSZ"=0xf);
+	ssram1 : RAMDevice();
+	ssram2 : RAMDevice();
+	ssram3 : RAMDevice();
+	ssram4 : RAMDevice();
         pvbus2ambapv : PVBus2AMBAPV();
         PSRAM : RAMDevice("size"=0x1000000);
         Clock100MHz : ClockDivider(mul=100000000);
         Clock1Hz : MasterClock();
-        BusDecoder : PVBusDecoder()
+        BusDecoder : PVBusDecoder();
     }
     
     connection
@@ -23,18 +25,10 @@ component m55
         pvbus2ambapv.amba_pv_m => self.amba_pv_m;
         armcortexm55ct.pvbus_m => BusDecoder.pvbus_s;
         Clock100MHz.clk_out => armcortexm55ct.clk_in;
-	BusDecoder.pvbus_m_range[0x40000000..0x4113ffff] => pvbus2ambapv.pvbus_s[0x0..0x113ffff];
-	BusDecoder.pvbus_m_range[0x50000000..0x5113ffff] => pvbus2ambapv.pvbus_s[0x0..0x113ffff];
-	BusDecoder.pvbus_m_range[0x21000000..0x21ffffff] => PSRAM.pvbus[0x21000000..0x21ffffff];
-	BusDecoder.pvbus_m_range[0x22000000..0x22ffffff] => PSRAM.pvbus[0x21000000..0x21ffffff];
-	BusDecoder.pvbus_m_range[0x0..0x7fffff] => ssram1.pvbus[0x0..0x7fffff];
-	BusDecoder.pvbus_m_range[0x400000..0x7fffff] => ssram1.pvbus[0x0..0x3fffff];
-	BusDecoder.pvbus_m_range[0x10000000..0x103fffff] => ssram1.pvbus[0x0..0x3fffff];
-	BusDecoder.pvbus_m_range[0x10000000..0x107fffff] => ssram1.pvbus[0x0..0x7fffff];
-	BusDecoder.pvbus_m_range[0x20000000..0x207fffff] => ssram2.pvbus[0x20000000..0x207fffff];
-	BusDecoder.pvbus_m_range[0x20400000..0x207fffff] => ssram2.pvbus[0x20000000..0x203fffff];
-	BusDecoder.pvbus_m_range[0x30000000..0x307fffff] => ssram2.pvbus[0x20000000..0x207fffff];
-	BusDecoder.pvbus_m_range[0x30400000..0x307fffff] => ssram2.pvbus[0x20000000..0x203fffff];
+	BusDecoder.pvbus_m_range[0x0..0xffffff] => ssram1.pvbus;
+	BusDecoder.pvbus_m_range[0x10000000..0x10ffffff] => ssram2.pvbus;
+	BusDecoder.pvbus_m_range[0x20000000..0x20ffffff] => ssram3.pvbus;
+	BusDecoder.pvbus_m_range[0x21000000..0x21ffffff] => ssram4.pvbus;
     }
 
     properties
