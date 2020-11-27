@@ -165,7 +165,7 @@ do
           shift
           ;;
         openblas )
-          onddnn="openblas"
+          onednn="openblas"
           shift
           ;;
         armpl )
