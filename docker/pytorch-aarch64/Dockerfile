@@ -225,6 +225,7 @@ ENV ONEDNN_BUILD="${onednn_opt}" \
 # Key version numbers
 ENV TORCH_VERSION=1.6.0
 ENV ONEDNN_VERSION=v1.7
+ENV VISION_VERSION=v0.7.0
 
 # Use a PACKAGE_DIR in userspace
 WORKDIR /home/$DOCKER_USER
@@ -242,8 +243,7 @@ COPY scripts/build-pytorch.sh $PACKAGE_DIR/.
 COPY patches/pytorch_onednn.patch $PACKAGE_DIR/.
 COPY patches/onednn_acl_verbose.patch $PACKAGE_DIR/.
 RUN $PACKAGE_DIR/build-pytorch.sh
-RUN pip install --no-cache-dir torchvision
-
+RUN pip install git+https://github.com/pytorch/vision@$VISION_VERSION
 
 CMD ["bash", "-l"]
 
