@@ -165,7 +165,7 @@ popd
 
 pushd pkg
 mkdir install
-git clone --branch 3.5.x https://github.com/protocolbuffers/protobuf.git
+git clone --branch v3.12.0 https://github.com/google/protobuf.git
 git clone https://github.com/tensorflow/tensorflow.git
 cd tensorflow
 # need specific version of tensorflow
