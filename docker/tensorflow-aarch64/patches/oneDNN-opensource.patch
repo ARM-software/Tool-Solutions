@@ -1,0 +1,368 @@
+ *******************************************************************************
+ Patch generated from https://github.com/tensorflow/tensorflow/pull/41645 
+ *******************************************************************************
+
+diff --git a/.bazelrc b/.bazelrc
+index 82bb0605b0..a331ae1280 100644
+--- a/.bazelrc
++++ b/.bazelrc
+@@ -164,8 +164,18 @@ build:mkl -c opt
+ # config to build OneDNN backend with a user specified threadpool.
+ build:mkl_threadpool --define=build_with_mkl=true --define=enable_mkl=true
+ build:mkl_threadpool --define=tensorflow_mkldnn_contraction_kernel=0
++build:mkl_threadpool --define=build_with_mkl_dnn_v1_only=true
++build:mkl_threadpool --define=build_with_mkl_opensource=true
+ build:mkl_threadpool --define=build_with_mkldnn_threadpool=true
+ build:mkl_threadpool -c opt
++
++# Config setting to build with oneDNN and without the binary blob
++build:mkl_opensource_only --define=build_with_mkl=true --define=enable_mkl=true
++build:mkl_opensource_only --define=tensorflow_mkldnn_contraction_kernel=0
++build:mkl_opensource_only --define=build_with_mkl_dnn_v1_only=true
++build:mkl_opensource_only --define=build_with_mkl_opensource=true
++build:mkl_opensource_only -c opt
++
+ # This config refers to building with CUDA available. It does not necessarily
+ # mean that we build CUDA op kernels.
+ build:using_cuda --define=using_cuda=true
+diff --git a/tensorflow/core/kernels/mkl_batch_matmul_op.cc b/tensorflow/core/kernels/mkl_batch_matmul_op.cc
+index 87e6002d9c..5cd3ac3b08 100644
+--- a/tensorflow/core/kernels/mkl_batch_matmul_op.cc
++++ b/tensorflow/core/kernels/mkl_batch_matmul_op.cc
+@@ -15,21 +15,26 @@ limitations under the License.
+ 
+ // See docs in ../ops/math_ops.cc.
+ 
+-// This file uses MKL CBLAS batched xGEMM for acceleration of TF Batch
+-// Matrix-Matrix Multiplication (MatMul) operations.
+-// We currently register this kernel only for MKL supported data
+-// types (float, double, complex64, complex128). The macro INTEL_MKL is defined
+-// by the build system only when MKL is chosen as an option at configure stage
+-// and when it is undefined at build time, this file becomes an empty
+-// compilation unit
++// This file uses both oneDNN and MKL CBLAS batched xGEMM for acceleration of
++// Batch Matrix-Matrix Multiplication (MatMul) operations.
++// We currently register this kernel only for oneDNN supported data
++// types (float, bfloat16). This file can be built with and without the use of
++// the binary MKL CBLAS calls, controlled by the macro INTEL_MKL_DNN_ONLY.
++// If INTEL_MKL_DNN_ONLY is defined, only oneDNN is used. For cases not
++// supported by oneDNN (ex. Batchmatmul with broadcasting) we fall back to the
++// default CPU implementation.
++// if INTEL_MKL_DNN_ONLY is not defined, both oneDNN and MKL CBLAS
++// implementations are used. This is only temporary, once we are able handle all
++// cases with oneDNN, CBLAS calls will be removed.
+ 
+ #define EIGEN_USE_THREADS
+ 
+ #if defined(INTEL_MKL)
+ #include <vector>
+ 
++#if !defined(INTEL_MKL_DNN_ONLY)
+ #include "mkl_cblas.h"
+-#include "third_party/eigen3/unsupported/Eigen/CXX11/Tensor"
++#endif  // !INTEL_MKL_DNN_ONLY
+ #include "tensorflow/core/framework/op.h"
+ #include "tensorflow/core/framework/op_kernel.h"
+ #include "tensorflow/core/framework/register_types.h"
+@@ -44,6 +49,7 @@ limitations under the License.
+ #include "tensorflow/core/platform/types.h"
+ #include "tensorflow/core/util/matmul_bcast.h"
+ #include "tensorflow/core/util/mkl_util.h"
++#include "third_party/eigen3/unsupported/Eigen/CXX11/Tensor"
+ 
+ namespace tensorflow {
+ 
+@@ -105,14 +111,14 @@ class BatchMatMulMkl : public OpKernel {
+             "In[0] and In[1] must have compatible batch dimensions: ",
+             lhs.shape().DebugString(), " vs. ", rhs.shape().DebugString()));
+ 
+-#ifdef ENABLE_MKLDNN_THREADPOOL
++#if defined(INTEL_MKL_DNN_ONLY)
+     if (bcast.IsBroadcastingRequired()) {
+       // Calling Eigen Kernel for broadcasting case and return. Eigen does
+       // not have BF16 support, so we have to fail graciously in that case.
+       eigen_batch_mm_v2_.Compute(ctx);
+       return;
+     }
+-#endif  // ENABLE_MKLDNN_THREADPOOL
++#endif  // INTEL_MKL_DNN_ONLY
+     TensorShape out_shape = bcast.output_batch_shape();
+     auto batch_size = bcast.output_batch_size();
+ 
+@@ -158,11 +164,11 @@ class BatchMatMulMkl : public OpKernel {
+     std::vector<MKL_INT> ldc_array(batch_size, N);
+     std::vector<MKL_INT> group_size(1, batch_size);
+ 
+-    bool threadpool_enabled = false;
+-#ifdef ENABLE_MKLDNN_THREADPOOL
+-    threadpool_enabled = true;
+-#endif  // ENABLE_MKLDNN_THREADPOOL
+-    if (std::is_same<Scalar, bfloat16>::value || threadpool_enabled) {
++    bool bcast_not_supported = false;
++#if defined(INTEL_MKL_DNN_ONLY)
++    bcast_not_supported = true;
++#endif  // INTEL_MKL_DNN_ONLY
++    if (std::is_same<Scalar, bfloat16>::value || bcast_not_supported) {
+       // DNNL bfloat16 API requires a, b, and c as pointers to tensors
+       // represented as flat-byte array.
+       const Scalar* a = nullptr;
+@@ -227,7 +233,7 @@ class BatchMatMulMkl : public OpKernel {
+       const std::vector<MKL_INT>& ldb_Array, float** C_Array,
+       const std::vector<MKL_INT>& ldc_Array, const MKL_INT group_count,
+       const std::vector<MKL_INT>& group_size, OpKernelContext* ctx) {
+-#ifndef ENABLE_MKLDNN_THREADPOOL
++#if !defined(INTEL_MKL_DNN_ONLY)
+     std::vector<CBLAS_TRANSPOSE> TransA_Array(
+         group_size[0], TransA ? CblasTrans : CblasNoTrans);
+     std::vector<CBLAS_TRANSPOSE> TransB_Array(
+@@ -249,7 +255,7 @@ class BatchMatMulMkl : public OpKernel {
+     dnnl_gemm_batch<float>(TransA_Array, TransB_Array, M_Array, N_Array,
+                            K_Array, alpha_Array, *A_Array, *B_Array, beta_Array,
+                            *C_Array, group_count, group_size, ctx);
+-#endif  // !ENABLE_MKLDNN_THREADPOOL
++#endif  // !INTEL_MKL_DNN_ONLY
+   }
+ // BatchMatMul BFloat16 support only exists in DNNL 1.2 onwards.
+ #if defined(ENABLE_MKLDNN_V1) && defined(ENABLE_INTEL_MKL_BFLOAT16)
+diff --git a/tensorflow/core/kernels/mkl_matmul_ops_common.h b/tensorflow/core/kernels/mkl_matmul_ops_common.h
+index d7af614ad0..f8242d06fa 100644
+--- a/tensorflow/core/kernels/mkl_matmul_ops_common.h
++++ b/tensorflow/core/kernels/mkl_matmul_ops_common.h
+@@ -35,7 +35,12 @@ using mkldnn::stream;
+ namespace tensorflow {
+ 
+ typedef Eigen::ThreadPoolDevice CPUDevice;
+-
++#ifdef INTEL_MKL_DNN_ONLY
++// Temporarily copying some definitions from mkl_cblas.h so the same code can
++// be used when calling oneDNN or CBLAS batchmatmul in mkl_batch_matmul_op.cc.
++typedef enum { CblasRowMajor, CblasColumnMajor } CBLAS_LAYOUT;
++#define MKL_INT int
++#endif
+ // This structure aggregates multiple inputs to MklDnnMatMul* methods.
+ struct MklDnnMatMulFwdParams {
+   memory::dims src_dims;
+diff --git a/tensorflow/tensorflow.bzl b/tensorflow/tensorflow.bzl
+index 1bf4b24559..278bf1abfe 100644
+--- a/tensorflow/tensorflow.bzl
++++ b/tensorflow/tensorflow.bzl
+@@ -47,7 +47,7 @@ load(
+ load(
+     "//third_party/mkl_dnn:build_defs.bzl",
+     "if_mkl_open_source_only",
+-    "if_mkl_v1_open_source_only",
++    "if_mkl_v1",
+     "if_mkldnn_threadpool",
+ )
+ load(
+@@ -327,12 +327,8 @@ def tf_copts(
+         if_tensorrt(["-DGOOGLE_TENSORRT=1"]) +
+         if_mkl(["-DINTEL_MKL=1", "-DEIGEN_USE_VML"]) +
+         if_mkl_open_source_only(["-DINTEL_MKL_DNN_ONLY"]) +
+-        if_mkl_v1_open_source_only(["-DENABLE_MKLDNN_V1", "-DENABLE_INTEL_MKL_BFLOAT16"]) +
+-        if_mkldnn_threadpool([
+-            "-DENABLE_MKLDNN_THREADPOOL",
+-            "-DENABLE_MKLDNN_V1",
+-            "-DINTEL_MKL_DNN_ONLY",
+-        ]) +
++        if_mkl_v1(["-DENABLE_MKLDNN_V1", "-DENABLE_INTEL_MKL_BFLOAT16"]) +
++        if_mkldnn_threadpool(["-DENABLE_MKLDNN_THREADPOOL"]) +
+         if_enable_mkl(["-DENABLE_MKL"]) +
+         if_ngraph(["-DINTEL_NGRAPH=1"]) +
+         if_android_arm(["-mfpu=neon"]) +
+diff --git a/third_party/mkl/BUILD b/third_party/mkl/BUILD
+index bbbec855ab..470b3d50ea 100644
+--- a/third_party/mkl/BUILD
++++ b/third_party/mkl/BUILD
+@@ -10,15 +10,6 @@ config_setting(
+     visibility = ["//visibility:public"],
+ )
+ 
+-config_setting(
+-    name = "build_with_mkl_ml_only",
+-    define_values = {
+-        "build_with_mkl": "true",
+-        "build_with_mkl_ml_only": "true",
+-    },
+-    visibility = ["//visibility:public"],
+-)
+-
+ config_setting(
+     name = "build_with_mkl_lnx_x64",
+     define_values = {
+diff --git a/third_party/mkl/build_defs.bzl b/third_party/mkl/build_defs.bzl
+index bd0686523b..851403fd13 100644
+--- a/third_party/mkl/build_defs.bzl
++++ b/third_party/mkl/build_defs.bzl
+@@ -41,26 +41,11 @@ def if_mkl_ml(if_true, if_false = []):
+       a select evaluating to either if_true or if_false as appropriate.
+     """
+     return select({
+-        "@org_tensorflow//third_party/mkl_dnn:build_with_mkl_dnn_only": if_false,
++        "@org_tensorflow//third_party/mkl_dnn:build_with_mkl_opensource": if_false,
+         "@org_tensorflow//third_party/mkl:build_with_mkl": if_true,
+         "//conditions:default": if_false,
+     })
+ 
+-def if_mkl_ml_only(if_true, if_false = []):
+-    """Shorthand for select()'ing on whether we're building with MKL-ML only.
+-
+-    Args:
+-      if_true: expression to evaluate if building with MKL-ML only.
+-      if_false: expression to evaluate if building without MKL, or with MKL-DNN.
+-
+-    Returns:
+-      a select evaluating to either if_true or if_false as appropriate.
+-    """
+-    return select({
+-        "@org_tensorflow//third_party/mkl:build_with_mkl_ml_only": if_true,
+-        "//conditions:default": if_false,
+-    })
+-
+ def if_mkl_lnx_x64(if_true, if_false = []):
+     """Shorthand to select() if building with MKL and the target is Linux x86-64.
+ 
+@@ -107,8 +92,6 @@ def mkl_deps():
+     return select({
+         "@org_tensorflow//third_party/mkl_dnn:build_with_mkl_dnn_only": ["@mkl_dnn"],
+         "@org_tensorflow//third_party/mkl_dnn:build_with_mkl_dnn_v1_only": ["@mkl_dnn_v1//:mkl_dnn"],
+-        "@org_tensorflow//third_party/mkl_dnn:build_with_mkldnn_threadpool": ["@mkl_dnn_v1//:mkl_dnn"],
+-        "@org_tensorflow//third_party/mkl:build_with_mkl_ml_only": ["@org_tensorflow//third_party/mkl:intel_binary_blob"],
+         "@org_tensorflow//third_party/mkl:build_with_mkl": [
+             "@org_tensorflow//third_party/mkl:intel_binary_blob",
+             "@mkl_dnn",
+diff --git a/third_party/mkl_dnn/BUILD b/third_party/mkl_dnn/BUILD
+index fe55832291..c3059a3dc5 100644
+--- a/third_party/mkl_dnn/BUILD
++++ b/third_party/mkl_dnn/BUILD
+@@ -18,6 +18,16 @@ config_setting(
+     visibility = ["//visibility:public"],
+ )
+ 
++config_setting(
++    name = "build_with_mkl_opensource",
++    define_values = {
++        "build_with_mkl": "true",
++        "build_with_mkl_dnn_v1_only": "true",
++        "build_with_mkl_opensource": "true",
++    },
++    visibility = ["//visibility:public"],
++)
++
+ config_setting(
+     name = "build_with_mkl_dnn_v1_only",
+     define_values = {
+@@ -31,6 +41,8 @@ config_setting(
+     name = "build_with_mkldnn_threadpool",
+     define_values = {
+         "build_with_mkl": "true",
++        "build_with_mkl_dnn_v1_only": "true",
++        "build_with_mkl_opensource": "true",
+         "build_with_mkldnn_threadpool": "true",
+     },
+     visibility = ["//visibility:public"],
+diff --git a/third_party/mkl_dnn/build_defs.bzl b/third_party/mkl_dnn/build_defs.bzl
+index bd3b4b94f2..6a3e4f827c 100644
+--- a/third_party/mkl_dnn/build_defs.bzl
++++ b/third_party/mkl_dnn/build_defs.bzl
+@@ -10,11 +10,11 @@ def if_mkl_open_source_only(if_true, if_false = []):
+ 
+     """
+     return select({
+-        "@org_tensorflow//third_party/mkl_dnn:build_with_mkl_dnn_only": if_true,
++        "@org_tensorflow//third_party/mkl_dnn:build_with_mkl_opensource": if_true,
+         "//conditions:default": if_false,
+     })
+ 
+-def if_mkl_v1_open_source_only(if_true, if_false = []):
++def if_mkl_v1(if_true, if_false = []):
+     """Returns `if_true` if MKL-DNN v1.x is used.
+ 
+     Shorthand for select()'ing on whether we're building with
+diff --git a/third_party/mkl_dnn/mkldnn.BUILD b/third_party/mkl_dnn/mkldnn.BUILD
+index 71dde75e2e..5279043ad2 100644
+--- a/third_party/mkl_dnn/mkldnn.BUILD
++++ b/third_party/mkl_dnn/mkldnn.BUILD
+@@ -3,7 +3,7 @@ exports_files(["LICENSE"])
+ load(
+     "@org_tensorflow//third_party/mkl_dnn:build_defs.bzl",
+     "if_mkl_open_source_only",
+-    "if_mkl_v1_open_source_only",
++    "if_mkl_v1",
+ )
+ load(
+     "@org_tensorflow//third_party:common.bzl",
+@@ -60,7 +60,7 @@ cc_library(
+         "src/cpu/**/*.cpp",
+         "src/cpu/**/*.hpp",
+         "src/cpu/xbyak/*.h",
+-    ]) + if_mkl_v1_open_source_only([
++    ]) + if_mkl_v1([
+         ":mkldnn_config_h",
+     ]) + [":mkldnn_version_h"],
+     hdrs = glob(["include/*"]),
+@@ -71,7 +71,7 @@ cc_library(
+     ] + if_mkl_open_source_only([
+         "-UUSE_MKL",
+         "-UUSE_CBLAS",
+-    ]) + if_mkl_v1_open_source_only([
++    ]) + if_mkl_v1([
+         "-UUSE_MKL",
+         "-UUSE_CBLAS",
+     ]) + select({
+diff --git a/third_party/mkl_dnn/mkldnn_v1.BUILD b/third_party/mkl_dnn/mkldnn_v1.BUILD
+index 7bdec138b9..adbf116178 100644
+--- a/third_party/mkl_dnn/mkldnn_v1.BUILD
++++ b/third_party/mkl_dnn/mkldnn_v1.BUILD
+@@ -3,9 +3,15 @@ exports_files(["LICENSE"])
+ load(
+     "@org_tensorflow//third_party/mkl_dnn:build_defs.bzl",
+     "if_mkl_open_source_only",
+-    "if_mkl_v1_open_source_only",
++    "if_mkl_v1",
+     "if_mkldnn_threadpool",
+ )
++
++load(
++    "@org_tensorflow//third_party/mkl:build_defs.bzl",
++    "if_mkl_ml",
++)
++
+ load(
+     "@org_tensorflow//third_party:common.bzl",
+     "template_rule",
+@@ -85,7 +91,7 @@ cc_library(
+     ] + if_mkl_open_source_only([
+         "-UUSE_MKL",
+         "-UUSE_CBLAS",
+-    ]) + if_mkl_v1_open_source_only([
++    ]) + if_mkl_v1([
+         "-UUSE_MKL",
+         "-UUSE_CBLAS",
+     ]) + if_mkldnn_threadpool([
+@@ -109,21 +115,10 @@ cc_library(
+         "src/cpu/xbyak",
+     ],
+     visibility = ["//visibility:public"],
+-    deps = select({
+-        "@org_tensorflow//tensorflow:linux_x86_64": [
+-            "@mkl_linux//:mkl_headers",
+-            "@mkl_linux//:mkl_libs_linux",
+-        ],
+-        "@org_tensorflow//tensorflow:macos": [
+-            "@mkl_darwin//:mkl_headers",
+-            "@mkl_darwin//:mkl_libs_darwin",
+-        ],
+-        "@org_tensorflow//tensorflow:windows": [
+-            "@mkl_windows//:mkl_headers",
+-            "@mkl_windows//:mkl_libs_windows",
+-        ],
+-        "//conditions:default": [],
+-    }),
++    deps = if_mkl_ml(
++        ["@org_tensorflow//third_party/mkl:intel_binary_blob"],
++        [],
++    ),
+ )
+ 
+ cc_library(

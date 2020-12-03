@@ -15,7 +15,7 @@ aarch64
   * OS: Ubuntu 18.04
   * Compiler: GCC 9.3.0
   * Maths libraries: [Arm Performance Libraries](https://developer.arm.com/tools-and-software/server-and-hpc/compile/arm-compiler-for-linux/arm-performance-libraries) 20.2.1 and [OpenBLAS](https://www.openblas.net/) 0.3.9
-  * [oneDNN](https://github.com/oneapi-src/oneDNN) 0.21.3 or 1.5. Previously known as (MKL-DNN/DNNL).
+  * [oneDNN](https://github.com/oneapi-src/oneDNN) 0.21.3 or 1.7. Previously known as (MKL-DNN/DNNL).
   * Python3 environment built from CPython 3.7 and containing:
     - NumPy 1.17.1
     - TensorFlow 1.15.2 or TensorFlow 2.3.0
@@ -91,7 +91,7 @@ For example:
 To choose between the different tensorflow versions use '--tf_version 1' for TensorFlow 1.15.2 or '--tf_version 2' for TensorFlow 2.3.0. The default value is set to tf_version=2.
 For the base build: This will generate an image named 'DockerTest/ubuntu/base-v$tf_version', hyphenated with the version of TensorFlow chosen.
 
-TensorFlow can optionally be built with oneDNN, using the '--onednn' or '--dnnl' flag. Tensorflow 1.x is built with oneDNN 0.21.3 (MKL-DNN) and Tensorflow 2.x is built with oneDNN 1.5.1.
+TensorFlow can optionally be built with oneDNN, using the '--onednn' or '--dnnl' flag. Tensorflow 1.x is built with oneDNN 0.21.3 (MKL-DNN) and Tensorflow 2.x is built with oneDNN 1.7.
 Without the '--onednn' flag, the default Eigen backend of Tensorflow is chosen. For the final TensorFlow image with oneDNN: This will generate an image 'tensorflow-v$tf_version$onednn_blas with the type of onednn backend chosen.
 
 The BLAS backend for oneDNN can also be selected using the '--onednn' or '--dnnl' flags:
