@@ -1,0 +1,145 @@
+ *******************************************************************************
+ Copyright 2020 Arm Limited and affiliates.
+ SPDX-License-Identifier: Apache-2.0
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+ *******************************************************************************
+
+diff --git a/tensorflow/workspace.bzl b/tensorflow/workspace.bzl
+index 61438f4b7e..5b8b5f04fb 100755
+--- a/tensorflow/workspace.bzl
++++ b/tensorflow/workspace.bzl
+@@ -214,6 +214,12 @@ def tf_repositories(path_prefix = "", tf_repo_name = ""):
+         path = '/opt/onednn/release/oneDNN'
+     )
+
++    native.new_local_repository(
++        name = "openblas",
++        build_file = clean_dep("//third_party/OpenBLAS:OpenBLAS.BUILD"),
++        path = '/opt/openblas/0.3.9'
++    )
++
+     tf_http_archive(
+         name = "com_google_absl",
+         build_file = clean_dep("//third_party:com_google_absl.BUILD"),
+diff --git a/third_party/OpenBLAS/BUILD b/third_party/OpenBLAS/BUILD
+new file mode 100644
+index 0000000000..b221306e35
+--- /dev/null
++++ b/third_party/OpenBLAS/BUILD
+@@ -0,0 +1,24 @@
++load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
++
++
++package(
++    default_visibility = [
++        "//tensorflow:__subpackages__",
++    ],
++    licenses = ["notice"],
++)
++
++
++exports_files(["LICENSE"])
++
++
++cc_library(
++    name = "openblas_lib",
++    visibility = ["//visibility:public"],
++    copts = ["-fopenmp"],
++    linkopts = ["-lopenblas",],
++    deps = [
++             "@openblas//:openblas_headers",
++             "@openblas//:openblas_libs_linux",
++    ],
++)
+diff --git a/third_party/OpenBLAS/OpenBLAS.BUILD b/third_party/OpenBLAS/OpenBLAS.BUILD
+new file mode 100644
+index 0000000000..76b0511de5
+--- /dev/null
++++ b/third_party/OpenBLAS/OpenBLAS.BUILD
+@@ -0,0 +1,28 @@
++licenses(["notice"])
++exports_files(["share/LICENSE"])
++
++
++filegroup(
++    name = "LICENSE",
++    srcs = [
++        "share/LICENSE",
++    ],
++    visibility = ["//visibility:public"],
++)
++
++
++cc_library(
++    name = "openblas_headers",
++    srcs = glob(["include/*.h"]),
++    includes = ["include"],
++    visibility = ["//visibility:public"],
++)
++
++
++cc_library(
++    name = "openblas_libs_linux",
++    srcs = [
++        "lib/libopenblas.so",
++    ],
++    visibility = ["//visibility:public"],
++)
+diff --git a/third_party/mkl_dnn/mkldnn_v1.BUILD b/third_party/mkl_dnn/mkldnn_v1.BUILD
+index 350fd4a374..58588b751b 100644
+--- a/third_party/mkl_dnn/mkldnn_v1.BUILD
++++ b/third_party/mkl_dnn/mkldnn_v1.BUILD
+@@ -89,40 +89,18 @@ cc_library(
+     hdrs = glob(["include/*"]),
+     copts = [
+         "-fexceptions",
+-        "-DUSE_MKL",
+         "-DUSE_CBLAS",
+-    ] + if_mkl_open_source_only([
+-        "-UUSE_MKL",
+-        "-UUSE_CBLAS",
+-    ]) + if_mkl_v1([
+-        "-UUSE_MKL",
+-        "-UUSE_CBLAS",
+-    ]) + if_mkldnn_threadpool([
+-        "-UUSE_MKL",
+-        "-UUSE_CBLAS",
+-    ]) + select({
+-        "@org_tensorflow//tensorflow:linux_x86_64": [
+-            "-fopenmp",  # only works with gcc
+-        ],
+-        # TODO(ibiryukov): enable openmp with clang by including libomp as a
+-        # dependency.
+-        ":clang_linux_x86_64": [],
+-        "//conditions:default": [],
+-    }),
++    ],
+     includes = [
+         "include",
+         "src",
+         "src/common",
+         "src/cpu",
+         "src/cpu/gemm",
+-        "src/cpu/xbyak",
+     ],
+     linkopts = ["-lgomp"],
+     visibility = ["//visibility:public"],
+-    deps = if_mkl_ml(
+-        ["@org_tensorflow//third_party/mkl:intel_binary_blob"],
+-        [],
+-    ),
++    deps = ["@org_tensorflow//third_party/OpenBLAS:openblas_lib",],    
+ )
+
+ cc_library(

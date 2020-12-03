@@ -15,7 +15,6 @@
  limitations under the License.
  *******************************************************************************
 
-
 diff --git a/tensorflow/workspace.bzl b/tensorflow/workspace.bzl
 index 24446d846c..f9b1122ee9 100755
 --- a/tensorflow/workspace.bzl
@@ -34,109 +33,37 @@ index 24446d846c..f9b1122ee9 100755
 -            "https://storage.googleapis.com/mirror.tensorflow.org/github.com/oneapi-src/oneDNN/archive/v1.4.tar.gz",
 -            "https://github.com/oneapi-src/oneDNN/archive/v1.4.tar.gz",
 -        ],
-+        path = '/opt/onednn/release'
++        path = '/opt/onednn/release/oneDNN'
      )
  
-     tf_http_archive(
-diff --git a/third_party/mkl_dnn/mkldnn_v1.BUILD b/third_party/mkl_dnn/mkldnn_v1.BUILD
-index 7bdec138b9..b833156fb7 100644
---- a/third_party/mkl_dnn/mkldnn_v1.BUILD
-+++ b/third_party/mkl_dnn/mkldnn_v1.BUILD
-@@ -31,85 +31,25 @@ _DNNL_RUNTIME_THREADPOOL = {
-     "#cmakedefine DNNL_GPU_RUNTIME DNNL_RUNTIME_${DNNL_GPU_RUNTIME}": "#define DNNL_GPU_RUNTIME DNNL_RUNTIME_NONE",
- }
- 
--template_rule(
--    name = "dnnl_config_h",
--    src = "include/dnnl_config.h.in",
--    out = "include/dnnl_config.h",
--    substitutions = if_mkldnn_threadpool(
--        _DNNL_RUNTIME_THREADPOOL,
--        if_false = _DNNL_RUNTIME_OMP,
--    ),
-+cc_library(
-+    name = "mkldnn_headers",
-+    srcs = glob(["include/*"]),
-+    includes = ["include"],
-+    visibility = ["//visibility:public"],
- )
- 
--# Create the file mkldnn_version.h with MKL-DNN version numbers.
--# Currently, the version numbers are hard coded here. If MKL-DNN is upgraded then
--# the version numbers have to be updated manually. The version numbers can be
--# obtained from the PROJECT_VERSION settings in CMakeLists.txt. The variable is
--# set to "version_major.version_minor.version_patch". The git hash version can
--# be set to NA.
--# TODO(agramesh1) Automatically get the version numbers from CMakeLists.txt.
--
--template_rule(
--    name = "dnnl_version_h",
--    src = "include/dnnl_version.h.in",
--    out = "include/dnnl_version.h",
--    substitutions = {
--        "@DNNL_VERSION_MAJOR@": "1",
--        "@DNNL_VERSION_MINOR@": "4",
--        "@DNNL_VERSION_PATCH@": "0",
--        "@DNNL_VERSION_HASH@": "N/A",
--    },
-+cc_library(
-+    name = "mkldnn_libs",
-+    srcs = glob(["lib/*"]),
-+    visibility = ["//visibility:public"],
- )
- 
- cc_library(
-     name = "mkl_dnn",
--    srcs = glob([
--        "src/common/*.cpp",
--        "src/common/*.hpp",
--        "src/cpu/*.cpp",
--        "src/cpu/*.hpp",
+     tf_http_archive(  
+--- a/third_party/mkl_dnn/mkldnn_v1.BUILD	2020-09-25 21:06:36.246342061 +0000
++++ b/third_party/mkl_dnn/mkldnn_v1.BUILD	2020-09-25 21:09:19.205725722 +0000
+@@ -74,11 +74,14 @@
+         "src/common/*.hpp",
+         "src/cpu/*.cpp",
+         "src/cpu/*.hpp",
 -        "src/cpu/**/*.cpp",
 -        "src/cpu/**/*.hpp",
 -        "src/cpu/xbyak/*.h",
 -        "src/cpu/jit_utils/jitprofiling/*.c",
 -        "src/cpu/jit_utils/jitprofiling/*.h",
--    ]) + [
--        ":dnnl_config_h",
--        ":dnnl_version_h",
--    ],
--    hdrs = glob(["include/*"]),
--    copts = [
--        "-fexceptions",
--        "-DUSE_MKL",
--        "-DUSE_CBLAS",
--    ] + if_mkl_open_source_only([
--        "-UUSE_MKL",
--        "-UUSE_CBLAS",
--    ]) + if_mkl_v1_open_source_only([
--        "-UUSE_MKL",
--        "-UUSE_CBLAS",
--    ]) + if_mkldnn_threadpool([
--        "-UUSE_MKL",
--        "-UUSE_CBLAS",
--    ]) + select({
--        "@org_tensorflow//tensorflow:linux_x86_64": [
--            "-fopenmp",  # only works with gcc
--        ],
--        # TODO(ibiryukov): enable openmp with clang by including libomp as a
--        # dependency.
--        ":clang_linux_x86_64": [],
--        "//conditions:default": [],
--    }),
--    includes = [
--        "include",
--        "src",
--        "src/common",
--        "src/cpu",
--        "src/cpu/gemm",
--        "src/cpu/xbyak",
--    ],
++        "src/cpu/rnn/*.cpp",
++        "src/cpu/rnn/*.hpp",
++        "src/cpu/matmul/*.cpp",
++        "src/cpu/matmul/*.hpp",
++        "src/cpu/gemm/*.cpp",
++        "src/cpu/gemm/*.hpp",
++        "src/cpu/gemm/**/*.cpp",
++        "src/cpu/gemm/**/*.hpp",
+     ]) + [
+         ":dnnl_config_h",
+         ":dnnl_version_h",
+@@ -114,6 +117,7 @@
+	 "src/cpu/gemm",
+         "src/cpu/xbyak",
+     ],
++    linkopts = ["-lgomp"],
      visibility = ["//visibility:public"],
--    deps = select({
-+    deps = ["@mkl_dnn_v1//:mkldnn_headers",
-+        "@mkl_dnn_v1//:mkldnn_libs",
-+        ] + select({
-         "@org_tensorflow//tensorflow:linux_x86_64": [
-             "@mkl_linux//:mkl_headers",
-             "@mkl_linux//:mkl_libs_linux",
+     deps = if_mkl_ml(
+	["@org_tensorflow//third_party/mkl:intel_binary_blob"],

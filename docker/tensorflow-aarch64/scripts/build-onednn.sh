@@ -34,16 +34,8 @@ cd ${src_repo}
 git checkout $version
 
 # Apply patch to add AArch64 flags, and OpenBLAS lib
-if [[ $tf_id == '1' ]]; then
-   # This patch is for version 0.21.3
-   patch -p1 < ../mkldnn.patch
-elif [[ $tf_id == '2' ]]; then
-   # This patch is for version 1.4+
-   patch -p1 < ../oneDNN.patch
-else
-   echo 'Invalid TensorFlow version when applying patches to the oneDNN repository'
-   exit 1
-fi
+# This patch is for version 0.21.3
+patch -p1 < ../mkldnn.patch
 
 cmake_options="-DCMAKE_BUILD_TYPE=release \
   -DDNNL_CPU_RUNTIME=OMP \

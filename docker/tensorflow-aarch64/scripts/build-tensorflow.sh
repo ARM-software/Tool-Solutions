@@ -32,12 +32,6 @@ git clone ${src_host}/${src_repo}.git
 cd ${src_repo}
 git checkout $version -b $version
 
-# Checking out mkl_matmul_op.cc from a newer commit, prior to the reorganisation of core/kernels.
-# See: https://github.com/tensorflow/tensorflow/pull/41232#issuecomment-670049428
-
-if [[ $tf_id == '2' ]]; then
- git checkout 00dbf072dbe69521ae2170a9fac4052187d187d6 -- tensorflow/core/kernels/mkl_matmul_op.cc
-fi
 
 # Apply path to allow use of newer Bazel build.
 if [[ $tf_id == '1' ]]; then
@@ -47,8 +41,18 @@ if [[ $tf_id == '1' ]]; then
    patch -p1 < ../tensorflow.patch
 elif [[ $tf_id == '2' ]]; then
    if [[ $ONEDNN_BUILD ]]; then
+      # TF2.3.0 fix: https://github.com/tensorflow/tensorflow/pull/41232#issuecomment-670049428
+      patch -p1 < ../oneDNN-opensource.patch
       patch -p1 < ../tf2_onednn_decoupling.patch
-      patch -p1 < ../oneDNN-header.patch
+      if [[ $ONEDNN_BUILD == 'armpl' ]]; then
+	 echo 'Patching for TensorFlow oneDNN - ArmPL'
+         patch -p1 < ../tf2-armpl.patch
+      elif  [[ $ONEDNN_BUILD == 'openblas' ]]; then
+	 echo 'Patching for TensorFlow oneDNN - OpenBLAS'
+         patch -p1 < ../tf2-openblas.patch
+      else
+	echo 'TensorFlow oneDNN-reference'
+      fi
    fi
    patch -p1 < ../tensorflow2.patch
 else
@@ -91,8 +95,7 @@ if [[ $ONEDNN_BUILD ]]; then
       //tensorflow/tools/pip_package:build_pip_package
    elif [[ $tf_id == '2' ]]; then
      bazel build $extra_args \
-       --define=build_with_mkl_dnn_v1_only=true --define=build_with_mkl=true \
-       --define=tensorflow_mkldnn_contraction_kernel=1 \
+       --config=mkl_opensource_only \
        --copt="-mcpu=${CPU}" --copt="-flax-vector-conversions" --copt="-moutline-atomics" --copt="-O3" \
        --cxxopt="-mcpu=${CPU}" --cxxopt="-flax-vector-conversions" --cxxopt="-moutline-atomics" --cxxopt="-O3" \
        --linkopt="-L$ARMPL_DIR/lib -lamath -lm" --linkopt="-fopenmp" \

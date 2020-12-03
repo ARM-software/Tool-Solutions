@@ -151,11 +151,12 @@ ENV LD_LIBRARY_PATH=$OPENBLAS_DIR/lib:$LD_LIBRARY_PATH
 COPY scripts/build-onednn.sh $PACKAGE_DIR/.
 # Patch for oneDNN (MKL-DNN), v0.21.3
 COPY patches/mkldnn.patch $PACKAGE_DIR/mkldnn.patch
-# Patch for oneDNN  v1.x
-COPY patches/oneDNN.patch $PACKAGE_DIR/oneDNN.patch
-RUN $PACKAGE_DIR/build-onednn.sh
 ENV ONEDNN_DIR=$PROD_DIR/onednn/release
 ENV LD_LIBRARY_PATH=$ONEDNN_DIR/lib:$LD_LIBRARY_PATH
+# Get oneDNN sources
+# Built as part of the bazel build step in TensorFlow
+COPY scripts/get-onednn.sh $PACKAGE_DIR/.
+RUN $PACKAGE_DIR/get-onednn.sh
 
 # ========
 # Stage 3: install essential python dependencies into a venv
@@ -200,6 +201,10 @@ RUN $PACKAGE_DIR/build-scipy.sh
 # Install some TensorFlow essentials
 RUN pip install --no-cache-dir keras_applications==1.0.8 --no-deps
 RUN pip install --no-cache-dir keras_preprocessing==1.1.0 --no-deps
+# enum34 is not compatible with Python 3.6+, and not required
+# it is installed as a dependency for an earlier package and needs
+# to be removed in order for the OpenCV build to complete.
+RUN pip uninstall enum34 -y
 RUN HDF5_DIR=/usr/lib/aarch64-linux-gnu/hdf5/serial pip install h5py
 RUN pip install --no-cache-dir ck absl-py pycocotools
 # Install OpenCV into our venv,
@@ -250,8 +255,11 @@ COPY patches/tf_dnnl_decoupling.patch $PACKAGE_DIR/tf_dnnl_decoupling.patch
 COPY patches/tf2_onednn_decoupling.patch $PACKAGE_DIR/tf2_onednn_decoupling.patch
 COPY patches/tensorflow.patch $PACKAGE_DIR/tensorflow.patch
 COPY patches/tensorflow2.patch $PACKAGE_DIR/tensorflow2.patch
-# Patches to unlink MKL-ML header files for TensorFlow 2.x - oneDNN 1.x builds
-COPY patches/oneDNN-header.patch $PACKAGE_DIR/oneDNN-header.patch
+# Patches to resolve intel binary blob dependencies for TensorFlow 2.x - oneDNN 1.x builds
+COPY patches/oneDNN-opensource.patch $PACKAGE_DIR/oneDNN-opensource.patch
+# Patches to support different flavours of oneDNN
+COPY patches/tf2-armpl.patch $PACKAGE_DIR/tf2-armpl.patch
+COPY patches/tf2-openblas.patch $PACKAGE_DIR/tf2-openblas.patch
 RUN $PACKAGE_DIR/build-tensorflow.sh
 
 CMD ["bash", "-l"]
