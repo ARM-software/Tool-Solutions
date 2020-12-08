@@ -7,14 +7,19 @@ For more information on this example, please see the enclosed .pdf as well as th
 xxx (link to blog)
 
 ASCET-DEVELOPER is a model-based development and auto code generation tool for industrial control applications. For more information, including how to get an evaluation see:
+
 https://www.etas.com/en/products/ascet-developer.php
 
 Arm Development Studio is a comprehensive embedded C/C++ dedicated software development solution specifically for the Arm architecture, including the industry leading Arm Compiler. For more information, including how to get a fully featured 30-day evaluation, see:
+
 https://developer.arm.com/tools-and-software/embedded/arm-development-studio
 
 The example provided has been written to support the NXP S32K144EVB evaluation board:
+
 https://www.nxp.com/design/development-boards/automotive-development-platforms/s32k-mcu-platforms/s32k144-evaluation-board:S32K144EVB
+
 using the on-board CMSIS-DAP debug interface
+
 https://arm-software.github.io/CMSIS_5/DAP/html/index.html
 ____________________________________________________________________________
 
