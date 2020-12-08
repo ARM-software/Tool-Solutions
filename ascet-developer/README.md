@@ -133,6 +133,8 @@ Click debug to connect to target, and download the built image.
 
 Subsequent connections can simply be done directly from the Debug Control pane.
 
+![](images/debug.png)
+
 Click continue to run the code on the target.
 
 For more information on using Arm Debugger, see the Development Studio User Guide and other documentation:
