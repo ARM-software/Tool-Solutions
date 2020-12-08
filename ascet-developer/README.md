@@ -8,17 +8,21 @@ xxx (link to blog)
 
 ASCET-DEVELOPER is a model-based development and auto code generation tool for industrial control applications. For more information, including how to get an evaluation see:
 https://www.etas.com/en/products/ascet-developer.php
+
 ![](images/ascet_ide.png)
 
 Arm Development Studio is a comprehensive embedded C/C++ dedicated software development solution specifically for the Arm architecture, including the industry leading Arm Compiler. For more information, including how to get a fully featured 30-day evaluation, see:
 https://developer.arm.com/tools-and-software/embedded/arm-development-studio
 
+![](images/armds_ide.png)
+
 The example provided has been written to support the NXP S32K144EVB evaluation board:
 https://www.nxp.com/design/development-boards/automotive-development-platforms/s32k-mcu-platforms/s32k144-evaluation-board:S32K144EVB
 
+![](images/evb.png)
+
 using the on-board CMSIS-DAP debug interface
 https://arm-software.github.io/CMSIS_5/DAP/html/index.html
-
 
 For technical assistance with ASCET, please contact ETAS : ec.support.de@etas.com
 Country specific tech support links are mentioned here https://www.etas.com/en/company/contact.php
@@ -44,6 +48,8 @@ Start ASCET and create a new workspace
 To simplify path naming, navigate to 
 File > Preferences > ESDL > Code Generation
 and change ‘Default Representation Name’ to EVB
+
+![](images/esdl.png)
 ____________________________________________________________________________
 
 ASCET-DEVELOPER project import and configuration
@@ -77,8 +83,12 @@ and select above S32K144_ArmIDE_ASCET folder.
 Alternatively import projects (InterpolationS32 and S32K144EVB_ARM) from the zip file into another workspace via
 File > Import >  General > Existing Projects into Workspace
 
+![](images/import.png)
+
 Clean and rebuild the S32K144EVB_ARM project.
 InterpolationS32 is a library used by this example (rebuilding library may take some time).
+
+![](images/projects.png)
 
 For more information on using Development Studio IDE functionality, see:
 https://developer.arm.com/documentation/101470/latest/Working-with-projects
@@ -86,6 +96,8 @@ ____________________________________________________________________________
 
 Development board setup
 ____________________________________________________________________________
+
+![](images/bench.png)
 
 Reflash EVB Debug processor to CMSIS-DAP as described in section 9 (page 8) of the below document:
 https://www.keil.com/appnotes/files/apnt_299_v1.2.pdf
@@ -102,10 +114,14 @@ ____________________________________________________________________________
 
 Open the CMSIS Pack Manager perspective, and locate and install Keil.S32_SDK_DFP.
 This provides necessary information to connect to and debug the evaluation board.
-        
-Double-click on debug configuration (S32K144EVB.launch) and browse for the CMSIS-DAP connection to the board.
 
+![](images/cmsis-pack.png)
+
+Double-click on debug configuration (S32K144EVB.launch) and browse for the CMSIS-DAP connection to the board.
 Click debug to connect to target, and download the built image.
+
+![](images/connection.png)
+
 Subsequent connections can simply be done directly from the Debug Control pane.
 
 Click continue to run the code on the target.
