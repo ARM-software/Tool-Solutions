@@ -25,11 +25,15 @@ using the on-board CMSIS-DAP debug interface
 https://arm-software.github.io/CMSIS_5/DAP/html/index.html
 
 For technical assistance with ASCET, please contact ETAS : ec.support.de@etas.com
+
 Country specific tech support links are mentioned here https://www.etas.com/en/company/contact.php
 
 For questions on Arm Development Studio, public forums are available:
+
 https://community.arm.com/developer/tools-software/tools/f/arm-compilers-forum
+
 https://community.arm.com/developer/tools-software/tools/f/armds-forum
+
 else contact arm-tool-solutions@arm.com
 ____________________________________________________________________________
 
