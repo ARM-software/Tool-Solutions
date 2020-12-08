@@ -8,6 +8,7 @@ xxx (link to blog)
 
 ASCET-DEVELOPER is a model-based development and auto code generation tool for industrial control applications. For more information, including how to get an evaluation see:
 https://www.etas.com/en/products/ascet-developer.php
+![](images/ascet_ide.png)
 
 Arm Development Studio is a comprehensive embedded C/C++ dedicated software development solution specifically for the Arm architecture, including the industry leading Arm Compiler. For more information, including how to get a fully featured 30-day evaluation, see:
 https://developer.arm.com/tools-and-software/embedded/arm-development-studio
