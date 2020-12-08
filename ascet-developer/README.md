@@ -3,7 +3,7 @@ ____________________________________________________________________________
 Building and debugging ASCET-DEVELOPER generated code with Arm Development Studio
 ____________________________________________________________________________
 
-For more information on this example, please see the enclosed .pdf as well as this article:
+For more information on this example, please see this article:
 xxx (link to blog)
 
 ASCET-DEVELOPER is a model-based development and auto code generation tool for industrial control applications. For more information, including how to get an evaluation see:
