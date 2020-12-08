@@ -65,10 +65,13 @@ Change the folder into which code is generated match the Arm Development Studio 
 Run > Run Configurations
 For example "C:\S32K144_ArmIDE_ASCET\S32K144EVB_ARM"
 
+![](images/folder.png)
+
 Click ‘Apply’, and then ‘Run’.
 The code will now be auto-generated into your Development Studio project, within the ./src folder
 
-For further instructions on how to write an ASCET Program and other functionality, open the user help (Menu Help > Help Contents). Navigate to chapter ASCET-DEVELOPER User Guide > Getting Started and do the Tutorial (Highly recommended)
+For further instructions on how to write an ASCET Program and other functionality, open the user help (Menu Help > Help Contents).
+Navigate to chapter ASCET-DEVELOPER User Guide > Getting Started and do the Tutorial (Highly recommended)
 ____________________________________________________________________________
 
 Arm Development Studio setup and building project
@@ -107,6 +110,8 @@ Move jumper J107 to connect pins 1 and 2 (instead of 2 and 3)
 Connect the USB cable from your PC to the board
 
 Provide a 12V supply on the IN 12V socket (required for CAN interface)
+
+Additional inputs optional
 ____________________________________________________________________________
 
 Debug setup and debugging the example project
