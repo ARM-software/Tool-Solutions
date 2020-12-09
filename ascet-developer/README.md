@@ -1,4 +1,4 @@
-# <h1> Building and debugging ASCET-DEVELOPER generated code with Arm Development Studio
+# Building and debugging ASCET-DEVELOPER generated code with Arm Development Studio
 
 For more information on this example, please see this article:
 xxx (link to blog)
@@ -33,7 +33,7 @@ https://community.arm.com/developer/tools-software/tools/f/armds-forum
 
 else contact arm-tool-solutions@arm.com
 
-# <h2> ASCET-DEVELOPER setup
+## ASCET-DEVELOPER setup
 
 Unzip the downloaded package from ETAS Download server to your host PC.
 
@@ -50,7 +50,7 @@ and change ‘Default Representation Name’ to EVB
 
 ![](images/esdl.png)
 
-# <h2> ASCET-DEVELOPER project import and configuration
+## ASCET-DEVELOPER project import and configuration
 
 Download the ASCET.zip file from this repository
 
@@ -70,7 +70,7 @@ The code will now be auto-generated into your Development Studio project, within
 For further instructions on how to write an ASCET Program and other functionality, open the user help (Menu Help > Help Contents).
 Navigate to chapter ASCET-DEVELOPER User Guide > Getting Started and do the Tutorial (Highly recommended)
 
-# <h2> Arm Development Studio setup and building project
+## Arm Development Studio setup and building project
 
 Download Arm_DS.zip file from this repository.
 
@@ -91,7 +91,7 @@ InterpolationS32 is a library used by this example (rebuilding library may take 
 For more information on using Development Studio IDE functionality, see:
 https://developer.arm.com/documentation/101470/latest/Working-with-projects
 
-# <h2> Development board setup
+## Development board setup
 
 ![](images/bench.png)
 
@@ -106,7 +106,7 @@ Provide a 12V supply on the IN 12V socket (required for CAN interface)
 
 Additional inputs optional
 
-# <h2> Debug setup and debugging the example project
+## Debug setup and debugging the example project
 
 Open the CMSIS Pack Manager perspective, and locate and install Keil.S32_SDK_DFP.
 This provides necessary information to connect to and debug the evaluation board.
