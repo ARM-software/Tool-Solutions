@@ -74,11 +74,7 @@ Navigate to chapter ASCET-DEVELOPER User Guide > Getting Started and do the Tuto
 
 Download Arm_DS.zip file from this repository.
 
-Unzip this file, creating S32K144_ArmIDE_ASCET folder, and in the Development Studio IDE, navigate to
-File > Switch Workspace
-and select above S32K144_ArmIDE_ASCET folder.
-
-Alternatively import projects (InterpolationS32 and S32K144EVB_ARM) from the zip file into another workspace via
+Import projects (InterpolationS32 and S32K144EVB_ARM) from the zip archive into  workspace via
 File > Import >  General > Existing Projects into Workspace
 
 ![](images/import.png)
