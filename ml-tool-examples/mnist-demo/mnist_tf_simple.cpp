@@ -85,6 +85,8 @@ int main(int argc, char** argv)
 
     // Create ArmNN runtime
     armnn::IRuntime::CreationOptions options; // default options
+    options.m_ProfilingOptions.m_EnableProfiling = true;
+    options.m_ProfilingOptions.m_TimelineEnabled = true;
     armnn::IRuntimePtr runtime = armnn::IRuntime::Create(options);
 
     // Optimize the network for a specific runtime compute device, e.g. CpuAcc, GpuAcc
