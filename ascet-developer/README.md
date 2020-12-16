@@ -58,14 +58,18 @@ Import the ASCET project from the menu system:
 File > Import > General > Existing Projects into Workspace
 Select the ASCET.zip file and click Finish
 
-Change the folder into which code is generated match the Arm Development Studio workspace project
+Change the folder into which code is generated match the Arm Development Studio workspace project. For this, from the menu system select  
 Run > Run Configurations
 For example "C:\S32K144_ArmIDE_ASCET\S32K144EVB_ARM"
 
-![](images/folder.png)
+![](images/ascet_run_config.png)
 
-Click ‘Apply’, and then ‘Run’.
+Click ‘Apply’.
 The code will now be auto-generated into your Development Studio project, within the ./src folder
+
+Run the ASCET launch after you have setup Arm Development Studio IDE in steps mentioned below. 
+The launch can also be directly executed by selecting the launch file in:
+Project Explorer > right click > Run As > ECU Code Generation
 
 For further instructions on how to write an ASCET Program and other functionality, open the user help (Menu Help > Help Contents).
 Navigate to chapter ASCET-DEVELOPER User Guide > Getting Started and do the Tutorial (Highly recommended)
