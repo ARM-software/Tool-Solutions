@@ -20,7 +20,7 @@ aarch64
     - NumPy 1.17.1
     - TensorFlow 1.15.2 or TensorFlow 2.3.0
   * TensorFlow Benchmarks
-
+  * [MLCommons (MLPerf)](https://mlperf.org/) benchmarks with an optional patch to support benchmarking for TF oneDNN builds.
 **Note: Arm Performance Libraries provides optimized standard core math libraries for high-performance computing applications on Arm processors. This free version of the libraries provides optimized libraries for Arm Neoverse N1-based Armv8 AArch64 implementations that are compatible with various versions of GCC.
 
 Use of the free of charge version of Arm Performance Libraries is subject to the terms and conditions of the applicable End User License Agreement (“EULA”).
@@ -129,4 +129,26 @@ To display available images use the Docker command:
 
   ``` > docker images ```
 
+## Running MLCommons benchmark
+Please refer to (https://github.com/mlperf/inference/tree/master/vision/classification_and_detection) to download datasets and models. Examples scripts are provided in the $HOME directory of the final image.
+To run resnet50 on ImageNet min-validation dataset for image classification:
+  ``` export DATA_DIR=${HOME}/CK-TOOLS/dataset-imagenet-ilsvrc2012-val-min ```
+  ``` export MODEL_DIR=$(pwd) ```
+  ``` ./run_local.sh tf resnet50 cpu ```
 
+Use MKLDNN_VERBOSE=1 to verify the build uses oneDNN when running the benchmarks
+
+## Running MLCommons benchmark with the (optional) run_cnn.py wrapper script provided.
+
+# To find out the usages and default settings
+  ``` ./run_cnn.py --help ```
+
+# To run benchmarks in the multiprogrammed mode
+  ``` DATA_DIR=$abc MODEL_DIR=$def OMP_NUM_THREADS=$ghi ./run_cnn.py --processes $(nproc) --threads 1 ```
+
+# To run benchmarks in the multithreaded mode
+  ``` DATA_DIR=$abc MODEL_DIR=$def OMP_NUM_THREADS=$ghi ./run_cnn.py --processes 1 --threads $(nproc) ```
+
+# To run benchmarks in the hybrid mode
+# e.g., run 8 processes each of which has 8 threads on a 64-core machine
+  ``` DATA_DIR=$abc MODEL_DIR=$def OMP_NUM_THREADS=$ghi ./run_cnn.py --processes 8 --threads 8 ```

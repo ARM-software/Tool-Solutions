@@ -17,7 +17,6 @@
 # limitations under the License.
 # *******************************************************************************
 
-
 set -euo pipefail
 
 cd $PACKAGE_DIR

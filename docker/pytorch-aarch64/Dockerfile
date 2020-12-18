@@ -248,7 +248,7 @@ RUN pip install git+https://github.com/pytorch/vision@$VISION_VERSION
 CMD ["bash", "-l"]
 
 # ========
-# Stage 5: install pytorch benchmarks
+# Stage 5: Install benchmarks
 # ========
 FROM pytorch-libs AS pytorch
 ARG njobs
@@ -264,5 +264,12 @@ ENV PATH="$VENV_DIR/bin:$PATH"
 # Clone PyTorch examples
 # NOTE: these examples are included as a startiing point
 RUN  git clone https://github.com/pytorch/examples.git
+
+# Clone and install  MLCommons (MLPerf)
+COPY scripts/build-mlcommons.sh $PACKAGE_DIR/.
+RUN $PACKAGE_DIR/build-mlcommons.sh
+# Copy scripts to download dataset and models
+COPY scripts/download-dataset.sh $PACKAGE_DIR/.
+COPY scripts/download-model.sh $PACKAGE_DIR/.
 
 CMD ["bash", "-l"]
