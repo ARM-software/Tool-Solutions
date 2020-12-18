@@ -207,9 +207,20 @@ RUN pip install --no-cache-dir keras_preprocessing==1.1.0 --no-deps
 RUN pip uninstall enum34 -y
 RUN HDF5_DIR=/usr/lib/aarch64-linux-gnu/hdf5/serial pip install h5py
 RUN pip install --no-cache-dir ck absl-py pycocotools
+
 # Install OpenCV into our venv,
-COPY scripts/build-opencv.sh $PACKAGE_DIR/.
-RUN $PACKAGE_DIR/build-opencv.sh
+# Note: Scripts are provided to build and install OpenCV from the
+# GitHub repository. These are no longer used by default in favour of the
+# opencv-python package, in this case opencv-python-headless.
+# Uncomment code block '1' below, and comment out code block '2' to build
+# from the GitHub sources.
+# --
+# 1 - build from GitHub sources:
+#COPY scripts/build-opencv.sh $PACKAGE_DIR/.
+#RUN $PACKAGE_DIR/build-opencv.sh
+# --
+# 2 - install opencv-python-headless
+RUN pip install --no-cache-dir --no-binary :all: opencv-python-headless
 
 CMD ["bash", "-l"]
 
@@ -265,7 +276,7 @@ RUN $PACKAGE_DIR/build-tensorflow.sh
 CMD ["bash", "-l"]
 
 # ========
-# Stage 5: install tensorflow benchmarks
+# Stage 5: Install benchmarks
 # ========
 FROM tensorflow-libs AS tensorflow
 
@@ -280,6 +291,13 @@ ENV PATH="$VENV_DIR/bin:$PATH"
 # Clone Tensorflow benchmarks
 RUN git clone https://github.com/tensorflow/benchmarks.git
 
+COPY patches/optional-mlcommons-changes.patch /home/$DOCKER_USER/optional-mlcommons-changes.patch
+# Clone and install  MLCommons (MLPerf)
+COPY scripts/build-mlcommons.sh /home/$DOCKER_USER/.
+RUN /home/$DOCKER_USER/build-mlcommons.sh
+
+# Copy scripts to download dataset and models
+COPY scripts/download-dataset.sh /home/$DOCKER_USER/.
+COPY scripts/download-model.sh /home/$DOCKER_USER/.
+
 CMD ["bash", "-l"]
-
-

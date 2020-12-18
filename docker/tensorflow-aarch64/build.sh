@@ -260,11 +260,11 @@ if [[ $build_tools_image ]]; then
 fi
 
 if [[ $build_dev_image ]]; then
-  # Stage 4: Adds bazel and TensorFlow builds with sources. Installs Tensorflow from whl.
+  # Stage 4: Adds bazel and TensorFlow builds with sources and creates a whl.
   docker build $extra_args --target tensorflow-dev -t tensorflow-dev-v$tf_version$onednn:latest .
 fi
 
 if [[ $build_tensorflow_image ]]; then
-  # Stage 5: Clone Tensorflow benchmarks with Tensorflow installed.
+  # Stage 5: Clone benchmarks with TensorFlow installed.
   docker build $extra_args --target tensorflow -t tensorflow-v$tf_version$onednn:latest .
 fi
