@@ -30,7 +30,7 @@ function print_usage_and_exit {
   echo "      --jobs                   Specify number of jobs to run in parallel during the build"
   echo "      --onednn/--dnnl          Build and link to oneDNN / DNNL:"
   echo "                                 * reference    - use the C++ reference kernels throughout."
-  echo "                                 * acl          - use Arm Copmute Library primitives where available (default)."
+  echo "                                 * acl          - use Arm Compute Library primitives where available (default)."
   echo "      --build-type             Type of build to perform:"
   echo "                                 * base       - build the basic portion of the image, OS and essential packages"
   echo "                                 * libs       - build image including maths libraries and Python3."
