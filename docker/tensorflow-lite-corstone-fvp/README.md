@@ -54,9 +54,9 @@ To learn more about licensing visit the [FAQ](https://developer.arm.com/support/
 To get started clone the project repository from github:
 
 	$git clone https://github.com/ARM-software/Tool-Solutions.git
-	$cd Tool-Solutions/docker/tflite-micro-corstone-fvp
+	$cd Tool-Solutions/docker/tensorflow-lite-corstone-fvp
 
-The tflite-micro-corstone-fvp project contains everything you need to build and run Tensorflow Lite for Microcontrollers examples on the Corstone-300 FVP. We are using a Docker-based development environment for our project. It makes it easier to create a known good development environment with all the dependencies in one package.
+The tensorflow-lite-corstone-fvp project contains everything you need to build and run Tensorflow Lite for Microcontrollers examples on the Corstone-300 FVP. We are using a Docker-based development environment for our project. It makes it easier to create a known good development environment with all the dependencies in one package.
 
 First, download Arm Compiler 6.15 for Linux. You can download it directly from [Arm Developer] (https://developer.arm.com/tools-and-software/embedded/arm-compiler/downloads/version-6) or by running the get-ac6.sh file:
 
