@@ -1,6 +1,6 @@
 # How to port Tensorflow Lite for Microcontroller applications to the Arm Corstone-300 FVP
 
-This Docker project goes with an Arm Community blog, [Kickstart your ML development with free Ethos-U55 platform](https://community.arm.com/developer/tools-software/tools/b/tools-software-ides-blog/posts/)
+This Docker project goes with an Arm Community blog, [Kickstart your ML development with free Ethos-U55 platform](https://community.arm.com/developer/tools-software/tools/b/tools-software-ides-blog/posts/kickstart-your-ml-development-with-free-ethos-u55-platform)
 
 The article explains how to use Arm Compiler 6 to build and run TensorFlow Lite Applications on Arm Corstone-300 FVP. It requires version 6.14 or greater for support of the Cortex-M55 processor.
 
