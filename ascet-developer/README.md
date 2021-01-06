@@ -1,7 +1,8 @@
 # Building and debugging ASCET-DEVELOPER generated code with Arm Development Studio
 
 For more information on this example, please see this article:
-xxx (link to blog)
+
+https://community.arm.com/developer/tools-software/tools/b/tools-software-ides-blog/posts//using-arm-compiler-to-optimize-ascet-developer-code-for-automotive-and-industrial
 
 ASCET-DEVELOPER is a model-based development and auto code generation tool for industrial control applications. For more information, including how to get an evaluation see:
 https://www.etas.com/en/products/ascet-developer.php
