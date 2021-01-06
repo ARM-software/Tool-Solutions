@@ -25,6 +25,9 @@ Various example systems and software for Arm Fast Models.
 #### ml-tool-examples
 Examples to run performance analysis for Machine Learning applications. 
 
+#### acet-developer
+Demonstration of ETAS ASCET-DEVELOPER model based design and code generation with Arm Development Studio 
+
 #### mobile-application-profiling
 Examples and scripts for Android performance analysis with Arm Mobile Studio.
 
