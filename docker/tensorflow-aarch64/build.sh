@@ -242,7 +242,6 @@ else
 fi
 
 extra_args="$extra_args --build-arg cpu=$target"
-echo "***** $extra_args"
 
 if [[ $build_base_image ]]; then
   # Stage 1: Base image, Ubuntu with core packages and GCC9

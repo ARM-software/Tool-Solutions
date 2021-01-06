@@ -289,7 +289,8 @@ COPY --chown=$DOCKER_USER:$DOCKER_USER --from=tensorflow-dev $VENV_DIR /home/$DO
 ENV PATH="$VENV_DIR/bin:$PATH"
 
 # Clone Tensorflow benchmarks
-RUN git clone https://github.com/tensorflow/benchmarks.git
+COPY scripts/build-benchmarks.sh /home/$DOCKER_USER/.
+RUN /home/$DOCKER_USER/build-benchmarks.sh
 
 COPY patches/optional-mlcommons-changes.patch /home/$DOCKER_USER/optional-mlcommons-changes.patch
 # Clone and install  MLCommons (MLPerf)

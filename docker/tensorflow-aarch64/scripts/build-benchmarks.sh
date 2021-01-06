@@ -25,7 +25,14 @@ readonly package=benchmarks
 readonly src_host=https://github.com/tensorflow
 readonly src_repo=benchmarks
 
+if [[ $tf_id == '1' ]]; then
+  src_branch=cnn_tf_v1.15_compatible
+elif [[ $tf_id == '2' ]]; then
+  src_branch=cnn_tf_v2.1_compatible
+else
+  echo 'Invalid TensorFlow version when installing benchmarks'
+  exit 1
+fi
+
 # Clone tensorflow and benchmarks
-
-git clone ${src_host}/${src_repo}.git
-
+git clone -b ${src_branch} ${src_host}/${src_repo}.git
