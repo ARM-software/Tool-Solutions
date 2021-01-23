@@ -13,15 +13,17 @@ function IsPackageInstalled() {
 }
 
 usage() { 
-    echo "Usage: $0 [-a <armv7a|arm64-v8a>] [-o <0|1> ]" 1>&2 
+    echo "Usage: $0 [-a <armv7a|arm64-v8a>] [-o <0|1> -b BUILDDIR ]" 1>&2
     echo "   default arch is arm64-v8a " 1>&2
     echo "   -o option will enable or disable OpenCL when cross compiling" 1>&2
     echo "      native compile will enable OpenCL if /dev/mali is found and -o is not used" 1>&2
+    echo "   -b pass a the path of the directory where things will be built (omit trailing /)" 1>&2
     exit 1 
 }
 
+BUILDDIR=$HOME
 # Simple command line arguments
-while getopts ":a:o:h" opt; do
+while getopts ":a:o:b:h" opt; do
     case "${opt}" in
         a)
             Arch=${OPTARG}
@@ -29,6 +31,9 @@ while getopts ":a:o:h" opt; do
             ;;
         o)
             OpenCL=${OPTARG}
+            ;;
+        b)
+            BUILDDIR=${OPTARG}
             ;;
         h)
             usage
@@ -48,10 +53,14 @@ fi
 exec > >(tee -i logfile)
 exec 2>&1
 
-echo "Building Arm NN in $HOME/armnn-devenv"
+# Start from build directory but check if it exists first
+if [[ ! -d $BUILDDIR ]]; then
+	echo -e "\nDirectory $BUILDDIR does not exist. Aborting!\n"
+	exit 1
+fi
 
-# Start from home directory
-cd $HOME 
+echo "Building Arm NN in $BUILDDIR/armnn-devenv"
+cd $BUILDDIR
 
 # if nothing, found make a new diectory
 [ -d armnn-devenv ] || mkdir armnn-devenv
@@ -121,7 +130,7 @@ pushd pkg/boost
 wget https://dl.bintray.com/boostorg/release/1.64.0/source/boost_1_64_0.tar.bz2
 tar xf boost_1_64_0.tar.bz2
 cd boost_1_64_0
-./bootstrap.sh --prefix=$HOME/armnn-devenv/pkg/boost/install
+./bootstrap.sh --prefix=$BUILDDIR/armnn-devenv/pkg/boost/install
 
 Toolset=""
 if [ $CrossCompile = "True" ]; then
@@ -130,7 +139,7 @@ if [ $CrossCompile = "True" ]; then
     Toolset="toolset=gcc-arm"
 fi
 
-./b2 install link=static cxxflags=-fPIC $Toolset --with-filesystem --with-test --with-log --with-program_options --prefix=$HOME/armnn-devenv/pkg/boost/install 
+./b2 install link=static cxxflags=-fPIC $Toolset --with-filesystem --with-test --with-log --with-program_options --prefix=$BUILDDIR/armnn-devenv/pkg/boost/install
 
 popd
 
@@ -142,7 +151,7 @@ if [ $CrossCompile = "True" ]; then
 else
     make -C gator/daemon -j $NPROC
 fi
-cp gator/daemon/gatord $HOME/
+cp gator/daemon/gatord $BUILDDIR/
 
 # Arm Compute Library 
 git clone https://github.com/ARM-software/ComputeLibrary.git
@@ -156,7 +165,7 @@ echo "gcc version is $VER"
 
 scons arch=$Arch neon=1 opencl=$OpenCL embed_kernels=$OpenCL Werror=0 \
   extra_cxx_flags="-fPIC" benchmark_tests=0 examples=0 validation_tests=0 \
-  os=linux gator_dir="$HOME/armnn-devenv/gator" -j $NPROC
+  os=linux gator_dir="$BUILDDIR/armnn-devenv/gator" -j $NPROC
 
 popd
 
@@ -181,7 +190,7 @@ cd protobuf
 # Extra protobuf build for host machine when cross compiling
 if [ $CrossCompile = "True" ]; then
     mkdir host-build ; cd host-build
-    ../configure --prefix=$HOME/armnn-devenv/pkg/host
+    ../configure --prefix=$BUILDDIR/armnn-devenv/pkg/host
     make -j NPROC
     make install
     make clean
@@ -190,9 +199,9 @@ fi
 
 mkdir build ; cd build
 if [ $CrossCompile = "True" ]; then
-    ../configure --prefix=$HOME/armnn-devenv/pkg/install --host=arm-linux CC=$PREFIX\gcc CXX=$PREFIX\g++ --with-protoc=$HOME/armnn-devenv/pkg/host/bin/protoc
+    ../configure --prefix=$BUILDDIR/armnn-devenv/pkg/install --host=arm-linux CC=$PREFIX\gcc CXX=$PREFIX\g++ --with-protoc=$BUILDDIR/armnn-devenv/pkg/host/bin/protoc
 else
-    ../configure --prefix=$HOME/armnn-devenv/pkg/install 
+    ../configure --prefix=$BUILDDIR/armnn-devenv/pkg/install 
 fi
 
 make -j $NPROC
@@ -206,9 +215,9 @@ git clone https://github.com/ARM-software/armnn.git
 pushd pkg/tensorflow/
 
 if [ $CrossCompile = "True" ]; then
-    $HOME/armnn-devenv/armnn/scripts/generate_tensorflow_protobuf.sh $HOME/armnn-devenv/pkg/tensorflow-protobuf $HOME/armnn-devenv/pkg/host
+    $BUILDDIR/armnn-devenv/armnn/scripts/generate_tensorflow_protobuf.sh $BUILDDIR/armnn-devenv/pkg/tensorflow-protobuf $BUILDDIR/armnn-devenv/pkg/host
 else
-    $HOME/armnn-devenv/armnn/scripts/generate_tensorflow_protobuf.sh $HOME/armnn-devenv/pkg/tensorflow-protobuf $HOME/armnn-devenv/pkg/install
+    $BUILDDIR/armnn-devenv/armnn/scripts/generate_tensorflow_protobuf.sh $BUILDDIR/armnn-devenv/pkg/tensorflow-protobuf $BUILDDIR/armnn-devenv/pkg/install
 fi
 
 popd
@@ -227,19 +236,19 @@ fi
 cmake ..  \
 $CrossOptions  \
 -DCMAKE_C_COMPILER_FLAGS=-fPIC \
--DARMCOMPUTE_ROOT=$HOME/armnn-devenv/ComputeLibrary/ \
--DARMCOMPUTE_BUILD_DIR=$HOME/armnn-devenv/ComputeLibrary/build \
--DBOOST_ROOT=$HOME/armnn-devenv/pkg/boost/install/ \
--DTF_GENERATED_SOURCES=$HOME/armnn-devenv/pkg/tensorflow-protobuf/  \
+-DARMCOMPUTE_ROOT=$BUILDDIR/armnn-devenv/ComputeLibrary/ \
+-DARMCOMPUTE_BUILD_DIR=$BUILDDIR/armnn-devenv/ComputeLibrary/build \
+-DBOOST_ROOT=$BUILDDIR/armnn-devenv/pkg/boost/install/ \
+-DTF_GENERATED_SOURCES=$BUILDDIR/armnn-devenv/pkg/tensorflow-protobuf/  \
 -DBUILD_TF_PARSER=1 \
--DPROTOBUF_ROOT=$HOME/armnn-devenv/pkg/install   \
--DPROTOBUF_INCLUDE_DIRS=$HOME/armnn-devenv/pkg/install/include   \
+-DPROTOBUF_ROOT=$BUILDDIR/armnn-devenv/pkg/install   \
+-DPROTOBUF_INCLUDE_DIRS=$BUILDDIR/armnn-devenv/pkg/install/include   \
 -DPROFILING_BACKEND_STREAMLINE=1 \
--DGATOR_ROOT=$HOME/armnn-devenv/gator \
+-DGATOR_ROOT=$BUILDDIR/armnn-devenv/gator \
 -DARMCOMPUTENEON=1  \
 -DARMCOMPUTECL=$OpenCL \
--DPROTOBUF_LIBRARY_DEBUG=$HOME/armnn-devenv/pkg/install/lib/libprotobuf.so \
--DPROTOBUF_LIBRARY_RELEASE=$HOME/armnn-devenv/pkg/install/lib/libprotobuf.so \
+-DPROTOBUF_LIBRARY_DEBUG=$BUILDDIR/armnn-devenv/pkg/install/lib/libprotobuf.so \
+-DPROTOBUF_LIBRARY_RELEASE=$BUILDDIR/armnn-devenv/pkg/install/lib/libprotobuf.so \
 -DCMAKE_CXX_FLAGS="-Wno-error=sign-conversion" \
 -DCMAKE_BUILD_TYPE=Debug
 
