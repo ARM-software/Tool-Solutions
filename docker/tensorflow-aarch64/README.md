@@ -131,24 +131,32 @@ To display available images use the Docker command:
 
 ## Running MLCommons benchmark
 Please refer to (https://github.com/mlperf/inference/tree/master/vision/classification_and_detection) to download datasets and models. Examples scripts are provided in the $HOME directory of the final image.
-To run resnet50 on ImageNet min-validation dataset for image classification:
-  ``` export DATA_DIR=${HOME}/CK-TOOLS/dataset-imagenet-ilsvrc2012-val-min ```
-  ``` export MODEL_DIR=$(pwd) ```
-  ``` ./run_local.sh tf resnet50 cpu ```
 
-Use MKLDNN_VERBOSE=1 to verify the build uses oneDNN when running the benchmarks
+To run resnet50 on ImageNet min-validation dataset for image classification:
+
+  ``` > export DATA_DIR=${HOME}/CK-TOOLS/dataset-imagenet-ilsvrc2012-val-min ```
+
+  ``` > export MODEL_DIR=$(pwd) ```
+
+  ``` > ./run_local.sh tf resnet50 cpu ```
+
+Use MKLDNN_VERBOSE=1 to verify the build uses oneDNN when running the benchmarks.
 
 ## Running MLCommons benchmark with the (optional) run_cnn.py wrapper script provided.
 
-# To find out the usages and default settings
-  ``` ./run_cnn.py --help ```
+To find out the usages and default settings:
 
-# To run benchmarks in the multiprogrammed mode
-  ``` DATA_DIR=$abc MODEL_DIR=$def OMP_NUM_THREADS=$ghi ./run_cnn.py --processes $(nproc) --threads 1 ```
+  ``` > ./run_cnn.py --help ```
 
-# To run benchmarks in the multithreaded mode
-  ``` DATA_DIR=$abc MODEL_DIR=$def OMP_NUM_THREADS=$ghi ./run_cnn.py --processes 1 --threads $(nproc) ```
+To run benchmarks in the multiprogrammed mode:
+  ``` > DATA_DIR=$abc MODEL_DIR=$def OMP_NUM_THREADS=$ghi ./run_cnn.py --processes $(nproc) --threads 1 ```
 
-# To run benchmarks in the hybrid mode
-# e.g., run 8 processes each of which has 8 threads on a 64-core machine
-  ``` DATA_DIR=$abc MODEL_DIR=$def OMP_NUM_THREADS=$ghi ./run_cnn.py --processes 8 --threads 8 ```
+To run benchmarks in the multithreaded mode:
+
+  ``` >  DATA_DIR=$abc MODEL_DIR=$def OMP_NUM_THREADS=$ghi ./run_cnn.py --processes 1 --threads $(nproc) ```
+
+To run benchmarks in the hybrid mode:
+
+For example, run 8 processes each of which has 8 threads on a 64-core machine
+
+  ``` >  DATA_DIR=$abc MODEL_DIR=$def OMP_NUM_THREADS=$ghi ./run_cnn.py --processes 8 --threads 8 ```

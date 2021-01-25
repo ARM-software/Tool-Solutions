@@ -1,5 +1,5 @@
 # *******************************************************************************
-# Copyright 2020 Arm Limited and affiliates.
+# Copyright 2021  Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -220,7 +220,7 @@ RUN pip install --no-cache-dir ck absl-py pycocotools
 #RUN $PACKAGE_DIR/build-opencv.sh
 # --
 # 2 - install opencv-python-headless
-RUN pip install --no-cache-dir --no-binary :all: opencv-python-headless
+RUN pip install --no-cache-dir --no-binary :all: opencv-python-headless==4.4.0.46
 
 CMD ["bash", "-l"]
 
