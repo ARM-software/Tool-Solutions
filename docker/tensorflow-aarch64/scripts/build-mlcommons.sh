@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # *******************************************************************************
-# Copyright 2020 Arm Limited and affiliates.
+# Copyright 2021 Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,7 +24,6 @@ pip install cython
 pip install absl-py pillow pycocotools
 pip install ck
 ck pull repo:ck-env
-pip install scikit-build
 sudo apt-get -y install protobuf-compiler libprotoc-dev
 git clone https://github.com/mlcommons/inference.git --recursive
 cd inference

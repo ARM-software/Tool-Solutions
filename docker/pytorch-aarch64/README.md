@@ -95,9 +95,13 @@ To display available images use the Docker command:
 
 ## Running MLCommons benchmark
 Please refer to (https://github.com/mlperf/inference/tree/master/vision/classification_and_detection) for instructions to download datasets and models. Examples scripts are provided in the $HOME directory of the final image.
+
 To run resnet34 on coco dataset for object detection:
-  ``` export DATA_DIR=${HOME}/CK-TOOLS/dataset-coco-2017-val ```
-  ``` export MODEL_DIR=$(pwd) ```
-  ``` ./run_local.sh pytorch ssd-resnet34 cpu ```
+
+  ``` > export DATA_DIR=${HOME}/CK-TOOLS/dataset-coco-2017-val ```
+
+  ``` > export MODEL_DIR=$(pwd) ```
+
+  ``` > ./run_local.sh pytorch ssd-resnet34 cpu ```
 
 Use MKLDNN_VERBOSE=1 to verify the build uses oneDNN when running the benchmarks.
