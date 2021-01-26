@@ -184,7 +184,7 @@ ENV PATH="$VENV_DIR/bin:$PATH"
 
 # Install some basic python packages
 RUN pip install --no-cache-dir --upgrade pip
-RUN pip install --no-cache-dir "setuptools>=41.0.0" six mock wheel cython
+RUN pip install --no-cache-dir "setuptools>=41.0.0" six mock wheel cython sh
 
 # Build numpy from source, using OpenBLAS for BLAS calls
 COPY scripts/build-numpy.sh $PACKAGE_DIR/.
@@ -205,8 +205,9 @@ RUN pip install --no-cache-dir keras_preprocessing==1.1.0 --no-deps
 # it is installed as a dependency for an earlier package and needs
 # to be removed in order for the OpenCV build to complete.
 RUN pip uninstall enum34 -y
-RUN HDF5_DIR=/usr/lib/aarch64-linux-gnu/hdf5/serial pip install h5py
-RUN pip install --no-cache-dir ck absl-py pycocotools
+RUN HDF5_DIR=/usr/lib/aarch64-linux-gnu/hdf5/serial pip install h5py==2.10.0
+RUN pip install --no-cache-dir grpcio
+RUN pip install --no-cache-dir ck absl-py pycocotools pillow
 
 # Install OpenCV into our venv,
 # Note: Scripts are provided to build and install OpenCV from the
