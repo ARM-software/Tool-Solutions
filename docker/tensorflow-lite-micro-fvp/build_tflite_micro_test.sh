@@ -18,7 +18,7 @@ usage() {
 mydir="$(dirname $0)"
 
 # Location of CMSIS
-CMSIS_DIR=$mydir/../CMSIS_REPO/CMSIS_5/
+CMSIS_DIR=$mydir/../CMSIS_REPO/cmsis/
 
 
 #Process command line arguments
