@@ -17,7 +17,7 @@ usage() {
 mydir="$(dirname $0)"
 
 # Location of CMSIS
-CMSIS_DIR=$mydir/../CMSIS_REPO/cmsis
+CMSIS_DIR=$mydir/../CMSIS_REPO/cmsis/
 
 #Currently only CPU supported is M55
 CPU=M55
