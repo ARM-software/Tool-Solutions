@@ -191,6 +191,7 @@ RUN $PACKAGE_DIR/build-scipy.sh
 RUN pip install --no-cache-dir hypothesis pyyaml pytest
 RUN pip install --no-cache-dir matplotlib
 RUN pip install --no-cache-dir pillow==6.1 lmdb
+RUN pip install --no-cache-dir ck absl-py pycocotools
 
 # Install OpenCV into our venv,
 # Note: Scripts are provided to build and install OpenCV from the
