@@ -13,17 +13,18 @@ function IsPackageInstalled() {
 }
 
 usage() { 
-    echo "Usage: $0 [-a <armv7a|arm64-v8a>] [-o <0|1> -b BUILDDIR ]" 1>&2
+    echo "Usage: $0 [-a <armv7a|arm64-v8a>] [-o <0|1> -b BUILDDIR -x <0|1>]" 1>&2
     echo "   default arch is arm64-v8a " 1>&2
     echo "   -o option will enable or disable OpenCL when cross compiling" 1>&2
     echo "      native compile will enable OpenCL if /dev/mali is found and -o is not used" 1>&2
     echo "   -b pass a the path of the directory where things will be built (omit trailing /)" 1>&2
+    echo "   -x option will enable or disable ONNX (disabled by default)" 1>&2
     exit 1 
 }
 
 BUILDDIR=$HOME
 # Simple command line arguments
-while getopts ":a:o:b:h" opt; do
+while getopts ":a:o:b:x:h" opt; do
     case "${opt}" in
         a)
             Arch=${OPTARG}
@@ -34,6 +35,9 @@ while getopts ":a:o:b:h" opt; do
             ;;
         b)
             BUILDDIR=${OPTARG}
+            ;;
+        x)
+            ONNX=${OPTARG}
             ;;
         h)
             usage
@@ -59,7 +63,7 @@ if [[ ! -d $BUILDDIR ]]; then
 	exit 1
 fi
 
-echo "Building Arm NN in $BUILDDIR/armnn-devenv"
+echo "Building Arm NN stack in $BUILDDIR/armnn-devenv"
 cd $BUILDDIR
 
 # if nothing, found make a new diectory
@@ -89,6 +93,7 @@ done
 
 # extra packages when cross compiling
 if [ $CrossCompile = "True" ]; then
+    echo "Cross-compiling enabled"
     if [ "$Arch" = "armv7a" ]; then
         cross_packages="g++-arm-linux-gnueabihf"
     else
@@ -99,6 +104,8 @@ if [ $CrossCompile = "True" ]; then
             sudo apt-get install -y $cross_package
         fi
     done
+else
+    echo "Cross-compiling disabled"
 fi
 
 # number of CPUs and memory size for make -j
@@ -107,6 +114,17 @@ MEM=`awk '/MemTotal/ {print $2}' /proc/meminfo`
 
 # check for Mali device node
 [ -z "$OpenCL" ] && [ -c /dev/mali? ] && OpenCL=1 || OpenCL=0 
+if [ $OpenCL = 1 ]; then
+  echo "OpenCL enabled"
+else
+  echo "OpenCL disabled"
+fi
+
+if [ "$ONNX" = "1" ]; then
+  echo "ONNX enabled"
+else
+  echo "ONNX disabled"
+fi
 
 # check for Armv8 or Armv7
 # don't override command line and default to aarch64
@@ -119,6 +137,8 @@ else
     Arch=arm64-v8a
     PREFIX=aarch64-linux-gnu-
 fi
+echo "Target architecture: ${Arch}"
+echo
 
 
 # Boost
@@ -144,6 +164,7 @@ fi
 popd
 
 # gator
+echo "building gator"
 git clone https://github.com/ARM-software/gator.git
 
 if [ $CrossCompile = "True" ]; then
@@ -154,9 +175,9 @@ fi
 cp gator/daemon/gatord $BUILDDIR/
 
 # Arm Compute Library 
+echo "building Arm CL"
 git clone https://github.com/ARM-software/ComputeLibrary.git
 
-echo "building Arm CL"
 pushd ComputeLibrary
 
 # check gcc version in case adjustments are needed based on compiler
@@ -170,10 +191,11 @@ scons arch=$Arch neon=1 opencl=$OpenCL embed_kernels=$OpenCL Werror=0 \
 popd
 
 # TensorFlow and Google protobuf
-# Latest TensorFlow had a problem, udpate branch as needed
-
+echo "building TensorFlow and Google protobuf"
 pushd pkg
 mkdir install
+# updated version of protobuf
+# https://github.com/ARM-software/armnn/releases/tag/v20.11
 git clone --branch v3.12.0 https://github.com/google/protobuf.git
 git clone https://github.com/tensorflow/tensorflow.git
 cd tensorflow
@@ -209,7 +231,36 @@ make install
 
 popd
 
+OnnxOptions=""
+# ONNX support
+if [ "${ONNX}" = "1" ]; then
+    echo "building ONNX"
+    pushd pkg
+
+    export ONNX_ML=1 #To clone ONNX with its ML extension
+    git clone --recursive https://github.com/onnx/onnx.git
+    unset ONNX_ML
+
+    cd onnx
+    # need specific version of ONNX: https://developer.arm.com/solutions/machine-learning-on-arm/developer-material/how-to-guides/configuring-the-arm-nn-sdk-build-environment-for-onnx/generate-the-onnx-protobuf-source-files
+    git checkout f612532843bd8e24efeab2815e45b436479cc9ab
+
+    export LD_LIBRARY_PATH=$BUILDDIR/armnn-devenv/pkg/install/lib:$LD_LIBRARY_PATH
+
+    if [ $CrossCompile = "True" ]; then
+        $BUILDDIR/armnn-devenv/pkg/host/bin/protoc onnx/onnx.proto --proto_path=. --proto_path=$BUILDDIR/armnn-devenv/pkg/host/include --cpp_out $BUILDDIR/armnn-devenv/pkg/onnx
+    else
+        $BUILDDIR/armnn-devenv/pkg/install/bin/protoc onnx/onnx.proto --proto_path=. --proto_path=$BUILDDIR/armnn-devenv/pkg/install/include --cpp_out $BUILDDIR/armnn-devenv/pkg/onnx
+    fi
+
+    popd
+
+    OnnxOptions="-DBUILD_ONNX_PARSER=1 \
+	         -DONNX_GENERATED_SOURCES=$BUILDDIR/armnn-devenv/pkg/onnx "
+fi
+
 # Arm NN
+echo "building Arm NN"
 git clone https://github.com/ARM-software/armnn.git
 
 pushd pkg/tensorflow/
@@ -235,6 +286,7 @@ fi
 
 cmake ..  \
 $CrossOptions  \
+$OnnxOptions \
 -DCMAKE_C_COMPILER_FLAGS=-fPIC \
 -DARMCOMPUTE_ROOT=$BUILDDIR/armnn-devenv/ComputeLibrary/ \
 -DARMCOMPUTE_BUILD_DIR=$BUILDDIR/armnn-devenv/ComputeLibrary/build \
@@ -260,6 +312,6 @@ else
 fi
 popd
 
-echo "done, everything in armnn-devenv/"
+echo "done, everything in $BUILDDIR/armnn-devenv"
 cd ..
 
