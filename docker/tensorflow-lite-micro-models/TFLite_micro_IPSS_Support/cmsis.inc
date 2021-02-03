@@ -31,7 +31,8 @@ ifneq ($(filter cmsis-nn,$(ALL_TAGS)),)
 
     INCLUDES += -I$(CMSIS_PATH)/CMSIS/Core/Include \
                 -I$(CMSIS_PATH)/CMSIS/NN/Include \
-                -I$(CMSIS_PATH)/CMSIS/DSP/Include
+                -I$(CMSIS_PATH)/CMSIS/DSP/Include \
+		-I$(CMSIS_PATH)/../
 
     GENERATED_PROJECT_INCLUDES += -I$(CMSIS_PATH)/CMSIS/Core/Include \
                                   -I$(CMSIS_PATH)/CMSIS/NN/Include \
