@@ -267,10 +267,10 @@ ENV PATH="$VENV_DIR/bin:$PATH"
 RUN  git clone https://github.com/pytorch/examples.git
 
 # Clone and install  MLCommons (MLPerf)
-COPY scripts/build-mlcommons.sh $PACKAGE_DIR/.
-RUN $PACKAGE_DIR/build-mlcommons.sh
+COPY scripts/build-mlcommons.sh /home/$DOCKER_USER/.
+RUN /home/$DOCKER_USER/build-mlcommons.sh
 # Copy scripts to download dataset and models
-COPY scripts/download-dataset.sh $PACKAGE_DIR/.
-COPY scripts/download-model.sh $PACKAGE_DIR/.
+COPY scripts/download-dataset.sh /home/$DOCKER_USER/.
+COPY scripts/download-model.sh /home/$DOCKER_USER/.
 
 CMD ["bash", "-l"]
