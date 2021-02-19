@@ -53,7 +53,7 @@ ifeq ($(TARGET),$(filter $(TARGET),fvp model))
           SCATTER := $(MAKEFILE_DIR)/targets/fvp/m55_app.scatter
       endif
     endif
-    LDFLAGS+=-Wl,--cpu=8.1-M.Main.mve.fp,-Omax
+    LDFLAGS+=-Wl,--cpu=cortex-m55,-Omax
     TARGET_SPECIFIC_FLAGS += -D__DSP_PRESENT=1 -D__FPU_PRESENT=1
     FLOAT=hard
   else ifeq ($(TARGET_ARCH), cortex-m33+nodsp)
