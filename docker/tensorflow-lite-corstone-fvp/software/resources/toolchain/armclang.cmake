@@ -24,7 +24,7 @@ set(__TOOLCHAIN_LOADED TRUE)
 set(CMAKE_SYSTEM_NAME Generic)
 set(CMAKE_C_COMPILER "armclang")
 set(CMAKE_CXX_COMPILER "armclang")
-set(CMAKE_SYSTEM_PROCESSOR "cortex-m33+nodsp" CACHE STRING "Select Cortex-M architure. (cortex-m0, cortex-m3, cortex-m33, cortex-m4, cortex-m55, cortex-m7, etc)")
+set(CMAKE_SYSTEM_PROCESSOR "cortex-m55" CACHE STRING "Select Cortex-M architure. (cortex-m0, cortex-m3, cortex-m33, cortex-m4, cortex-m55, cortex-m7, etc)")
 
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_CXX_STANDARD 11)
@@ -52,7 +52,7 @@ if("nofp" IN_LIST __CPU_FEATURES)
 endif()
 
 if(CMAKE_SYSTEM_PROCESSOR STREQUAL "cortex-m55")
-    set(__CPU_LINK_TARGET 8.1-M.Main.dsp)
+    set(__CPU_LINK_TARGET cortex-m55)
 endif()
 
 add_link_options(--cpu=${__CPU_LINK_TARGET})
