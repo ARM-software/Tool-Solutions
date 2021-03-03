@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # *******************************************************************************
-# Copyright 2020 Arm Limited and affiliates.
+# Copyright 2020-2021 Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -33,6 +33,7 @@ function print_usage_and_exit {
   echo "                                 * reference    - use the C++ reference kernels throughout."
   echo "                                 * openblas     - use OpenBLAS for BLAS calls."
   echo "                                 * armpl        - use Arm Performance Libraries for BLAS calls (default)."
+  echo "                                 * acl          - use Compute Library."
   echo "      --tf_version             TensorFlow version:"
   echo "                                 * 1            - TensorFlow v1.15.2 build."
   echo "                                 * 2            - TensorFlow 2.3.0 build (default)."
@@ -170,6 +171,10 @@ do
           ;;
         armpl )
           onednn="armpl"
+          shift
+          ;;
+        acl )
+          onednn="acl"
           shift
           ;;
         * )

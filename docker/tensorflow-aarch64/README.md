@@ -14,7 +14,7 @@ aarch64
 ## What's in the final image?
   * OS: Ubuntu 18.04
   * Compiler: GCC 9.3.0
-  * Maths libraries: [Arm Performance Libraries](https://developer.arm.com/tools-and-software/server-and-hpc/compile/arm-compiler-for-linux/arm-performance-libraries) 20.2.1 and [OpenBLAS](https://www.openblas.net/) 0.3.9
+  * Maths libraries: [Arm Performance Libraries](https://developer.arm.com/tools-and-software/server-and-hpc/compile/arm-compiler-for-linux/arm-performance-libraries) 20.2.1, [OpenBLAS](https://www.openblas.net/) 0.3.9, [Compute Library](https://developer.arm.com/ip-products/processors/machine-learning/compute-library) 20.11.
   * [oneDNN](https://github.com/oneapi-src/oneDNN) 0.21.3 or 1.7. Previously known as (MKL-DNN/DNNL).
   * Python3 environment built from CPython 3.7 and containing:
     - NumPy 1.17.1
@@ -96,7 +96,7 @@ Without the '--onednn' flag, the default Eigen backend of Tensorflow is chosen. 
 
 The BLAS backend for oneDNN can also be selected using the '--onednn' or '--dnnl' flags:
 For TensorFlow 1.x builds, this defaults to the C++ reference kernels, setting '--dnnl openblas' will use the OpenBLAS libary where possible.
-For TensorFlow 2.x builds, this defaults to using Arm Performance Libraries, but '--onednn reference' and '--onednn openblas' can also be selected to use the reference C++ kernels, or OpenBLAS respectively.
+For TensorFlow 2.x builds, this defaults to using Arm Performance Libraries, but '--onednn reference', '--onednn openblas' or '--onednn acl' can also be selected to use the reference C++ kernels, OpenBLAS, or Compute Library respectively.
 _Note: The oneDNN backend chosen will be apended to the image name: `tensorflow-v$tf_version$onednn_blas`._
 _Note: selecting OpenBLAS will also cause other dependencies (NumPy and SciPy) to be built against OpenBLAS rather than Arm Performance Libraries._
 
