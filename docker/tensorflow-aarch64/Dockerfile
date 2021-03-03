@@ -272,6 +272,7 @@ COPY patches/oneDNN-opensource.patch $PACKAGE_DIR/oneDNN-opensource.patch
 # Patches to support different flavours of oneDNN
 COPY patches/tf2-armpl.patch $PACKAGE_DIR/tf2-armpl.patch
 COPY patches/tf2-openblas.patch $PACKAGE_DIR/tf2-openblas.patch
+COPY patches/tf2-acl.patch $PACKAGE_DIR/tf2-acl.patch
 RUN $PACKAGE_DIR/build-tensorflow.sh
 
 CMD ["bash", "-l"]
