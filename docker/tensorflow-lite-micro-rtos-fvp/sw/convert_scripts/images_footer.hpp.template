@@ -1,0 +1,8 @@
+
+
+
+const char* get_image_name(const uint32_t fileindex);
+const unsigned char* get_image_pointer(const uint32_t fileindex);
+uint32_t get_image_len(const uint32_t fileindex);
+
+#endif /* IMAGES_HPP */
