@@ -16,7 +16,21 @@ The repository includes a couple of example applications running on FreeRTOS to 
 
 ## Table of Contents
 
-[[_TOC_]]
+* [Introduction](#introduction)
+* [Prerequisites](#prerequisites)
+* [Dependencies](#dependencies)
+* [Setup Environment](#setup-environment)
+    * [Option 1: Using Docker (Recommended)](#option-1-using-docker-recommended)
+    * [Option 2: Using local linux machine.](#option-2-using-local-linux-machine)
+* [About the Demo Applications](#about-the-demo-applications)
+    * [Person Detection](#person-detection)
+    * [Mobilenet](#mobilenet)
+* [Vela Model Optimizer for Ethos-U](#vela-model-optimizer-for-ethos-u)
+    * [Installing Vela](#installing-vela)
+* [Convert models and Images to cpp code](#convert-models-and-images-to-cpp-code)
+    * [Converting a model](#converting-a-model)
+    * [converting a folder with images](#converting-a-folder-with-images)
+
 
 ## Prerequisites
 
