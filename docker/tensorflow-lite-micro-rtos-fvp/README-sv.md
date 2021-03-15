@@ -16,7 +16,21 @@ Detta repo innehåller ett par exempelapplikationer som använder FreeRTOS som O
 
 ## Innehållsförteckning
 
-[[_TOC_]]
+* [Introduktion](#introduktion)
+* [Innehållsförteckning](#innehållsförteckning)
+* [Förhandsvillkor](#förhandsvillkor)
+* [Beroenden](#beroenden)
+* [Sätta upp utvecklingsmiljö](#sätta-upp-utvecklingsmiljö)
+    * [Alternativ 1: Docker (Rekomenderas)](#alternativ-1-docker-rekomenderas)
+    * [Alternativ 2: Använd linux machine.](#alternativ-2-använd-linux-machine)
+* [Om Demoapplikationerna](#om-demoapplikationerna)
+    * [Persondetektering](#persondetektering)
+    * [Mobilenet V2](#mobilenet-v2)
+* [Vela Modelloptimerare för Ethos-U](#vela-modelloptimerare-för-ethos-u)
+    * [Installera Vela](#installera-vela)
+* [Konvertera modeller och bilder till cpp-kod](#konvertera-modeller-och-bilder-till-cpp-kod)
+    * [Konvertera en modell](#konvertera-en-modell)
+    * [Konvertera en mapp med bilder](#konvertera-en-mapp-med-bilder)
 
 ## Förhandsvillkor
 
