@@ -70,13 +70,23 @@ These instructions are available in the following languages
 
 1. Linux コンソールもしくはWindows PowershellでDocker buildの実行:
     * Windows PowerShell:
-        ```
-        $> ./docker_build.PS1
-        ```
+        * ArmCompilerを利用したい場合
+            ```
+            $> ./docker_build.PS1 -compiler armclang
+            ```
+        * GCC Compilerを利用したい場合
+            ```
+            $> ./docker_build.PS1 -compiler gcc
+            ```
     * Linux:
-        ```
-        $> ./docker_build.sh
-        ```
+        * ArmCompilerを利用したい場合
+            ```
+            $> ./docker_build.sh -c armclang
+            ```
+        * GCC Compilerを利用したい場合
+            ```
+            $> ./docker_build.sh -c gcc
+            ```
 
 1. スクリプトが無事完了したら、docker image ubuntu:18.04_sse300が生成されているはずです。
 

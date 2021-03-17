@@ -66,13 +66,23 @@ Byggskripten har testats med CentOS 7, Ubuntu 18.04, och Windows 10 PowerShell
 
 1. Kör byggskriptet för docker i en linux terminal eller Windows Powershell:
     * Windows PowerShell:
-        ```
-        $> ./docker_build.PS1
-        ```
+        * Om du önskar att andvända Arm Compiler
+            ```
+            $> ./docker_build.PS1 -compiler armclang
+            ```
+        * Om du önskar att andvända GNU GCC Compiler
+            ```
+            $> ./docker_build.PS1 -compiler gcc
+            ```
     * Linux:
-        ```
-        $> ./docker_build.sh
-        ```
+        * Om du önskar att andvända Arm Compiler
+            ```
+            $> ./docker_build.sh -c armclang
+            ```
+        * Om du önskar att andvända GNU GCC Compiler
+            ```
+            $> ./docker_build.sh -c gcc
+            ```
 
 1. När skriptet har kört klart, kommer en docker image som heter ubuntu:18.04_sse300 ha skapats.
 

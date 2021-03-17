@@ -35,6 +35,7 @@ set(ETHOSU_COMMAND_DEFAULT ${CMAKE_CURRENT_SOURCE_DIR}/../../ethos-u/core_platfo
 cmake_minimum_required(VERSION 3.15.6)
 
 project(corstone-300-mobilenet-v2 VERSION 0.0.1)
+set(CMAKE_EXECUTABLE_SUFFIX ".elf")
 
 #############################################################################
 # Corstone-300

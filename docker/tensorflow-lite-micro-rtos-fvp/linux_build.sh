@@ -2,25 +2,47 @@
 
 BASEDIR=$(dirname "$0")
 
-wget -c https://git.mlplatform.org/ml/ethos-u/ethos-u.git/snapshot/ethos-u-21.02.tar.gz -O - | tar -xz
-mv ethos-u-21.02 ethos-u
 
-pushd $BASEDIR/ethos-u
-python3 fetch_externals.py -c 21.02.json fetch
-popd
+# Usage: takes compiler as input
+usage() { 
+    echo "Usage: $0 [-c <gcc|armclang>]" 1>&2
+    echo "   -c|--compiler  : De compiler to use to build the applications, gcc|armclang (default: armclang)" 1>&2
+    exit 1 
+}
 
+COMPILER=armclang
 NPROC=`grep -c ^processor /proc/cpuinfo`
+
+while [[ "$#" -gt 0 ]]; do
+    case $1 in
+        -c|--compiler) COMPILER="$2"; shift ;;
+        -h|--help) usage ;;
+        *) echo "Unknown parameter passed: $1"; usage ;;
+    esac
+    shift
+done
+
+if [ $COMPILER = 'armclang' ];
+then
+    TOOLCHAIN_FILE=../../../ethos-u/core_platform/cmake/toolchain/armclang.cmake
+elif [ $COMPILER = 'gcc' ]
+then
+    TOOLCHAIN_FILE=../../../ethos-u/core_platform/cmake/toolchain/arm-none-eabi-gcc.cmake
+else
+    usage;
+fi
+
 
 pushd $BASEDIR/sw/corstone-300-person-detection
 mkdir build
 cd build
-cmake ..
+cmake -DCMAKE_TOOLCHAIN_FILE=$TOOLCHAIN_FILE ..
 make -j $NPROC
 popd
 
 pushd $BASEDIR/sw/corstone-300-mobilenet-v2
 mkdir build
 cd build
-cmake ..
+cmake -DCMAKE_TOOLCHAIN_FILE=$TOOLCHAIN_FILE ..
 make -j $NPROC
 popd

@@ -16,6 +16,7 @@ The repository includes a couple of example applications running on FreeRTOS to 
 
 ## Table of Contents
 
+
 * [Introduction](#introduction)
 * [Prerequisites](#prerequisites)
 * [Dependencies](#dependencies)
@@ -29,8 +30,7 @@ The repository includes a couple of example applications running on FreeRTOS to 
     * [Installing Vela](#installing-vela)
 * [Convert models and Images to cpp code](#convert-models-and-images-to-cpp-code)
     * [Converting a model](#converting-a-model)
-    * [converting a folder with images](#converting-a-folder-with-images)
-
+    * [Converting a folder with images](#converting-a-folder-with-images)
 
 ## Prerequisites
 
@@ -66,13 +66,23 @@ The build scripts has been tested on CentOS7, Ubuntu 18.04, and Windows 10 Power
 
 1. Run the docker build script in a linux terminal or Windows Powershell:
     * Windows PowerShell:
-        ```
-        $> ./docker_build.PS1
-        ```
+        * If you wish to use the Arm Compiler
+            ```
+            $> ./docker_build.PS1 -compiler armclang
+            ```
+        * If you wish to use the GNU GCC Compiler
+            ```
+            $> ./docker_build.PS1 -compiler gcc
+            ```
     * Linux:
-        ```
-        $> ./docker_build.sh
-        ```
+        * If you wish to use the Arm Compiler
+            ```
+            $> ./docker_build.sh -c armclang
+            ```
+        * If you wish to use the GNU GCC Compiler
+            ```
+            $> ./docker_build.sh -c gcc
+            ```
 
 1. When the script has finished, there should be a Docker image called ubuntu:18.04_sse300.
 
@@ -201,7 +211,7 @@ $> convert_tflite_to_cpp.sh --input <model.tflite> --output model_vela.cpp
 
 After converting the model, you can add it to the project folder, and recompile.  
 
-### converting a folder with images
+### Converting a folder with images
 
 - For RGB images:
     ```
