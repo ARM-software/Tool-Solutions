@@ -24,6 +24,12 @@ done
 
 if [ $COMPILER = 'armclang' ];
 then
+    if [ -z ${ARMLMD_LICENSE_FILE} ]; 
+    then 
+        echo "ARMLMD_LICENSE_FILE is unset"
+        echo "Please set ARMLMD_LICENSE_FILE to a valid License Server before proceeding"
+        exit;
+    fi
     TOOLCHAIN_FILE=../../../ethos-u/core_platform/cmake/toolchain/armclang.cmake
 elif [ $COMPILER = 'gcc' ]
 then
