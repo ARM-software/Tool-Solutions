@@ -60,15 +60,15 @@ RUN mkdir /home/user1/cmake \
 RUN mkdir /home/user1/tmp \
   && mkdir /home/user1/system
 ADD --chown=user1:user1 FVP_Corstone_SSE-300_Ethos-U55_11.13_41.tgz /home/user1/tmp
-RUN /home/user1/tmp/FVP_Corstone_SSE-300_Ethos-U55.sh --i-agree-to-the-contained-eula -d /home/user1/system/FVP_Corestone_SSE-300_Ethos-U55 --no-interactive \
+RUN /home/user1/tmp/FVP_Corstone_SSE-300_Ethos-U55.sh --i-agree-to-the-contained-eula -d /home/user1/system/FVP_Corstone_SSE-300_Ethos-U55 --no-interactive \
   && rm -rf /home/user1/tmp
 
 # Setup Environment Variables
-ENV PATH="/home/user1/cmake/bin:/home/user1/system/FVP_Corestone_SSE-300_Ethos-U55/models/Linux64_GCC-6.4:${PATH}"
+ENV PATH="/home/user1/cmake/bin:/home/user1/system/FVP_Corstone_SSE-300_Ethos-U55/models/Linux64_GCC-6.4:${PATH}"
 
 # Create FVP SSE300 Alias to simplify command for running the FVP
 RUN echo "FVP_CS300() {" >> ~/.bashrc && \
-    echo "  /home/user1/system/FVP_Corestone_SSE-300_Ethos-U55/models/Linux64_GCC-6.4/FVP_Corstone_SSE-300_Ethos-U55 \"\$@\"" >> ~/.bashrc && \
+    echo "  /home/user1/system/FVP_Corstone_SSE-300_Ethos-U55/models/Linux64_GCC-6.4/FVP_Corstone_SSE-300_Ethos-U55 \"\$@\"" >> ~/.bashrc && \
     echo "}" >> ~/.bashrc && \
     echo "export -f FVP_CS300" >> ~/.bashrc
 
