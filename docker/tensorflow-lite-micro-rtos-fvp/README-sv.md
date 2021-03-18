@@ -236,4 +236,3 @@ Efter att skriptet kört klart, så kan du lägga till den nya kodfilen till app
     ```
 
 Lägg till bilderna till aplikationens mapp, och kompilera om.
-

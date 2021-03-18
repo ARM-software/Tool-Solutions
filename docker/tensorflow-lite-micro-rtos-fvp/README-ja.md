@@ -233,4 +233,3 @@ $> convert_tflite_to_cpp.sh --input <model.tflite> --output model_vela.cpp
     ```
 
 変換後生成されたcppファイルを組み込み向けプロジェクトに組み込んで、Arm向けにクロスコンパイルします。  
-
