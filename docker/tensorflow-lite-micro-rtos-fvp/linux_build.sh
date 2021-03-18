@@ -22,7 +22,7 @@ while [[ "$#" -gt 0 ]]; do
     shift
 done
 
-if [ $COMPILER = 'armclang' ];
+if [ ${COMPILER} = 'armclang' ];
 then
     if [ -z ${ARMLMD_LICENSE_FILE} ]; 
     then 
@@ -31,24 +31,32 @@ then
         exit;
     fi
     TOOLCHAIN_FILE=../../../ethos-u/core_platform/cmake/toolchain/armclang.cmake
-elif [ $COMPILER = 'gcc' ]
+elif [ ${COMPILER} = 'gcc' ]
 then
     TOOLCHAIN_FILE=../../../ethos-u/core_platform/cmake/toolchain/arm-none-eabi-gcc.cmake
 else
     usage;
 fi
 
+# Only clone ethos-u if it doesn't exist already
+if [ -d ethos-u ];
+then
+    git clone -b 21.02 https://git.mlplatform.org/ml/ethos-u/ethos-u.git
+    pushd ${BASEDIR}/ethos-u
+    python3 fetch_externals.py -c 21.02.json fetch
+    popd
+fi
 
-pushd $BASEDIR/sw/corstone-300-person-detection
-mkdir build
-cd build
-cmake -DCMAKE_TOOLCHAIN_FILE=$TOOLCHAIN_FILE ..
-make -j $NPROC
+pushd ${BASEDIR}/sw/corstone-300-person-detection
+    mkdir -p build
+    cd build
+    cmake -DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_FILE} ..
+    make -j ${NPROC}
 popd
 
-pushd $BASEDIR/sw/corstone-300-mobilenet-v2
-mkdir build
-cd build
-cmake -DCMAKE_TOOLCHAIN_FILE=$TOOLCHAIN_FILE ..
-make -j $NPROC
+pushd ${BASEDIR}/sw/corstone-300-mobilenet-v2
+    mkdir -p build
+    cd build
+    cmake -DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_FILE} ..
+    make -j ${NPROC}
 popd
