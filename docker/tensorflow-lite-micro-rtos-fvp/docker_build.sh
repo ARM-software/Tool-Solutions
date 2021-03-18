@@ -12,7 +12,6 @@ usage() {
 }
 
 COMPILER=armclang
-NPROC=`grep -c ^processor /proc/cpuinfo`
 
 while [[ "$#" -gt 0 ]]; do
     case $1 in
