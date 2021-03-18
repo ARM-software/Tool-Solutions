@@ -149,7 +149,7 @@ These instructions are available in the following languages
     $> ./linux_build.sh
     ```
 
-3. デモアプリを走らせます (オプション "-h" でオプションメニューを全表示します):
+3. デモアプリを走らせます。完了するまでに10〜20分かかる場合があります。 (オプション "-h" でオプションメニューを全表示します):
     ```
     $> ./run_demo_app.sh
     ```

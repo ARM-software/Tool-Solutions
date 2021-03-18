@@ -145,7 +145,7 @@ The build scripts has been tested on CentOS7, Ubuntu 18.04, and Windows 10 Power
     $> ./linux_build.sh
     ```
 
-1. Run the demo application with the following command (use the "-h"-flag to see all run options):
+1. Run the demo application with the following command. It may take 10-20 minutes to complete. (use the "-h"-flag to see all run options):
     ```
     $> ./run_demo_app.sh
     ```

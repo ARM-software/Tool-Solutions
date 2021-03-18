@@ -91,12 +91,12 @@ Byggskripten har testats med CentOS 7, Ubuntu 18.04, och Windows 10 PowerShell
         ```
         $> docker run -it ubuntu:18.04_sse300 /bin/bash
         ```
-    * Linux;
+    * Linux:
         ```
         $> ./docker_run.sh
         ```
 
-1. Kör en demoapplikation med följande kommando (använd "-h"-flaggan för att se alla köralternativ):
+1. Kör en demoapplikation med följande kommando. Det kan ta 10-20 minuter för applikationen att köra klart. (Använd "-h"-flaggan för att se alla köralternativ):
     ```
     $> ./run_demo_app.sh
     ```
