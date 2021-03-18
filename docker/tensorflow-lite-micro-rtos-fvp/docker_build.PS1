@@ -41,10 +41,10 @@ elseif( $compiler -eq 'gcc' )
 }
 else
 {
-    Write-Output ""
-    Write-Output "Usage: ./docker_build.PS1 -compiler <armclang|gcc>"
-    Write-Output "  -compiler: Choose to use ArmCompiler of GCC <armclang|gcc> (default: armclang)"
-    Write-Output ""
+    Write-Warning "
+Usage: ./docker_build.PS1 -compiler <armclang|gcc>
+  -compiler: Choose to use ArmCompiler or GCC <armclang|gcc> (default: armclang)
+"
     exit
 }
 
