@@ -2,7 +2,6 @@
 BASEDIR=$(dirname "$0")
 pushd $BASEDIR
 
-
 # Usage: takes compiler as input
 usage() { 
     echo "Usage: $0 [-c <gcc|armclang>]" 1>&2
