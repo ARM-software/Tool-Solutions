@@ -5,7 +5,7 @@ BASEDIR=$(dirname "$0")
 # Usage: takes compiler as input
 usage() { 
     echo "Usage: $0 [-c <gcc|armclang>]" 1>&2
-    echo "   -c|--compiler  : De compiler to use to build the applications, gcc|armclang (default: armclang)" 1>&2
+    echo "   -c|--compiler  : The compiler to use to build the applications, gcc|armclang (default: armclang)" 1>&2
     exit 1 
 }
 
@@ -38,7 +38,7 @@ else
 fi
 
 # Only clone ethos-u if it doesn't exist already
-if [ -d ethos-u ];
+if [ ! -d ethos-u ];
 then
     git clone -b 21.02 https://git.mlplatform.org/ml/ethos-u/ethos-u.git
     pushd ${BASEDIR}/ethos-u
