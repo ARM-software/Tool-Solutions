@@ -84,19 +84,24 @@ Byggskripten har testats med CentOS 7, Ubuntu 18.04, och Windows 10 PowerShell
             $> ./docker_build.sh -c gcc
             ```
 
-1. När skriptet har kört klart, kommer en docker image som heter ubuntu:18.04_sse300 ha skapats.
+1. När skriptet har kört klart, kommer en docker image som heter tensorflow-lite-micro-rtos-fvp:*<armclang|gcc>* ha skapats.
 
 1. Logga in i docker imagen med föjande kommando (om du vill använda lokala volymer för data, så kan du modifiera kommandot efter behov):
     * Windows:
+        * Om du önskar att andvända Arm Compiler
+            ```
+            $> docker run -it tensorflow-lite-micro-rtos-fvp:armclang /bin/bash
+            ```
+        * Om du önskar att andvända gcc
+            ```
+            $> docker run -it tensorflow-lite-micro-rtos-fvp:gcc /bin/bash
+            ```
+    * Linux:
         ```
-        $> docker run -it ubuntu:18.04_sse300 /bin/bash
-        ```
-    * Linux;
-        ```
-        $> ./docker_run.sh
+        $> ./docker_run.sh -c <armclang|gcc>
         ```
 
-1. Kör en demoapplikation med följande kommando (använd "-h"-flaggan för att se alla köralternativ):
+1. Kör en demoapplikation med följande kommando. Det kan ta 10-20 minuter för applikationen att köra klart. (Använd "-h"-flaggan för att se alla köralternativ):
     ```
     $> ./run_demo_app.sh
     ```
@@ -236,4 +241,3 @@ Efter att skriptet kört klart, så kan du lägga till den nya kodfilen till app
     ```
 
 Lägg till bilderna till aplikationens mapp, och kompilera om.
-

@@ -29,14 +29,15 @@ while [[ "$#" -gt 0 ]]; do
 done
 
 # Check if new or old version of FVP, to know which option to use..
-
 if command $FVP --version | grep 11.13.41 &> /dev/null
 then
     MAC_CONFIG="-C ethosu.num_macs=$NUM_MACS"
 else
     MAC_CONFIG="-C ethosu.config=H$NUM_MACS"
 fi
- 
+
+echo "Running $APPLICATION"
+
 $FVP  \
     --stat \
     -C mps3_board.visualisation.disable-visualisation=1 \

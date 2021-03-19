@@ -88,16 +88,16 @@ These instructions are available in the following languages
             $> ./docker_build.sh -c gcc
             ```
 
-1. スクリプトが無事完了したら、docker image ubuntu:18.04_sse300が生成されているはずです。
+1. スクリプトが無事完了したら、docker image tensorflow-lite-micro-rtos-fvp:*<armclang|gcc>*が生成されているはずです。
 
 1. Docker containerを起動してbashを起動します(ご自分の環境に合わせて実行して下さい):
     * Windows:
         ```
-        $> docker run -it ubuntu:18.04_sse300 /bin/bash
+        $> docker run -it --rm tensorflow-lite-micro-rtos-fvp:<armclang|gcc> /bin/bash
         ```
     * Linux;
         ```
-        $> ./docker_run.sh
+        $> ./docker_run.sh -c <armclang|gcc>
         ```
 
 1. デモ実行のスクリプトを走らせます:
@@ -149,7 +149,7 @@ These instructions are available in the following languages
     $> ./linux_build.sh
     ```
 
-3. デモアプリを走らせます (オプション "-h" でオプションメニューを全表示します):
+3. デモアプリを走らせます。完了するまでに10〜20分かかる場合があります。 (オプション "-h" でオプションメニューを全表示します):
     ```
     $> ./run_demo_app.sh
     ```
@@ -233,4 +233,3 @@ $> convert_tflite_to_cpp.sh --input <model.tflite> --output model_vela.cpp
     ```
 
 変換後生成されたcppファイルを組み込み向けプロジェクトに組み込んで、Arm向けにクロスコンパイルします。  
-
