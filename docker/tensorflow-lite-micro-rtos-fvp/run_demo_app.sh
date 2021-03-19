@@ -14,7 +14,7 @@ usage() {
 }
 
 FVP=FVP_Corstone_SSE-300_Ethos-U55
-APPLICATION=$BASEDIR/sw/corstone-300-person-detection/build/ethosu55-person-detection.elf
+APPLICATION=$BASEDIR/sw/corstone-300-mobilenet-v2/build/ethosu55-mobilenet-v2.elf
 NUM_MACS=128
 
 while [[ "$#" -gt 0 ]]; do
