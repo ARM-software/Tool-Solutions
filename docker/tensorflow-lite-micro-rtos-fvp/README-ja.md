@@ -88,16 +88,16 @@ These instructions are available in the following languages
             $> ./docker_build.sh -c gcc
             ```
 
-1. スクリプトが無事完了したら、docker image ubuntu:18.04_sse300が生成されているはずです。
+1. スクリプトが無事完了したら、docker image tensorflow-lite-micro-rtos-fvp:*<armclang|gcc>*が生成されているはずです。
 
 1. Docker containerを起動してbashを起動します(ご自分の環境に合わせて実行して下さい):
     * Windows:
         ```
-        $> docker run -it ubuntu:18.04_sse300 /bin/bash
+        $> docker run -it --rm tensorflow-lite-micro-rtos-fvp:<armclang|gcc> /bin/bash
         ```
     * Linux;
         ```
-        $> ./docker_run.sh
+        $> ./docker_run.sh -c <armclang|gcc>
         ```
 
 1. デモ実行のスクリプトを走らせます:

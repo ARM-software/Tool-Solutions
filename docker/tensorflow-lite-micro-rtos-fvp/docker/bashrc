@@ -17,8 +17,7 @@ You are running this container as root
 WARN
 else
   cat <<EXPL
-You are running this container as user with ID $(id -u) and group $(id -g),
-which should map to the ID and group for your user on the Docker host.
+You are running this container as user with ID $(id -u) and group $(id -g)
 EXPL
 fi
 

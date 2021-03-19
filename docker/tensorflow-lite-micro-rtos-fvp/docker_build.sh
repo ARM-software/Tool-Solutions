@@ -60,23 +60,26 @@ then
     fi
 
     # get dependencies, then build the armclang docker image 
-    ./get_deps.sh -c armclang
-    docker build --rm -t ubuntu:18.04_sse300 \
+    ./get_deps.sh -c $COMPILER
+    docker build --rm -t tensorflow-lite-micro-rtos-fvp:armclang \
         --build-arg LICENSE_FILE=${ARMLMD_LICENSE_FILE} \
         -f docker/armclang.Dockerfile .
 elif [ $COMPILER = 'gcc' ]
 then
-    ./get_deps.sh -c gcc
-    docker build --rm -t ubuntu:18.04_sse300 \
+    ./get_deps.sh -c $COMPILER
+    docker build --rm -t tensorflow-lite-micro-rtos-fvp:gcc \
         -f docker/gcc.Dockerfile .
+elif [ $COMPILER = 'fvp' ]
+then
+    # Build docker image for fvp.
+    # This image is a minimal evaluation image, that can be used for
+    # running built applicaitons with FVP. 
+    ./get_deps.sh -c $COMPILER
+    docker build --rm -t tensorflow-lite-micro-rtos-fvp:fvp \
+        -f docker/fvp.Dockerfile .
 else
     usage;
 fi
 
-# Build docker image for fvp.
-# This image is a minimal evaluation image, that can be used for
-# running built applicaitons with FVP. 
-docker build --rm -t tflm_corstone300:fvp \
-    -f docker/fvp.Dockerfile .
 
 popd

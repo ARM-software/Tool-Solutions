@@ -84,16 +84,21 @@ The build scripts has been tested on CentOS7, Ubuntu 18.04, and Windows 10 Power
             $> ./docker_build.sh -c gcc
             ```
 
-1. When the script has finished, there should be a Docker image called ubuntu:18.04_sse300.
+1. When the script has finished, there should be a Docker image called tensorflow-lite-micro-rtos-fvp:*<armclang|gcc>*.
 
 1. Enter the docker image using the following command (you can modify the command if you want to use local volumes etc.):
     * Windows:
-        ```
-        $> docker run -it ubuntu:18.04_sse300 /bin/bash
-        ```
+        * If you wish to use the Arm Compiler
+            ```
+            $> docker run -it --rm tensorflow-lite-micro-rtos-fvp:armclang /bin/bash
+            ```
+        * If you wish to use the GNU GCC Compiler
+            ```
+            $> docker run -it --rm tensorflow-lite-micro-rtos-fvp:gcc /bin/bash
+            ```
     * Linux;
         ```
-        $> ./docker_run.sh
+        $> ./docker_run.sh -c <armclang|gcc>
         ```
 
 1. Run the demo by running the following:

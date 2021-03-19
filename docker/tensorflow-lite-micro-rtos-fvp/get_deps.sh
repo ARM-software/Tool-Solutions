@@ -38,6 +38,12 @@ then
 
     [ -f gcc-arm-none-eabi-10-2020-q4-major-x86_64-linux.tar.bz2 ] || wget https://developer.arm.com/-/media/Files/downloads/gnu-rm/10-2020q4/gcc-arm-none-eabi-10-2020-q4-major-x86_64-linux.tar.bz2
     [ -f FVP_Corstone_SSE-300_Ethos-U55_11.13_41.tgz ] || wget https://developer.arm.com/-/media/Arm%20Developer%20Community/Downloads/OSS/FVP/Corstone-300/FVP_Corstone_SSE-300_Ethos-U55_11.13_41.tgz
+elif [ $COMPILER = 'fvp' ]
+then
+    echo
+    echo "Downloading Corstone 300 FVP..."
+    echo
+    [ -f FVP_Corstone_SSE-300_Ethos-U55_11.13_41.tgz ] || wget https://developer.arm.com/-/media/Arm%20Developer%20Community/Downloads/OSS/FVP/Corstone-300/FVP_Corstone_SSE-300_Ethos-U55_11.13_41.tgz
 else
     usage;
 fi
