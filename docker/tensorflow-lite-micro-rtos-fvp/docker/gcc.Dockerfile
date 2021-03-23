@@ -8,17 +8,28 @@ RUN echo "root:docker" | chpasswd
 # Update and install necessary packages.
 #---------------------------------------------------------------------
 RUN apt-get -y update \
-  && apt-get -y install \
+  && apt-get -y install --no-install-recommends \
     sudo git wget make gcc curl \
-    zip libatomic1 ca-certificates \
+    zip unzip libatomic1 ca-certificates \
     xxd imagemagick \
     python3 python3-venv python3-dev python3-pip \
   && rm -rf /var/lib/apt/lists/*
 
-## add user
+#----------------------------------------------------------------------------
+# add user
+#----------------------------------------------------------------------------
 RUN useradd --create-home -s /bin/bash -m user1 \
   && echo "user1:docker" | chpasswd \
   && adduser user1 sudo
+
+#----------------------------------------------------------------------------
+# install vela
+#----------------------------------------------------------------------------
+RUN python3 -m venv /usr/local/.vela
+ENV PATH=/usr/local/.vela/bin:${PATH}
+RUN pip install --upgrade wheel pip setuptools \
+  && pip install ethos-u-vela
+
 
 #---------------------------------------------------------------------------
 # Install newer CMake, 3.15.6 or newer is required to build the Ethos-U55 driver
@@ -35,20 +46,20 @@ RUN /tmp/FVP_Corstone_SSE-300_Ethos-U55.sh --i-agree-to-the-contained-eula -d /u
   && rm -rf /tmp/*
 
 # Setup Environment Variables
-ENV PATH="/usr/local/FVP_Corstone_SSE-300_Ethos-U55/models/Linux64_GCC-6.4:${PATH}"
+ENV PATH=/usr/local/FVP_Corstone_SSE-300_Ethos-U55/models/Linux64_GCC-6.4:${PATH}
 
 #----------------------------------------------------------------------------
-# install vela
+# bashrc
 #----------------------------------------------------------------------------
-RUN python3 -m venv /usr/local/.vela
-ENV PATH="/usr/local/.vela/bin:${PATH}"
-RUN pip install --upgrade wheel pip setuptools \
-  && pip install ethos-u-vela
+COPY docker/bashrc /etc/bash.bashrc
+RUN  sed -i 's/\r//' /etc/bash.bashrc
 
 USER user1
 WORKDIR /home/user1
 
-# Download dependencies
+#----------------------------------------------------------------------------
+# Download ethos-u dependencies
+#----------------------------------------------------------------------------
 RUN git clone -b 21.02 https://git.mlplatform.org/ml/ethos-u/ethos-u.git \
   && cd ethos-u \
   && python3 fetch_externals.py -c 21.02.json fetch
@@ -62,7 +73,7 @@ RUN cd /tmp \
   && mkdir -p /home/user1/ethos-u/core_software/tensorflow/tensorflow/lite/micro/tools/make/downloads/ \
   && mv /tmp/gcc-arm-none-eabi-10-2020-q4-major /home/user1/ethos-u/core_software/tensorflow/tensorflow/lite/micro/tools/make/downloads/gcc_embedded \
   && rm -rf /tmp/*
-ENV PATH="/home/user1/ethos-u/core_software/tensorflow/tensorflow/lite/micro/tools/make/downloads/gcc_embedded/bin/:${PATH}"
+ENV PATH=/home/user1/ethos-u/core_software/tensorflow/tensorflow/lite/micro/tools/make/downloads/gcc_embedded/bin/:${PATH}
 
 #----------------------------------------------------------------------------
 # Copy application source to the image
@@ -72,7 +83,8 @@ COPY --chown=user1:user1 sw sw
 #----------------------------------------------------------------------------
 # add path to helper scripts 
 #----------------------------------------------------------------------------
-ENV PATH=/home/user1/sw/convert_scripts:$PATH
+ENV PATH=/home/user1/sw/convert_scripts:${PATH}
+RUN  sed -i 's/\r//' /home/user1/sw/convert_scripts/*.sh
 RUN chmod +x /home/user1/sw/convert_scripts/*.sh
 
 #----------------------------------------------------------------------------
@@ -89,5 +101,4 @@ RUN sed -i 's/\r//' linux_build.sh \
 COPY --chown=user1:user1 run_demo_app.sh .
 RUN sed -i 's/\r//' run_demo_app.sh \
   && chmod +x run_demo_app.sh
-
-COPY docker/bashrc /etc/bash.bashrc
+  
