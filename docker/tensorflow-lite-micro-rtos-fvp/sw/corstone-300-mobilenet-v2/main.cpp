@@ -112,12 +112,14 @@ void printResults(const char* name)
             topId = i;
         }
     }
-    
-    printf("\n\t#-------------------\n");
+
+    printf("\n");
+    printf("\t#-------------------\n");
     printf("\tTop prediction for %s\n", name);
     printf("\tlabel: %s\n", labelsVec[topId]);
     printf("\tID: %i  : Confidence: %f \n", topId, (float)(topConfidence / 255.f));
-    printf("\t#-------------------\n\n");
+    printf("\t#-------------------\n");
+    printf("\n");
 }
 
 void inferenceProcessTask(void *pvParameters) {

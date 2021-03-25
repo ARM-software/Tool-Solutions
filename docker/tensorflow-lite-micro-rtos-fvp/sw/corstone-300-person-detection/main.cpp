@@ -104,22 +104,24 @@ void printResults(const char* name)
     float no_person_confidence = (float)(inferenceResult[2] / 255.0f);
     float person_confidence = (float)(inferenceResult[1] / 255.0f);
 
-    printf("\n#-----------------------------\n");
-    printf ("Input image name: \"%s\"\n", name);
-    printf("  No Person Confidence = %f | Person Confidence = %f\n",
+    printf("\n");
+    printf("#-----------------------------\n");
+    printf("Input image name: \"%s\"\n", name);
+    printf("\tNo Person Confidence = %f | Person Confidence = %f\n",
         (double)no_person_confidence, (double)person_confidence);
 
     if(no_person_confidence >= person_confidence)
     {
-        printf("  Detected NO PERSON in the input image \n  Confidence = %f\n",
+        printf("\tDetected NO PERSON in the input image \n  Confidence = %f\n",
             (double)no_person_confidence);
     }
     else
     {
-        printf("  Detected A PERSON in the input image\n  Confidence = %f\n",
+        printf("\tDetected A PERSON in the input image\n  Confidence = %f\n",
             (double)person_confidence);
     }
-    printf("#-----------------------------\n\n");
+    printf("#-----------------------------\n");
+    printf("\n");
 }
 
 void inferenceProcessTask(void *pvParameters) {
