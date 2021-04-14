@@ -28,9 +28,6 @@ Examples to run performance analysis for Machine Learning applications.
 #### acet-developer
 Demonstration of ETAS ASCET-DEVELOPER model based design and code generation with Arm Development Studio 
 
-#### mobile-application-profiling
-Examples and scripts for Android performance analysis with Arm Mobile Studio.
-
 #### mathworks-support-packages
 Support packages to enable Arm Fast Models and Arm Compiler usage with MathWorks software such as Embedded Coder, Simulink, and MATLAB.
 
