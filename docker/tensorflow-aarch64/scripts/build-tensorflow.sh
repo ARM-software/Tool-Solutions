@@ -31,37 +31,37 @@ git clone ${src_host}/${src_repo}.git
 cd ${src_repo}
 git checkout $version -b $version
 
-
 # Apply path to allow use of newer Bazel build.
 if [[ $tf_id == '1' ]]; then
-   if [[ $ONEDNN_BUILD ]]; then
-      patch -p1 < ../tf_dnnl_decoupling.patch
-   fi
-   patch -p1 < ../tensorflow.patch
+    if [[ $ONEDNN_BUILD ]]; then
+        patch -p1 < ../tf_dnnl_decoupling.patch
+    fi
+    patch -p1 < ../tensorflow.patch
 elif [[ $tf_id == '2' ]]; then
-   if [[ $ONEDNN_BUILD ]]; then
-      # TF2.3.0 fix: https://github.com/tensorflow/tensorflow/pull/41232#issuecomment-670049428
-      # The below patches should apply cleanly on top of the v2.3.0 tag
-      # i.e. commit b36436b087bd8e8701ef51718179037cccdfc26e
-      patch -p1 < ../oneDNN-opensource.patch
-      patch -p1 < ../tf2_onednn_decoupling.patch
-      if [[ $ONEDNN_BUILD == 'armpl' ]]; then
-         echo 'Patching for TensorFlow oneDNN - ArmPL'
-         patch -p1 < ../tf2-armpl.patch
-      elif  [[ $ONEDNN_BUILD == 'openblas' ]]; then
-         echo 'Patching for TensorFlow oneDNN - OpenBLAS'
-         patch -p1 < ../tf2-openblas.patch
-      elif  [[ $ONEDNN_BUILD == 'acl' ]]; then
-         echo 'Patching for TensorFlow oneDNN - Compute Library'
-         patch -p1 < ../tf2-acl.patch
-      else
-         echo 'TensorFlow oneDNN-reference'
-      fi
-   fi
-   patch -p1 < ../tensorflow2.patch
+    if [[ $ONEDNN_BUILD ]]; then
+        # TF2.3.0 fix: https://github.com/tensorflow/tensorflow/pull/41232#issuecomment-670049428
+        patch -p1 < ../oneDNN-opensource.patch
+        patch -p1 < ../tf2_onednn_decoupling.patch
+        if [[ $ONEDNN_BUILD == 'acl' || $ONEDNN_BUILD == 'reference' ]]; then
+            patch -p1 < ../tf2-onednn-explicit.patch
+        fi
+        if [[ $ONEDNN_BUILD == 'armpl' ]]; then
+            echo 'Patching for TensorFlow oneDNN - ArmPL'
+            patch -p1 < ../tf2-armpl.patch
+        elif [[ $ONEDNN_BUILD == 'openblas' ]]; then
+            echo 'Patching for TensorFlow oneDNN - OpenBLAS'
+            patch -p1 < ../tf2-openblas.patch
+        elif [[ $ONEDNN_BUILD == 'acl' ]]; then
+            echo 'Patching for TensorFlow oneDNN - ACL'
+            patch -p1 < ../tf2-acl.patch
+        else
+            echo 'TensorFlow oneDNN-reference'
+        fi
+    fi
+    patch -p1 < ../tensorflow2.patch
 else
-   echo 'Invalid TensorFlow version when applying patches to the TensorFlow repository'
-   exit 1
+    echo 'Invalid TensorFlow version when applying patches to the TensorFlow repository'
+    exit 1
 fi
 
 # Env vars used to avoid interactive elements of the build.
@@ -82,46 +82,42 @@ export TF_NEED_ROCM=0
 
 ./configure
 
-extra_args=""
+extra_args="--verbose_failures -s"
 if [[ $BZL_RAM ]]; then extra_args="$extra_args --local_ram_resources=$BZL_RAM"; fi
 if [[ $NP_MAKE ]]; then extra_args="$extra_args --jobs=$NP_MAKE"; fi
+if [[ $ONEDNN_BUILD == 'acl' ]]; then extra_args="$extra_args --cxxopt=-DDNNL_AARCH64_USE_ACL=1"; fi
 
 if [[ $ONEDNN_BUILD ]]; then
-  echo "$ONEDNN_BUILD build for $TF_VERSION"
-  extra_args="${extra_args} --copt=-moutline-atomics --config=noaws --config=v${tf_id}
-              --linkopt=-fopenmp --cxxopt=-D_GLIBCXX_USE_CXX11_ABI=0 --copt=-O3"
-  if [[ $tf_id == '1' ]]; then
-    bazel build $extra_args \
-      --define=build_with_mkl_dnn_only=true --define=build_with_mkl=true \
-      --define=tensorflow_mkldnn_contraction_kernel=1 \
-      --copt="-mtune=${CPU}" --copt="-march=armv8-a" \
-      --linkopt="-L$ARMPL_DIR/lib -lamath -lm" \
-      //tensorflow/tools/pip_package:build_pip_package
-   elif [[ $tf_id == '2' ]]; then
-     if  [[ $ONEDNN_BUILD == 'acl' ]]; then
-       bazel build $extra_args \
-         --copt="-mtune=${CPU}" --copt="-march=armv8-a" \
-         --config=mkl_aarch64_acl \
-         //tensorflow/tools/pip_package:build_pip_package
-     else
-       bazel build $extra_args \
-         --config=mkl_opensource_only \
-         --copt="-mcpu=${CPU}" --copt="-flax-vector-conversions" \
-         --linkopt="-L$ARMPL_DIR/lib -lamath -lm" \
-         //tensorflow/tools/pip_package:build_pip_package
-     fi
-   else
-     echo 'Invalid TensorFlow version when building tensorflow'
-     exit 1
-   fi
+    echo "$ONEDNN_BUILD build for $TF_VERSION"
+    if [[ $tf_id == '1' ]]; then
+        bazel build $extra_args \
+        --define=build_with_mkl_dnn_only=true --define=build_with_mkl=true \
+        --define=tensorflow_mkldnn_contraction_kernel=1 \
+        --copt="-mtune=${CPU}" --copt="-march=armv8-a" --copt="-moutline-atomics" \
+        --cxxopt="-mtune=${CPU}" --cxxopt="-march=armv8-a" --cxxopt="-moutline-atomics" \
+        --linkopt="-L$ARMPL_DIR/lib -lamath -lm" --linkopt="-fopenmp" \
+        --config=noaws --config=v$tf_id  --cxxopt="-D_GLIBCXX_USE_CXX11_ABI=0" \
+        //tensorflow/tools/pip_package:build_pip_package
+    elif [[ $tf_id == '2' ]]; then
+        bazel build $extra_args \
+        --config=mkl_opensource_only \
+        --copt="-mcpu=${CPU}" --copt="-flax-vector-conversions" --copt="-moutline-atomics" --copt="-O3" \
+        --cxxopt="-mcpu=${CPU}" --cxxopt="-flax-vector-conversions" --cxxopt="-moutline-atomics" --cxxopt="-O3" \
+        --linkopt="-L$ARMPL_DIR/lib -lamath -lm" --linkopt="-fopenmp" \
+        --config=noaws --config=v$tf_id  --cxxopt="-D_GLIBCXX_USE_CXX11_ABI=0" \
+        //tensorflow/tools/pip_package:build_pip_package
+    else
+        echo 'Invalid TensorFlow version when building tensorflow'
+        exit 1
+    fi
 else
-  echo "Eigen-only build for $TF_VERSION"
-  bazel build $extra_args --define tensorflow_mkldnn_contraction_kernel=0 \
-    --copt="-mcpu=${CPU}" --copt="-flax-vector-conversions" --copt="-moutline-atomics" --copt="-O3" \
-    --cxxopt="-mcpu=${CPU}" --cxxopt="-flax-vector-conversions" --cxxopt="-moutline-atomics" --cxxopt="-O3" \
-    --linkopt="-L$ARMPL_DIR/lib -lamath -lm" \
-    --config=noaws --config=v$tf_id --cxxopt="-D_GLIBCXX_USE_CXX11_ABI=0" \
-    //tensorflow/tools/pip_package:build_pip_package
+    echo "Eigen-only build for $TF_VERSION"
+    bazel build $extra_args --define tensorflow_mkldnn_contraction_kernel=0 \
+        --copt="-mcpu=${CPU}" --copt="-flax-vector-conversions" --copt="-moutline-atomics" --copt="-O3" \
+        --cxxopt="-mcpu=${CPU}" --cxxopt="-flax-vector-conversions" --cxxopt="-moutline-atomics" --cxxopt="-O3" \
+        --linkopt="-L$ARMPL_DIR/lib -lamath -lm" \
+        --config=noaws --config=v$tf_id --cxxopt="-D_GLIBCXX_USE_CXX11_ABI=0" \
+        //tensorflow/tools/pip_package:build_pip_package
 fi
 ./bazel-bin/tensorflow/tools/pip_package/build_pip_package ./wheel-TF$TF_VERSION-py$PY_VERSION-$CC
 
@@ -131,10 +127,10 @@ pip install $(ls -tr wheel-TF$TF_VERSION-py$PY_VERSION-$CC/*.whl | tail)
 cd $HOME
 
 if python -c 'import tensorflow; print(tensorflow.__version__)' > version.log; then
-  echo "TensorFlow $(cat version.log) package installed from $TF_VERSION branch."
+    echo "TensorFlow $(cat version.log) package installed from $TF_VERSION branch."
 else
-  echo "TensorFlow package installation failed."
-  exit 1
+    echo "TensorFlow package installation failed."
+    exit 1
 fi
 
 rm $HOME/version.log

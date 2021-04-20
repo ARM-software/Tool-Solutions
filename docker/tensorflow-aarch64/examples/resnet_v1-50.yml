@@ -1,7 +1,5 @@
-#!/bin/bash
-
 # *******************************************************************************
-# Copyright 2021 Arm Limited and affiliates.
+# Copyright 2021  Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,17 +15,15 @@
 # limitations under the License.
 # *******************************************************************************
 
-set -euo pipefail
-
-source python3-venv/bin/activate
-ck pull repo:ck-env
-sudo apt-get -y install protobuf-compiler libprotoc-dev
-git clone https://github.com/mlcommons/inference.git --recursive
-cd inference
-git checkout r0.7
-# Scripts to support running of MLPerf in different modes. Refer to README.md for details.
-patch -p1 < ../optional-mlcommons-changes.patch
-cd loadgen
-CFLAGS="-std=c++14" python setup.py develop
-cd ../vision/classification_and_detection
-python setup.py develop
+description: >-
+  resnet50-v1.5 is a TensorFlow implementation of ResNet-50 - an image classification model
+  pretrained on the ImageNet dataset. For details on how this model was trained please see
+  <https://github.com/mlcommons/training/tree/master/image_classification> for more information
+model:
+  - name: resnet_v1-50.pb
+    source: https://zenodo.org/record/2535873/files/resnet50_v1.pb
+    labels: https://s3.amazonaws.com/deep-learning-models/image-models/imagenet_class_index.json
+arguments:
+  - input_shape: [1,224,224,3]
+    input: input_tensor
+    output: softmax_tensor

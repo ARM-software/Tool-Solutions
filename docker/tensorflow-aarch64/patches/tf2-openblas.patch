@@ -20,7 +20,7 @@ index 61438f4b7e..5b8b5f04fb 100755
 --- a/tensorflow/workspace.bzl
 +++ b/tensorflow/workspace.bzl
 @@ -214,6 +214,12 @@ def tf_repositories(path_prefix = "", tf_repo_name = ""):
-         path = '/opt/onednn/release/oneDNN'
+         path = '/opt/onednn/release'
      )
 
 +    native.new_local_repository(
@@ -62,50 +62,108 @@ index 0000000000..b221306e35
 +             "@openblas//:openblas_libs_linux",
 +    ],
 +)
-diff --git a/third_party/OpenBLAS/OpenBLAS.BUILD b/third_party/OpenBLAS/OpenBLAS.BUILD
-new file mode 100644
-index 0000000000..76b0511de5
---- /dev/null
-+++ b/third_party/OpenBLAS/OpenBLAS.BUILD
-@@ -0,0 +1,28 @@
-+licenses(["notice"])
-+exports_files(["share/LICENSE"])
-+
-+
-+filegroup(
-+    name = "LICENSE",
-+    srcs = [
-+        "share/LICENSE",
-+    ],
-+    visibility = ["//visibility:public"],
-+)
-+
-+
-+cc_library(
-+    name = "openblas_headers",
-+    srcs = glob(["include/*.h"]),
-+    includes = ["include"],
-+    visibility = ["//visibility:public"],
-+)
-+
-+
-+cc_library(
-+    name = "openblas_libs_linux",
-+    srcs = [
-+        "lib/libopenblas.so",
-+    ],
-+    visibility = ["//visibility:public"],
-+)
 diff --git a/third_party/mkl_dnn/mkldnn_v1.BUILD b/third_party/mkl_dnn/mkldnn_v1.BUILD
-index 350fd4a374..58588b751b 100644
+index 350fd4a374d..2a906b7b374 100644
 --- a/third_party/mkl_dnn/mkldnn_v1.BUILD
 +++ b/third_party/mkl_dnn/mkldnn_v1.BUILD
-@@ -89,40 +89,18 @@ cc_library(
-     hdrs = glob(["include/*"]),
+@@ -29,22 +29,26 @@ _DNNL_RUNTIME_OMP = {
+     "#cmakedefine DNNL_CPU_THREADING_RUNTIME DNNL_RUNTIME_${DNNL_CPU_THREADING_RUNTIME}": "#define DNNL_CPU_THREADING_RUNTIME DNNL_RUNTIME_OMP",
+     "#cmakedefine DNNL_CPU_RUNTIME DNNL_RUNTIME_${DNNL_CPU_RUNTIME}": "#define DNNL_CPU_RUNTIME DNNL_RUNTIME_OMP",
+     "#cmakedefine DNNL_GPU_RUNTIME DNNL_RUNTIME_${DNNL_GPU_RUNTIME}": "#define DNNL_GPU_RUNTIME DNNL_RUNTIME_NONE",
++    "#cmakedefine DNNL_WITH_SYCL": "#undef DNNL_WITH_SYCL",
++    "#cmakedefine DNNL_WITH_LEVEL_ZERO": "#undef DNNL_WITH_LEVEL_ZERO",
++    "#cmakedefine DNNL_SYCL_CUDA": "#undef DNNL_SYCL_CUDA",
+ }
+ 
+ _DNNL_RUNTIME_THREADPOOL = {
+     "#cmakedefine DNNL_CPU_THREADING_RUNTIME DNNL_RUNTIME_${DNNL_CPU_THREADING_RUNTIME}": "#define DNNL_CPU_THREADING_RUNTIME DNNL_RUNTIME_THREADPOOL",
+     "#cmakedefine DNNL_CPU_RUNTIME DNNL_RUNTIME_${DNNL_CPU_RUNTIME}": "#define DNNL_CPU_RUNTIME DNNL_RUNTIME_THREADPOOL",
+     "#cmakedefine DNNL_GPU_RUNTIME DNNL_RUNTIME_${DNNL_GPU_RUNTIME}": "#define DNNL_GPU_RUNTIME DNNL_RUNTIME_NONE",
++    "#cmakedefine DNNL_WITH_SYCL": "#undef DNNL_WITH_SYCL",
++    "#cmakedefine DNNL_WITH_LEVEL_ZERO": "#undef DNNL_WITH_LEVEL_ZERO",
++    "#cmakedefine DNNL_SYCL_CUDA": "#undef DNNL_SYCL_CUDA",
++
+ }
+ 
+ template_rule(
+     name = "dnnl_config_h",
+-    src = "include/dnnl_config.h.in",
+-    out = "include/dnnl_config.h",
+-    substitutions = if_mkldnn_threadpool(
+-        _DNNL_RUNTIME_THREADPOOL,
+-        if_false = _DNNL_RUNTIME_OMP,
+-    ),
++    src = "include/oneapi/dnnl/dnnl_config.h.in",
++    out = "include/oneapi/dnnl/dnnl_config.h",
++    substitutions = _DNNL_RUNTIME_OMP,
+ )
+ 
+ # Create the file mkldnn_version.h with MKL-DNN version numbers.
+@@ -55,74 +59,70 @@ template_rule(
+ # be set to NA.
+ # TODO(agramesh1) Automatically get the version numbers from CMakeLists.txt.
+ 
++
+ template_rule(
+     name = "dnnl_version_h",
+-    src = "include/dnnl_version.h.in",
+-    out = "include/dnnl_version.h",
++    src = "include/oneapi/dnnl/dnnl_version.h.in",
++    out = "include/oneapi/dnnl/dnnl_version.h",
+     substitutions = {
+-        "@DNNL_VERSION_MAJOR@": "1",
+-        "@DNNL_VERSION_MINOR@": "4",
++        "@DNNL_VERSION_MAJOR@": "2",
++        "@DNNL_VERSION_MINOR@": "2",
+         "@DNNL_VERSION_PATCH@": "0",
+-        "@DNNL_VERSION_HASH@": "N/A",
++        "@DNNL_VERSION_HASH@": "269680b228218158fc172e9d5277446f73ac1917",
+     },
+ )
+ 
+ cc_library(
+     name = "mkl_dnn",
+-    srcs = glob([
+-        "src/common/*.cpp",
+-        "src/common/*.hpp",
+-        "src/cpu/*.cpp",
+-        "src/cpu/*.hpp",
+-        "src/cpu/rnn/*.cpp",
+-        "src/cpu/rnn/*.hpp",
+-        "src/cpu/matmul/*.cpp",
+-        "src/cpu/matmul/*.hpp",
+-        "src/cpu/gemm/*.cpp",
+-        "src/cpu/gemm/*.hpp",
+-        "src/cpu/gemm/**/*.cpp",
+-        "src/cpu/gemm/**/*.hpp",
+-    ]) + [
+-        ":dnnl_config_h",
+-        ":dnnl_version_h",
+-    ],
+-    hdrs = glob(["include/*"]),
++    srcs = glob(
++        [
++            "src/common/*.cpp",
++            "src/cpu/**/*.cpp",
++            "src/cpu/*.cpp",
++        ],
++        exclude = [
++            "src/cpu/x64/**",
++ 	    "src/cpu/aarch64/acl_convolution_utils.cpp",
++	    "src/cpu/aarch64/acl_convolution_utils.hpp",
++	    "src/cpu/aarch64/acl_convolution_utils.cpp",
++	    "src/cpu/aarch64/acl_gemm_convolution.cpp",
++	    "src/cpu/aarch64/acl_gemm_convolution.hpp",
++	    "src/cpu/aarch64/acl_indirect_gemm_convolution.cpp",
++	    "src/cpu/aarch64/acl_indirect_gemm_convolution.hpp",
++	    "src/cpu/aarch64/acl_winograd_convolution.cpp",
++	    "src/cpu/aarch64/acl_winograd_convolution.hpp",
++        ],
++    ),
      copts = [
          "-fexceptions",
 -        "-DUSE_MKL",
-         "-DUSE_CBLAS",
+-        "-DUSE_CBLAS",
 -    ] + if_mkl_open_source_only([
 -        "-UUSE_MKL",
 -        "-UUSE_CBLAS",
@@ -113,7 +171,7 @@ index 350fd4a374..58588b751b 100644
 -        "-UUSE_MKL",
 -        "-UUSE_CBLAS",
 -    ]) + if_mkldnn_threadpool([
--        "-UUSE_MKL",
+         "-UUSE_MKL",
 -        "-UUSE_CBLAS",
 -    ]) + select({
 -        "@org_tensorflow//tensorflow:linux_x86_64": [
@@ -124,14 +182,30 @@ index 350fd4a374..58588b751b 100644
 -        ":clang_linux_x86_64": [],
 -        "//conditions:default": [],
 -    }),
++        "-DUSE_CBLAS",
 +    ],
      includes = [
          "include",
          "src",
          "src/common",
          "src/cpu",
++        "src/cpu/aarch64/xbyak_aarch64/src",
++        "src/cpu/aarch64/xbyak_aarch64/xbyak_aarch64",
          "src/cpu/gemm",
 -        "src/cpu/xbyak",
++    ],
++    textual_hdrs = glob(
++        [
++            "include/**/*",
++            "include/*",
++            "src/common/*.hpp",
++            "src/cpu/**/*.hpp",
++            "src/cpu/*.hpp",
++            "src/cpu/aarch64/xbyak_aarch64/**/*.h",
++        ],
++    ) + [
++        ":dnnl_config_h",
++        ":dnnl_version_h",
      ],
      linkopts = ["-lgomp"],
      visibility = ["//visibility:public"],
@@ -139,7 +213,7 @@ index 350fd4a374..58588b751b 100644
 -        ["@org_tensorflow//third_party/mkl:intel_binary_blob"],
 -        [],
 -    ),
-+    deps = ["@org_tensorflow//third_party/OpenBLAS:openblas_lib",],    
++    deps = ["@org_tensorflow//third_party/OpenBLAS:openblas_lib",],
  )
-
+ 
  cc_library(

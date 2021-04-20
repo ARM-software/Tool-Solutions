@@ -213,7 +213,7 @@ if [[ $bazel_mem ]]; then
 fi
 
 # Add oneDNN build options
-if [[ $onednn_blas ]]; then
+if [[ $onednn ]]; then
   extra_args="$extra_args --build-arg onednn_opt=$onednn"
 fi
 
@@ -236,7 +236,7 @@ elif [[ $tf_version == "2" ]]; then
    # TF2 dependency versions
    version="v2.3.0"
    bazel_version="3.4.0"
-   onednn_version="v1.7"
+   onednn_version="v2.2"
    extra_args="$extra_args --build-arg tf_id=$tf_version \
       --build-arg tf_version=$version \
       --build-arg bazel_version=$bazel_version \
