@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # *******************************************************************************
 # Copyright 2021 Arm Limited and affiliates.
@@ -17,17 +17,21 @@
 # limitations under the License.
 # *******************************************************************************
 
+
 set -euo pipefail
 
-source python3-venv/bin/activate
-ck pull repo:ck-env
-sudo apt-get -y install protobuf-compiler libprotoc-dev
-git clone https://github.com/mlcommons/inference.git --recursive
-cd inference
-git checkout r0.7
-# Scripts to support running of MLPerf in different modes. Refer to README.md for details.
-patch -p1 < ../optional-mlcommons-changes.patch
-cd loadgen
-CFLAGS="-std=c++14" python setup.py develop
-cd ../vision/classification_and_detection
-python setup.py develop
+cd $PROD_DIR
+readonly package=acl
+readonly version=$ACL_VERSION
+readonly src_host=https://review.mlplatform.org/ml
+readonly src_repo=ComputeLibrary
+
+mkdir -p $package
+cd $package
+
+# Clone ACL
+git clone ${src_host}/${src_repo}.git
+cd ${src_repo}
+git checkout $version
+
+scons -j16 Werror=0 debug=0 neon=1 gles_compute=0 embed_kernels=0 os=linux arch=arm64-v8a build=native asserts=1

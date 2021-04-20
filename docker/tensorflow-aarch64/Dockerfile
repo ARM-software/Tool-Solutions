@@ -64,6 +64,7 @@ RUN apt-get -y update && \
       openssl \
       python-openssl \
       rsync \
+      scons \
       ssh \
       sudo \
       time \
@@ -82,7 +83,7 @@ RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 1 --slave /usr
 ENV DOCKER_USER=ubuntu
 
 # Setup default user
-RUN useradd --create-home -s /bin/bash -m $DOCKER_USER && echo "$DOCKER_USER:Arm2020" | chpasswd && adduser $DOCKER_USER sudo
+RUN useradd --create-home -s /bin/bash -m $DOCKER_USER && echo "$DOCKER_USER:Portland" | chpasswd && adduser $DOCKER_USER sudo
 RUN echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
 
@@ -110,6 +111,7 @@ ENV NP_MAKE="${njobs}" \
 
 # Key version numbers
 ENV PY_VERSION=3.7.0 \
+    ACL_VERSION="v21.02" \
     ARMPL_VERSION=20.2.1 \
     OPENBLAS_VERSION=0.3.9
 
@@ -147,13 +149,23 @@ RUN $PACKAGE_DIR/build-openblas.sh
 ENV OPENBLAS_DIR=$PROD_DIR/openblas/$OPENBLAS_VERSION
 ENV LD_LIBRARY_PATH=$OPENBLAS_DIR/lib:$LD_LIBRARY_PATH
 
+# Build Compute Library from source
+COPY scripts/build-acl.sh $PACKAGE_DIR/.
+RUN $PACKAGE_DIR/build-acl.sh
+ENV ACL_ROOT_DIR=$PROD_DIR/acl/ComputeLibrary
+ENV LD_LIBRARY_PATH=$ACL_ROOT_DIR/build:$LD_LIBRARY_PATH
+
 # Build oneDNN from source
 COPY scripts/build-onednn.sh $PACKAGE_DIR/.
 # Patch for oneDNN (MKL-DNN), v0.21.3
 COPY patches/mkldnn.patch $PACKAGE_DIR/mkldnn.patch
+# Patch for oneDNN  v1.x
+COPY patches/oneDNN.patch $PACKAGE_DIR/oneDNN.patch
+# Build oneDNN ACL/reference
+RUN $PACKAGE_DIR/build-onednn.sh
 ENV ONEDNN_DIR=$PROD_DIR/onednn/release
 ENV LD_LIBRARY_PATH=$ONEDNN_DIR/lib:$LD_LIBRARY_PATH
-# Get oneDNN sources
+# Get oneDNN sources for ArmPL and OpenBLAS builds
 # Built as part of the bazel build step in TensorFlow
 COPY scripts/get-onednn.sh $PACKAGE_DIR/.
 RUN $PACKAGE_DIR/get-onednn.sh
@@ -200,14 +212,14 @@ RUN $PACKAGE_DIR/build-scipy.sh
 
 # Install some TensorFlow essentials
 RUN pip install --no-cache-dir keras_applications==1.0.8 --no-deps
-RUN pip install --no-cache-dir keras_preprocessing==1.1.0 --no-deps
+RUN pip install --no-cache-dir keras_preprocessing==1.1.2 --no-deps
 # enum34 is not compatible with Python 3.6+, and not required
 # it is installed as a dependency for an earlier package and needs
 # to be removed in order for the OpenCV build to complete.
 RUN pip uninstall enum34 -y
 RUN HDF5_DIR=/usr/lib/aarch64-linux-gnu/hdf5/serial pip install h5py==2.10.0
 RUN pip install --no-cache-dir grpcio
-RUN pip install --no-cache-dir ck absl-py pycocotools pillow
+RUN pip install --no-cache-dir ck==1.55.5 absl-py pycocotools pillow
 
 # Install OpenCV into our venv,
 # Note: Scripts are provided to build and install OpenCV from the
@@ -273,12 +285,13 @@ COPY patches/oneDNN-opensource.patch $PACKAGE_DIR/oneDNN-opensource.patch
 COPY patches/tf2-armpl.patch $PACKAGE_DIR/tf2-armpl.patch
 COPY patches/tf2-openblas.patch $PACKAGE_DIR/tf2-openblas.patch
 COPY patches/tf2-acl.patch $PACKAGE_DIR/tf2-acl.patch
+COPY patches/tf2-onednn-explicit.patch $PACKAGE_DIR/tf2-onednn-explicit.patch
 RUN $PACKAGE_DIR/build-tensorflow.sh
 
 CMD ["bash", "-l"]
 
 # ========
-# Stage 5: Install benchmarks
+# Stage 5: Install benchmarks and examples
 # ========
 FROM tensorflow-libs AS tensorflow
 
@@ -294,13 +307,25 @@ ENV PATH="$VENV_DIR/bin:$PATH"
 COPY scripts/build-benchmarks.sh /home/$DOCKER_USER/.
 RUN /home/$DOCKER_USER/build-benchmarks.sh
 
+# Examples, benchmarks, and associated 'helper' scripts will be installed within
+# in $EXAMPLE_DIR.
+ENV EXAMPLE_DIR=/home/$DOCKER_USER/examples
+RUN mkdir -p $EXAMPLE_DIR
+RUN mkdir -p $EXAMPLE_DIR/MLCommons
+
+# Clone and install MLCommons (MLPerf)
 COPY patches/optional-mlcommons-changes.patch /home/$DOCKER_USER/optional-mlcommons-changes.patch
 # Clone and install  MLCommons (MLPerf)
 COPY scripts/build-mlcommons.sh /home/$DOCKER_USER/.
 RUN /home/$DOCKER_USER/build-mlcommons.sh
-
 # Copy scripts to download dataset and models
-COPY scripts/download-dataset.sh /home/$DOCKER_USER/.
-COPY scripts/download-model.sh /home/$DOCKER_USER/.
+COPY scripts/download-dataset.sh $EXAMPLE_DIR/MLCommons/.
+COPY scripts/download-model.sh $EXAMPLE_DIR/MLCommons/.
+
+# Install missing Python package dependencies required to run examples
+RUN pip install --no-cache-dir pyyaml
+RUN pip install --no-cache-dir tqdm
+# Copy examples
+ADD examples $EXAMPLE_DIR
 
 CMD ["bash", "-l"]

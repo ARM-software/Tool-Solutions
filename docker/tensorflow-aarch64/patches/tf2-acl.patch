@@ -15,357 +15,61 @@
  limitations under the License.
  *******************************************************************************
 
-diff --git a/.bazelrc b/.bazelrc
-index 13739b05abc..bb7a202c9ac 100644
---- a/.bazelrc
-+++ b/.bazelrc
-@@ -167,6 +167,12 @@ build:mkl_opensource_only --define=build_with_mkl_dnn_v1_only=true
- build:mkl_opensource_only --define=build_with_mkl_opensource=true
- build:mkl_opensource_only -c opt
+diff --git a/tensorflow/core/kernels/mkl_conv_ops.cc b/tensorflow/core/kernels/mkl_conv_ops.cc
+index 210044436aa..7f9597de33e 100644
+--- a/tensorflow/core/kernels/mkl_conv_ops.cc
++++ b/tensorflow/core/kernels/mkl_conv_ops.cc
+@@ -66,6 +66,9 @@ struct MklConvFwdParams {
+   memory::dims padding_left;
+   memory::dims padding_right;
+   string dtypes = string("");
++#ifdef DNNL_AARCH64_USE_ACL
++  void* filter_address = nullptr;
++#endif
+   struct PostOpParam {
+     string name;
+     mkldnn::algorithm alg;
+@@ -407,6 +410,9 @@ class MklConvFwdPrimitiveFactory : public MklPrimitiveFactory<float> {
+     key_creator.AddAsKey(prefix);
+     key_creator.AddAsKey(convFwdDims.src_dims);
+     key_creator.AddAsKey(convFwdDims.filter_dims);
++#ifdef DNNL_AARCH64_USE_ACL
++    key_creator.AddAsKey(convFwdDims.filter_address);
++#endif
+     key_creator.AddAsKey(convFwdDims.bias_dims);
+     key_creator.AddAsKey(convFwdDims.dst_dims);
+     key_creator.AddAsKey(convFwdDims.strides);
+@@ -686,6 +692,12 @@ class MklConvOp : public OpKernel {
 
-+# Config setting to build oneDNN with Compute Library for Arm.
-+build:mkl_aarch64_acl --define=build_with_mkl_aarch64_acl=true --define=enable_mkl=true
-+build:mkl_aarch64_acl --define=tensorflow_mkldnn_contraction_kernel=0
-+build:mkl_aarch64_acl --define=build_with_mkl_opensource=true
-+build:mkl_aarch64_acl -c opt
-+
- # This config refers to building with CUDA available. It does not necessarily
- # mean that we build CUDA op kernels.
- build:using_cuda --define=using_cuda=true
-diff --git a/tensorflow/tensorflow.bzl b/tensorflow/tensorflow.bzl
-index f0a578eabfc..2c8eb806cf1 100644
---- a/tensorflow/tensorflow.bzl
-+++ b/tensorflow/tensorflow.bzl
-@@ -49,6 +49,7 @@ load(
-     "if_mkl_open_source_only",
-     "if_mkl_v1",
-     "if_mkldnn_threadpool",
-+    "if_mkldnn_aarch64_acl",
- )
- load(
-     "//third_party/ngraph:build_defs.bzl",
-@@ -329,6 +330,7 @@ def tf_copts(
-         if_mkl_open_source_only(["-DINTEL_MKL_DNN_ONLY"]) +
-         if_mkl_v1(["-DENABLE_MKLDNN_V1", "-DENABLE_INTEL_MKL_BFLOAT16"]) +
-         if_mkldnn_threadpool(["-DENABLE_MKLDNN_THREADPOOL"]) +
-+        if_mkldnn_aarch64_acl(["-DENABLE_MKLDNN_V1", "-DINTEL_MKL_DNN_ONLY"]) +
-         if_enable_mkl(["-DENABLE_MKL"]) +
-         if_ngraph(["-DINTEL_NGRAPH=1"]) +
-         if_android_arm(["-mfpu=neon"]) +
-diff --git a/tensorflow/workspace.bzl b/tensorflow/workspace.bzl
-index 61ac9f79141..440533d5dc9 100755
---- a/tensorflow/workspace.bzl
-+++ b/tensorflow/workspace.bzl
-@@ -219,6 +219,17 @@ def tf_repositories(path_prefix = "", tf_repo_name = ""):
-         ],
-     )
+       // TODO(mdfaijul): Extend the basic parameters for data types and fusions
+       this->ExtendConvFwdParams(context, convFwdDims);
++#ifdef DNNL_AARCH64_USE_ACL
++      // Specifics of Arm Compute Library: a primitive per constant weights ptr
++      convFwdDims.filter_address = const_cast<void*>(
++                                   static_cast<const void*>(
++                                   filter_tensor.flat<Tfilter>().data()));
++#endif
+       conv_fwd =
+           MklConvFwdPrimitiveFactory<Tinput, Tfilter, Tbias, Ttemp_output>::Get(
+               convFwdDims, do_not_cache);
 
-+    tf_http_archive(
-+       name = "mkl_dnn_acl_compatible",
-+       build_file = clean_dep("//third_party/mkl_dnn:mkldnn_acl.BUILD"),
-+       sha256 = "2dbd53578b36bd84bbc3e411d1a4cacc0eed832892818c5fa16b72cbf1dab015",
-+       strip_prefix = "oneDNN-1.7",
-+       patch_file = clean_dep("//third_party/mkl_dnn:mkldnn_acl_log.patch"),
-+       urls = [
-+            "https://storage.googleapis.com/mirror.tensorflow.org/github.com/oneapi-src/oneDNN/archive/v1.7.tar.gz",
-+            "https://github.com/oneapi-src/oneDNN/archive/v1.7.tar.gz"]
-+    )
-+
-     tf_http_archive(
-         name = "com_google_absl",
-         build_file = clean_dep("//third_party:com_google_absl.BUILD"),
-@@ -1182,6 +1193,18 @@ def tf_repositories(path_prefix = "", tf_repo_name = ""):
-         ],
-     )
+diff --git a/tensorflow/core/util/mkl_util.h b/tensorflow/core/util/mkl_util.h
+index a4a3f5ff778..4f41b1d26dd 100644
+--- a/tensorflow/core/util/mkl_util.h
++++ b/tensorflow/core/util/mkl_util.h
+@@ -2100,7 +2100,14 @@ class FactoryKeyCreator {
+     auto buffer = reinterpret_cast<const char*>(&data);
+     Append(StringPiece(buffer, sizeof(T)));
+   }
+-
++#ifdef DNNL_AARCH64_USE_ACL
++  // generalisation to handle pointers
++  template <typename T>
++  void AddAsKey(const T* data) {
++    auto buffer = reinterpret_cast<const char*>(&data);
++    Append(StringPiece(buffer, sizeof(T)));
++  }
++#endif
+   string GetKey() { return key_; }
 
-+    tf_http_archive(
-+        name = "arm_compute_library",
-+        sha256 = "2c4cfbe5f87cf47170aa497209c24567d425365fa5f959129a50be665317a8ab",
-+        patch_file = clean_dep("//third_party/arm_compute_library:arm_compute_library.patch"),
-+        strip_prefix = "ComputeLibrary-20.11",
-+        build_file = clean_dep("//third_party/arm_compute_library:BUILD"),
-+        urls = [
-+            "http://mirror.tensorflow.org/github.com/ARM-software/ComputeLibrary/archive/v20.11.tar.gz",
-+            "https://github.com/ARM-software/ComputeLibrary/archive/v20.11.tar.gz"
-+        ],
-+    )
-+
- def tf_bind():
-     """Bind targets for some external repositories"""
-     ##############################################################################
-diff --git a/third_party/arm_compute_library/BUILD b/third_party/arm_compute_library/BUILD
-new file mode 100644
-index 00000000000..322b8a67f12
---- /dev/null
-+++ b/third_party/arm_compute_library/BUILD
-@@ -0,0 +1,74 @@
-+cc_library(
-+    name = "include",
-+    hdrs = glob(["include/**/*.h", "include/**/*.hpp"]),
-+    strip_include_prefix = "include",
-+    includes = ["include"],
-+)
-+
-+cc_library(
-+    name = "arm_compute_core",
-+
-+    srcs = glob(["src/core/*.cpp",
-+                 "src/core/helpers/*.cpp",
-+                 "src/core/CPP/**/*.cpp",
-+                 "src/core/utils/**/*.cpp",
-+                 "src/core/NEON/kernels/**/*.cpp",
-+                 "src/core/**/*.hpp",
-+                 "**/*.h"],
-+                 exclude=["src/core/TracePoint.cpp"]),
-+
-+    hdrs = glob(["arm_compute/core/**/*.h",
-+                 "**/*.inl"])
-+           + ["src/core/utils/quantization/AsymmHelpers.cpp",
-+              "arm_compute_version.embed"],
-+
-+    includes = ["src/core/NEON/kernels/convolution/common",
-+                "src/core/NEON/kernels/convolution/winograd",
-+                "src/core/NEON/kernels/assembly"],
-+
-+    defines = ["ENABLE_FP16_KERNELS", "ENABLE_FP32_KERNELS", "ENABLE_QASYMM8_KERNELS",
-+               "ENABLE_QASYMM8_SIGNED_KERNELS", "ENABLE_QSYMM16_KERNELS"],
-+
-+    deps = ["include"],
-+)
-+
-+cc_library(
-+    name = "arm_compute_runtime",
-+
-+    srcs = glob(["src/runtime/*.cpp",
-+                 "src/runtime/CPP/**/*.cpp",
-+                 "src/runtime/NEON/**/*.cpp",
-+                 "**/*.h"]),
-+
-+    hdrs = glob(["arm_compute/runtime/**/*.h"])
-+            + ["arm_compute_version.embed"],
-+
-+    deps = ["arm_compute_core"],
-+
-+    defines = ["ARM_COMPUTE_CPP_SCHEDULER"],
-+
-+    linkopts = ["-lpthread"],
-+
-+    visibility = ["//visibility:public"],
-+)
-+
-+cc_library(
-+    name = "arm_compute_graph",
-+
-+    srcs = glob(["src/graph/*.cpp",
-+                 "src/graph/algorithms/*.cpp",
-+                 "src/graph/backends/*.cpp",
-+                 "src/graph/detail/*.cpp",
-+                 "src/graph/frontend/*.cpp",
-+                 "src/graph/mutators/*.cpp",
-+                 "src/graph/nodes/*.cpp",
-+                 "src/graph/printers/*.cpp",
-+                 "src/graph/backends/NEON/*.cpp",
-+                 "**/*.h"]),
-+
-+    hdrs = glob(["arm_compute/graph/**/*.h"]),
-+
-+    deps = ["arm_compute_core"],
-+
-+    visibility = ["//visibility:public"],
-+)
-\ No newline at end of file
-diff --git a/third_party/arm_compute_library/LICENSE b/third_party/arm_compute_library/LICENSE
-new file mode 100644
-index 00000000000..be847369eda
---- /dev/null
-+++ b/third_party/arm_compute_library/LICENSE
-@@ -0,0 +1,21 @@
-+MIT License
-+
-+Copyright (c) 2017-2021 Arm Limited
-+
-+Permission is hereby granted, free of charge, to any person obtaining a copy
-+of this software and associated documentation files (the "Software"), to deal
-+in the Software without restriction, including without limitation the rights
-+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-+copies of the Software, and to permit persons to whom the Software is
-+furnished to do so, subject to the following conditions:
-+
-+The above copyright notice and this permission notice shall be included in all
-+copies or substantial portions of the Software.
-+
-+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-+SOFTWARE.
-diff --git a/third_party/arm_compute_library/arm_compute_library.patch b/third_party/arm_compute_library/arm_compute_library.patch
-new file mode 100644
-index 00000000000..cda322982ef
---- /dev/null
-+++ b/third_party/arm_compute_library/arm_compute_library.patch
-@@ -0,0 +1,21 @@
-+diff --git a/src/runtime/NEON/functions/NEElementwiseOperators.cpp b/src/runtime/NEON/functions/NEElementwiseOperators.cpp
-+index 7f3fe8b30..41a0242d9 100644
-+--- a/src/runtime/NEON/functions/NEElementwiseOperators.cpp
-++++ b/src/runtime/NEON/functions/NEElementwiseOperators.cpp
-+@@ -23,7 +23,7 @@
-+  */
-+ #include "arm_compute/core/Validate.h"
-+ #include "arm_compute/runtime/NEON/functions/NEElementwiseOperations.h"
-+-#include <src/core/NEON/kernels/NEElementwiseOperationKernel.h>
-++#include "src/core/NEON/kernels/NEElementwiseOperationKernel.h"
-+
-+ #include "arm_compute/core/ITensor.h"
-+ #include "support/MemorySupport.h"
-+diff --git a/arm_compute_version.embed b/arm_compute_version.embed
-+new file mode 100644
-+index 000000000..c986ad52a
-+--- /dev/null
-++++ b/arm_compute_version.embed
-+@@ -0,0 +1 @@
-++"arm_compute_version=v20.11 Build options: {} Git hash=b'N/A'"
-+\ No newline at end of file
-\ No newline at end of file
-diff --git a/third_party/mkl/BUILD b/third_party/mkl/BUILD
-index 470b3d50ea5..53aef40f362 100644
---- a/third_party/mkl/BUILD
-+++ b/third_party/mkl/BUILD
-@@ -21,6 +21,14 @@ config_setting(
-     visibility = ["//visibility:public"],
- )
-
-+config_setting(
-+    name = "build_with_mkl_aarch64_acl",
-+    define_values = {
-+        "build_with_mkl_aarch64_acl": "true",
-+    },
-+    visibility = ["//visibility:public"],
-+)
-+
- config_setting(
-     name = "enable_mkl",
-     define_values = {
-diff --git a/third_party/mkl/build_defs.bzl b/third_party/mkl/build_defs.bzl
-index 851403fd13a..5fb94b574cd 100644
---- a/third_party/mkl/build_defs.bzl
-+++ b/third_party/mkl/build_defs.bzl
-@@ -26,6 +26,7 @@ def if_mkl(if_true, if_false = []):
-     """
-     return select({
-         "@org_tensorflow//third_party/mkl:build_with_mkl": if_true,
-+        "@org_tensorflow//third_party/mkl:build_with_mkl_aarch64_acl": if_true,
-         "//conditions:default": if_false,
-     })
-
-@@ -77,6 +78,7 @@ def if_enable_mkl(if_true, if_false = []):
-     """
-     return select({
-         "@org_tensorflow//third_party/mkl:enable_mkl": if_true,
-+        "@org_tensorflow//third_party/mkl:build_with_mkl_aarch64_acl": if_true,
-         "//conditions:default": if_false,
-     })
-
-@@ -96,6 +98,7 @@ def mkl_deps():
-             "@org_tensorflow//third_party/mkl:intel_binary_blob",
-             "@mkl_dnn",
-         ],
-+        "@org_tensorflow//third_party/mkl:build_with_mkl_aarch64_acl": ["@mkl_dnn_acl_compatible//:mkl_dnn_acl"],
-         "//conditions:default": [],
-     })
-
-diff --git a/third_party/mkl_dnn/build_defs.bzl b/third_party/mkl_dnn/build_defs.bzl
-index 6a3e4f827ce..6b3aa4350de 100644
---- a/third_party/mkl_dnn/build_defs.bzl
-+++ b/third_party/mkl_dnn/build_defs.bzl
-@@ -45,3 +45,9 @@ def if_mkldnn_threadpool(if_true, if_false = []):
-         "@org_tensorflow//third_party/mkl_dnn:build_with_mkldnn_threadpool": if_true,
-         "//conditions:default": if_false,
-     })
-+
-+def if_mkldnn_aarch64_acl(if_true, if_false = []):
-+        return select({
-+            "@org_tensorflow//third_party/mkl:build_with_mkl_aarch64_acl": if_true,
-+            "//conditions:default": if_false,
-+})
-diff --git a/third_party/mkl_dnn/mkldnn_acl.BUILD b/third_party/mkl_dnn/mkldnn_acl.BUILD
-new file mode 100644
-index 00000000000..a1cb52f483f
---- /dev/null
-+++ b/third_party/mkl_dnn/mkldnn_acl.BUILD
-@@ -0,0 +1,52 @@
-+load(
-+    "@org_tensorflow//third_party:common.bzl",
-+    "template_rule",
-+)
-+
-+_DNNL_RUNTIME_OMP = {
-+    "#cmakedefine DNNL_CPU_THREADING_RUNTIME DNNL_RUNTIME_${DNNL_CPU_THREADING_RUNTIME}": "#define DNNL_CPU_THREADING_RUNTIME DNNL_RUNTIME_OMP",
-+    "#cmakedefine DNNL_CPU_RUNTIME DNNL_RUNTIME_${DNNL_CPU_RUNTIME}": "#define DNNL_CPU_RUNTIME DNNL_RUNTIME_OMP",
-+    "#cmakedefine DNNL_GPU_RUNTIME DNNL_RUNTIME_${DNNL_GPU_RUNTIME}": "#define DNNL_GPU_RUNTIME DNNL_RUNTIME_NONE",
-+}
-+
-+template_rule(
-+    name = "dnnl_config_h",
-+    src = "include/dnnl_config.h.in",
-+    out = "include/dnnl_config.h",
-+    substitutions = _DNNL_RUNTIME_OMP,
-+)
-+
-+template_rule(
-+    name = "dnnl_version_h",
-+    src = "include/dnnl_version.h.in",
-+    out = "include/dnnl_version.h",
-+    substitutions = {
-+        "@DNNL_VERSION_MAJOR@": "1",
-+        "@DNNL_VERSION_MINOR@": "7",
-+        "@DNNL_VERSION_PATCH@": "0",
-+        "@DNNL_VERSION_HASH@": "N/A",
-+    },
-+)
-+
-+cc_library(
-+    name = "mkl_dnn_acl",
-+    srcs = glob(["src/common/*.cpp",
-+                 "src/common/*.hpp",
-+                 "src/cpu/**/*.cpp",
-+                 "src/cpu/**/*.hpp",
-+                ], exclude=["src/cpu/x64/**/*"])
-+           + [":dnnl_config_h", ":dnnl_version_h"],
-+    hdrs = glob(["include/*"]),
-+    defines=["DNNL_AARCH64_USE_ACL=1"],
-+    includes = [
-+        "include",
-+        "src",
-+        "src/common",
-+        "src/cpu",
-+        "src/cpu/gemm",
-+    ],
-+    linkopts = ["-lgomp"],
-+    visibility = ["//visibility:public"],
-+    deps = ["@arm_compute_library//:arm_compute_runtime",
-+            "@arm_compute_library//:arm_compute_graph"],
-+)
-diff --git a/third_party/mkl_dnn/mkldnn_acl_log.patch b/third_party/mkl_dnn/mkldnn_acl_log.patch
-new file mode 100644
-index 00000000000..38909dcaf2c
---- /dev/null
-+++ b/third_party/mkl_dnn/mkldnn_acl_log.patch
-@@ -0,0 +1,15 @@
-+diff --git a/src/cpu/aarch64/acl_gemm_convolution.hpp b/src/cpu/aarch64/acl_gemm_convolution.hpp
-+index c3f84e304..666e9ac82 100644
-+--- a/src/cpu/aarch64/acl_gemm_convolution.hpp
-++++ b/src/cpu/aarch64/acl_gemm_convolution.hpp
-+@@ -101,8 +101,8 @@ struct acl_gemm_convolution_fwd_t : public primitive_t {
-+                 const typename pd_t::base_class *hint_fwd_pd)
-+             : cpu_convolution_fwd_pd_t(adesc, attr, hint_fwd_pd), acp_() {}
-+
-+-        DECLARE_COMMON_PD_T(GEMM_IMPL_STR, acl_gemm_convolution_fwd_t,
-+-                USE_GLOBAL_SCRATCHPAD);
-++        DECLARE_COMMON_PD_T(
-++                "gemm:acl", acl_gemm_convolution_fwd_t, USE_GLOBAL_SCRATCHPAD);
-+
-+         status_t init(engine_t *engine) {
-+             bool ok = true && is_fwd()
+  private:

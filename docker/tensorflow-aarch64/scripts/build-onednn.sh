@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # *******************************************************************************
-# Copyright 2020 Arm Limited and affiliates.
+# Copyright 2020-2021 Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,8 +17,11 @@
 # limitations under the License.
 # *******************************************************************************
 
-
 set -euo pipefail
+
+if [[ $ONEDNN_BUILD == 'armpl' || $ONEDNN_BUILD == 'openblas' ]]; then
+  exit 0
+fi
 
 cd $PACKAGE_DIR
 readonly package=onednn
@@ -34,8 +37,16 @@ cd ${src_repo}
 git checkout $version
 
 # Apply patch to add AArch64 flags, and OpenBLAS lib
-# This patch is for version 0.21.3
-patch -p1 < ../mkldnn.patch
+if [[ $tf_id == '1' ]]; then
+  # This patch is for version 0.21.3
+  patch -p1 <../mkldnn.patch
+elif [[ $tf_id == '2' ]]; then
+  # This patch is for version 1.4+
+  patch -p1 < ../oneDNN.patch
+else
+  echo 'Invalid TensorFlow version when applying patches to the oneDNN repository'
+  exit 1
+fi
 
 cmake_options="-DCMAKE_BUILD_TYPE=release \
   -DDNNL_CPU_RUNTIME=OMP \
@@ -45,13 +56,8 @@ cxx_flags="${BASE_CFLAGS} -O3"
 blas_flags=""
 blas_libs=""
 
-if [[ $ONEDNN_BUILD = "openblas" ]]; then
-  blas_flags="-DUSE_CBLAS -I${OPENBLAS_DIR}/include"
-  blas_libs="-L${OPENBLAS_DIR}/lib -lopenblas"
-elif [[ $ONEDNN_BUILD = "armpl" ]]; then
-  blas_flags="-DUSE_CBLAS -I${ARMPL_DIR}/include"
-  blas_libs="-L${ARMPL_DIR}/lib -larmpl_lp64_mp -lgfortran -lamath -lm"
-fi
+cmake_options="$cmake_options -DCMAKE_CXX_STANDARD=14 -DCMAKE_CXX_EXTENSIONS=OFF"
+if [[ $ONEDNN_BUILD == 'acl' ]]; then cmake_options="$cmake_options -DDNNL_AARCH64_USE_ACL=ON -DDNNL_AARCH64=ON"; fi
 
 echo "CMake options: $cmake_options"
 echo "Compiler flags: $cxx_flags"

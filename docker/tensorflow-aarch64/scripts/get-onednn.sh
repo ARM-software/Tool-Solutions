@@ -20,15 +20,21 @@
 
 set -euo pipefail
 
+if [[ $ONEDNN_BUILD == 'acl' || $ONEDNN_BUILD == 'reference' ]]; then
+  exit 0
+fi
+
 readonly package=onednn
 readonly version=$ONEDNN_VERSION
 readonly tf_id=$TF_VERSION_ID
 readonly src_host=https://github.com/oneapi-src
 readonly src_repo=oneDNN
 
-mkdir -p $PROD_DIR/$package/release
-cd $PROD_DIR/$package/release
+mkdir -p $PROD_DIR/$package
+cd $PROD_DIR/$package
 echo "oneDNN VERSION" $version
 git clone ${src_host}/${src_repo}.git
 cd ${src_repo}
 git checkout $version
+cd ..
+mv oneDNN release
