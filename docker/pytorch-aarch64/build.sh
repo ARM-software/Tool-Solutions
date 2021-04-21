@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # *******************************************************************************
-# Copyright 2020 Arm Limited and affiliates.
+# Copyright 2020-2021 Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -30,7 +30,7 @@ function print_usage_and_exit {
   echo "      --jobs                   Specify number of jobs to run in parallel during the build"
   echo "      --onednn/--dnnl          Build and link to oneDNN / DNNL:"
   echo "                                 * reference    - use the C++ reference kernels throughout."
-  echo "                                 * acl          - use Arm Compute Library primitives where available (default)."
+  echo "                                 * acl          - use Arm Copmute Library primitives where available (default)."
   echo "      --build-type             Type of build to perform:"
   echo "                                 * base       - build the basic portion of the image, OS and essential packages"
   echo "                                 * libs       - build image including maths libraries and Python3."

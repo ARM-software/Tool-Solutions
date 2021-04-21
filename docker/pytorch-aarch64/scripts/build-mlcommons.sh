@@ -17,13 +17,17 @@
 # limitations under the License.
 # *******************************************************************************
 
+set -euo pipefail
+
 source python3-venv/bin/activate
 ck pull repo:ck-env
 sudo apt-get -y install protobuf-compiler libprotoc-dev
+cd $EXAMPLE_DIR/MLCommons
 git clone https://github.com/mlcommons/inference.git --recursive
 cd inference
-git checkout master
+git checkout r0.7
 cd loadgen
 CFLAGS="-std=c++14" python setup.py develop
 cd ../vision/classification_and_detection
 python setup.py develop
+

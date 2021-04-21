@@ -1,5 +1,5 @@
 # *******************************************************************************
-# Copyright 2020 Arm Limited and affiliates.
+# Copyright 2020-2021 Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -81,7 +81,7 @@ RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 1 --slave /usr
 ENV DOCKER_USER=ubuntu
 
 # Setup default user
-RUN useradd --create-home -s /bin/bash -m $DOCKER_USER && echo "$DOCKER_USER:Arm2020" | chpasswd && adduser $DOCKER_USER sudo
+RUN useradd --create-home -s /bin/bash -m $DOCKER_USER && echo "$DOCKER_USER:Portland" | chpasswd && adduser $DOCKER_USER sudo
 RUN echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
 
@@ -100,8 +100,8 @@ ENV NP_MAKE="${njobs}"
 
 # Key version numbers
 ENV PY_VERSION=3.8.5 \
-    ACL_VERSION="v20.08" \
-    OPENBLAS_VERSION=0.3.9 \
+    ACL_VERSION="v21.02" \
+    OPENBLAS_VERSION=0.3.10 \
     NINJA_VERSION=1.9.0
 
 # Package build parameters
@@ -155,7 +155,7 @@ ARG njobs
 ENV NP_MAKE="${njobs}"
 
 # Key version numbers
-ENV NUMPY_VERSION=1.19.1 \
+ENV NUMPY_VERSION=1.19.5 \
     SCIPY_VERSION=1.5.2 \
     NPY_DISTUTILS_APPEND_FLAGS=1
 
@@ -191,7 +191,7 @@ RUN $PACKAGE_DIR/build-scipy.sh
 RUN pip install --no-cache-dir hypothesis pyyaml pytest
 RUN pip install --no-cache-dir matplotlib
 RUN pip install --no-cache-dir pillow==6.1 lmdb
-RUN pip install --no-cache-dir ck absl-py pycocotools
+RUN pip install --no-cache-dir ck==1.55.5 absl-py pycocotools typing_extensions
 
 # Install OpenCV into our venv,
 # Note: Scripts are provided to build and install OpenCV from the
@@ -224,9 +224,9 @@ ENV ONEDNN_BUILD="${onednn_opt}" \
     NP_MAKE="${njobs}"
 
 # Key version numbers
-ENV TORCH_VERSION=1.6.0
-ENV ONEDNN_VERSION=v1.7
-ENV VISION_VERSION=v0.7.0
+ENV TORCH_VERSION=1.8.1
+ENV ONEDNN_VERSION="v2.2"
+ENV VISION_VERSION="v0.9.1"
 
 # Use a PACKAGE_DIR in userspace
 WORKDIR /home/$DOCKER_USER
@@ -242,14 +242,13 @@ ENV PATH="$VENV_DIR/bin:$PATH"
 # Build PyTorch
 COPY scripts/build-pytorch.sh $PACKAGE_DIR/.
 COPY patches/pytorch_onednn.patch $PACKAGE_DIR/.
-COPY patches/onednn_acl_verbose.patch $PACKAGE_DIR/.
 RUN $PACKAGE_DIR/build-pytorch.sh
-RUN pip install git+https://github.com/pytorch/vision@$VISION_VERSION
+RUN pip install torchvision==$VISION_VERSION
 
 CMD ["bash", "-l"]
 
 # ========
-# Stage 5: Install benchmarks
+# Stage 5: Install benchmarks and examples
 # ========
 FROM pytorch-libs AS pytorch
 ARG njobs
@@ -262,15 +261,25 @@ ENV VENV_DIR=/home/$DOCKER_USER/python3-venv
 COPY --chown=$DOCKER_USER:$DOCKER_USER --from=pytorch-dev $VENV_DIR /home/$DOCKER_USER/python3-venv
 ENV PATH="$VENV_DIR/bin:$PATH"
 
-# Clone PyTorch examples
-# NOTE: these examples are included as a startiing point
-RUN  git clone https://github.com/pytorch/examples.git
+# Examples, benchmarks, and associated 'helper' scripts will be installed within
+# in $EXAMPLE_DIR.
+ENV EXAMPLE_DIR=/home/$DOCKER_USER/examples
+RUN mkdir -p $EXAMPLE_DIR
+RUN mkdir -p $EXAMPLE_DIR/MLCommons
 
 # Clone and install  MLCommons (MLPerf)
-COPY scripts/build-mlcommons.sh /home/$DOCKER_USER/.
-RUN /home/$DOCKER_USER/build-mlcommons.sh
+COPY scripts/build-mlcommons.sh $PACKAGE_DIR/.
+RUN $PACKAGE_DIR/build-mlcommons.sh
 # Copy scripts to download dataset and models
-COPY scripts/download-dataset.sh /home/$DOCKER_USER/.
-COPY scripts/download-model.sh /home/$DOCKER_USER/.
+COPY scripts/download-dataset.sh $EXAMPLE_DIR/MLCommons/.
+COPY scripts/download-model.sh $EXAMPLE_DIR/MLCommons/.
+
+# Install missing Python package dependencies required to run examples
+RUN pip install --no-cache-dir requests
+RUN pip install --no-cache-dir tqdm
+
+# Copy examples
+ENV EXAMPLE_DIR=/home/$DOCKER_USER/examples
+ADD examples $EXAMPLE_DIR
 
 CMD ["bash", "-l"]

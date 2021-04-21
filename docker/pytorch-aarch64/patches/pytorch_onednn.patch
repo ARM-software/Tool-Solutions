@@ -1,5 +1,5 @@
  *******************************************************************************
- Copyright 2020 Arm Limited and affiliates.
+ Copyright 2021 Arm Limited and affiliates.
  SPDX-License-Identifier: Apache-2.0
 
  Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,47 +16,120 @@
  *******************************************************************************
 
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 50f7657440..9d673c7106 100644
+index 24d3c9b3a4..92193849f5 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -195,9 +195,10 @@ option(USE_VULKAN_SHADERC_RUNTIME "Use Vulkan Shader compilation runtime(Needs s
- option(USE_XNNPACK "Use XNNPACK" ON)
- option(USE_ZMQ "Use ZMQ" OFF)
- option(USE_ZSTD "Use ZSTD" OFF)
--cmake_dependent_option(
--  USE_MKLDNN "Use MKLDNN. Only available on x86 and x86_64." ON
--  "CPU_INTEL" OFF)
-+option(USE_MKLDNN "Use MKLDNN" OFF)
-+#cmake_dependent_option(
-+#  USE_MKLDNN "Use MKLDNN. Only available on x86 and x86_64." ON
-+#  "CPU_INTEL" OFF)
+@@ -245,6 +245,9 @@ option(USE_ZSTD "Use ZSTD" OFF)
+ cmake_dependent_option(
+   USE_MKLDNN "Use MKLDNN. Only available on x86, x86_64, and AArch64." "${CPU_INTEL}"
+   "CPU_INTEL OR CPU_AARCH64" OFF)
++cmake_dependent_option(
++  USE_MKLDNN_ACL "Use Compute Library for the Arm architecture." OFF
++  "USE_MKLDNN AND CPU_AARCH64 AND USE_MKLDNN_ACL" OFF)
  set(MKLDNN_ENABLE_CONCURRENT_EXEC ${USE_MKLDNN})
  cmake_dependent_option(
      USE_MKLDNN_CBLAS "Use CBLAS in MKLDNN" OFF
-diff --git a/cmake/Modules/FindMKLDNN.cmake b/cmake/Modules/FindMKLDNN.cmake
-index 62ec456f73..41e02505f8 100644
---- a/cmake/Modules/FindMKLDNN.cmake
-+++ b/cmake/Modules/FindMKLDNN.cmake
-@@ -42,9 +42,14 @@ ELSE(MKL_FOUND)
-   SET(MKLDNN_USE_MKL "NONE" CACHE STRING "" FORCE)
- ENDIF(MKL_FOUND)
+diff --git a/cmake/Summary.cmake b/cmake/Summary.cmake
+index eccd98b64a..e8195839f8 100644
+--- a/cmake/Summary.cmake
++++ b/cmake/Summary.cmake
+@@ -124,6 +124,7 @@ function(caffe2_print_configuration_summary)
+   message(STATUS "  USE_MKL               : ${CAFFE2_USE_MKL}")
+   message(STATUS "  USE_MKLDNN            : ${USE_MKLDNN}")
+   if(${CAFFE2_USE_MKLDNN})
++    message(STATUS "  USE_MKLDNN_ACL        : ${USE_MKLDNN_ACL}")
+     message(STATUS "  USE_MKLDNN_CBLAS      : ${USE_MKLDNN_CBLAS}")
+   endif()
+   message(STATUS "  USE_NCCL              : ${USE_NCCL}")
+diff --git a/cmake/public/ComputeLibrary.cmake b/cmake/public/ComputeLibrary.cmake
+new file mode 100644
+index 0000000000..e6c8c96bc4
+--- /dev/null
++++ b/cmake/public/ComputeLibrary.cmake
+@@ -0,0 +1,39 @@
++# Build with Compute Library backend for the Arm architecture
++# Note: Compute Library is available from: https://github.com/ARM-software/ComputeLibrary
++#   and must be built separately. The location of the Compute Library build
++#   must be set with the env var ACL_ROOT_DIR. This path will be checked later
++#   as part of FindACL.cmake in oneDNN.
++
++if(NOT CPU_AARCH64)
++    return()
++endif()
++
++if(NOT USE_MKLDNN_ACL)
++    return()
++endif()
++
++set(DNNL_AARCH64_USE_ACL ON CACHE BOOL "" FORCE)
++
++# Check the Compute Library version number.
++# Note: oneDNN / MKL-DNN v2.2 onwards will check the Compute Library version
++#   the version check here can be removed once PyTorch transitions to v2.2.
++set(ACL_MINIMUM_VERSION "21.02")
++
++file(GLOB_RECURSE ACL_VERSION_FILE $ENV{ACL_ROOT_DIR}/*/arm_compute_version.embed)
++
++if("${ACL_VERSION_FILE}" STREQUAL "")
++  message(WARNING "Build may fail: Could not determine ACL version (minimum required is ${ACL_MINIMUM_VERSION})")
++else()
++  file(READ ${ACL_VERSION_FILE} ACL_VERSION_STRING)
++  string(REGEX MATCH "v([0-9]+\\.[0-9]+)" ACL_VERSION ${ACL_VERSION_STRING})
++  set(ACL_VERSION "${CMAKE_MATCH_1}")
++
++  if(${ACL_VERSION} VERSION_EQUAL "0.0")
++    # Unreleased ACL versions come with version string "v0.0-unreleased", and may not be compatible with oneDNN.
++    # It is recommended to use the latest release of ACL.
++    message(WARNING "Build may fail: Using unreleased ACL version (minimum required is ${ACL_MINIMUM_VERSION})")
++  elseif(${ACL_VERSION} VERSION_LESS ${ACL_MINIMUM_VERSION})
++    message(FATAL_ERROR "Detected ACL version ${ACL_VERSION}, but minimum required is ${ACL_MINIMUM_VERSION}")
++  endif()
++endif()
++
+diff --git a/cmake/public/mkldnn.cmake b/cmake/public/mkldnn.cmake
+index 50e862a6b2..145ca21100 100644
+--- a/cmake/public/mkldnn.cmake
++++ b/cmake/public/mkldnn.cmake
+@@ -1,5 +1,6 @@
+ set(MKLDNN_USE_NATIVE_ARCH ${USE_NATIVE_ARCH})
  
-+# Try and make it build with ACL!
-+IF(CMAKE_SYSTEM_PROCESSOR MATCHES "^(aarch64.*|AARCH64.*|arm64.*|ARM64.*)" AND DEFINED ENV{USE_ACL})
-+  SET(DNNL_AARCH64_USE_ACL ON CACHE BOOL "" FORCE)
-+ENDIF()
-+
- SET(MKL_cmake_included TRUE)
- IF (NOT MKLDNN_CPU_RUNTIME)
--  SET(MKLDNN_CPU_RUNTIME "OMP" CACHE STRING "")
-+  SET(MKLDNN_CPU_RUNTIME "OMP" CACHE STRING "" FORCE)
- ELSEIF (MKLDNN_CPU_RUNTIME STREQUAL "TBB")
-   IF (USE_TBB)
-     MESSAGE(STATUS "MKL-DNN is using TBB")
-@@ -63,6 +68,9 @@ ELSEIF (MKLDNN_CPU_RUNTIME STREQUAL "TBB")
-   ENDIF()
- ENDIF()
- MESSAGE(STATUS "MKLDNN_CPU_RUNTIME = ${MKLDNN_CPU_RUNTIME}")
-+MESSAGE(STATUS "DNNL_AARCH64_USE_ACL = ${DNNL_AARCH64_USE_ACL}")
-+
-+
++include(${CMAKE_CURRENT_LIST_DIR}/ComputeLibrary.cmake)
+ find_package(MKLDNN QUIET)
+ 
+ if(NOT TARGET caffe2::mkldnn)
+diff --git a/setup.py b/setup.py
+index dcfcb7ee4e..1166e210d1 100644
+--- a/setup.py
++++ b/setup.py
+@@ -45,6 +45,10 @@
+ #   USE_MKLDNN=0
+ #     disables use of MKLDNN
+ #
++#   USE_MKLDNN_ACL
++#     enables use of Compute Library backend for MKLDNN on Arm;
++#     USE_MKLDNN must be explicitly enabled.
++#
+ #   MKLDNN_CPU_RUNTIME
+ #     MKL-DNN threading mode: TBB or OMP (default)
+ #
+@@ -149,6 +153,9 @@
+ #   NVTOOLSEXT_PATH (Windows only)
+ #     specify where nvtoolsext is installed
+ #
++#   ACL_ROOT_DIR
++#     specify where Compute Library is installed
++#
+ #   LIBRARY_PATH
+ #   LD_LIBRARY_PATH
+ #     we will search for libraries in these paths
+@@ -426,6 +433,10 @@ class build_ext(setuptools.command.build_ext.build_ext):
+             report('-- Not using CUDA')
+         if cmake_cache_vars['USE_MKLDNN']:
+             report('-- Using MKLDNN')
++            if cmake_cache_vars['USE_MKLDNN_ACL']:
++                report('-- Using Compute Library for the Arm architecture with MKLDNN')
++            else:
++                report('-- Not using Compute Library for the Arm architecture with MKLDNN')
+             if cmake_cache_vars['USE_MKLDNN_CBLAS']:
+                 report('-- Using CBLAS in MKLDNN')
+             else:
