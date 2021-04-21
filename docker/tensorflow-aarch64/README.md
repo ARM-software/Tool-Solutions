@@ -26,7 +26,7 @@ aarch64
 
 Use of the free of charge version of Arm Performance Libraries is subject to the terms and conditions of the applicable End User License Agreement (“EULA”).
 A copy of the EULA can be found [here](https://developer.arm.com/tools-and-software/server-and-hpc/downloads/arm-performance-libraries/eula)
-The acompanying Third Party IP statement can be found [here](https://developer.arm.com/tools-and-software/server-and-hpc/downloads/arm-performance-libraries/third-party-ip).**
+The accompanying Third Party IP statement can be found [here](https://developer.arm.com/tools-and-software/server-and-hpc/downloads/arm-performance-libraries/third-party-ip).**
 
 A user account with username 'ubuntu' is created with sudo privileges and password of 'Portland'.
 

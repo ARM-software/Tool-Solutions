@@ -13,17 +13,17 @@ aarch64
 
 ## What's in the final image?
   * OS: Ubuntu 18.04
-  * Compiler: GCC 9.2
-  * Maths libraries: [Arm Optimized Routines](https://github.com/ARM-software/optimized-routines) and [OpenBLAS](https://www.openblas.net/) 0.3.9
-  * [oneDNN](https://github.com/oneapi-src/oneDNN) 1.7.
-    - [Arm Compute library](https://developer.arm.com/ip-products/processors/machine-learning/compute-library) 20.08, providing AArch64 optimised primitives for oneDNN>
+  * Compiler: GCC 9.3
+  * Maths libraries: [Arm Optimized Routines](https://github.com/ARM-software/optimized-routines) and [OpenBLAS](https://www.openblas.net/) 0.3.10
+  * [oneDNN](https://github.com/oneapi-src/oneDNN) 2.2.
+    - [Compute Library for the Arm architecture](https://developer.arm.com/ip-products/processors/machine-learning/compute-library) 21.02, providing AArch64 optimised primitives for oneDNN.>
   * Python3 environment built from CPython 3.8 and containing:
-    - NumPy 1.19.1
+    - NumPy 1.19.5
     - SciPy 1.5.2
-    - PyTorch 1.6
-  * PyTorch examples, and some key dependencies such as Matplolib.
-  * [MLCommons (MLPerf)](https://mlperf.org/)
-A user account with username 'ubuntu' is created with sudo privaleges and password of 'Arm2020'.
+    - PyTorch 1.8.1
+  * [ML Commons :TM: (MLPerf)](https://mlperf.org/)
+  * [Example scripts](./examples/README.md) that demonstrate how to run ML models
+A user account with username 'ubuntu' is created with sudo privileges and password of 'Portland'.
 
 In addition to the Dockerfile, please look at the files in the scripts/ directory and the patches/ directory too see how the software is built.
 
@@ -54,7 +54,7 @@ Use the build.sh script to build the image. This script implements a multi-stage
   * Stage 2: 'libs' image including essential tools and libraries such as Python and OpenBLAS.
   * Stage 3: 'tools' image, including a Python3 virtual environment in userspace and a build of NumPy against OpenBLAS, as well as other Python essentials.
   * Stage 4: 'dev' image, including PyTorch with sources
-  * Stage 5: 'pytorch' image, including only the Python3 virtual environment, the PyTorch module, and the basic examples. PyTorch sources are not included in this image.
+  * Stage 5: 'pytorch' image, including only the Python3 virtual environment, the PyTorch module, and the example scripts. PyTorch sources are not included in this image.
 
 To see the command line options for build.sh use:
 
