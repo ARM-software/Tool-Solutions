@@ -32,7 +32,7 @@ Do you wish to continue building the docker image for Arm Compiler anyways? [y/N
         }
     }
     .\get_deps.PS1 -compiler $compiler
-    docker build --rm -t tensorflow-lite-micro-rtos-fvp:armclang --file .\docker\armclang.Dockerfile --build-arg "LICENSE_FILE=$env:ARMLMD_LICENSE_FILE" .
+    docker build --rm -t tensorflow-lite-micro-rtos-fvp:armclang --file .\docker\armclang.Dockerfile --build-arg "LICENSE_FILE=$env:ARMLMD_LICENSE_FILE" --build-arg "TOOL_VARIANT=$env:ARM_TOOL_VARIANT" .
 }
 elseif( $compiler -eq 'gcc' )
 {
@@ -55,6 +55,5 @@ Usage: ./docker_build.PS1 -compiler <armclang|gcc>
 "
     exit
 }
-
 
 popd

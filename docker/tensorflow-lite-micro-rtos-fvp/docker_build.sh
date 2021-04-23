@@ -1,5 +1,5 @@
 # make sure we are building from the correct working directory
-BASEDIR=$(dirname "$0")
+BASEDIR="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 pushd $BASEDIR
 
 # TODO: specify which docker image to build?
@@ -62,7 +62,6 @@ then
     # get dependencies, then build the armclang docker image 
     ./get_deps.sh -c $COMPILER
     docker build --rm -t tensorflow-lite-micro-rtos-fvp:armclang \
-        --build-arg LICENSE_FILE=${ARMLMD_LICENSE_FILE} \
         -f docker/armclang.Dockerfile .
 elif [ $COMPILER = 'gcc' ]
 then
@@ -80,6 +79,5 @@ then
 else
     usage;
 fi
-
 
 popd

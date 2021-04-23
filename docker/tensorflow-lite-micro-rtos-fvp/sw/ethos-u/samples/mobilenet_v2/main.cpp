@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Arm Limited. All rights reserved.
+ * Copyright (c) 2020-2021 Arm Limited. All rights reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -30,8 +30,9 @@
 #include "inference_process.hpp"
 
 // model and input
-#include "model.hpp"
 #include "images.hpp"
+#include "model.hpp"
+#include "labels.hpp"
 
 // System includes
 #include <stdio.h>
@@ -48,7 +49,6 @@ using namespace InferenceProcess;
 #endif
 
 __attribute__((section(".bss.NoInit"), aligned(16))) uint8_t inferenceProcessTensorArena[TENSOR_ARENA_SIZE];
-
 
 namespace {
 
@@ -94,34 +94,30 @@ xInferenceJob::xInferenceJob(const std::string &_name,
 /****************************************************************************
  * Functions
  ****************************************************************************/
-
 namespace {
 
-uint8_t inferenceResult[3];
+//think about how to do this... 
+uint8_t inferenceResult [1001]; // truck
 
 void printResults(const char* name)
 {
-    float no_person_confidence = (float)(inferenceResult[2] / 255.0f);
-    float person_confidence = (float)(inferenceResult[1] / 255.0f);
-
-    printf("\n");
-    printf("#-----------------------------\n");
-    printf("Input image name: \"%s\"\n", name);
-    printf("\tNo Person Confidence = %f | Person Confidence = %f\n",
-        (double)no_person_confidence, (double)person_confidence);
-
-    if(no_person_confidence >= person_confidence)
-    {
-        printf("\tDetected NO PERSON in the input image \n  Confidence = %f\n",
-            (double)no_person_confidence);
+    // find top 1 result
+    uint32_t topId=0;
+    uint8_t topConfidence=0.0f;
+    
+    /* Scan through the elements with compare operations. */
+    for (uint32_t i = 0; i < 1000; ++i) {
+        if (topConfidence < inferenceResult[i]) {
+            topConfidence = inferenceResult[i];
+            topId = i;
+        }
     }
-    else
-    {
-        printf("\tDetected A PERSON in the input image\n  Confidence = %f\n",
-            (double)person_confidence);
-    }
-    printf("#-----------------------------\n");
-    printf("\n");
+    
+    printf("\n\t#-------------------\n");
+    printf("\tTop prediction for %s\n", name);
+    printf("\tlabel: %s\n", labelsVec[topId]);
+    printf("\tID: %i  : Confidence: %f \n", topId, (float)(topConfidence / 255.f));
+    printf("\t#-------------------\n\n");
 }
 
 void inferenceProcessTask(void *pvParameters) {
@@ -161,8 +157,8 @@ void inferenceJobTask(void *pvParameters) {
         xInferenceJob *j = &job;
         job.name         = get_image_name(i);
         job.networkModel = networkModel;
-        job.output.push_back(DataPtr(inferenceResult, sizeof(inferenceResult)));
         job.input.push_back(DataPtr((uint8_t*)get_image_pointer(i), get_image_len(i)));
+        job.output.push_back(DataPtr(inferenceResult, sizeof(inferenceResult)));
         job.queue = senderQueue;
 
         // Send job
@@ -172,7 +168,7 @@ void inferenceJobTask(void *pvParameters) {
         // Wait for response
         xQueueReceive(senderQueue, &j, portMAX_DELAY);
         printf("Received inference job response. status=%u\n", j->status);
-        
+
         printResults(get_image_name(i));
     }
 

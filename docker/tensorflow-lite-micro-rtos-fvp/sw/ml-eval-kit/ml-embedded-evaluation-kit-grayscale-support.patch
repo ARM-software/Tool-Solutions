@@ -1,0 +1,123 @@
+diff --git a/dependencies/tensorflow b/dependencies/tensorflow
+--- a/dependencies/tensorflow
++++ b/dependencies/tensorflow
+@@ -1 +1 @@
+-Subproject commit 6cff09aee1f832d495b3cae40cab0de58155a0af
++Subproject commit 6cff09aee1f832d495b3cae40cab0de58155a0af-dirty
+diff --git a/scripts/cmake/source_gen_utils.cmake b/scripts/cmake/source_gen_utils.cmake
+index 8653016..bda9b6f 100644
+--- a/scripts/cmake/source_gen_utils.cmake
++++ b/scripts/cmake/source_gen_utils.cmake
+@@ -22,6 +22,13 @@ set(SCRIPTS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/scripts)
+ ##############################################################################
+ function(generate_images_code input_dir src_out hdr_out img_size)
+ 
++    # Assume the grayscale is defined as an optional argument beyond the named arguments
++    if(${ARGC} GREATER 4)
++        set(GRAYSCALE ${ARGV4})
++    else()
++        set(GRAYSCALE 0) 
++    endif()
++    
+     # Absolute paths for passing into python script
+     get_filename_component(input_dir_abs ${input_dir} ABSOLUTE)
+     get_filename_component(src_out_abs ${src_out} ABSOLUTE)
+@@ -34,6 +41,7 @@ function(generate_images_code input_dir src_out hdr_out img_size)
+         --source_folder_path ${src_out_abs}
+         --header_folder_path ${hdr_out_abs}
+         --image_size ${img_size} ${img_size}
++        --grayscale ${GRAYSCALE}
+         RESULT_VARIABLE return_code
+     )
+     if (NOT return_code EQUAL "0")
+diff --git a/scripts/py/gen_rgb_cpp.py b/scripts/py/gen_rgb_cpp.py
+index 1a2e09b..dcbccb2 100644
+--- a/scripts/py/gen_rgb_cpp.py
++++ b/scripts/py/gen_rgb_cpp.py
+@@ -33,6 +33,7 @@ parser.add_argument("--image_path", type=str, help="path to images folder or ima
+ parser.add_argument("--source_folder_path", type=str, help="path to source folder to be generated.")
+ parser.add_argument("--header_folder_path", type=str, help="path to header folder to be generated.")
+ parser.add_argument("--image_size", type=int, nargs=2, help="Size (width and height) of the converted images.")
++parser.add_argument("--grayscale", type=int, help="If the converted image is grayscale or not.", default=0)
+ parser.add_argument("--license_template", type=str, help="Header template file",
+                     default="header_template.txt")
+ args = parser.parse_args()
+@@ -43,7 +44,7 @@ env = Environment(loader=FileSystemLoader(os.path.join(os.path.dirname(__file__)
+ 
+ 
+ def write_hpp_file(header_file_path, cc_file_path, header_template_file, num_images, image_filenames,
+-                   image_array_names, image_size):
++                   image_array_names, image_size, nChannels):
+     print(f"++ Generating {header_file_path}")
+     header_template = env.get_template(header_template_file)
+     hdr = header_template.render(script_name=os.path.basename(__file__),
+@@ -51,7 +52,7 @@ def write_hpp_file(header_file_path, cc_file_path, header_template_file, num_ima
+                                  year=datetime.datetime.now().year)
+     env.get_template('Images.hpp.template').stream(common_template_header=hdr,
+                                                    imgs_count=num_images,
+-                                                   img_size=str(image_size[0] * image_size[1] * 3),
++                                                   img_size=str(image_size[0] * image_size[1] * nChannels),
+                                                    var_names=image_array_names) \
+         .dump(str(header_file_path))
+ 
+@@ -62,7 +63,7 @@ def write_hpp_file(header_file_path, cc_file_path, header_template_file, num_ima
+ 
+ 
+ def write_individual_img_cc_file(image_filename, cc_filename, header_template_file, original_image,
+-                                 image_size, array_name):
++                                 image_size, array_name, grayscale):
+     print(f"++ Converting {image_filename} to {os.path.basename(cc_filename)}")
+ 
+     header_template = env.get_template(header_template_file)
+@@ -77,6 +78,11 @@ def write_individual_img_cc_file(image_filename, cc_filename, header_template_fi
+     resized_image = Image.new('RGB', args.image_size, (255, 255, 255, 0))
+     resized_image.paste(original_image, (int(delta_w / 2), int(delta_h / 2)))
+ 
++    # convert to grayscale if option is enabled
++    if grayscale:
++        resized_image = resized_image.convert("L")
++
++
+     # Convert the image and write it to the cc file
+     rgb_data = np.array(resized_image, dtype=np.uint8).flatten()
+     hex_line_generator = (', '.join(map(hex, sub_arr))
+@@ -118,7 +124,7 @@ def main(args):
+         array_name = "im" + str(image_idx)
+         image_array_names.append(array_name)
+         write_individual_img_cc_file(filename, cc_filename, args.license_template,
+-                                     original_image, args.image_size, array_name)
++                                     original_image, args.image_size, array_name, args.grayscale)
+ 
+         # Increment image index
+         image_idx = image_idx + 1
+@@ -127,8 +133,11 @@ def main(args):
+     header_filepath = os.path.join(args.header_folder_path, header_filename)
+     common_cc_filename = "InputFiles.cc"
+     common_cc_filepath = os.path.join(args.source_folder_path, common_cc_filename)
++    nChannels = 3
++    if args.grayscale:
++        nChannels = 1
+     write_hpp_file(header_filepath, common_cc_filepath, args.license_template,
+-                   image_idx, image_filenames, image_array_names, args.image_size)
++                   image_idx, image_filenames, image_array_names, args.image_size, nChannels)
+ 
+ 
+ if __name__ == '__main__':
+diff --git a/source/use_case/img_class/src/MainLoop.cc b/source/use_case/img_class/src/MainLoop.cc
+index 469907c..a39b081 100644
+--- a/source/use_case/img_class/src/MainLoop.cc
++++ b/source/use_case/img_class/src/MainLoop.cc
+@@ -71,11 +71,11 @@ void main_loop(hal_platform& platform)
+ 
+     /* Loop. */
+     bool executionSuccessful = true;
+-    constexpr bool bUseMenu = NUMBER_OF_FILES > 1 ? true : false;
++    constexpr bool bUseMenu = false;
+ 
+     /* Loop. */
+     do {
+-        int menuOption = MENU_OPT_RUN_INF_NEXT;
++        int menuOption = MENU_OPT_RUN_INF_ALL;
+         if (bUseMenu) {
+             DisplayMenu();
+             menuOption = arm::app::ReadUserInputAsInt(platform);

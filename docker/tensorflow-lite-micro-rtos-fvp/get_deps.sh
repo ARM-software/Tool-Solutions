@@ -1,6 +1,8 @@
 # make sure we download into the correct working directory
-BASEDIR=$(dirname "$0")
-pushd $BASEDIR
+BASEDIR="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
+
+mkdir -p ${BASEDIR}/downloads
+pushd ${BASEDIR}/downloads
 
 # Usage: takes compiler as input
 usage() { 
@@ -22,30 +24,31 @@ while [[ "$#" -gt 0 ]]; do
 done
 
 # aria2 is faster when downloading big files.
-if [ $COMPILER = 'armclang' ]
+if [ ${COMPILER} = 'armclang' ]
 then
-    echo
-    echo "Downloading ArmCompiler 6.15 and Corstone 300 FVP..."
-    echo
+    echo ""
+    echo "Downloading ArmCompiler 6.16..."
+    echo ""
 
-    [ -f DS500-BN-00026-r5p0-17rel0.tgz ] || wget https://developer.arm.com/-/media/Files/downloads/compiler/DS500-BN-00026-r5p0-17rel0.tgz
-    [ -f FVP_Corstone_SSE-300_Ethos-U55_11.13_41.tgz ] || wget https://developer.arm.com/-/media/Arm%20Developer%20Community/Downloads/OSS/FVP/Corstone-300/FVP_Corstone_SSE-300_Ethos-U55_11.13_41.tgz
-elif [ $COMPILER = 'gcc' ]
+    [ -f DS500-BN-00026-r5p0-18rel0.tgz ] || wget https://developer.arm.com/-/media/Files/downloads/compiler/DS500-BN-00026-r5p0-18rel0.tgz
+
+elif [ ${COMPILER} = 'gcc' ]
 then
-    echo
-    echo "Downloading GNU GCC and Corstone 300 FVP..."
-    echo
+    echo ""
+    echo "Downloading GNU GCC..."
+    echo ""
 
     [ -f gcc-arm-none-eabi-10-2020-q4-major-x86_64-linux.tar.bz2 ] || wget https://developer.arm.com/-/media/Files/downloads/gnu-rm/10-2020q4/gcc-arm-none-eabi-10-2020-q4-major-x86_64-linux.tar.bz2
-    [ -f FVP_Corstone_SSE-300_Ethos-U55_11.13_41.tgz ] || wget https://developer.arm.com/-/media/Arm%20Developer%20Community/Downloads/OSS/FVP/Corstone-300/FVP_Corstone_SSE-300_Ethos-U55_11.13_41.tgz
-elif [ $COMPILER = 'fvp' ]
+
+elif [ ! ${COMPILER} = 'fvp' ]
 then
-    echo
-    echo "Downloading Corstone 300 FVP..."
-    echo
-    [ -f FVP_Corstone_SSE-300_Ethos-U55_11.13_41.tgz ] || wget https://developer.arm.com/-/media/Arm%20Developer%20Community/Downloads/OSS/FVP/Corstone-300/FVP_Corstone_SSE-300_Ethos-U55_11.13_41.tgz
-else
     usage;
 fi
+
+echo ""
+echo "Downloading Corstone 300 FVP..."
+echo ""
+[ -f FVP_Corstone_SSE-300_Ethos-U55_11.14_24.tgz ] || wget https://developer.arm.com/-/media/Arm%20Developer%20Community/Downloads/OSS/FVP/Corstone-300/MPS3/FVP_Corstone_SSE-300_Ethos-U55_11.14_24.tgz
+
 
 popd

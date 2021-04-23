@@ -1,4 +1,4 @@
-# Tensorflow Lite Micro med SSE-300 FVP (Cortex-M55 + Ethon-U55)
+# Tensorflow Lite for Microcontrollers med Corstone 300 FVP (Cortex-M55 + Ethos-U55)
 
 De här instructionerna finns att läsa på följande språk:
     
@@ -84,21 +84,16 @@ Byggskripten har testats med CentOS 7, Ubuntu 18.04, och Windows 10 PowerShell
             $> ./docker_build.sh -c gcc
             ```
 
-1. När skriptet har kört klart, kommer en docker image som heter tensorflow-lite-micro-rtos-fvp:*<armclang|gcc>* ha skapats.
+1. När skriptet har kört klart, kommer en docker image som heter ubuntu:18.04_sse300 ha skapats.
 
 1. Logga in i docker imagen med föjande kommando (om du vill använda lokala volymer för data, så kan du modifiera kommandot efter behov):
     * Windows:
-        * Om du önskar att andvända Arm Compiler
-            ```
-            $> docker run -it tensorflow-lite-micro-rtos-fvp:armclang /bin/bash
-            ```
-        * Om du önskar att andvända gcc
-            ```
-            $> docker run -it tensorflow-lite-micro-rtos-fvp:gcc /bin/bash
-            ```
+        ```
+        $> docker run -it ubuntu:18.04_sse300 /bin/bash
+        ```
     * Linux:
         ```
-        $> ./docker_run.sh -c <armclang|gcc>
+        $> ./docker_run.sh
         ```
 
 1. Kör en demoapplikation med följande kommando. Det kan ta 10-20 minuter för applikationen att köra klart. (Använd "-h"-flaggan för att se alla köralternativ):

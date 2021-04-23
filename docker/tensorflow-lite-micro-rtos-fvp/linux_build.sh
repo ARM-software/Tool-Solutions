@@ -1,6 +1,6 @@
 #!/bin/bash
 
-BASEDIR=$(dirname "$0")
+BASEDIR="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 
 # Usage: takes compiler as input
 usage() { 
@@ -9,7 +9,7 @@ usage() {
     exit 1 
 }
 
-COMPILER=armclang
+COMPILER=${COMPILER:-'armclang'}
 NPROC=`grep -c ^processor /proc/cpuinfo`
 
 while [[ "$#" -gt 0 ]]; do
@@ -29,33 +29,46 @@ then
         echo "Please set ARMLMD_LICENSE_FILE to a valid License Server before proceeding"
         exit;
     fi
-    TOOLCHAIN_FILE=../../../ethos-u/core_platform/cmake/toolchain/armclang.cmake
+    TOOLCHAIN_FILE=${BASEDIR}/dependencies/ethos-u/core_platform/cmake/toolchain/armclang.cmake
 elif [ ${COMPILER} = 'gcc' ]
 then
-    TOOLCHAIN_FILE=../../../ethos-u/core_platform/cmake/toolchain/arm-none-eabi-gcc.cmake
+    TOOLCHAIN_FILE=${BASEDIR}/dependencies/ethos-u/core_platform/cmake/toolchain/arm-none-eabi-gcc.cmake
 else
     usage;
 fi
 
 # Only clone ethos-u if it doesn't exist already
-if [ ! -d ethos-u ];
+if [ ! -d ${BASEDIR}/dependencies/ethos-u ];
 then
-    git clone -b 21.02 https://git.mlplatform.org/ml/ethos-u/ethos-u.git
-    pushd ${BASEDIR}/ethos-u
+    git clone -b 21.02 https://git.mlplatform.org/ml/ethos-u/ethos-u.git ${BASEDIR}/dependencies/ethos-u
+    pushd ${BASEDIR}/dependencies/ethos-u
     python3 fetch_externals.py -c 21.02.json fetch
     popd
 fi
 
-pushd ${BASEDIR}/sw/corstone-300-person-detection
-    mkdir -p build
-    cd build
-    cmake -DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_FILE} ..
-    make -j ${NPROC}
+# include samples (TODO:automatic detect sample names?)
+echo "Apply grayscale patch to the eval kit"
+pushd ${BASEDIR}/dependencies/ethos-u/core_platform
+patch -p1 --forward -r /dev/null < ${BASEDIR}/sw/ethos-u/ethos_u_core_platform.patch
 popd
 
-pushd ${BASEDIR}/sw/corstone-300-mobilenet-v2
-    mkdir -p build
-    cd build
-    cmake -DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_FILE} ..
-    make -j ${NPROC}
+# Copy source to ml-embedded-eval-kit add
+echo "Copying user samples to ml-embedded-evaluation-kit"
+cp -r ${BASEDIR}/sw/ethos-u/samples/* ${BASEDIR}/dependencies/ethos-u/core_platform/applications/
+
+DOCKER=""
+
+if grep "docker\|lxc" /proc/1/cgroup >/dev/null 2>&1 ;  
+then
+    DOCKER="-docker";
+fi
+
+BUILDDIR=build-${DOCKER}
+
+pushd ${BASEDIR}/dependencies/ethos-u
+    mkdir -p ${BUILDDIR}
+    cd ${BUILDDIR}
+    cmake -DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_FILE} -DCMAKE_INSTALL_PREFIX=. ../core_platform/targets/corstone-300
+    make -j8
+    make install
 popd

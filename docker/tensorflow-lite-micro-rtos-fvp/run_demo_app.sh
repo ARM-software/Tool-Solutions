@@ -1,6 +1,6 @@
 #!/bin/bash
 
-BASEDIR=$(dirname "$0")
+BASEDIR="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 
 
 # Usage: takes model as input
@@ -13,8 +13,15 @@ usage() {
     exit 1 
 }
 
+DOCKER=""
+if grep "docker\|lxc" /proc/1/cgroup >/dev/null 2>&1 ;  
+then
+    DOCKER="-docker";
+fi
+
+BUILDDIR=build-${DOCKER}
 FVP=FVP_Corstone_SSE-300_Ethos-U55
-APPLICATION=$BASEDIR/sw/corstone-300-mobilenet-v2/build/ethosu55-mobilenet-v2.elf
+APPLICATION=$BASEDIR/dependencies/ethos-u/${BUILDDIR}/bin/ethosu55-person-detection.elf
 NUM_MACS=128
 
 while [[ "$#" -gt 0 ]]; do
@@ -29,15 +36,13 @@ while [[ "$#" -gt 0 ]]; do
 done
 
 # Check if new or old version of FVP, to know which option to use..
-if command $FVP --version | grep 11.13.41 &> /dev/null
+if command $FVP --version | grep 11.12 &> /dev/null
 then
-    MAC_CONFIG="-C ethosu.num_macs=$NUM_MACS"
-else
     MAC_CONFIG="-C ethosu.config=H$NUM_MACS"
+else
+    MAC_CONFIG="-C ethosu.num_macs=$NUM_MACS"
 fi
-
-echo "Running $APPLICATION"
-
+ 
 $FVP  \
     --stat \
     -C mps3_board.visualisation.disable-visualisation=1 \
