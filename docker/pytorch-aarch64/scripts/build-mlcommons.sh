@@ -30,4 +30,3 @@ cd loadgen
 CFLAGS="-std=c++14" python setup.py develop
 cd ../vision/classification_and_detection
 python setup.py develop
-

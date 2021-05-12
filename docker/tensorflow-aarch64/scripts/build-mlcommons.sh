@@ -26,7 +26,7 @@ git clone https://github.com/mlcommons/inference.git --recursive
 cd inference
 git checkout r0.7
 # Scripts to support running of MLPerf in different modes. Refer to README.md for details.
-patch -p1 < ../optional-mlcommons-changes.patch
+patch -p1 <  $MLCOMMONS_DIR/optional-mlcommons-changes.patch
 cd loadgen
 CFLAGS="-std=c++14" python setup.py develop
 cd ../vision/classification_and_detection

@@ -1,7 +1,5 @@
-#!/usr/bin/env bash
-
 # *******************************************************************************
-# Copyright 2020-2021 Arm Limited and affiliates.
+# Copyright 2021 Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,13 +15,20 @@
 # limitations under the License.
 # *******************************************************************************
 
-
-set -euo pipefail
-
-cd /home/$DOCKER_USER
-readonly package=benchmarks
-readonly src_host=https://github.com/tensorflow
-readonly src_repo=benchmarks
-src_branch=cnn_tf_v2.1_compatible
-# Clone tensorflow and benchmarks
-git clone -b ${src_branch} ${src_host}/${src_repo}.git
+description: >-
+  SSD-ResNet34 FP32 for object detection pretrained on COCO 2017 dataset. For details on how
+  this model was trained please see
+  <https://github.com/mlcommons/training/tree/master/image_classification> for more information
+model:
+  - name: resnet34_tf.22.1.pb
+    source: https://zenodo.org/record/3345892/files/tf_ssd_resnet34_22.1.zip
+    labels: https://raw.githubusercontent.com/amikelive/coco-labels/master/coco-labels-2014_2017.txt
+    threshold: 0.5
+arguments:
+  - input: image
+    output: detection_bboxes,detection_classes,detection_scores
+image_preprocess:
+  - input_shape: [1200,1200]
+    transpose: true
+    mean: [0.485,0.456,0.406]
+    std: [0.229, 0.224, 0.22]

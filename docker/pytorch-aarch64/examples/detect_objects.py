@@ -35,18 +35,23 @@ def main():
     args = parser.parse_arguments()
 
     # Load model used for inference
-    classification_model = model.Model(args['optimized'], args['threads'])
-    if not classification_model.load(args['model']):
+    detection_model = model.Model()
+    if not detection_model.load(args['model']):
         sys.exit("Failed to set up the model")
 
+
     # Preprocess the image
-    image_to_classify = image.preprocess_image_for_classification(args['image'], args['model'])
+    image_for_detection, image_file = \
+        image.preprocess_image_for_detection(args['image'], args['model'])
 
     # Predict
-    predictions = classification_model.run(image_to_classify, args['runs'])
+    predictions = detection_model.run(image_for_detection, args['runs'])
 
     # Label predictions
-    label.classify_predictions(args['model'], predictions)
+    labels = label.detected_objects(args['model'], predictions)
+
+    # Draw bounding boxes around detected objects
+    image.postprocess_image_for_detection(args['model'], image_file, predictions, labels)
 
 if __name__ == "__main__":
     main()

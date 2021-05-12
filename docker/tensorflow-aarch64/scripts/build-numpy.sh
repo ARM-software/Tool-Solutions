@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # *******************************************************************************
-# Copyright 2020 Arm Limited and affiliates.
+# Copyright 2020-2021 Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -30,23 +30,15 @@ git clone ${src_host}/${src_repo}.git
 cd ${src_repo}
 git checkout v$version -b v$version
 
-# Arm Performance Libaries are used by default unless "openblas" is selected
-# for the oneDNN build.
-if [[ $ONEDNN_BUILD = "openblas" ]]; then
-  export BLAS_LIB='openblas'
-  export BLAS_DIR=$OPENBLAS_DIR
-  export BLAS_LDFLAGS=""
-else
-  export BLAS_LIB='armpl_lp64'
-  export BLAS_DIR=$ARMPL_DIR
-  export BLAS_LDFLAGS="-lgfortran"
-fi
+# OpenBLAS libraries are used to build numpy
+export BLAS_LIB='openblas'
+export BLAS_DIR=$OPENBLAS_DIR
+export BLAS_LDFLAGS=""
 
 envsubst < $PACKAGE_DIR/site.cfg > ./site.cfg
 rm $PACKAGE_DIR/site.cfg
 
 export CFLAGS="${BASE_CFLAGS} -O3"
-export LDFLAGS="${BASE_LDFLAGS}"
 
 python setup.py install
 

@@ -1,7 +1,5 @@
-#!/usr/bin/env bash
-
 # *******************************************************************************
-# Copyright 2020 Arm Limited and affiliates.
+# Copyright 2021 Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,31 +15,17 @@
 # limitations under the License.
 # *******************************************************************************
 
-
-set -euo pipefail
-
-cd $PACKAGE_DIR
-readonly package=python
-readonly version=$PY_VERSION
-readonly src_host=https://github.com/python
-readonly src_repo=cpython
-
-git clone ${src_host}/${src_repo}.git
-cd ${src_repo}
-git checkout v$version -b v$version
-
-export CFLAGS="${BASE_CFLAGS} -O3"
-export LDFLAGS="${BASE_LDFLAGS} -lpthread"
-readonly confflags="" #"--enable-optimizations
-
-install_dir=$PROD_DIR/$package/$version
-mkdir Build
-cd Build
-
-../configure $confflags # --prefix=$install_dir
-make -j $NP_MAKE
-make install
-
-update-alternatives --install /usr/bin/python python /usr/local/bin/python3 1
-update-alternatives --install /usr/bin/pip pip /usr/local/bin/pip3 1
-
+description: >-
+  SSD-ResNet34 FP32 for object detection pretrained on COCO 2017 dataset. For details on how
+  this model was trained please see
+  <https://github.com/mlcommons/training/tree/master/image_classification> for more information
+model:
+  - name: resnet34-ssd1200.pytorch
+    script: ssd_resnet34.py
+    source: https://zenodo.org/record/3236545/files/resnet34-ssd1200.pytorch
+    labels: https://raw.githubusercontent.com/amikelive/coco-labels/master/coco-labels-2014_2017.txt
+    threshold: 0.5
+image_preprocess:
+  - input_shape: [1,3,1200,1200]
+    mean: [0.485,0.456,0.406]
+    std: [0.229, 0.224, 0.22]

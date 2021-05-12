@@ -1,7 +1,5 @@
-#!/usr/bin/env bash
-
 # *******************************************************************************
-# Copyright 2020 Arm Limited and affiliates.
+# Copyright 2021 Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,23 +14,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *******************************************************************************
+'''
+Helper methods that are common between utility functions
+'''
 
+import yaml
 
-set -euo pipefail
+def parse_model_file(model_file):
+    '''
+    Parses YAML configuration file to dictionary
+    :param model_file: Path to model descriptor to parse
+    '''
 
-cd $PACKAGE_DIR
-readonly package=armpl
-readonly version=$ARMPL_VERSION
-readonly tar_host="https://developer.arm.com/-/media/Files/downloads/hpc/arm-performance-libraries/$(echo $version | sed "s/\./-/g")/Ubuntu16.04"
-readonly tar_name="arm-performance-libraries_${version}_Ubuntu-16.04_gcc-9.3"
+    with open(model_file) as model_file_handle:
+        model_descriptor = yaml.load(model_file_handle, Loader=yaml.FullLoader)
 
-mkdir -p $package
-cd $package
-
-# Download, untar and install ArmPL
-wget ${tar_host}/${tar_name}".tar"
-tar -xvf ${tar_name}.tar
-rm ${tar_name}.tar
-cd ${tar_name}
-
-./arm-performance-libraries_${version}_Ubuntu-16.04.sh --accept --install-to $PROD_DIR/$package
+    return model_descriptor

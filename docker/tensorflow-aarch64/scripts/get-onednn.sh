@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # *******************************************************************************
-# Copyright 2020 Arm Limited and affiliates.
+# Copyright 2021 Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,21 +20,12 @@
 
 set -euo pipefail
 
-if [[ $ONEDNN_BUILD == 'acl' || $ONEDNN_BUILD == 'reference' ]]; then
-  exit 0
-fi
+readonly package=bazel
+readonly version=$BZL_VERSION
 
-readonly package=onednn
-readonly version=$ONEDNN_VERSION
-readonly tf_id=$TF_VERSION_ID
-readonly src_host=https://github.com/oneapi-src
-readonly src_repo=oneDNN
+mkdir -p $PACKAGE_DIR/$package
+cd $PACKAGE_DIR/$package
 
-mkdir -p $PROD_DIR/$package
-cd $PROD_DIR/$package
-echo "oneDNN VERSION" $version
-git clone ${src_host}/${src_repo}.git
-cd ${src_repo}
-git checkout $version
-cd ..
-mv oneDNN release
+wget https://github.com/bazelbuild/bazel/releases/download/$version/bazel-$version-linux-arm64
+mv bazel-$version-linux-arm64 bazel
+chmod a+x bazel
