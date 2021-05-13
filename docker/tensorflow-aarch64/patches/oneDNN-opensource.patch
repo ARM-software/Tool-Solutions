@@ -1,5 +1,5 @@
  *******************************************************************************
- Patch generated from https://github.com/tensorflow/tensorflow/pull/41645 
+ Patch generated from https://github.com/tensorflow/tensorflow/pull/41645
  *******************************************************************************
 
 diff --git a/.bazelrc b/.bazelrc

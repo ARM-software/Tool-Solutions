@@ -1,7 +1,5 @@
-#!/usr/bin/env bash
-
 # *******************************************************************************
-# Copyright 2020 Arm Limited and affiliates.
+# Copyright 2021 Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,31 +14,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *******************************************************************************
+'''
+Helper methods that are common between utility functions
+'''
 
-set -euo pipefail
+import yaml
 
-cd $PACKAGE_DIR
-readonly package=python
-readonly version=$PY_VERSION
-readonly src_host=https://github.com/python
-readonly src_repo=cpython
+def parse_model_file(model_file):
+    '''
+    Parses YAML configuration file to dictionary
+    :param model_file: Path to model descriptor to parse
+    '''
 
-git clone ${src_host}/${src_repo}.git
-cd ${src_repo}
-git checkout v$version -b v$version
+    with open(model_file) as model_file_handle:
+        model_descriptor = yaml.load(model_file_handle, Loader=yaml.FullLoader)
 
-export CFLAGS="${BASE_CFLAGS} -O3"
-export LDFLAGS="${BASE_LDFLAGS} -lpthread"
-readonly confflags="" #"--enable-optimizations
-
-install_dir=$PROD_DIR/$package/$version
-mkdir Build
-cd Build
-
-../configure $confflags # --prefix=$install_dir
-make -j $NP_MAKE
-make install
-
-update-alternatives --install /usr/bin/python python /usr/local/bin/python3 1
-update-alternatives --install /usr/bin/pip pip /usr/local/bin/pip3 1
-
+    return model_descriptor

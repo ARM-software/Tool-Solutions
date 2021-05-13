@@ -55,10 +55,10 @@ cd $PACKAGE_DIR/$src_repo
 
 MAX_JOBS=${NP_MAKE:-$((num_cpus / 2))} OpenBLAS_HOME=$OPENBLAS_DIR/lib CXX_FLAGS="$BASE_CFLAGS -O3" LDFLAGS=$BASE_LDFLAGS USE_OPENMP=1 USE_LAPACK=1 USE_CUDA=0 USE_FBGEMM=0 USE_DISTRIBUTED=0 python setup.py install
 
-# Check the installation was sucessful
+# Check the installation was sucessfull
 cd $HOME
 
-# Check the wheel has installed correctly.
+# Check the wheel has installed ocrrectly.
 # Note: only checks the major.minor version numbers, and not the point release
 check_version=$(python -c 'import torch; print(torch.__version__)' | cut -f1,2 -d'.')
 required_version=$(echo $version | cut -f1,2 -d'.')

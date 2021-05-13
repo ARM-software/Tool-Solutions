@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # *******************************************************************************
-# Copyright 2020 Arm Limited and affiliates.
+# Copyright 2020-2021 Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -32,7 +32,6 @@ cd $PACKAGE_DIR/$package
 mkdir -p build
 cd build
 export CFLAGS="${BASE_CFLAGS} -O3"
-export LDFLAGS="${BASE_LDFLAGS}"
 
 py_inc=/usr/local/include/python${PY_VERSION:0:3}m
 

@@ -1,9 +1,8 @@
 
 ================================================================================
-TensorFlow for AArch64
+PyTorch for AArch64
 Built using:
  https://github.com/ARM-software/Tool-Solutions
 For more details, see:
- https://github.com/ARM-software/Tool-Solutions/blob/master/docker/tensorflow-aarch64/README.md
+ https://github.com/ARM-software/Tool-Solutions/blob/master/docker/pytorch-aarch64/README.md
 ================================================================================
-

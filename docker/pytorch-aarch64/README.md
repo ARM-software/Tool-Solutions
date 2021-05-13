@@ -6,26 +6,30 @@ For more information, see this Arm Developer Community [blog post](https://commu
 Before using this project run the uname command to confirm the machine is aarch64. Other architectures will not work.
 
 ```
-> uname -m
+uname -m
 aarch64
 ```
 
+Pre-built images are available for download from [Arm's Software Developers DockerHub](https://hub.docker.com/r/armswdev/pytorch-arm-neoverse-n1).
+
 
 ## What's in the final image?
-  * OS: Ubuntu 18.04
+
+  * OS: Ubuntu 20.04
   * Compiler: GCC 9.3
   * Maths libraries: [Arm Optimized Routines](https://github.com/ARM-software/optimized-routines) and [OpenBLAS](https://www.openblas.net/) 0.3.10
   * [oneDNN](https://github.com/oneapi-src/oneDNN) 2.2.
     - [Compute Library for the Arm architecture](https://developer.arm.com/ip-products/processors/machine-learning/compute-library) 21.02, providing AArch64 optimised primitives for oneDNN.>
-  * Python3 environment built from CPython 3.8 and containing:
+  * Python3 environment containing:
     - NumPy 1.19.5
     - SciPy 1.5.2
     - PyTorch 1.8.1
-  * [ML Commons :TM: (MLPerf)](https://mlperf.org/)
+  * [ML Commons :tm: (MLPerf)](https://mlperf.org/)
   * [Example scripts](./examples/README.md) that demonstrate how to run ML models
+
 A user account with username 'ubuntu' is created with sudo privileges and password of 'Portland'.
 
-In addition to the Dockerfile, please look at the files in the scripts/ directory and the patches/ directory too see how the software is built.
+In addition to the Dockerfile, please refer to the files in the `scripts/` and `patches/` directories to see how the software is built.
 
 
 ## Installing Docker
@@ -33,15 +37,15 @@ The [Docker Engine](https://docs.docker.com/get-docker/) is used. Instructions o
 
 Confirm Docker is working:
 
-``` > docker run hello-world ```
+``` docker run hello-world ```
 
 If there are any problems make sure the service is running:
 
-``` > systemctl start docker ```
+``` systemctl start docker ```
 
 and make sure you are in the Docker group:
 
-```  > usermod -aG docker $USER ```
+```  usermod -aG docker $USER ```
 
 These steps may require root privlages and usermod requires logout and login to take effect.
 
@@ -58,7 +62,7 @@ Use the build.sh script to build the image. This script implements a multi-stage
 
 To see the command line options for build.sh use:
 
-``` > ./build.sh -h ```
+```./build.sh -h ```
 
 The image to build is selected with the '--build-type' flag. The options are base, libs, tools, dev, pytorch, or full. Selecting full builds all of the images. The default value is 'pytorch'
 
@@ -66,15 +70,15 @@ The image to build is selected with the '--build-type' flag. The options are bas
 For example:
   * To build the final pytorch image:
 
-    ``` > ./build.sh --build-type pytorch ```
+    ```./build.sh --build-type pytorch ```
 
   * For a full build:
 
-    ``` > ./build.sh --build-type full ```
+    ```./build.sh --build-type full ```
 
   * For a base build:
 
-    ```  > ./build.sh --build-type base ```
+    ```./build.sh --build-type base ```
 
     This will generate an image named 'DockerTest/ubuntu/base'.
 
@@ -83,25 +87,12 @@ PyTorch can optionally be built with oneDNN, using the '--onednn' or '--dnnl' fl
 ## Running the Docker image
 To run the finished image:
 
-  ``` > docker run -it --init <image name> ```
+```docker run -it --init <image name> ```
 
 where <image name> is the name of the finished image, for example 'pytorch'.
 
-  ``` > docker run -it --init pytorch```
+```docker run -it --init pytorch```
 
 To display available images use the Docker command:
 
-  ``` > docker images ```
-
-## Running MLCommons benchmark
-Please refer to (https://github.com/mlperf/inference/tree/master/vision/classification_and_detection) for instructions to download datasets and models. Examples scripts are provided in the $HOME directory of the final image.
-
-To run resnet34 on coco dataset for object detection:
-
-  ``` > export DATA_DIR=${HOME}/CK-TOOLS/dataset-coco-2017-val ```
-
-  ``` > export MODEL_DIR=$(pwd) ```
-
-  ``` > ./run_local.sh pytorch ssd-resnet34 cpu ```
-
-Use MKLDNN_VERBOSE=1 to verify the build uses oneDNN when running the benchmarks.
+```docker images ```

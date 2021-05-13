@@ -20,7 +20,8 @@
 # ========
 ARG njobs
 
-FROM ubuntu:18.04 AS pytorch-base
+FROM ubuntu:20.04 AS pytorch-base
+ARG PY_VERSION=3.8
 
 RUN if ! [ "$(arch)" = "aarch64" ] ; then exit 1; fi
 
@@ -35,6 +36,7 @@ RUN apt-get -y update && \
       cmake \
       curl \
       g++-9 \
+      gcc-7 \
       gcc-9 \
       gettext-base \
       gfortran-9 \
@@ -60,6 +62,11 @@ RUN apt-get -y update && \
       moreutils \
       openjdk-8-jdk \
       openssl \
+      python${PY_VERSION} \
+      python${PY_VERSION}-dev \
+      python${PY_VERSION}-distutils \
+      python${PY_VERSION}-venv \
+      python3-pip \
       python-openssl \
       rsync \
       scons \
@@ -75,7 +82,9 @@ RUN apt-get -y update && \
 
 # Make gcc 9 the default
 RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 1 --slave /usr/bin/g++ g++ /usr/bin/g++-9 && \
-    update-alternatives --install /usr/bin/gfortran gfortran /usr/bin/gfortran-9 1
+    update-alternatives --install /usr/bin/gfortran gfortran /usr/bin/gfortran-9 1 && \
+    update-alternatives --install /usr/bin/python python /usr/bin/python3 1 && \
+    update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 1
 
 # DOCKER_USER for the Docker user
 ENV DOCKER_USER=ubuntu
@@ -88,7 +97,8 @@ RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selectio
 # Import profile for bash
 COPY bash_profile /home/$DOCKER_USER/.bash_profile
 RUN chown $DOCKER_USER:$DOCKER_USER /home/$DOCKER_USER/.bash_profile
-
+COPY patches/welcome.txt /home/$DOCKER_USER/.
+RUN echo '[ ! -z "$TERM" -a -r /home/$DOCKER_USER/welcome.txt ] && cat /home/$DOCKER_USER/welcome.txt' >> /etc/bash.bashrc
 
 # ========
 # Stage 2: augment the base image with some essential libs
@@ -99,14 +109,13 @@ ARG njobs
 ENV NP_MAKE="${njobs}"
 
 # Key version numbers
-ENV PY_VERSION=3.8.5 \
-    ACL_VERSION="v21.02" \
+ENV ACL_VERSION="v21.02" \
     OPENBLAS_VERSION=0.3.10 \
     NINJA_VERSION=1.9.0
 
 # Package build parameters
 ENV PROD_DIR=/opt \
-    PACKAGE_DIR=/packages
+    PACKAGE_DIR=packages
 
 # Make directories to hold package source & build directories (PACKAGE_DIR)
 # and install build directories (PROD_DIR).
@@ -127,9 +136,6 @@ ENV CC=gcc \
     BASE_CFLAGS="-mcpu=native" \
     BASE_LDFLAGS="-L$PROD_DIR/arm_opt_routines/lib -lmathlib -lm" \
     LD_LIBRARY_PATH="$PROD_DIR/arm_opt_routines/lib"
-
-COPY scripts/build-cpython.sh $PACKAGE_DIR/.
-RUN $PACKAGE_DIR/build-cpython.sh
 
 # Build OpenBLAS from source
 COPY scripts/build-openblas.sh $PACKAGE_DIR/.
@@ -210,7 +216,7 @@ RUN pip install --no-cache-dir scikit-build
 # it is installed as a dependency for an earlier package and needs
 # to be removed in order for the OpenCV build to complete.
 RUN pip uninstall enum34 -y
-RUN pip install --no-cache-dir --no-binary :all: opencv-python-headless
+RUN pip install --no-cache-dir opencv-python-headless
 
 CMD ["bash", "-l"]
 
@@ -261,18 +267,19 @@ ENV VENV_DIR=/home/$DOCKER_USER/python3-venv
 COPY --chown=$DOCKER_USER:$DOCKER_USER --from=pytorch-dev $VENV_DIR /home/$DOCKER_USER/python3-venv
 ENV PATH="$VENV_DIR/bin:$PATH"
 
-# Examples, benchmarks, and associated 'helper' scripts will be installed within
+# Examples, benchmarks, and associated 'helper' scripts will be installed
 # in $EXAMPLE_DIR.
 ENV EXAMPLE_DIR=/home/$DOCKER_USER/examples
+ENV MLCOMMONS_DIR=$EXAMPLE_DIR/MLCommons
 RUN mkdir -p $EXAMPLE_DIR
-RUN mkdir -p $EXAMPLE_DIR/MLCommons
+RUN mkdir -p $MLCOMMONS_DIR
 
 # Clone and install  MLCommons (MLPerf)
-COPY scripts/build-mlcommons.sh $PACKAGE_DIR/.
-RUN $PACKAGE_DIR/build-mlcommons.sh
+COPY scripts/build-mlcommons.sh $MLCOMMONS_DIR/.
+RUN $MLCOMMONS_DIR/build-mlcommons.sh
 # Copy scripts to download dataset and models
-COPY scripts/download-dataset.sh $EXAMPLE_DIR/MLCommons/.
-COPY scripts/download-model.sh $EXAMPLE_DIR/MLCommons/.
+COPY scripts/download-dataset.sh $MLCOMMONS_DIR/.
+COPY scripts/download-model.sh $MLCOMMONS_DIR/.
 
 # Install missing Python package dependencies required to run examples
 RUN pip install --no-cache-dir requests

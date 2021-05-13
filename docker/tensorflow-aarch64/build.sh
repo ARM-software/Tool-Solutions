@@ -31,12 +31,7 @@ function print_usage_and_exit {
   echo "      --bazel_memory_limit     Set a memory limit for Bazel build."
   echo "      --onednn/--dnnl          Build and link to oneDNN / DNNL:"
   echo "                                 * reference    - use the C++ reference kernels throughout."
-  echo "                                 * openblas     - use OpenBLAS for BLAS calls."
-  echo "                                 * armpl        - use Arm Performance Libraries for BLAS calls (default)."
   echo "                                 * acl          - use Compute Library."
-  echo "      --tf_version             TensorFlow version:"
-  echo "                                 * 1            - TensorFlow v1.15.2 build."
-  echo "                                 * 2            - TensorFlow 2.3.0 build (default)."
   echo "      --build-type             Type of build to perform:"
   echo "                                 * base         - build the basic portion of the image, OS and essential packages."
   echo "                                 * libs         - build image including maths libraries and Python3."
@@ -84,8 +79,6 @@ extra_args=""
 nproc_build=
 bazel_mem=
 onednn=
-onednn_blas="armpl"
-tf_version=2
 target="native"
 clean_build=
 
@@ -165,27 +158,16 @@ do
           onednn="reference"
           shift
           ;;
-        openblas )
-          onednn="openblas"
-          shift
-          ;;
-        armpl )
-          onednn="armpl"
-          shift
-          ;;
         acl )
           onednn="acl"
           shift
           ;;
         * )
-          onednn=$onednn_blas
+          echo "Defaulting to oneDNN-ACL build."
+          echo "Note: support for oneDNN builds with OpenBLAS or ArmPL is now deprecated."
+          onednn="acl"
           ;;
       esac
-      ;;
-
-    --tf_version )
-      tf_version=$2
-      shift
       ;;
 
     --clean )
@@ -199,7 +181,7 @@ do
   esac
   shift
 done
-exec > >(tee -i build-tfv$tf_version$onednn.log)
+exec > >(tee -i build-tfv2$onednn.log)
 exec 2>&1
 
 if [[ $nproc_build ]]; then
@@ -223,52 +205,37 @@ if [[ $clean_build ]]; then
 fi
 
 # Set TensorFlow, bazel and oneDNN version
-if [[ $tf_version == "1" ]]; then
-   # TF1 dependency versions
-   version="v1.15.2"
-   bazel_version="0.29.1"
-   onednn_version="v0.21.3"
-   extra_args="$extra_args --build-arg tf_id=$tf_version \
-      --build-arg tf_version=$version \
-      --build-arg bazel_version=$bazel_version \
-      --build-arg onednn_version=$onednn_version"
-elif [[ $tf_version == "2" ]]; then
-   # TF2 dependency versions
-   version="v2.3.0"
-   bazel_version="3.4.0"
-   onednn_version="v2.2"
-   extra_args="$extra_args --build-arg tf_id=$tf_version \
-      --build-arg tf_version=$version \
-      --build-arg bazel_version=$bazel_version \
-      --build-arg onednn_version=$onednn_version"
-else
-   echo 'TensorFlow version set to invalid value.'
-   exit 1
-fi
+version="v2.3.0"
+bazel_version="3.4.0"
+onednn_version="v2.2"
+extra_args="$extra_args \
+    --build-arg tf_version=$version \
+    --build-arg bazel_version=$bazel_version \
+    --build-arg onednn_version=$onednn_version"
 
 extra_args="$extra_args --build-arg cpu=$target"
 
 if [[ $build_base_image ]]; then
   # Stage 1: Base image, Ubuntu with core packages and GCC9
-  docker build $extra_args --target tensorflow-base -t tensorflow-base-v$tf_version:latest .
+  docker build $extra_args --target tensorflow-base -t tensorflow-base-v2:latest .
 fi
 
 if [[ $build_libs_image ]]; then
   # Stage 2: Libs image, essential maths libs and Python built and installed
-  docker build $extra_args --target tensorflow-libs -t tensorflow-libs-v$tf_version:latest .
+  docker build $extra_args --target tensorflow-libs -t tensorflow-libs-v2:latest .
 fi
 
 if [[ $build_tools_image ]]; then
   # Stage 3: Tools image, Python3 venv added with additional Python essentials
-  docker build $extra_args --target tensorflow-tools -t tensorflow-tools-v$tf_version:latest .
+  docker build $extra_args --target tensorflow-tools -t tensorflow-tools-v2:latest .
 fi
 
 if [[ $build_dev_image ]]; then
   # Stage 4: Adds bazel and TensorFlow builds with sources and creates a whl.
-  docker build $extra_args --target tensorflow-dev -t tensorflow-dev-v$tf_version$onednn:latest .
+  docker build $extra_args --target tensorflow-dev -t tensorflow-dev-v2$onednn:latest .
 fi
 
 if [[ $build_tensorflow_image ]]; then
   # Stage 5: Clone benchmarks with TensorFlow installed.
-  docker build $extra_args --target tensorflow -t tensorflow-v$tf_version$onednn:latest .
+  docker build $extra_args --target tensorflow -t tensorflow-v2$onednn:latest .
 fi

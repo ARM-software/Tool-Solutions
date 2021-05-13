@@ -1,5 +1,5 @@
 # *******************************************************************************
-# Copyright 2021  Arm Limited and affiliates.
+# Copyright 2021 Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,7 +22,8 @@
 ARG njobs
 ARG bazel_mem
 
-FROM ubuntu:18.04 AS tensorflow-base
+FROM ubuntu:20.04 AS tensorflow-base
+ARG PY_VERSION=3.8
 
 RUN if ! [ "$(arch)" = "aarch64" ] ; then exit 1; fi
 
@@ -62,6 +63,11 @@ RUN apt-get -y update && \
       moreutils \
       openjdk-8-jdk \
       openssl \
+      python${PY_VERSION} \
+      python${PY_VERSION}-dev \
+      python${PY_VERSION}-distutils \
+      python${PY_VERSION}-venv \
+      python3-pip \
       python-openssl \
       rsync \
       scons \
@@ -75,9 +81,11 @@ RUN apt-get -y update && \
       zip \
       zlib1g-dev
 
-# Make gcc 9 the default
+# Make gcc 9 and python 3(.8) the default
 RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 1 --slave /usr/bin/g++ g++ /usr/bin/g++-9 && \
-    update-alternatives --install /usr/bin/gfortran gfortran /usr/bin/gfortran-9 1
+    update-alternatives --install /usr/bin/gfortran gfortran /usr/bin/gfortran-9 1 && \
+    update-alternatives --install /usr/bin/python python /usr/bin/python3 1 && \
+    update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 1
 
 # DOCKER_USER for the Docker user
 ENV DOCKER_USER=ubuntu
@@ -101,23 +109,19 @@ ARG njobs
 ARG onednn_opt
 ARG onednn_version
 ARG cpu
-ARG tf_id
 
 ENV NP_MAKE="${njobs}" \
     ONEDNN_BUILD="${onednn_opt}" \
     ONEDNN_VERSION="${onednn_version}" \
-    CPU="${cpu}" \
-    TF_VERSION_ID="${tf_id}"
+    CPU="${cpu}"
 
 # Key version numbers
-ENV PY_VERSION=3.7.0 \
-    ACL_VERSION="v21.02" \
-    ARMPL_VERSION=20.2.1 \
+ENV ACL_VERSION="v21.02" \
     OPENBLAS_VERSION=0.3.9
 
 # Package build parameters
 ENV PROD_DIR=/opt \
-    PACKAGE_DIR=/packages
+    PACKAGE_DIR=packages
 
 # Make directories to hold package source & build directories (PACKAGE_DIR)
 # and install build directories (PROD_DIR).
@@ -128,20 +132,6 @@ RUN mkdir -p $PACKAGE_DIR && \
 ENV CC=gcc \
     CXX=g++ \
     BASE_CFLAGS="-mcpu=${CPU}  -moutline-atomics"
-
-# Install Arm Performance Libraries
-COPY scripts/build-armpl.sh $PACKAGE_DIR/.
-RUN $PACKAGE_DIR/build-armpl.sh
-ENV ARMPL_DIR=$PROD_DIR/armpl/armpl_${ARMPL_VERSION}_gcc-9.3
-
-# Add libamath into the default LDFLAGS and set the
-# initial LD_LIBRARY_PATH to inlcude ArmPL.
-ENV BASE_LDFLAGS="-L$ARMPL_DIR/lib -lamath -lm" \
-    LD_LIBRARY_PATH=$ARMPL_DIR/lib
-
-# Build python from source
-COPY scripts/build-cpython.sh $PACKAGE_DIR/.
-RUN $PACKAGE_DIR/build-cpython.sh
 
 # Build OpenBLAS from source
 COPY scripts/build-openblas.sh $PACKAGE_DIR/.
@@ -155,20 +145,13 @@ RUN $PACKAGE_DIR/build-acl.sh
 ENV ACL_ROOT_DIR=$PROD_DIR/acl/ComputeLibrary
 ENV LD_LIBRARY_PATH=$ACL_ROOT_DIR/build:$LD_LIBRARY_PATH
 
-# Build oneDNN from source
+# Build oneDNN from source (Compute Library/reference)
 COPY scripts/build-onednn.sh $PACKAGE_DIR/.
-# Patch for oneDNN (MKL-DNN), v0.21.3
-COPY patches/mkldnn.patch $PACKAGE_DIR/mkldnn.patch
 # Patch for oneDNN  v1.x
 COPY patches/oneDNN.patch $PACKAGE_DIR/oneDNN.patch
-# Build oneDNN ACL/reference
 RUN $PACKAGE_DIR/build-onednn.sh
 ENV ONEDNN_DIR=$PROD_DIR/onednn/release
 ENV LD_LIBRARY_PATH=$ONEDNN_DIR/lib:$LD_LIBRARY_PATH
-# Get oneDNN sources for ArmPL and OpenBLAS builds
-# Built as part of the bazel build step in TensorFlow
-COPY scripts/get-onednn.sh $PACKAGE_DIR/.
-RUN $PACKAGE_DIR/get-onednn.sh
 
 # ========
 # Stage 3: install essential python dependencies into a venv
@@ -178,7 +161,7 @@ ARG njobs
 ENV NP_MAKE="${njobs}"
 
 # Key version numbers
-ENV NUMPY_VERSION=1.17.1 \
+ENV NUMPY_VERSION=1.18.4 \
     SCIPY_VERSION=1.4.1 \
     NPY_DISTUTILS_APPEND_FLAGS=1
 
@@ -233,7 +216,7 @@ RUN pip install --no-cache-dir ck==1.55.5 absl-py pycocotools pillow
 #RUN $PACKAGE_DIR/build-opencv.sh
 # --
 # 2 - install opencv-python-headless
-RUN pip install --no-cache-dir --no-binary :all: opencv-python-headless==4.4.0.46
+RUN pip install --no-cache-dir opencv-python-headless==4.4.0.46
 
 CMD ["bash", "-l"]
 
@@ -245,7 +228,6 @@ ARG njobs
 ARG bazel_mem
 ARG onednn_opt
 ARG tf_version
-ARG tf_id
 ARG bazel_version
 
 ENV NP_MAKE="${njobs}" \
@@ -254,8 +236,7 @@ ENV NP_MAKE="${njobs}" \
 
 # Key version numbers
 ENV BZL_VERSION="${bazel_version}" \
-    TF_VERSION="${tf_version}" \
-    TF_VERSION_ID="${tf_id}"
+    TF_VERSION="${tf_version}"
 
 # Use a PACKAGE_DIR in userspace
 WORKDIR /home/$DOCKER_USER
@@ -268,22 +249,18 @@ ENV VENV_DIR=/home/$DOCKER_USER/python3-venv
 COPY --chown=$DOCKER_USER:$DOCKER_USER --from=tensorflow-tools $VENV_DIR /home/$DOCKER_USER/python3-venv
 ENV PATH="$VENV_DIR/bin:$PATH"
 
-# Build Bazel
-COPY scripts/build-bazel.sh $PACKAGE_DIR/.
-RUN $PACKAGE_DIR/build-bazel.sh
-ENV PATH=$PACKAGE_DIR/bazel/output:$PATH
+# Get Bazel binary for AArch64
+COPY scripts/get-bazel.sh $PACKAGE_DIR/.
+RUN $PACKAGE_DIR/get-bazel.sh
+ENV PATH=$PACKAGE_DIR/bazel:$PATH
 
 # Build TensorFlow
 COPY scripts/build-tensorflow.sh $PACKAGE_DIR/.
-COPY patches/tf_dnnl_decoupling.patch $PACKAGE_DIR/tf_dnnl_decoupling.patch
 COPY patches/tf2_onednn_decoupling.patch $PACKAGE_DIR/tf2_onednn_decoupling.patch
-COPY patches/tensorflow.patch $PACKAGE_DIR/tensorflow.patch
 COPY patches/tensorflow2.patch $PACKAGE_DIR/tensorflow2.patch
 # Patches to resolve intel binary blob dependencies for TensorFlow 2.x - oneDNN 1.x builds
 COPY patches/oneDNN-opensource.patch $PACKAGE_DIR/oneDNN-opensource.patch
 # Patches to support different flavours of oneDNN
-COPY patches/tf2-armpl.patch $PACKAGE_DIR/tf2-armpl.patch
-COPY patches/tf2-openblas.patch $PACKAGE_DIR/tf2-openblas.patch
 COPY patches/tf2-acl.patch $PACKAGE_DIR/tf2-acl.patch
 COPY patches/tf2-onednn-explicit.patch $PACKAGE_DIR/tf2-onednn-explicit.patch
 RUN $PACKAGE_DIR/build-tensorflow.sh
@@ -303,24 +280,24 @@ ENV VENV_DIR=/home/$DOCKER_USER/python3-venv
 COPY --chown=$DOCKER_USER:$DOCKER_USER --from=tensorflow-dev $VENV_DIR /home/$DOCKER_USER/python3-venv
 ENV PATH="$VENV_DIR/bin:$PATH"
 
-# Clone Tensorflow benchmarks
-COPY scripts/build-benchmarks.sh /home/$DOCKER_USER/.
-RUN /home/$DOCKER_USER/build-benchmarks.sh
-
-# Examples, benchmarks, and associated 'helper' scripts will be installed within
+# Examples, benchmarks, and associated 'helper' scripts will be installed
 # in $EXAMPLE_DIR.
 ENV EXAMPLE_DIR=/home/$DOCKER_USER/examples
+ENV MLCOMMONS_DIR=$EXAMPLE_DIR/MLCommons
 RUN mkdir -p $EXAMPLE_DIR
-RUN mkdir -p $EXAMPLE_DIR/MLCommons
+RUN mkdir -p $MLCOMMONS_DIR
+
+# Clone TensorFlow benchmarks into EXAMPLE_DIR.
+COPY scripts/build-benchmarks.sh $EXAMPLE_DIR/.
+RUN $EXAMPLE_DIR/build-benchmarks.sh
 
 # Clone and install MLCommons (MLPerf)
-COPY patches/optional-mlcommons-changes.patch /home/$DOCKER_USER/optional-mlcommons-changes.patch
-# Clone and install  MLCommons (MLPerf)
-COPY scripts/build-mlcommons.sh /home/$DOCKER_USER/.
-RUN /home/$DOCKER_USER/build-mlcommons.sh
+COPY patches/optional-mlcommons-changes.patch $MLCOMMONS_DIR/optional-mlcommons-changes.patch
+COPY scripts/build-mlcommons.sh $MLCOMMONS_DIR/.
+RUN $MLCOMMONS_DIR/build-mlcommons.sh
 # Copy scripts to download dataset and models
-COPY scripts/download-dataset.sh $EXAMPLE_DIR/MLCommons/.
-COPY scripts/download-model.sh $EXAMPLE_DIR/MLCommons/.
+COPY scripts/download-dataset.sh $MLCOMMONS_DIR/.
+COPY scripts/download-model.sh $MLCOMMONS_DIR/.
 
 # Install missing Python package dependencies required to run examples
 RUN pip install --no-cache-dir pyyaml
