@@ -15,3 +15,6 @@ tar -zxf ssd_mobilenet_v1_coco_2018_01_28.tar.gz
 cp ssd_mobilenet_v1_coco_2018_01_28/frozen_inference_graph.pb  ssd_mobilenet_v1_coco_2018_01_28.pb
 # ssd-resnet34
 wget https://zenodo.org/record/3246481/files/ssd_resnet34_mAP_20.2.pb
+wget https://zenodo.org/record/3345892/files/tf_ssd_resnet34_22.1.zip
+unzip tf_ssd_resnet34_22.1.zip
+cp tf_ssd_resnet34_22.1/resnet34_tf.22.1.pb .

@@ -19,7 +19,7 @@ Pre-built images are available for download from [Arm's Software Developers Dock
   * [oneDNN](https://github.com/oneapi-src/oneDNN) 2.2. Previously known as (MKL-DNN/DNNL).
   * Python3 environment containing:
     - NumPy 1.18.4
-    - TensorFlow 2.3.0. (_Note: support for TensorFlow 1.x is now deprecated_).
+    - TensorFlow 2.3.0. (_Note: support for TensorFlow 1.x is now deprecated. Please use the [tensorflow-v1-aarch64)](https://github.com/ARM-software/Tool-Solutions/releases/tag/tensorflow-v1-aarch64) tag_).
     - SciPy 1.4.1
   * TensorFlow Benchmarks
   * [MLCommons :tm: (MLPerf)](https://mlperf.org/) benchmarks with an optional patch to support benchmarking for TF oneDNN builds.

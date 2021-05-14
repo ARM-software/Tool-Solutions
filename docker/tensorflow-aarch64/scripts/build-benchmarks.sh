@@ -20,7 +20,7 @@
 
 set -euo pipefail
 
-cd /home/$DOCKER_USER
+cd $EXAMPLE_DIR
 readonly package=benchmarks
 readonly src_host=https://github.com/tensorflow
 readonly src_repo=benchmarks

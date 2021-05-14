@@ -22,6 +22,8 @@ set -euo pipefail
 source python3-venv/bin/activate
 ck pull repo:ck-env
 sudo apt-get -y install protobuf-compiler libprotoc-dev
+
+cd $MLCOMMONS_DIR
 git clone https://github.com/mlcommons/inference.git --recursive
 cd inference
 git checkout r0.7

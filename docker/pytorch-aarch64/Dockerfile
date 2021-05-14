@@ -277,6 +277,7 @@ RUN mkdir -p $MLCOMMONS_DIR
 # Clone and install  MLCommons (MLPerf)
 COPY scripts/build-mlcommons.sh $MLCOMMONS_DIR/.
 RUN $MLCOMMONS_DIR/build-mlcommons.sh
+RUN rm -f $MLCOMMONS_DIR/build-mlcommons.sh
 # Copy scripts to download dataset and models
 COPY scripts/download-dataset.sh $MLCOMMONS_DIR/.
 COPY scripts/download-model.sh $MLCOMMONS_DIR/.
