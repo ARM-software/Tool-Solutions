@@ -290,11 +290,13 @@ RUN mkdir -p $MLCOMMONS_DIR
 # Clone TensorFlow benchmarks into EXAMPLE_DIR.
 COPY scripts/build-benchmarks.sh $EXAMPLE_DIR/.
 RUN $EXAMPLE_DIR/build-benchmarks.sh
+RUN rm -f $EXAMPLE_DIR/build-benchmarks.sh
 
 # Clone and install MLCommons (MLPerf)
 COPY patches/optional-mlcommons-changes.patch $MLCOMMONS_DIR/optional-mlcommons-changes.patch
 COPY scripts/build-mlcommons.sh $MLCOMMONS_DIR/.
 RUN $MLCOMMONS_DIR/build-mlcommons.sh
+RUN rm -f $MLCOMMONS_DIR/build-mlcommons.sh
 # Copy scripts to download dataset and models
 COPY scripts/download-dataset.sh $MLCOMMONS_DIR/.
 COPY scripts/download-model.sh $MLCOMMONS_DIR/.

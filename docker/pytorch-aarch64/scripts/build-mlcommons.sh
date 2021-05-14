@@ -30,3 +30,7 @@ cd loadgen
 CFLAGS="-std=c++14" python setup.py develop
 cd ../vision/classification_and_detection
 python setup.py develop
+
+# view method generates a runtime error where tensor is not
+# contigious in memory. Using reshape avoids this.
+sed -ie "s/\.view/\.reshape/g" python/models/ssd_r34.py
