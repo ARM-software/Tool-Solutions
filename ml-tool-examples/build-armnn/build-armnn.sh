@@ -140,15 +140,14 @@ fi
 echo "Target architecture: ${Arch}"
 echo
 
-
 # Boost
 
 mkdir -p pkg/boost 
 echo "building boost"
 pushd pkg/boost
 
-wget https://dl.bintray.com/boostorg/release/1.64.0/source/boost_1_64_0.tar.bz2
-tar xf boost_1_64_0.tar.bz2
+wget https://boostorg.jfrog.io/artifactory/main/release/1.64.0/source/boost_1_64_0.tar.gz
+tar xf boost_1_64_0.tar.gz
 cd boost_1_64_0
 ./bootstrap.sh --prefix=$BUILDDIR/armnn-devenv/pkg/boost/install
 
@@ -160,6 +159,37 @@ if [ $CrossCompile = "True" ]; then
 fi
 
 ./b2 install link=static cxxflags=-fPIC $Toolset --with-filesystem --with-test --with-log --with-program_options --prefix=$BUILDDIR/armnn-devenv/pkg/boost/install
+
+popd
+
+# Flatbuffers 
+mkdir -p pkg/flatbuffers 
+echo "building flatbuffers"
+
+pushd pkg/flatbuffers
+
+wget -O flatbuffers-1.12.0.zip https://github.com/google/flatbuffers/archive/v1.12.0.zip
+unzip -d . flatbuffers-1.12.0.zip
+cd flatbuffers-1.12.0
+mkdir build
+cd build
+cmake .. -DCMAKE_CXX_FLAGS=-fPIC
+make -j $NPROC
+sudo make install
+
+popd
+
+# SWIG
+mkdir -p pkg/swig
+echo "building swig"
+pushd pkg/swig
+ 
+wget http://prdownloads.sourceforge.net/swig/swig-4.0.2.tar.gz
+tar xzvf swig-4.0.2.tar.gz
+cd swig-4.0.2/
+./configure 
+make -j $NPROC
+sudo make install
 
 popd
 
@@ -194,14 +224,9 @@ popd
 echo "building TensorFlow and Google protobuf"
 pushd pkg
 mkdir install
-# updated version of protobuf
-# https://github.com/ARM-software/armnn/releases/tag/v20.11
 git clone --branch v3.12.0 https://github.com/google/protobuf.git
-git clone https://github.com/tensorflow/tensorflow.git
+git clone --branch v2.3.1 https://github.com/tensorflow/tensorflow.git
 cd tensorflow
-# need specific version of tensorflow
-# https://github.com/ARM-software/armnn/issues/267
-git checkout a0043f9262dc1b0e7dc4bdf3a7f0ef0bebc4891e
 cd ../
 
 # build Protobuf
@@ -273,7 +298,6 @@ fi
 
 popd
 
-# Arm NN
 pushd armnn
 mkdir build ; cd build
 
@@ -291,8 +315,12 @@ $OnnxOptions \
 -DARMCOMPUTE_ROOT=$BUILDDIR/armnn-devenv/ComputeLibrary/ \
 -DARMCOMPUTE_BUILD_DIR=$BUILDDIR/armnn-devenv/ComputeLibrary/build \
 -DBOOST_ROOT=$BUILDDIR/armnn-devenv/pkg/boost/install/ \
+-DTF=$BUILDDIR/armnn-devenv/pkg/tensorflow/tensorflow/lite \
 -DTF_GENERATED_SOURCES=$BUILDDIR/armnn-devenv/pkg/tensorflow-protobuf/  \
--DBUILD_TF_PARSER=1 \
+-DBUILD_TF_LITE_PARSER=1 \
+-DTF_LITE_GENERATED_PATH=$BUILDDIR/armnn-devenv/pkg/tensorflow/tensorflow/lite/schema \
+-DTF_LITE_SCHEMA_INCLUDE_PATH=$BUILDDIR/armnn-devenv/pkg/tensorflow/tensorflow/lite/schema \
+-DBUILD_ARMNN_TFLITE_DELEGATE=0 \
 -DPROTOBUF_ROOT=$BUILDDIR/armnn-devenv/pkg/install   \
 -DPROTOBUF_INCLUDE_DIRS=$BUILDDIR/armnn-devenv/pkg/install/include   \
 -DPROFILING_BACKEND_STREAMLINE=1 \
@@ -310,8 +338,21 @@ if [ $Arch = "armv7l" ] || [ $MEM -lt 2000000 ]; then
 else
     make -j $NPROC
 fi
-popd
 
+cd ..
 echo "done, everything in $BUILDDIR/armnn-devenv"
+
+export SWIG_EXECUTABLE=/usr/local/bin/swig
+export ARMNN_INCLUDE=$BUILDDIR/armnn-devenv/armnn/include/
+export ARMNN_LIB=$BUILDDIR/armnn-devenv/armnn/build/
+
+cd python/pyarmnn
+
+python3 swig_generate.py -v
+python3 setup.py build_ext --inplace
+python3 setup.py sdist
+python3 setup.py bdist
+
+popd
 cd ..
 
