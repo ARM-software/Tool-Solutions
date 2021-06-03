@@ -72,7 +72,7 @@ index 350fd4a374..2e21481dfc 100644
 +
 +cc_library(
 +    name = "mkldnn_libs",
-+    srcs = glob(["lib/*"]),
++    srcs = glob(["lib/*", "lib64/*"]),
 +    visibility = ["//visibility:public"],
  )
  
