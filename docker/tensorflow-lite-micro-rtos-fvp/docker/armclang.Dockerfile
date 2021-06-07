@@ -1,103 +1,90 @@
 #----------------------------------------------------------------------------
-# Step 0: Create base imagewith some basice configuration
+# Step 1. Install newer CMake, 3.15.6 or newer is required to build the Ethos-U55 driver
 #----------------------------------------------------------------------------
-FROM multiarch/ubuntu-core:amd64-bionic as base_image
+FROM multiarch/ubuntu-core:amd64-bionic as cmake_install
+RUN apt-get -y update \
+  && apt-get -y install wget \
+  && rm -rf /var/lib/apt/lists/* \
+  && wget https://github.com/Kitware/CMake/releases/download/v3.20.1/cmake-3.20.1-Linux-x86_64.sh \
+  && mkdir -p /usr/local/cmake \
+  && bash cmake-3.20.1-Linux-x86_64.sh --skip-license --exclude-subdir --prefix=/usr/local/cmake \
+  && rm cmake-3.20.1-Linux-x86_64.sh
+
+#----------------------------------------------------------------------------
+# Step 1: Install Arm Compiler 6
+#----------------------------------------------------------------------------
+FROM multiarch/ubuntu-core:amd64-bionic as armclang_install
+ADD downloads/DS500-BN-00026-r5p0-18rel0.tgz /tmp/AC6
+RUN /tmp/AC6/install_x86_64.sh --i-agree-to-the-contained-eula --no-interactive -d /usr/local/AC6 \
+  && rm -rf /tmp/AC6
+
+#----------------------------------------------------------------------------
+# Step 2: Install Arm Corstone-300 FVP with Ethos-U55 into system directory 
+#----------------------------------------------------------------------------
+FROM multiarch/ubuntu-core:amd64-bionic as fvp_install
+ADD downloads/FVP_Corstone_SSE-300_Ethos-U55_11.13_41.tgz /tmp/FVP
+RUN /tmp/FVP/FVP_Corstone_SSE-300_Ethos-U55.sh --i-agree-to-the-contained-eula -d /usr/local/FVP_Corstone_SSE-300_Ethos-U55 --no-interactive \
+  && rm -rf /tmp/FVP
+
+#----------------------------------------------------------------------------
+# Step 3: Install vela
+#----------------------------------------------------------------------------
+FROM multiarch/ubuntu-core:amd64-bionic as vela_install
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PATH=/usr/local/.vela/bin:$PATH
+COPY requirements.txt requirements.txt
+
+RUN apt-get -y update \
+  && apt-get -y install python3 python3-venv python3-dev python3-pip \
+  && rm -rf /var/lib/apt/lists/* \
+  && python3 -m venv /usr/local/.vela \
+  && pip install --upgrade pip setuptools \
+  && pip install -r requirements.txt
+
+#----------------------------------------------------------------------------
+# Step 4: Install dependenices to the armclang image
+#----------------------------------------------------------------------------
+FROM multiarch/ubuntu-core:amd64-bionic as armclang_main
 
 SHELL ["/bin/bash", "-c"]
 LABEL maintainer="tobias.andersson@arm.com"
 
 RUN echo "root:docker" | chpasswd
 
-#----------------------------------------------------------------------------
-# Step 1: Use Gosu to create user dynamically
-#----------------------------------------------------------------------------
-FROM base_image as user_configuration
-
 RUN apt-get -y update \
-  && apt-get -y --no-install-recommends install \
-    ca-certificates \
-    curl \
-    gpg gpg-agent dirmngr 
-
-RUN gpg --keyserver ha.pool.sks-keyservers.net --recv-keys B42F6819007F00F88E364FD4036A9C25BF357DD4
-RUN curl -o /usr/local/bin/gosu -SL "https://github.com/tianon/gosu/releases/download/1.4/gosu-$(dpkg --print-architecture)" \
-    && curl -o /usr/local/bin/gosu.asc -SL "https://github.com/tianon/gosu/releases/download/1.4/gosu-$(dpkg --print-architecture).asc" \
-    && gpg --verify /usr/local/bin/gosu.asc \
-    && rm /usr/local/bin/gosu.asc \
-    && chmod +x /usr/local/bin/gosu
-
-
-#----------------------------------------------------------------------------
-# Install newer CMake, 3.15.6 or newer is required to build the Ethos-U55 driver
-#----------------------------------------------------------------------------
-FROM base_image as cmake_install
-RUN apt-get -y update \
-  && apt-get -y install wget
-RUN wget https://github.com/Kitware/CMake/releases/download/v3.19.1/cmake-3.19.1-Linux-x86_64.sh \
-  && mkdir -p /usr/local/cmake \
-  && bash cmake-3.19.1-Linux-x86_64.sh --skip-license --exclude-subdir --prefix=/usr/local/cmake
-
-#----------------------------------------------------------------------------
-# Step 3: Install Arm Compiler 6
-#----------------------------------------------------------------------------
-FROM base_image as armclang_install
-ADD downloads/DS500-BN-00026-r5p0-18rel0.tgz /tmp
-RUN /tmp/install_x86_64.sh --i-agree-to-the-contained-eula --no-interactive -d /usr/local/AC6
-
-#----------------------------------------------------------------------------
-# Step 4: Install Arm Corstone-300 FVP with Ethos-U55 into system directory 
-#----------------------------------------------------------------------------
-FROM base_image as fvp_install
-ADD downloads/FVP_Corstone_SSE-300_Ethos-U55_11.14_24.tgz /tmp
-RUN /tmp/FVP_Corstone_SSE-300_Ethos-U55.sh --i-agree-to-the-contained-eula -d /usr/local/FVP_Corstone_SSE-300_Ethos-U55 --no-interactive 
-
-#----------------------------------------------------------------------------
-# Step 5: Install vela
-#----------------------------------------------------------------------------
-FROM base_image as vela_install
-ENV DEBIAN_FRONTEND=noninteractive
-RUN apt-get -y update \
-  && apt-get -y install python3 python3-venv python3-dev python3-pip 
-RUN python3 -m venv /usr/local/.vela
-ENV PATH=/usr/local/.vela/bin:$PATH
-RUN pip install --upgrade pip setuptools \
-  && pip install ethos-u-vela pillow pygame PySimpleGui requests 
-
-
-#----------------------------------------------------------------------------
-# Step 6: Copy dependenices to the armclang image
-#----------------------------------------------------------------------------
-FROM base_image as armclang_main
-RUN apt-get -y update \
-  && apt-get -y install sudo git vim wget make telnet curl zip xterm bc build-essential libsndfile1 software-properties-common \
+  && apt-get -y install \
+  	sudo nano git git-lfs vim wget \
+  	make telnet curl zip xterm \
+  	bc build-essential libsndfile1 \
+  	software-properties-common gosu \
   && DEBIAN_FRONTEND=noninteractive apt-get -y install python3 python3-venv python3-tk \
   && rm -rf /var/lib/apt/lists/*
 
 #---------------------------------------------------------------------------
-# COPY over user configuration from user_configuration image
+# COPY entrypoint script
 #---------------------------------------------------------------------------
-COPY --from=user_configuration /usr/local/bin/gosu /usr/local/bin/gosu
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh
+RUN sed -i 's/\r//' /usr/local/bin/entrypoint.sh \
+  && chmod +x /usr/local/bin/entrypoint.sh
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 
 #---------------------------------------------------------------------------
-# COPY over cmake from cmake_install image
+# COPY over cmake from cmake image
 #---------------------------------------------------------------------------
 COPY --from=cmake_install /usr/local/cmake /usr/local/cmake
 
 #---------------------------------------------------------------------------
-# COPY over cmake from vela_install image
+# COPY over cmake from vela install image
 #---------------------------------------------------------------------------
 COPY --from=vela_install /usr/local/.vela /usr/local/.vela
 
 #----------------------------------------------------------------------------
-# Copy ArmClang installation from armclang_install image
+# Copy ArmClang installation from armclang install image
 #----------------------------------------------------------------------------
 COPY --from=armclang_install /usr/local/AC6 /usr/local/AC6
 
 #----------------------------------------------------------------------------
-# Copy FVP installation from fvp_install image
+# Copy FVP installation from fvp install image
 #----------------------------------------------------------------------------
 COPY --from=fvp_install /usr/local/FVP_Corstone_SSE-300_Ethos-U55 /usr/local/FVP_Corstone_SSE-300_Ethos-U55
 
@@ -122,23 +109,32 @@ RUN mkdir -p -m777 /work
 WORKDIR /work
 
 #----------------------------------------------------------------------------
+# copy sw
+#----------------------------------------------------------------------------
+COPY sw /work/sw
+
+#----------------------------------------------------------------------------
 # Add build Script
 #----------------------------------------------------------------------------
-COPY linux_build.sh .
-RUN  sed -i 's/\r//' linux_build.sh \
-  && chmod +x linux_build.sh
+COPY linux_build_rtos_apps.sh .
+RUN  sed -i 's/\r//' linux_build_rtos_apps.sh \
+  && chmod +x linux_build_rtos_apps.sh
 
-COPY linux_build_eval_kit.sh .
-RUN  sed -i 's/\r//' linux_build_eval_kit.sh \
-  && chmod +x linux_build_eval_kit.sh
+COPY download_use_case_model.sh .
+RUN  sed -i 's/\r//' download_use_case_model.sh \
+  && chmod +x download_use_case_model.sh
 
-COPY run_fvp_eval.py .
-RUN sed -i 's/\r//' run_fvp_eval.py \
-  && chmod +x run_fvp_eval.py
+COPY linux_build_eval_kit_apps.sh .
+RUN  sed -i 's/\r//' linux_build_eval_kit_apps.sh \
+  && chmod +x linux_build_eval_kit_apps.sh
 
 #----------------------------------------------------------------------------
 # Add run script
 #----------------------------------------------------------------------------
+COPY data_injection_demo.py .
+RUN sed -i 's/\r//' data_injection_demo.py \
+  && chmod +x data_injection_demo.py
+  
 COPY run_demo_app.sh .
 RUN sed -i 's/\r//' run_demo_app.sh \
   && chmod +x run_demo_app.sh

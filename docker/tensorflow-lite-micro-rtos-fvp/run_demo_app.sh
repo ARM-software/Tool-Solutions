@@ -19,9 +19,9 @@ then
     DOCKER="-docker";
 fi
 
-BUILDDIR=build-${DOCKER}
+BUILDDIR=build${DOCKER}
 FVP=FVP_Corstone_SSE-300_Ethos-U55
-APPLICATION=$BASEDIR/dependencies/ethos-u/${BUILDDIR}/bin/ethosu55-person-detection.elf
+APPLICATION=$BASEDIR/dependencies/ethos-u/${BUILDDIR}/bin/freertos_person_detection.elf
 NUM_MACS=128
 
 while [[ "$#" -gt 0 ]]; do

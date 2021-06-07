@@ -1,6 +1,6 @@
 # Hello TFLM demo
 
-## Intoduction
+## Introduction
 
 This demo shows how to runs a simple network.
 
@@ -8,7 +8,13 @@ The network has no practical use, other than to show the flow, and structure of 
 
 ## Table of Contents
 
-[[_TOC_]]
+* [Introduction](#introduction)
+* [Resources](#resources)
+    * [Model](#model)
+    * [Images](#images)
+* [Build](#build)
+* [Run application with FVP](#run-application-with-fvp)
+    * [Inference results](#inference-results)
 
 ## Build
 
@@ -24,9 +30,9 @@ $> cmake ..
 $> make
 ```
 
-The result will be an application called `ethosu55-hello-tflm.elf`.
+The result will be an application called `freertos_hello_tflm.elf`.
 
-## Run apllication with Fixed Virtual Platform (FVP)
+## Run application with FVP
 
 You can run the demo with FVP_Corstone_SSE-300_Ethos-U55.
 
@@ -46,12 +52,14 @@ FVP_Corstone_SSE-300_Ethos-U55  \
     -C cpu0.CFGITCMSZ=14 \
     -C cpu0.CFGDTCMSZ=14 \
     -C ethosu.num_macs=128 \
-    -a ethosu55-hello-tflm.elf
+    -a freertos_hello_tflm.elf
 ```
 
-You will see some info messages from the npu, along with the result from the inferece.
+### Inference results
 
-The application will look something like this in a successful run:
+You will see some info messages from the npu, and job scheduling with the status OK.
+
+The application output will look something like this in a successful run:
 
 ```
 telnetterminal0: Listening for serial connection on port 5000

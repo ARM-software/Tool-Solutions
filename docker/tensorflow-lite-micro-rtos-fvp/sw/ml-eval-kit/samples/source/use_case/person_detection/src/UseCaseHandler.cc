@@ -22,6 +22,8 @@
 #include "UseCaseCommonUtils.hpp"
 #include "hal.h"
 
+#include <inttypes.h>
+
 using ImgClassClassifier = arm::app::Classifier;
 
 namespace arm {
@@ -35,13 +37,13 @@ namespace app {
     * @param[out]      inputTensor   Pointer to the input tensor to be populated.
     * @return          true if tensor is loaded, false otherwise.
     **/
-    static bool _LoadImageIntoTensor(uint32_t imIdx, TfLiteTensor* inputTensor);
+    static bool LoadImageIntoTensor(uint32_t imIdx, TfLiteTensor* inputTensor);
 
     /**
      * @brief           Helper function to increment current image index.
      * @param[in,out]   ctx   Pointer to the application context object.
      **/
-    static void _IncrementAppCtxImageIdx(ApplicationContext& ctx);
+    static void IncrementAppCtxImageIdx(ApplicationContext& ctx);
 
     /**
      * @brief           Helper function to set the image index.
@@ -49,7 +51,7 @@ namespace app {
      * @param[in]       idx   Value to be set.
      * @return          true if index is set, false otherwise.
      **/
-    static bool _SetAppCtxImageIdx(ApplicationContext& ctx, uint32_t idx);
+    static bool SetAppCtxImageIdx(ApplicationContext& ctx, uint32_t idx);
 
     /**
      * @brief           Presents inference results using the data presentation
@@ -60,8 +62,8 @@ namespace app {
      *                              otherwise, this can be passed in as 0.
      * @return          true if successful, false otherwise.
      **/
-    static bool _PresentInferenceResult(hal_platform& platform,
-                                        const std::vector<ClassificationResult>& results);
+    static bool PresentInferenceResult(hal_platform& platform,
+                                       const std::vector<ClassificationResult>& results);
 
     /**
      * @brief           Helper function to convert a UINT8 image to INT8 format.
@@ -74,6 +76,7 @@ namespace app {
     bool ClassifyImageHandler(ApplicationContext& ctx, uint32_t imgIndex, bool runAll)
     {
         auto& platform = ctx.Get<hal_platform&>("platform");
+        auto& profiler = ctx.Get<Profiler&>("profiler");
 
         constexpr uint32_t dataPsnImgDownscaleFactor = 2;
         constexpr uint32_t dataPsnImgStartX = 10;
@@ -88,7 +91,7 @@ namespace app {
 
         /* If the request has a valid size, set the image index. */
         if (imgIndex < NUMBER_OF_FILES) {
-            if (!_SetAppCtxImageIdx(ctx, imgIndex)) {
+            if (!SetAppCtxImageIdx(ctx, imgIndex)) {
                 return false;
             }
         }
@@ -123,7 +126,7 @@ namespace app {
             std::string str_inf{"Running inference... "};
 
             /* Copy over the data. */
-            _LoadImageIntoTensor(ctx.Get<uint32_t>("imgIndex"), inputTensor);
+            LoadImageIntoTensor(ctx.Get<uint32_t>("imgIndex"), inputTensor);
 
             /* Display this image on the LCD. */
             platform.data_psn->present_data_image(
@@ -141,10 +144,12 @@ namespace app {
                                     dataPsnTxtInfStartX, dataPsnTxtInfStartY, 0);
 
             /* Run inference over this image. */
-            info("Running inference on image %u => %s\n", ctx.Get<uint32_t>("imgIndex"),
+            info("Running inference on image %" PRIu32 " => %s\n", ctx.Get<uint32_t>("imgIndex"),
                 get_filename(ctx.Get<uint32_t>("imgIndex")));
 
-            RunInference(platform, model);
+            if (!RunInference(model, profiler)) {
+                return false;
+            }
 
             /* Erase. */
             str_inf = std::string(str_inf.size(), ' ');
@@ -163,34 +168,36 @@ namespace app {
             arm::app::DumpTensor(outputTensor);
 #endif /* VERIFY_TEST_OUTPUT */
 
-            if (!_PresentInferenceResult(platform, results)) {
+            if (!PresentInferenceResult(platform, results)) {
                 return false;
             }
 
-            _IncrementAppCtxImageIdx(ctx);
+            profiler.PrintProfilingResult();
+
+            IncrementAppCtxImageIdx(ctx);
 
         } while (runAll && ctx.Get<uint32_t>("imgIndex") != curImIdx);
 
         return true;
     }
 
-    static bool _LoadImageIntoTensor(const uint32_t imIdx, TfLiteTensor* inputTensor)
+    static bool LoadImageIntoTensor(uint32_t imIdx, TfLiteTensor* inputTensor)
     {
         const size_t copySz = inputTensor->bytes < IMAGE_DATA_SIZE ?
                               inputTensor->bytes : IMAGE_DATA_SIZE;
         const uint8_t* imgSrc = get_img_array(imIdx);
         if (nullptr == imgSrc) {
-            printf_err("Failed to get image index %u (max: %u)\n", imIdx,
+            printf_err("Failed to get image index %" PRIu32 " (max: %u)\n", imIdx,
                        NUMBER_OF_FILES - 1);
             return false;
         }
 
         memcpy(inputTensor->data.data, imgSrc, copySz);
-        debug("Image %u loaded\n", imIdx);
+        debug("Image %" PRIu32 " loaded\n", imIdx);
         return true;
     }
 
-    static void _IncrementAppCtxImageIdx(ApplicationContext& ctx)
+    static void IncrementAppCtxImageIdx(ApplicationContext& ctx)
     {
         auto curImIdx = ctx.Get<uint32_t>("imgIndex");
 
@@ -202,10 +209,10 @@ namespace app {
         ctx.Set<uint32_t>("imgIndex", curImIdx);
     }
 
-    static bool _SetAppCtxImageIdx(ApplicationContext& ctx, const uint32_t idx)
+    static bool SetAppCtxImageIdx(ApplicationContext& ctx, uint32_t idx)
     {
         if (idx >= NUMBER_OF_FILES) {
-            printf_err("Invalid idx %u (expected less than %u)\n",
+            printf_err("Invalid idx %" PRIu32 " (expected less than %u)\n",
                        idx, NUMBER_OF_FILES);
             return false;
         }
@@ -213,8 +220,8 @@ namespace app {
         return true;
     }
 
-    static bool _PresentInferenceResult(hal_platform& platform,
-                                        const std::vector<ClassificationResult>& results)
+    static bool PresentInferenceResult(hal_platform& platform,
+                                       const std::vector<ClassificationResult>& results)
     {
         constexpr uint32_t dataPsnTxtStartX1 = 150;
         constexpr uint32_t dataPsnTxtStartY1 = 30;
@@ -230,6 +237,8 @@ namespace app {
         uint32_t rowIdx1 = dataPsnTxtStartY1 + 2 * dataPsnTxtYIncr;
         uint32_t rowIdx2 = dataPsnTxtStartY2;
 
+        info("Final results:\n");
+        info("Total number of inferences: 1\n");
         for (uint32_t i = 0; i < results.size(); ++i) {
             std::string resultStr =
                 std::to_string(i + 1) + ") " +
@@ -247,8 +256,9 @@ namespace app {
                                         dataPsnTxtStartX2, rowIdx2, 0);
             rowIdx2 += dataPsnTxtYIncr;
 
-            info("%u) %u (%f) -> %s\n", i, results[i].m_labelIdx,
-                 results[i].m_normalisedVal, results[i].m_label.c_str());
+            info("%" PRIu32 ") %" PRIu32 " (%f) -> %s\n", i,
+                results[i].m_labelIdx, results[i].m_normalisedVal,
+                results[i].m_label.c_str());
         }
 
         return true;

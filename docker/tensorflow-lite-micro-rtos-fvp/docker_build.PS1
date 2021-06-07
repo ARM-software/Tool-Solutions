@@ -31,12 +31,12 @@ Do you wish to continue building the docker image for Arm Compiler anyways? [y/N
             exit;
         }
     }
-    .\get_deps.PS1 -compiler $compiler
-    docker build --rm -t tensorflow-lite-micro-rtos-fvp:armclang --file .\docker\armclang.Dockerfile --build-arg "LICENSE_FILE=$env:ARMLMD_LICENSE_FILE" --build-arg "TOOL_VARIANT=$env:ARM_TOOL_VARIANT" .
+    .\scripts\get_deps.PS1 -compiler $compiler
+    docker build --rm -t tensorflow-lite-micro-rtos-fvp:armclang --file .\docker\armclang.Dockerfile .
 }
 elseif( $compiler -eq 'gcc' )
 {
-    .\get_deps.PS1 -compiler $compiler
+    .\scripts\get_deps.PS1 -compiler $compiler
     docker build --rm -t tensorflow-lite-micro-rtos-fvp:gcc --file .\docker\gcc.Dockerfile .
 }
 elseif( $compiler -eq 'fvp' )
@@ -44,7 +44,7 @@ elseif( $compiler -eq 'fvp' )
     # Build docker image for fvp.
     # This image is a minimal evaluation image, that can be used for
     # running built applicaitons with FVP. 
-    .\get_deps.PS1 -compiler $compiler
+    .\scripts\get_deps.PS1 -compiler $compiler
     docker build --rm -t tensorflow-lite-micro-rtos-fvp:fvp --file .\docker\fvp.Dockerfile .
 }
 else

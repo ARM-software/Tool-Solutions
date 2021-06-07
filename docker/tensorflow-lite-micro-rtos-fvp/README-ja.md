@@ -44,9 +44,9 @@ These instructions are available in the following languages
 
 最新のArm Compiler(armclang)とCorstone SSE-300 FVPをインストールします。Docker Containerをビルドする場合は、Dockerfile中でこれらのリンクを自動でダウンロード・インストールします。Linuxコンソールで環境構築する場合は、こちらのリンクからファイルをダウンロードし、インストールしてください。
 
-[DS500-DN-00026-r5p0-17rel0.tgz](https://developer.arm.com/-/media/Files/downloads/compiler/DS500-BN-00026-r5p0-17rel0.tgz?revision=2fde4f61-f000-4f22-a182-0223543dc4e8?product=Download%20Arm%20Compiler,64-bit,,Linux,6.15) (ArmCompiler 6.15 for Linux64)
+* [DS500-BN-00026-r5p0-18rel0.tgz](https://developer.arm.com/-/media/Files/downloads/compiler/DS500-BN-00026-r5p0-18rel0.tgz) (ArmCompiler 6.16 for Linux64)
 
-[FVP_Corstone_SSE-300_Ethos-U55_11.13_41.tgz](https://developer.arm.com/-/media/Arm%20Developer%20Community/Downloads/OSS/FVP/Corstone-300/FVP_Corstone_SSE-300_Ethos-U55_11.13_41.tgz) (Corstore SSE-300 FVP with Ethos U55 support for Linux64)
+* [FVP_Corstone_SSE-300_Ethos-U55_11.13_41.tgz](https://developer.arm.com/-/media/Arm%20Developer%20Community/Downloads/OSS/FVP/Corstone-300/FVP_Corstone_SSE-300_Ethos-U55_11.13_41.tgz) (Corstore SSE-300 FVP with Ethos U55 support for Linux64)
 
 
 ## 依存性
@@ -97,7 +97,11 @@ These instructions are available in the following languages
 1. Docker containerを起動してbashを起動します(ご自分の環境に合わせて実行して下さい):
     * Windows:
         ```
-        $> docker run -it -e LOCAL_USER_ID=0 -v $PWD\sw:/work/sw -v $PWD\dependencies:/work/dependencies -e DISPLAY=localhost:1 --privileged --rm tensorflow-lite-micro-rtos-fvp:<compiler> /bin/bash
+        $> docker run -it -e LOCAL_USER_ID=0 -v $PWD\sw:/work/sw `
+        -v $PWD\dependencies:/work/dependencies -e DISPLAY=localhost:1 `
+        -e ARMLMD_LICENSE_FILE=$env:ARMLMD_LICENSE_FILE `
+        -e ARM_TOOL_VARIANT=$env:ARM_TOOL_VARIANT `
+        --privileged --rm tensorflow-lite-micro-rtos-fvp:<compiler> /bin/bash
         ```
     * Linux;
         ```
@@ -145,7 +149,7 @@ These instructions are available in the following languages
 
 2. Linux向けセットアップスクリプトを走らせます:
     ```
-    $> ./linux_build.sh
+    $> ./linux_build_apps.sh
     ```
 
 
@@ -158,18 +162,18 @@ These instructions are available in the following languages
 
 サンプルアプリケーションのビルドに使用できるスクリプトは2つあります。 
 
-* `run_fvp_eval.py`は、person_detectionまたはimg_classサンプルアプリケーションをダウンロード、ビルド、実行します。 これを使用して、データをアプリケーションに動的に挿入する方法の例を示します。
+* `data_injection_demo.py`は、person_detectionまたはimg_classサンプルアプリケーションをダウンロード、ビルド、実行します。 これを使用して、データをアプリケーションに動的に挿入する方法の例を示します。
     ```
-    $> ./run_fvp_eval.py
+    $> ./data_injection_demo.py
     ``` 
     * コマンドライン引数 `--image_path = <path/to/image/or/folder>`を使用して、アプリケーションに挿入する画像を選択できます 
     * コマンドライン引数 `--use_camera=True`を使用して、USBカメラを使用して入力データを取得することもできます（各推論には少なくとも10秒かかるため、スムーズなリアルタイムビデオは期待しないでください） 
     * ビデオストリームでリアルタイムスタイルの推論を実行するには、ビデオフレームを静止画像に変換し、そのフレームを入力として使用するのが最善の方法です。 
 
-* `linux_build_eval_kit.sh`はキットをダウンロードしてビルドします。サンプルを手動で実行する場合、またはMPS3ボードで実行するために独自のサンプルイメージをアプリケーションにベイクする場合は、これを使用します。 ビルドスクリプトを実行する前に、イメージを `sw/ml-eval-kit/samples/resources/<use-case>/samples/`フォルダーにコピーします。
+* `linux_build_eval_kit_apps.sh`はキットをダウンロードしてビルドします。サンプルを手動で実行する場合、またはMPS3ボードで実行するために独自のサンプルイメージをアプリケーションにベイクする場合は、これを使用します。 ビルドスクリプトを実行する前に、イメージを `sw/ml-eval-kit/samples/resources/<use-case>/samples/`フォルダーにコピーします。
     1. ビルド
         ```
-        $> ./linux_build_eval_kit.sh
+        $> ./linux_build_eval_kit_apps.sh
         ```
 
     1. サンプルを実行します
@@ -200,7 +204,7 @@ These instructions are available in the following languages
 
 1. ビルド
     ```
-    $> ./linux_build.sh -c <compiler>
+    $> ./linux_build_apps.sh -c <compiler>
     ```
 
 1. デモアプリを走らせます。完了するまでに10〜20分かかる場合があります。 (オプション "-h" でオプションメニューを全表示します):

@@ -24,7 +24,7 @@ endif()
 
 FILE(GLOB CPP_SOURCES *.cpp)
 
-ethosu_add_executable(ethosu55-mobilenet-v2 PRIVATE
+ethosu_add_executable(freertos_mobilenet_v2 PRIVATE
     SOURCES 
         ${CPP_SOURCES}
     LIBRARIES 
@@ -35,8 +35,8 @@ ethosu_add_executable(ethosu55-mobilenet-v2 PRIVATE
 # of the FVP
 # The size is defined to force the .bss.NoInit to be placed in DDR
 target_compile_definitions(
-    ethosu55-mobilenet-v2 PRIVATE ETHOSU_FAST_MEMORY_SIZE=0xa0000)
+    freertos_mobilenet_v2 PRIVATE ETHOSU_FAST_MEMORY_SIZE=0xa0000)
 
-install(TARGETS ethosu55-mobilenet-v2
+install(TARGETS freertos_mobilenet_v2
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )

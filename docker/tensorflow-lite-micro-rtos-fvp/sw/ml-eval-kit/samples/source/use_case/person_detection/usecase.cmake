@@ -15,24 +15,9 @@
 #  limitations under the License.
 #----------------------------------------------------------------------------
 
-# If the path to a directory or source file has been defined,
-# get the type here (FILEPATH or PATH):
-if (DEFINED ${use_case}_FILE_PATH)
-    get_path_type(${${use_case}_FILE_PATH} PATH_TYPE)
-    # Set the default type if path is not a dir or file path (or undefined)
-    if (NOT ${PATH_TYPE} STREQUAL PATH AND NOT ${PATH_TYPE} STREQUAL FILEPATH)
-        message(FATAL_ERROR "Invalid ${use_case}_FILE_PATH. It should be a dir or file path.")
-    endif()
-else()
-    # Default is a directory path
-    set(PATH_TYPE PATH)
-endif()
-
-message(STATUS "${use_case}_FILE_PATH is of type: ${PATH_TYPE}")
-
 USER_OPTION(${use_case}_FILE_PATH "Directory with custom image files to use, or path to a single image, in the evaluation application"
     ${CMAKE_CURRENT_SOURCE_DIR}/resources/${use_case}/samples/
-    ${PATH_TYPE})
+    PATH_OR_FILE)
 
 USER_OPTION(${use_case}_IMAGE_SIZE "Square image size in pixels. Images will be resized to this size."
     96
@@ -62,13 +47,11 @@ USER_OPTION(${use_case}_ACTIVATION_BUF_SZ "Activation buffer size for the chosen
     0x00200000
     STRING)
 
-# If there is no tflite file pointed to
-# we can't build this usecase (not available in the model zoo.)
-# upload model with use_case example?
-if (NOT DEFINED ${use_case}_MODEL_TFLITE_PATH)
-    set(DEFAULT_MODEL_PATH  ${CMAKE_CURRENT_SOURCE_DIR}/resources/${use_case}/models/person_detection.tflite)
+
+    if (ETHOS_U55_ENABLED)
+    set(DEFAULT_MODEL_PATH      ${DEFAULT_MODEL_DIR}/person_detection_vela.tflite)
 else()
-    set(DEFAULT_MODEL_PATH  "N/A")
+    set(DEFAULT_MODEL_PATH      ${CMAKE_CURRENT_SOURCE_DIR}/resources/${use_case}/models/person_detection.tflite)
 endif()
 
 USER_OPTION(${use_case}_MODEL_TFLITE_PATH "NN models file to be used in the evaluation application. Model files must be in tflite format."

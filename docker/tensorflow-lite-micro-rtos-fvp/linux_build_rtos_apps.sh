@@ -10,7 +10,8 @@ usage() {
 }
 
 COMPILER=${COMPILER:-'armclang'}
-NPROC=`grep -c ^processor /proc/cpuinfo`
+NPROC=`nproc`
+mkdir -p ${BASEDIR}/dependencies/logs
 
 while [[ "$#" -gt 0 ]]; do
     case $1 in
@@ -37,14 +38,11 @@ else
     usage;
 fi
 
-# Only clone ethos-u if it doesn't exist already
-if [ ! -d ${BASEDIR}/dependencies/ethos-u ];
-then
-    git clone -b 21.02 https://git.mlplatform.org/ml/ethos-u/ethos-u.git ${BASEDIR}/dependencies/ethos-u
-    pushd ${BASEDIR}/dependencies/ethos-u
-    python3 fetch_externals.py -c 21.02.json fetch
-    popd
-fi
+git clone -b 21.05 https://git.mlplatform.org/ml/ethos-u/ethos-u.git ${BASEDIR}/dependencies/ethos-u
+pushd ${BASEDIR}/dependencies/ethos-u
+python3 fetch_externals.py -c 21.05.json fetch
+mkdir -p core_software/tensorflow/tensorflow/lite/micro/tools/make/downloads/gcc_embedded
+popd
 
 # include samples (TODO:automatic detect sample names?)
 echo "Apply grayscale patch to the eval kit"
@@ -63,12 +61,17 @@ then
     DOCKER="-docker";
 fi
 
-BUILDDIR=build-${DOCKER}
+BUILDDIR=build${DOCKER}
 
 pushd ${BASEDIR}/dependencies/ethos-u
     mkdir -p ${BUILDDIR}
     cd ${BUILDDIR}
-    cmake -DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_FILE} -DCMAKE_INSTALL_PREFIX=. ../core_platform/targets/corstone-300
-    make -j8
-    make install
+    rm CMakeCache.txt
+    rm -rf target/core_software/tensorflow
+    cmake -DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_FILE} -DCMAKE_INSTALL_PREFIX=. ../core_platform/targets/corstone-300 \
+        | tee ${BASEDIR}/dependencies/logs/rtos_cmake_$(date '+%Y-%m-%d-%H').log
+    make -j$NPROC \
+        | tee ${BASEDIR}/dependencies/logs/rtos_make_$(date '+%Y-%m-%d-%H').log
+    make install \
+        | tee ${BASEDIR}/dependencies/logs/rtos_make_install_$(date '+%Y-%m-%d-%H').log
 popd

@@ -11,8 +11,14 @@ the object (+one for empty).
 
 ## Table of Contents
 
-[[_TOC_]]
-
+* [Introduction](#introduction)
+* [Resources](#resources)
+    * [Model](#model)
+    * [Images](#images)
+* [Build](#build)
+* [Run application with FVP](#run-application-with-fvp)
+    * [Inference results](#inference-results)
+    
 ## Resources
 
 Here is a list of the resources used in this application
@@ -50,9 +56,9 @@ $> cmake ..
 $> make
 ```
 
-The result will be an application called `ethosu55-mobilenet_v2.elf`.
+The result will be an application called `freertos_mobilenet_v2.elf`.
 
-## Run apllication with Fixed Virtual Platform (FVP)
+## Run application with FVP
 
 You can run the demo with FVP_Corstone_SSE-300_Ethos-U55.
 
@@ -72,14 +78,23 @@ FVP_Corstone_SSE-300_Ethos-U55  \
     -C cpu0.CFGITCMSZ=14 \
     -C cpu0.CFGDTCMSZ=14 \
     -C ethosu.num_macs=128 \
-    -a ethosu55-mobilenet-v2.elf
+    -a freertos_mobilenet_v2.elf
 ```
 
-You will see some info messages from the npu, along with the result from the inferece. The inference is the first image in the list. In order to change which image to perform an inference on, edit `LINE 127 in main.cpp`, to have a different value between 0-4 and rebuild:
+### Inference results
 
-`int image_index = 0;`
+You will see some info messages from the npu, along with the result from the inference.
 
-The application will look something like this in a successful run:
+The inference result looks like this:
+```
+        #-------------------
+        Top prediction for Summer_Bicycle
+        label: mountain bike, all-terrain bike, off-roader
+        ID: 672  : Confidence: 10.779286 
+        #-------------------
+```
+
+The complete application output will look something like this in a successful run:
 
 ```
 telnetterminal0: Listening for serial connection on port 5000
@@ -303,7 +318,7 @@ Here are instructions for how to change the Mobilenet V2 model from Ethos-U55 wi
         -C cpu0.CFGITCMSZ=14 \
         -C cpu0.CFGDTCMSZ=14 \
         -C ethosu.num_macs=256 \
-        -a ethosu55-mobilenet-v2.elf
+        -a freertos_mobilenet_v2.elf
     ```
 
 ### Other Networks?
@@ -313,4 +328,5 @@ If the input data is images, you can use the Image Conversion scripts shipped wi
 
 The classification labels may have to be changed depending on the dataset used in training. 
 
-If your input is audio, scripts for this will be available shortly.
+If your input is audio, scripts for this will be available shortly,
+for now you can use the ml-embedded-evaluation-kit for these use cases.

@@ -24,7 +24,7 @@ endif()
 
 FILE(GLOB CPP_SOURCES *.cpp)
 
-ethosu_add_executable(ethosu55-person-detection PRIVATE
+ethosu_add_executable(freertos_person_detection PRIVATE
     SOURCES 
         ${CPP_SOURCES}
     LIBRARIES 
@@ -35,8 +35,8 @@ ethosu_add_executable(ethosu55-person-detection PRIVATE
 # of the FVP
 # The size is defined to force the .bss.NoInit to be placed in DDR
 target_compile_definitions(
-    ethosu55-person-detection PRIVATE ETHOSU_FAST_MEMORY_SIZE=0xa0000)
+    freertos_person_detection PRIVATE ETHOSU_FAST_MEMORY_SIZE=0xa0000)
 
-install(TARGETS ethosu55-person-detection
+install(TARGETS freertos_person_detection
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )

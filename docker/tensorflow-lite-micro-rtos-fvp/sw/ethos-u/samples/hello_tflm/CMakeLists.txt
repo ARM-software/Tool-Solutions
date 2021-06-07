@@ -24,7 +24,7 @@ endif()
 
 FILE(GLOB CPP_SOURCES *.cpp)
 
-ethosu_add_executable(ethosu55-hello-world PRIVATE
+ethosu_add_executable(freertos_hello_tflm PRIVATE
     SOURCES 
         ${CPP_SOURCES}
     LIBRARIES 
@@ -35,8 +35,8 @@ ethosu_add_executable(ethosu55-hello-world PRIVATE
 # of the FVP
 # The size is defined to force the .bss.NoInit to be placed in DDR
 target_compile_definitions(
-    ethosu55-hello-world PRIVATE ETHOSU_FAST_MEMORY_SIZE=0xa0000)
+    freertos_hello_tflm PRIVATE ETHOSU_FAST_MEMORY_SIZE=0xa0000)
 
-install(TARGETS ethosu55-hello-world
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+install(TARGETS freertos_hello_tflm
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )

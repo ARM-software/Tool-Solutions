@@ -1,8 +1,8 @@
 # make sure we download into the correct working directory
 BASEDIR="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 
-mkdir -p ${BASEDIR}/downloads
-pushd ${BASEDIR}/downloads
+mkdir -p ${BASEDIR}/../downloads
+pushd ${BASEDIR}/../downloads
 
 # Usage: takes compiler as input
 usage() { 
@@ -48,7 +48,7 @@ fi
 echo ""
 echo "Downloading Corstone 300 FVP..."
 echo ""
-[ -f FVP_Corstone_SSE-300_Ethos-U55_11.14_24.tgz ] || wget https://developer.arm.com/-/media/Arm%20Developer%20Community/Downloads/OSS/FVP/Corstone-300/MPS3/FVP_Corstone_SSE-300_Ethos-U55_11.14_24.tgz
+[ -f FVP_Corstone_SSE-300_Ethos-U55_11.13_41.tgz ] || wget https://developer.arm.com/-/media/Arm%20Developer%20Community/Downloads/OSS/FVP/Corstone-300/FVP_Corstone_SSE-300_Ethos-U55_11.13_41.tgz
 
 
 popd

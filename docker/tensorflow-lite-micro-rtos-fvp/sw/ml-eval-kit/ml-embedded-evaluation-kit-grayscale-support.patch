@@ -1,11 +1,5 @@
-diff --git a/dependencies/tensorflow b/dependencies/tensorflow
---- a/dependencies/tensorflow
-+++ b/dependencies/tensorflow
-@@ -1 +1 @@
--Subproject commit 6cff09aee1f832d495b3cae40cab0de58155a0af
-+Subproject commit 6cff09aee1f832d495b3cae40cab0de58155a0af-dirty
 diff --git a/scripts/cmake/source_gen_utils.cmake b/scripts/cmake/source_gen_utils.cmake
-index 8653016..bda9b6f 100644
+index 92ec53d..35d7fa5 100644
 --- a/scripts/cmake/source_gen_utils.cmake
 +++ b/scripts/cmake/source_gen_utils.cmake
 @@ -22,6 +22,13 @@ set(SCRIPTS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/scripts)
@@ -31,7 +25,7 @@ index 8653016..bda9b6f 100644
      )
      if (NOT return_code EQUAL "0")
 diff --git a/scripts/py/gen_rgb_cpp.py b/scripts/py/gen_rgb_cpp.py
-index 1a2e09b..dcbccb2 100644
+index 957d2d0..a9ddb92 100644
 --- a/scripts/py/gen_rgb_cpp.py
 +++ b/scripts/py/gen_rgb_cpp.py
 @@ -33,6 +33,7 @@ parser.add_argument("--image_path", type=str, help="path to images folder or ima
@@ -90,24 +84,26 @@ index 1a2e09b..dcbccb2 100644
  
          # Increment image index
          image_idx = image_idx + 1
-@@ -127,8 +133,11 @@ def main(args):
+@@ -127,10 +133,13 @@ def main(args):
      header_filepath = os.path.join(args.header_folder_path, header_filename)
      common_cc_filename = "InputFiles.cc"
      common_cc_filepath = os.path.join(args.source_folder_path, common_cc_filename)
 +    nChannels = 3
 +    if args.grayscale:
 +        nChannels = 1
-     write_hpp_file(header_filepath, common_cc_filepath, args.license_template,
--                   image_idx, image_filenames, image_array_names, args.image_size)
-+                   image_idx, image_filenames, image_array_names, args.image_size, nChannels)
  
+     if len(image_filenames) > 0:
+         write_hpp_file(header_filepath, common_cc_filepath, args.license_template,
+-                    image_idx, image_filenames, image_array_names, args.image_size)
++                    image_idx, image_filenames, image_array_names, args.image_size, nChannels)
+     else:
+         raise FileNotFoundError("No valid images found.")
  
- if __name__ == '__main__':
 diff --git a/source/use_case/img_class/src/MainLoop.cc b/source/use_case/img_class/src/MainLoop.cc
-index 469907c..a39b081 100644
+index 255f8e0..0732ca7 100644
 --- a/source/use_case/img_class/src/MainLoop.cc
 +++ b/source/use_case/img_class/src/MainLoop.cc
-@@ -71,11 +71,11 @@ void main_loop(hal_platform& platform)
+@@ -74,11 +74,11 @@ void main_loop(hal_platform& platform)
  
      /* Loop. */
      bool executionSuccessful = true;

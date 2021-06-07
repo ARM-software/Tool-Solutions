@@ -28,9 +28,13 @@ eval_kit_base = path.join(where_am_i, "dependencies/ml-embedded-evaluation-kit")
 usecase = "person_detection"
 image_path = f"{eval_kit_base}/resources/{usecase}/samples/"
 use_camera = False
+compiler = 'armclang'
+#compiler=os.getenv('COMPILER', default='armclang')
+#print(f"found COMPILER={compiler}")
 
 format = "[%(levelname)s] %(message)s"
 logging.basicConfig(format=format, level=logging.DEBUG)
+
 
 def InputArguments():
     """
@@ -39,6 +43,7 @@ def InputArguments():
     global usecase
     global image_path
     global use_camera
+    #global compiler
 
     parser = ArgumentParser(description="Build and run Ethos Evaluation Samples")
     parser.add_argument('--usecase', type=str, default=usecase,
@@ -47,6 +52,8 @@ def InputArguments():
                         help='Use a camera feed as input')
     parser.add_argument('--image_path', type=str, default="",
                         help='Path to image or folder to use in inference (baked into application)')
+    #parser.add_argument('--compiler', type=str, default="",
+    #                    help='Which compiler to use, armclang or gcc')
     #parser.add_argument('--log_file', type=str, default="/tmp/run_log.txt",
     #                    help="Log file path")
     args = parser.parse_args()
@@ -57,17 +64,30 @@ def InputArguments():
         image_path = args.image_path
     else:
         image_path = f"{eval_kit_base}/resources/{usecase}/samples/"
+    
+    #if len(args.compiler):
+    #    compiler = args.compiler
+
     use_camera = args.use_camera 
+
 
 class build_samples:
     def __init__(self):
-
+        global compiler
         self.platform_name = "mps3"
         self.platform_subsystem = "sse-300"
-        self.platform_toolchain = "scripts/cmake/bare-metal-toolchain.cmake"
+        if(compiler == "armclang"):
+            logging.info("Using ArmCompiler Toolchain")
+            self.platform_toolchain = "scripts/cmake/toolchains/bare-metal-armclang.cmake"
+        elif(compiler == "gcc"):
+            logging.info("Using GCC Toolchain")
+            self.platform_toolchain = "scripts/cmake/toolchains/bare-metal-gcc.cmake"
+        else:
+            logging.error("Wrong compiler selected. Only armclang or gcc can be used")
+            exit(1)
+        
         self._cmakelist_path = path.join(eval_kit_base, "CMakeLists.txt")
         self._bin_dir = ""
-
 
     def _generate_configure_args(self, extra_build_args: dict = {}) -> list:
         """
@@ -103,7 +123,10 @@ class build_samples:
             build_dir += f'-{self.platform_subsystem}'
 
         if(len(docker_check)):
-            build_dir += f'-docker'
+            build_dir += '-docker'
+        
+        global compiler 
+        build_dir += f'-{compiler}'
 
         build_dir_root = path.dirname(self._cmakelist_path)
         build_dir = path.join(build_dir_root, build_dir)
@@ -116,14 +139,14 @@ class build_samples:
         command_return = subprocess.run(command_str, shell=True, cwd=build_dir,
                                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT).stdout.decode('utf-8')
         
-        logging.info("Checking cmake configuration")
+        logging.info("Checking CMake configuration")
 
         for key, value in extra_build_args.items():
             result = re.search(f"{key}(.*)", command_return)
             if result == None or value not in result.group(1):
                 return False
          
-        logging.info("Cmake configuration OK")
+        logging.info("CMake configuration OK")
 
         return True
 
@@ -141,17 +164,24 @@ class build_samples:
                 r = requests.get(url, allow_redirects=True)
                 open(MODEL, 'wb').write(r.content)
         MODEL_VELA_DIR = path.dirname(MODEL_VELA)
-        command_str = f"vela {MODEL} --output-dir={MODEL_VELA_DIR} --accelerator-config=ethos-u55-128 --block-config-limit=0 --config {eval_kit_base}/scripts/vela/vela.ini --memory-mode Shared_Sram --system-config Ethos_U55_High_End_Embedded"
-        command_return = subprocess.run(command_str, shell=True,
-                                stdout=subprocess.PIPE, stderr=subprocess.STDOUT).stdout.decode('utf-8')
-        logging.debug(command_return)
+        command_str = f"vela {MODEL} --output-dir={MODEL_VELA_DIR} --accelerator-config=ethos-u55-128 --block-config-limit=0 --config {eval_kit_base}/scripts/vela/default_vela.ini --memory-mode Shared_Sram --system-config Ethos_U55_High_End_Embedded"
+        command_status = subprocess.run(command_str, shell=True)
+        if 0 == command_status.returncode:
+        	logging.debug("Vela compilation successful")
+        else:
+        	logging.error("Vela compilation failed, aborting")
+        	exit()
 
     def download_source(self):
         logging.info("Cloning ml-embedded-evaluation-kit source tree")
-        command_string = f"git clone -b 21.03 --recursive https://git.mlplatform.org/ml/ethos-u/ml-embedded-evaluation-kit.git {eval_kit_base}"
-        proc = subprocess.POpen(command_string, shell=True)
-        proc.communicate()
-
+        command_string = f"git clone -b 21.05 --recursive https://git.mlplatform.org/ml/ethos-u/ml-embedded-evaluation-kit.git {eval_kit_base} && (cd {eval_kit_base}; mkdir -p dependencies/tensorflow/tensorflow/lite/micro/tools/make/downloads/gcc_embedded )"
+        command_status = subprocess.run(command_string, shell=True)
+        if 0 == command_status.returncode:
+        	logging.debug("Cloning of ml-embedded-evaluation-kit successful")
+        elif 128 == command_status.returncode:
+        	logging.debug("Cloning of ml-embedded-evaluation-kit skipped, already exists ")
+        else:
+        	logging.warning("Cloning of ml-embedded-evaluation-kit failed, trying to proceed")
 
     def build(self, extra_build_args: dict = {}) -> bool:
         """
@@ -159,25 +189,20 @@ class build_samples:
         Args:
             extra_build_args:   additional build argument for cmake a dict
         """
-        # check if source exists, if not, download
-        if not path.exists(eval_kit_base):
-            #download
-            self.download_source()
-            exit()
+        # download source
+        self.download_source()
 
         # apply patch        
         logging.debug("applying patch")
         command_string = f"( cd {eval_kit_base}; patch -p1 --forward -b -r /dev/null < {where_am_i}/sw/ml-eval-kit/ml-embedded-evaluation-kit-grayscale-support.patch )"
-        proc = subprocess.run(command_string, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-
+        command_status = subprocess.run(command_string, shell=True)
+        
         # copy user samples to the source tree
         from distutils.dir_util import copy_tree
         logging.debug("copying user samples to code tree")
         copy_tree(f"{where_am_i}/sw/ml-eval-kit/samples/", f"{eval_kit_base}/")
 
-        global MODEL_VELA
-        if not path.exists(MODEL_VELA):
-            self.build_vela_model()
+        self.build_vela_model()
 
         _build_log = ""
         build_dir = self.get_build_dir()
@@ -196,32 +221,34 @@ class build_samples:
             
             command_str = " ".join(args)
             logging.info(f'Configuring cmake project...')
+            
+            logging.debug(command_str)
 
             for opts in configuration_opts:
                 logging.info(f'\t{opts}')
-            build_state = subprocess.run(command_str, shell=True, cwd=build_dir,
-                                    stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-            _build_log = build_state.stdout.decode('utf-8')
+            build_state = subprocess.run(command_str, shell=True, cwd=build_dir)
 
         build_done = False
         if skip_cmake or 0 == build_state.returncode:
             logging.info('Building project...')
-            build_state = subprocess.run('make -j', shell=True, cwd=build_dir,
-                                stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-            _build_log += build_state.stdout.decode('utf-8')
+            build_state = subprocess.run('make -j8', shell=True, cwd=build_dir)
             if 0 == build_state.returncode:
                 _build_dir = build_dir
                 self._bin_dir = path.join(build_dir, 'bin')
                 build_done  = True
-                logging.debug(_build_log)
+                logging.debug("Build Successful")
 
         # Revert patch
-        command_string = f"( cd {eval_kit_base}; patch -p1 -R < {where_am_i}/sw/ml-eval-kit/ml-embedded-evaluation-kit-grayscale-support.patch )"
-        proc = subprocess.run(command_string, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         logging.debug("reverting applied patch")
+        command_string = f"( cd {eval_kit_base}; patch -p1 -R < {where_am_i}/sw/ml-eval-kit/ml-embedded-evaluation-kit-grayscale-support.patch )"
+        command_status = subprocess.run(command_string, shell=True)
+        
+        if 0 == command_status.returncode:
+        	logging.debug("Reverting patch successful")
+        else:
+        	logging.warning("Reverting patch failed.")
 
         if not build_done:
-            logging.debug(_build_log)
             logging.error('Build failed')
 
         return build_done
@@ -230,7 +257,7 @@ class InferenceGUI:
     def __init__(self):
         # Left column will show the inference result
         self.left_col = [[sg.Text('Inference Results', key='-INFERENCE-')],
-                    [sg.Text('No inference Performed yet',size=(30,10), key='-RESULT-')]]
+                    [sg.Text('No inference Performed yet',size=(40,15), key='-RESULT-')]]
         # HRight column will show the inference image
         self.images_col = [[sg.Text('Inference Image:')],
                     [sg.Text(size=(40,1), key='-IMAGE_NAME-')],
@@ -329,12 +356,20 @@ class fvp_runner:
         logging.debug(_simulation_log)
 
         # get the inference result string
-        result = re.search(r'(?<=\[INFO\] Profile for Inference: \r\n)(.*?)(?=\[INFO\] Main loop terminated.)', _simulation_log, flags=re.S).group()
+        result = re.search(r'(?<=INFO - Total number of inferences: 1\r\n)(.*?)(?=INFO - Profile for Inference:)', _simulation_log, flags=re.S).group()
 
         # strip the result of unecessary line endings, tabs and tags
-        result = result.replace("[INFO] ", "")
+        result = result.replace("INFO - ", "")
         result = result.replace("\t", "")
         result = result.replace("\r\n", "\n")
+
+        profiling = re.search(r'(?<=INFO - Profile for Inference:\r\n)(.*?)(?=INFO - Main loop terminated.)', _simulation_log, flags=re.S).group()
+
+        profiling = profiling.replace("INFO - ", "")
+        profiling = profiling.replace("\t", "")
+        profiling = profiling.replace("\r\n", "\n")
+
+        result = result + "\n" + profiling
 
         return result
 
@@ -351,7 +386,7 @@ elif usecase == "img_class":
 _extra_build_args = {
         "USE_CASE_BUILD" : f"\"{usecase}\"",
         f"{usecase}_MODEL_TFLITE_PATH" : MODEL_VELA ,
-        f"{usecase}_FILE_PATH" : path.join(image_path, "cat.bmp")
+        f"{usecase}_FILE_PATH" : path.join(f"{eval_kit_base}/resources/{usecase}/samples/", "cat.bmp")
     }
 
 #build the samples
@@ -359,6 +394,7 @@ builder = build_samples()
 if not builder.build(_extra_build_args):
     logging.error("Building samples failed, exiting...")
     exit()
+
 
 # image format for the usecase
 image_size = (96,96)
@@ -370,12 +406,21 @@ if usecase == "img_class":
 # get a cycle list of all images in image_path
 image_list = []
 valid_images = [".jpg",".jpeg",".gif",".png",".tga",".bmp"]
+
+if not os.path.exists(image_path):
+    logging.error(f"{image_path} was not found. Has to be a valid path")
+    exit()    
+
 for f in os.listdir(image_path):
     ext = path.splitext(f)[1]
     if ext.lower() not in valid_images:
         continue
     image_list.append(path.join(image_path, f))
 image_pool = cycle(image_list)
+
+if len(image_list) == 0:
+    logging.error(f"No images found in path {image_path}, aborting...")
+    exit()
 
 # Create runner
 runner = fvp_runner(builder._bin_dir)
@@ -419,7 +464,11 @@ while running:
     with open("python_img.hex", 'w') as f:
         address = int("70000000", base=16)
         for val in rgb_data:
-            f.write(f'@{hex(address)} {hex(val)}\n')
+            if compiler == 'armclang':
+                address_string = str.format('@0x{:08X}', address)
+            else:
+                address_string = str.format('{:08X}', address)
+            f.write(f'{address_string} {hex(val)}\n')
             address += 1
 
     # run inference 
