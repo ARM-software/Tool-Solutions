@@ -1,5 +1,5 @@
 # make sure we are building from the correct working directory
-BASEDIR=$(dirname "$0")
+BASEDIR="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 pushd $BASEDIR
 
 # TODO: specify which docker image to build?
@@ -60,26 +60,24 @@ then
     fi
 
     # get dependencies, then build the armclang docker image 
-    ./get_deps.sh -c $COMPILER
-    docker build --rm -t tensorflow-lite-micro-rtos-fvp:armclang \
-        --build-arg LICENSE_FILE=${ARMLMD_LICENSE_FILE} \
-        -f docker/armclang.Dockerfile .
+    ./scripts/get_deps.sh -c $COMPILER
+    docker build --rm -t tensorflow-lite-micro-rtos-fvp:$COMPILER \
+        -f docker/$COMPILER.Dockerfile .
 elif [ $COMPILER = 'gcc' ]
 then
-    ./get_deps.sh -c $COMPILER
-    docker build --rm -t tensorflow-lite-micro-rtos-fvp:gcc \
-        -f docker/gcc.Dockerfile .
+    ./scripts/get_deps.sh -c $COMPILER
+    docker build --rm -t tensorflow-lite-micro-rtos-fvp:$COMPILER \
+        -f docker/$COMPILER.Dockerfile .
 elif [ $COMPILER = 'fvp' ]
 then
     # Build docker image for fvp.
     # This image is a minimal evaluation image, that can be used for
     # running built applicaitons with FVP. 
-    ./get_deps.sh -c $COMPILER
-    docker build --rm -t tensorflow-lite-micro-rtos-fvp:fvp \
-        -f docker/fvp.Dockerfile .
+    ./scripts/get_deps.sh -c $COMPILER
+    docker build --rm -t tensorflow-lite-micro-rtos-fvp:$COMPILER \
+        -f docker/$COMPILER.Dockerfile .
 else
     usage;
 fi
-
 
 popd

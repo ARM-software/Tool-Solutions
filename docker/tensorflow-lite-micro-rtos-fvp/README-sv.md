@@ -1,4 +1,4 @@
-# Tensorflow Lite Micro med SSE-300 FVP (Cortex-M55 + Ethon-U55)
+# Tensorflow Lite for Microcontrollers med Corstone 300 FVP (Cortex-M55 + Ethos-U55)
 
 De här instructionerna finns att läsa på följande språk:
     
@@ -38,7 +38,7 @@ Detta repo innehåller ett par exempelapplikationer som använder FreeRTOS som O
 
 När du bygger din Docker Image, så kommer följande filer att laddas ner till rotmappen av detta projekt:
 
-* [DS500-DN-00026-r5p0-17rel0.tgz](https://developer.arm.com/-/media/Files/downloads/compiler/DS500-BN-00026-r5p0-17rel0.tgz?revision=2fde4f61-f000-4f22-a182-0223543dc4e8?product=Download%20Arm%20Compiler,64-bit,,Linux,6.15) (ArmCompiler 6.15 for Linux64)
+* [DS500-BN-00026-r5p0-18rel0.tgz](https://developer.arm.com/-/media/Files/downloads/compiler/DS500-BN-00026-r5p0-18rel0.tgz) (ArmCompiler 6.16 for Linux64)
 * [FVP_Corstone_SSE-300_Ethos-U55_11.13_41.tgz](https://developer.arm.com/-/media/Arm%20Developer%20Community/Downloads/OSS/FVP/Corstone-300/FVP_Corstone_SSE-300_Ethos-U55_11.13_41.tgz) (Corstore SSE-300 FVP with Ethos U55 support for Linux64)
 
 ## Beroenden
@@ -84,21 +84,16 @@ Byggskripten har testats med CentOS 7, Ubuntu 18.04, och Windows 10 PowerShell
             $> ./docker_build.sh -c gcc
             ```
 
-1. När skriptet har kört klart, kommer en docker image som heter tensorflow-lite-micro-rtos-fvp:*<armclang|gcc>* ha skapats.
+1. När skriptet har kört klart, kommer en docker image som heter ubuntu:18.04_sse300 ha skapats.
 
 1. Logga in i docker imagen med föjande kommando (om du vill använda lokala volymer för data, så kan du modifiera kommandot efter behov):
     * Windows:
-        * Om du önskar att andvända Arm Compiler
-            ```
-            $> docker run -it tensorflow-lite-micro-rtos-fvp:armclang /bin/bash
-            ```
-        * Om du önskar att andvända gcc
-            ```
-            $> docker run -it tensorflow-lite-micro-rtos-fvp:gcc /bin/bash
-            ```
+        ```
+        $> docker run -it ubuntu:18.04_sse300 /bin/bash
+        ```
     * Linux:
         ```
-        $> ./docker_run.sh -c <armclang|gcc>
+        $> ./docker_run.sh
         ```
 
 1. Kör en demoapplikation med följande kommando. Det kan ta 10-20 minuter för applikationen att köra klart. (Använd "-h"-flaggan för att se alla köralternativ):
@@ -147,7 +142,7 @@ Byggskripten har testats med CentOS 7, Ubuntu 18.04, och Windows 10 PowerShell
 
 1. Kör byggskriptet för linux:
     ```
-    $> ./linux_build.sh
+    $> ./linux_build_apps.sh
     ```
 
 1. Kör demoapplikationen med följande kommando (använd "-h"-flaggan för att se alla köralternativ):

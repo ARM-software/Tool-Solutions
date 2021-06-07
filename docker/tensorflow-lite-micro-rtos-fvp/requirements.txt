@@ -1,0 +1,6 @@
+ethos-u-vela==2.1.1
+pillow==8.2.0
+pygame==2.0.1
+PySimpleGui==4.41.2 
+requests==2.25.1
+pyelftools==0.27

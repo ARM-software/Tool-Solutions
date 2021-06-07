@@ -1,4 +1,4 @@
-# Tensorflow Lite Micro on SSE-300 FVP (Cortex-M55 + Ethon-U55)
+# Tensorflow Lite for Microcontrollers on Corstone 300 FVP (Cortex-M55 + Ethos-U55)
 
 These instructions are available in the following languages
     
@@ -23,9 +23,13 @@ These instructions are available in the following languages
 * [環境の構築](#環境の構築)
     * [Option 1: Dockerを利用する場合 (推奨)](#option-1-dockerを利用する場合-推奨)
     * [Option 2: Linux環境を利用する場合](#option-2-linux環境を利用する場合)
+* [デモアプリケーションのビルド](#デモアプリケーションのビルド)
+    * [ml-embedded-evaluation-kit](#ml-embedded-evaluation-kit)
+    * [Ethos-U RTOS デモアプリケーション](#ethos-u-rtos-デモアプリケーション)
 * [付属しているデモアプリケーションについて](#付属しているデモアプリケーションについて)
     * [Person Detection](#person-detection)
     * [Mobilenet v2](#mobilenet-v2)
+    * [その他のデモアプリケーション](#その他のデモアプリケーション)
 * [Vela Model Optimizer for Ethos-U](#vela-model-optimizer-for-ethos-u)
     * [Velaのインストール](#velaのインストール)
 * [ネットワーク(.tflm)と推論に利用するイメージファイルのcppへの変換](#ネットワークtflmと推論に利用するイメージファイルのcppへの変換)
@@ -40,9 +44,9 @@ These instructions are available in the following languages
 
 最新のArm Compiler(armclang)とCorstone SSE-300 FVPをインストールします。Docker Containerをビルドする場合は、Dockerfile中でこれらのリンクを自動でダウンロード・インストールします。Linuxコンソールで環境構築する場合は、こちらのリンクからファイルをダウンロードし、インストールしてください。
 
-[DS500-DN-00026-r5p0-17rel0.tgz](https://developer.arm.com/-/media/Files/downloads/compiler/DS500-BN-00026-r5p0-17rel0.tgz?revision=2fde4f61-f000-4f22-a182-0223543dc4e8?product=Download%20Arm%20Compiler,64-bit,,Linux,6.15) (ArmCompiler 6.15 for Linux64)
+* [DS500-BN-00026-r5p0-18rel0.tgz](https://developer.arm.com/-/media/Files/downloads/compiler/DS500-BN-00026-r5p0-18rel0.tgz) (ArmCompiler 6.16 for Linux64)
 
-[FVP_Corstone_SSE-300_Ethos-U55_11.13_41.tgz](https://developer.arm.com/-/media/Arm%20Developer%20Community/Downloads/OSS/FVP/Corstone-300/FVP_Corstone_SSE-300_Ethos-U55_11.13_41.tgz) (Corstore SSE-300 FVP with Ethos U55 support for Linux64)
+* [FVP_Corstone_SSE-300_Ethos-U55_11.13_41.tgz](https://developer.arm.com/-/media/Arm%20Developer%20Community/Downloads/OSS/FVP/Corstone-300/FVP_Corstone_SSE-300_Ethos-U55_11.13_41.tgz) (Corstore SSE-300 FVP with Ethos U55 support for Linux64)
 
 
 ## 依存性
@@ -88,22 +92,21 @@ These instructions are available in the following languages
             $> ./docker_build.sh -c gcc
             ```
 
-1. スクリプトが無事完了したら、docker image tensorflow-lite-micro-rtos-fvp:*<armclang|gcc>*が生成されているはずです。
+1. スクリプトが無事完了したら、docker image tensorflow-lite-micro-rtos-fvp:<compiler>が生成されているはずです。
 
 1. Docker containerを起動してbashを起動します(ご自分の環境に合わせて実行して下さい):
     * Windows:
         ```
-        $> docker run -it --rm tensorflow-lite-micro-rtos-fvp:<armclang|gcc> /bin/bash
+        $> docker run -it -e LOCAL_USER_ID=0 -v $PWD\sw:/work/sw `
+        -v $PWD\dependencies:/work/dependencies -e DISPLAY=localhost:1 `
+        -e ARMLMD_LICENSE_FILE=$env:ARMLMD_LICENSE_FILE `
+        -e ARM_TOOL_VARIANT=$env:ARM_TOOL_VARIANT `
+        --privileged --rm tensorflow-lite-micro-rtos-fvp:<compiler> /bin/bash
         ```
     * Linux;
         ```
-        $> ./docker_run.sh -c <armclang|gcc>
+        $> ./docker_run.sh -i <compiler>
         ```
-
-1. デモ実行のスクリプトを走らせます:
-    ```
-    $> ./run_demo_app.sh
-    ```
 
 ### Option 2: Linux環境を利用する場合
 
@@ -113,16 +116,16 @@ These instructions are available in the following languages
 
     1. インストールが終了したらarmclangとCorstore SSE-300のインストールパスを環境に合わせて設定してください。
         * Temporary 
-        ```
-        $> export PATH=<armclang-install-dir>:$PATH
-        $> export PATH=<FVP-install-dir>/models/Linux64_GCC-6.4:$PATH
-        ```
+            ```
+            $> export PATH=<armclang-install-dir>:$PATH
+            $> export PATH=<FVP-install-dir>/models/Linux64_GCC-6.4:$PATH
+            ```
         * Persistent
-        ```
-        $> echo "export PATH=<armclang-install-dir>:$PATH" >> ~/.bashrc
-        $> echo "export PATH=<FVP-install-dir>/models/Linux64_GCC-6.4:$PATH" >> ~/.bashrc
-        $> source ~/.bashrc
-        ```
+            ```
+            $> echo "export PATH=<armclang-install-dir>:$PATH" >> ~/.bashrc
+            $> echo "export PATH=<FVP-install-dir>/models/Linux64_GCC-6.4:$PATH" >> ~/.bashrc
+            $> source ~/.bashrc
+            ```
     2. 設定されたパスが有効か、確認します。
 
         ```
@@ -146,13 +149,69 @@ These instructions are available in the following languages
 
 2. Linux向けセットアップスクリプトを走らせます:
     ```
-    $> ./linux_build.sh
+    $> ./linux_build_apps.sh
     ```
 
-3. デモアプリを走らせます。完了するまでに10〜20分かかる場合があります。 (オプション "-h" でオプションメニューを全表示します):
+
+## デモアプリケーションのビルド
+
+### ml-embedded-evaluation-kit
+
+このキットには、ベアメタルサンプルアプリケーションが含まれています。
+アプリケーションは、FVPを使用して実行することも、MPS3評価ボードで直接実行することもできます。
+
+サンプルアプリケーションのビルドに使用できるスクリプトは2つあります。 
+
+* `data_injection_demo.py`は、person_detectionまたはimg_classサンプルアプリケーションをダウンロード、ビルド、実行します。 これを使用して、データをアプリケーションに動的に挿入する方法の例を示します。
+    ```
+    $> ./data_injection_demo.py
+    ``` 
+    * コマンドライン引数 `--image_path = <path/to/image/or/folder>`を使用して、アプリケーションに挿入する画像を選択できます 
+    * コマンドライン引数 `--use_camera=True`を使用して、USBカメラを使用して入力データを取得することもできます（各推論には少なくとも10秒かかるため、スムーズなリアルタイムビデオは期待しないでください） 
+    * ビデオストリームでリアルタイムスタイルの推論を実行するには、ビデオフレームを静止画像に変換し、そのフレームを入力として使用するのが最善の方法です。 
+
+* `linux_build_eval_kit_apps.sh`はキットをダウンロードしてビルドします。サンプルを手動で実行する場合、またはMPS3ボードで実行するために独自のサンプルイメージをアプリケーションにベイクする場合は、これを使用します。 ビルドスクリプトを実行する前に、イメージを `sw/ml-eval-kit/samples/resources/<use-case>/samples/`フォルダーにコピーします。
+    1. ビルド
+        ```
+        $> ./linux_build_eval_kit_apps.sh
+        ```
+
+    1. サンプルを実行します
+        ```
+        $> FVP_Corstone_SSE-300_Ethos-U55 -a dependencies/ml-embedded-evaluation-kit/build_auto/bin/<sample-name>.axf
+        ``` 
+    1. サンプルと対話します
+    サンプルアプリケーションを操作する必要がある場合があります。
+    これを行うには、2番目のターミナルを開いて実行してください
+        ```
+        $> telnet localhost 5000
+        ```
+        * 注：dockerを使用している場合は、最初に2番目のターミナルで実行中のdockerコンテナーを入力する必要があります。
+            * 実行中のコンテナーのcontainer-idを検索します
+                ```
+                $> docker ps
+                ```
+            * Dockerコンテナを入力します
+                ```
+                $> docker exec -it <container-id> /bin/bash
+                ``` 
+
+指示に従うことで、ml-emedded-evaluation-kitを手動でビルドして実行することもできます。 オープンソースプロジェクトはここから入手できます： `https://git.mlplatform.org/ml/ethos-u/ml-embedded-evaluation-kit.git` 
+
+### Ethos-U RTOS デモアプリケーション
+
+このアプリケーションはFreeRTOSサンプルアプリケーションであり、FVPを使用するか、MPS3評価ボードで直接実行できます。
+
+1. ビルド
+    ```
+    $> ./linux_build_apps.sh -c <compiler>
+    ```
+
+1. デモアプリを走らせます。完了するまでに10〜20分かかる場合があります。 (オプション "-h" でオプションメニューを全表示します):
     ```
     $> ./run_demo_app.sh
     ```
+
 
 ## 付属しているデモアプリケーションについて
 ### Person Detection
@@ -162,6 +221,10 @@ Mobilenetベースで作られた人物検知の為のネットワークです�
 ### Mobilenet v2
 Mobilenet v2ネットワークの実行デモです。FreeRTOS上で動きます。イメージ上の2つのオブジェクトを検知可能です。
 この簡単なデモを通してTensorflow Lite Micro(TFLM)のネットワークをCorstore SSE-300 FVP上で実行する手順をご理解いただけます。
+
+### その他のデモアプリケーション
+ml-embedded-evaluation-kitには、キーワードスポッティングと自然言語処理用のサンプルアプリケーションが含まれています。
+このサンプルは手動で実行できます。 
 
 ## Vela Model Optimizer for Ethos-U
 
