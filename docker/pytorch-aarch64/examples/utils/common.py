@@ -14,17 +14,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *******************************************************************************
-'''
+"""
 Helper methods that are common between utility functions
-'''
+"""
 
 import yaml
 
+
 def parse_model_file(model_file):
-    '''
+    """
     Parses YAML configuration file to dictionary
     :param model_file: Path to model descriptor to parse
-    '''
+    """
 
     with open(model_file) as model_file_handle:
         model_descriptor = yaml.load(model_file_handle, Loader=yaml.FullLoader)

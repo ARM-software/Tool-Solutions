@@ -14,39 +14,43 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *******************************************************************************
-'''
+"""
 This example demonstrates how to load an image classification model and run
 inference on a single image
-'''
+"""
 
 import sys
 
-from utils import parser
+from utils import vision_parser
 from utils import image
 from utils import label
 
 from executor import model
 
-def main():
-    '''
-    Main function
-    '''
 
-    args = parser.parse_arguments()
+def main():
+    """
+    Main function
+    """
+
+    args = vision_parser.parse_arguments()
 
     # Load model used for inference
     classification_model = model.Model()
-    if not classification_model.load(args['model']):
+    if not classification_model.load(args["model"]):
         sys.exit("Failed to set up the model")
 
     # Preprocess the image
-    image_to_classify = image.preprocess_image_for_classification(args['image'])
+    image_to_classify = image.preprocess_image_for_classification(
+        args["image"]
+    )
 
     # Predict
-    predictions = classification_model.run(image_to_classify, args['runs'])
+    predictions = classification_model.run(image_to_classify, args["runs"])
 
     # Label predictions
-    label.classify_predictions(args['model'], predictions)
+    label.classify_predictions(args["model"], predictions)
+
 
 if __name__ == "__main__":
     main()

@@ -1,5 +1,5 @@
 # *******************************************************************************
-# Copyright 2021 Arm Limited and affiliates.
+# Copyright 2020-2021 Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,9 +21,11 @@
 # ========
 ARG njobs
 ARG bazel_mem
+ARG default_py_version=3.8
 
 FROM ubuntu:20.04 AS tensorflow-base
-ARG PY_VERSION=3.8
+ARG default_py_version
+ENV PY_VERSION="${default_py_version}"
 
 RUN if ! [ "$(arch)" = "aarch64" ] ; then exit 1; fi
 
@@ -131,7 +133,8 @@ RUN mkdir -p $PACKAGE_DIR && \
 # Common compiler settings
 ENV CC=gcc \
     CXX=g++ \
-    BASE_CFLAGS="-mcpu=${CPU}  -moutline-atomics"
+    BASE_CFLAGS="-mcpu=${CPU} -moutline-atomics" \
+    BASE_LDFLAGS=""
 
 # Build OpenBLAS from source
 COPY scripts/build-openblas.sh $PACKAGE_DIR/.
@@ -153,12 +156,18 @@ RUN $PACKAGE_DIR/build-onednn.sh
 ENV ONEDNN_DIR=$PROD_DIR/onednn/release
 ENV LD_LIBRARY_PATH=$ONEDNN_DIR/lib:$LD_LIBRARY_PATH
 
+# Build and install OpenCV from GitHub sources (needed for C++ API examples)
+COPY scripts/build-opencv.sh $PACKAGE_DIR/.
+RUN $PACKAGE_DIR/build-opencv.sh
+
 # ========
 # Stage 3: install essential python dependencies into a venv
 # ========
 FROM tensorflow-libs AS tensorflow-tools
 ARG njobs
-ENV NP_MAKE="${njobs}"
+ARG default_py_version
+ENV PY_VERSION="${default_py_version}" \
+    NP_MAKE="${njobs}"
 
 # Key version numbers
 ENV NUMPY_VERSION=1.18.4 \
@@ -176,6 +185,10 @@ ENV VENV_DIR=/home/$DOCKER_USER/python3-venv
 ENV VENV_ACT=$VENV_DIR/bin/activate
 RUN python -m venv $VENV_DIR
 ENV PATH="$VENV_DIR/bin:$PATH"
+
+# Install Rust into user-space, needed for transformers dependencies
+RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
+ENV PATH="/home/$DOCKER_USER/.cargo/bin:${PATH}"
 
 # Install some basic python packages
 RUN pip install --no-cache-dir --upgrade pip
@@ -203,19 +216,9 @@ RUN pip uninstall enum34 -y
 RUN HDF5_DIR=/usr/lib/aarch64-linux-gnu/hdf5/serial pip install h5py==2.10.0
 RUN pip install --no-cache-dir grpcio
 RUN pip install --no-cache-dir ck==1.55.5 absl-py pycocotools pillow
+RUN pip install --no-cache-dir transformers pandas
 
-# Install OpenCV into our venv,
-# Note: Scripts are provided to build and install OpenCV from the
-# GitHub repository. These are no longer used by default in favour of the
-# opencv-python package, in this case opencv-python-headless.
-# Uncomment code block '1' below, and comment out code block '2' to build
-# from the GitHub sources.
-# --
-# 1 - build from GitHub sources:
-#COPY scripts/build-opencv.sh $PACKAGE_DIR/.
-#RUN $PACKAGE_DIR/build-opencv.sh
-# --
-# 2 - install opencv-python-headless
+# Install OpenCV into our venv (needed for MLCommons benchmarks)
 RUN pip install --no-cache-dir opencv-python-headless==4.4.0.46
 
 CMD ["bash", "-l"]
@@ -229,13 +232,15 @@ ARG bazel_mem
 ARG onednn_opt
 ARG tf_version
 ARG bazel_version
+ARG default_py_version
 
 ENV NP_MAKE="${njobs}" \
     BZL_RAM="${bazel_mem}" \
     ONEDNN_BUILD="${onednn_opt}"
 
 # Key version numbers
-ENV BZL_VERSION="${bazel_version}" \
+ENV PY_VERSION="${default_py_version}" \
+    BZL_VERSION="${bazel_version}" \
     TF_VERSION="${tf_version}"
 
 # Use a PACKAGE_DIR in userspace
@@ -294,6 +299,7 @@ RUN rm -f $EXAMPLE_DIR/build-benchmarks.sh
 
 # Clone and install MLCommons (MLPerf)
 COPY patches/optional-mlcommons-changes.patch $MLCOMMONS_DIR/optional-mlcommons-changes.patch
+COPY patches/mlcommons_bert.patch $MLCOMMONS_DIR/mlcommons_bert.patch
 COPY scripts/build-mlcommons.sh $MLCOMMONS_DIR/.
 RUN $MLCOMMONS_DIR/build-mlcommons.sh
 RUN rm -f $MLCOMMONS_DIR/build-mlcommons.sh
@@ -304,7 +310,8 @@ COPY scripts/download-model.sh $MLCOMMONS_DIR/.
 # Install missing Python package dependencies required to run examples
 RUN pip install --no-cache-dir pyyaml
 RUN pip install --no-cache-dir tqdm
+
 # Copy examples
-ADD examples $EXAMPLE_DIR
+COPY --chown=$DOCKER_USER:$DOCKER_USER examples $EXAMPLE_DIR
 
 CMD ["bash", "-l"]

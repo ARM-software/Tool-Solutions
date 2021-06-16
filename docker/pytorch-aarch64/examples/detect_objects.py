@@ -14,44 +14,48 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *******************************************************************************
-'''
+"""
 This example demonstrates how to load an image classification model and run
 inference on a single image
-'''
+"""
 
 import sys
 
-from utils import parser
+from utils import vision_parser
 from utils import image
 from utils import label
 
 from executor import model
 
-def main():
-    '''
-    Main function
-    '''
 
-    args = parser.parse_arguments()
+def main():
+    """
+    Main function
+    """
+
+    args = vision_parser.parse_arguments()
 
     # Load model used for inference
     detection_model = model.Model()
-    if not detection_model.load(args['model']):
+    if not detection_model.load(args["model"]):
         sys.exit("Failed to set up the model")
 
-
     # Preprocess the image
-    image_for_detection, image_file = \
-        image.preprocess_image_for_detection(args['image'], args['model'])
+    image_for_detection, image_file = image.preprocess_image_for_detection(
+        args["image"], args["model"]
+    )
 
     # Predict
-    predictions = detection_model.run(image_for_detection, args['runs'])
+    predictions = detection_model.run(image_for_detection, args["runs"])
 
     # Label predictions
-    labels = label.detected_objects(args['model'], predictions)
+    labels = label.detected_objects(args["model"], predictions)
 
     # Draw bounding boxes around detected objects
-    image.postprocess_image_for_detection(args['model'], image_file, predictions, labels)
+    image.postprocess_image_for_detection(
+        args["model"], image_file, predictions, labels
+    )
+
 
 if __name__ == "__main__":
     main()

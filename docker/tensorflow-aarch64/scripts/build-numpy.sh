@@ -39,6 +39,7 @@ envsubst < $PACKAGE_DIR/site.cfg > ./site.cfg
 rm $PACKAGE_DIR/site.cfg
 
 export CFLAGS="${BASE_CFLAGS} -O3"
+export LDFLAGS="${BASE_LDFLAGS}"
 
 python setup.py install
 

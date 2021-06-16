@@ -236,6 +236,6 @@ if [[ $build_dev_image ]]; then
 fi
 
 if [[ $build_tensorflow_image ]]; then
-  # Stage 5: Clone benchmarks with TensorFlow installed.
+  # Stage 5: Add examples and clone benchmarks with TensorFlow installed.
   docker build $extra_args --target tensorflow -t tensorflow-v2$onednn:latest .
 fi
