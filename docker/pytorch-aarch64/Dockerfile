@@ -19,9 +19,11 @@
 # Stage 1: Base image including OS and key packages
 # ========
 ARG njobs
+ARG default_py_version=3.8
 
 FROM ubuntu:20.04 AS pytorch-base
-ARG PY_VERSION=3.8
+ARG default_py_version
+ENV PY_VERSION="${default_py_version}"
 
 RUN if ! [ "$(arch)" = "aarch64" ] ; then exit 1; fi
 
@@ -158,7 +160,10 @@ ENV PATH=$PROD_DIR/ninja/$NINJA_VERSION:$PATH
 # ========
 FROM pytorch-libs AS pytorch-tools
 ARG njobs
-ENV NP_MAKE="${njobs}"
+ARG default_py_version
+
+ENV PY_VERSION="${default_py_version}" \
+    NP_MAKE="${njobs}"
 
 # Key version numbers
 ENV NUMPY_VERSION=1.19.5 \
@@ -176,6 +181,10 @@ ENV VENV_DIR=/home/$DOCKER_USER/python3-venv
 ENV VENV_ACT=$VENV_DIR/bin/activate
 RUN python -m venv $VENV_DIR
 ENV PATH="$VENV_DIR/bin:$PATH"
+
+# Install Rust into user-space, needed for transformers dependencies
+RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
+ENV PATH="/home/$DOCKER_USER/.cargo/bin:${PATH}"
 
 # Install some basic python packages needed for NumPy
 RUN pip install --no-cache-dir --upgrade pip
@@ -198,6 +207,7 @@ RUN pip install --no-cache-dir hypothesis pyyaml pytest
 RUN pip install --no-cache-dir matplotlib
 RUN pip install --no-cache-dir pillow==6.1 lmdb
 RUN pip install --no-cache-dir ck==1.55.5 absl-py pycocotools typing_extensions
+RUN pip install --no-cache-dir transformers pandas
 
 # Install OpenCV into our venv,
 # Note: Scripts are provided to build and install OpenCV from the
@@ -226,13 +236,16 @@ CMD ["bash", "-l"]
 FROM pytorch-libs AS pytorch-dev
 ARG njobs
 ARG onednn_opt
+ARG default_py_version
+
 ENV ONEDNN_BUILD="${onednn_opt}" \
     NP_MAKE="${njobs}"
 
 # Key version numbers
-ENV TORCH_VERSION=1.8.1
-ENV ONEDNN_VERSION="v2.2"
-ENV VISION_VERSION="v0.9.1"
+ENV PY_VERSION="${default_py_version}" \
+    TORCH_VERSION=1.8.1 \
+    ONEDNN_VERSION="v2.2" \
+    VISION_VERSION="v0.9.1"
 
 # Use a PACKAGE_DIR in userspace
 WORKDIR /home/$DOCKER_USER
@@ -276,6 +289,7 @@ RUN mkdir -p $MLCOMMONS_DIR
 
 # Clone and install  MLCommons (MLPerf)
 COPY scripts/build-mlcommons.sh $MLCOMMONS_DIR/.
+COPY patches/mlcommons_bert.patch $MLCOMMONS_DIR/.
 RUN $MLCOMMONS_DIR/build-mlcommons.sh
 RUN rm -f $MLCOMMONS_DIR/build-mlcommons.sh
 # Copy scripts to download dataset and models
@@ -285,6 +299,7 @@ COPY scripts/download-model.sh $MLCOMMONS_DIR/.
 # Install missing Python package dependencies required to run examples
 RUN pip install --no-cache-dir requests
 RUN pip install --no-cache-dir tqdm
+RUN pip install --no-cache-dir boto3
 
 # Copy examples
 ENV EXAMPLE_DIR=/home/$DOCKER_USER/examples

@@ -50,16 +50,25 @@ export HOST_C_COMPILER=(which gcc)
 export HOST_CXX_COMPILER=(which g++)
 export PYTHON_BIN_PATH=(which python)
 export USE_DEFAULT_PYTHON_LIB_PATH=1
-export CC_OPT_FLAGS=""
 export TF_ENABLE_XLA=0
+export TF_DOWNLOAD_CLANG=0
+export TF_SET_ANDROID_WORKSPACE=0
+export TF_NEED_MPI=0
+export TF_NEED_ROCM=0
 export TF_NEED_GCP=0
 export TF_NEED_S3=0
 export TF_NEED_OPENCL_SYCL=0
 export TF_NEED_CUDA=0
-export TF_DOWNLOAD_CLANG=0
-export TF_NEED_MPI=0
-export TF_SET_ANDROID_WORKSPACE=0
-export TF_NEED_ROCM=0
+export TF_NEED_HDFS=0
+export TF_NEED_OPENCL=0
+export TF_NEED_JEMALLOC=1
+export TF_NEED_VERBS=0
+export TF_NEED_AWS=0
+export TF_NEED_GDR=0
+export TF_NEED_OPENCL_SYCL=0
+export TF_NEED_COMPUTECPP=0
+export TF_NEED_KAFKA=0
+export TF_NEED_TENSORRT=0
 
 ./configure
 
@@ -70,34 +79,40 @@ if [[ $ONEDNN_BUILD == 'acl' ]]; then extra_args="$extra_args --cxxopt=-DDNNL_AA
 
 if [[ $ONEDNN_BUILD ]]; then
     echo "$ONEDNN_BUILD build for $TF_VERSION"
-    bazel build $extra_args \
-        --config=mkl_opensource_only \
-        --copt="-mcpu=${CPU}" --copt="-flax-vector-conversions" --copt="-moutline-atomics" --copt="-O3" \
-        --cxxopt="-mcpu=${CPU}" --cxxopt="-flax-vector-conversions" --cxxopt="-moutline-atomics" --cxxopt="-O3" \
-        --linkopt="-fopenmp" \
-        --config=noaws --config=v2  --cxxopt="-D_GLIBCXX_USE_CXX11_ABI=0" \
-        //tensorflow/tools/pip_package:build_pip_package
+    extra_args="$extra_args --config=mkl_opensource_only --linkopt=-fopenmp"
 
 else
     echo "Eigen-only build for $TF_VERSION"
-    bazel build $extra_args --define tensorflow_mkldnn_contraction_kernel=0 \
-        --copt="-mcpu=${CPU}" --copt="-flax-vector-conversions" --copt="-moutline-atomics" --copt="-O3" \
-        --cxxopt="-mcpu=${CPU}" --cxxopt="-flax-vector-conversions" --cxxopt="-moutline-atomics" --cxxopt="-O3" \
-        --config=noaws --config=v2 --cxxopt="-D_GLIBCXX_USE_CXX11_ABI=0" \
-        //tensorflow/tools/pip_package:build_pip_package
+    extra_args="$extra_args --define tensorflow_mkldnn_contraction_kernel=0"
 fi
-./bazel-bin/tensorflow/tools/pip_package/build_pip_package ./wheel-TF$TF_VERSION-py$PY_VERSION-$CC
 
+# Build the tensorflow configuration
+bazel build $extra_args \
+        --config=v2 --config=noaws \
+        --copt="-mcpu=${CPU}" --copt="-O3" --copt="-flax-vector-conversions" --copt="-moutline-atomics" \
+        --cxxopt="-mcpu=${CPU}" --cxxopt="-O3" --cxxopt="-flax-vector-conversions" --cxxopt="-moutline-atomics" \
+        //tensorflow/tools/pip_package:build_pip_package \
+        //tensorflow:libtensorflow_cc.so \
+        //tensorflow:install_headers
+
+# Install Tensorflow python package via pip
+./bazel-bin/tensorflow/tools/pip_package/build_pip_package ./wheel-TF$TF_VERSION-py$PY_VERSION-$CC
 pip install $(ls -tr wheel-TF$TF_VERSION-py$PY_VERSION-$CC/*.whl | tail)
 
-# Check the installation was sucessfull
-cd $HOME
+# Install Tensorflow C++ interface
+mkdir -p $VENV_DIR/$package/lib
+mkdir -p $VENV_DIR/$package/include
+cp ./bazel-bin/tensorflow/libtensorflow* $VENV_DIR/$package/lib
+cp -r ./bazel-bin/tensorflow/include $VENV_DIR/$package/
+cp -r $VENV_DIR/lib/python$PY_VERSION/site-packages/tensorflow/include/google \
+      $VENV_DIR/$package/include
 
+# Check the Python installation was sucessfull
+cd $HOME
 if python -c 'import tensorflow; print(tensorflow.__version__)' > version.log; then
     echo "TensorFlow $(cat version.log) package installed from $TF_VERSION branch."
 else
-    echo "TensorFlow package installation failed."
+    echo "TensorFlow Python package installation failed."
     exit 1
 fi
-
 rm $HOME/version.log

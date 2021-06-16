@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # *******************************************************************************
-# Copyright 2020 Arm Limited and affiliates.
+# Copyright 2020-2021 Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,6 +28,10 @@ readonly src_repo=scipy
 git clone ${src_host}/${src_repo}.git
 cd ${src_repo}
 git checkout v$version -b v$version
+
+export BLAS_LIB='openblas'
+export BLAS_DIR=$OPENBLAS_DIR
+export BLAS_LDFLAGS=
 
 envsubst < $PACKAGE_DIR/site.cfg > ./site.cfg
 rm $PACKAGE_DIR/site.cfg
