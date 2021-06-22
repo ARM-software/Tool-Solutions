@@ -7,7 +7,7 @@ These instructions are available in the following languages
 
 ## 始めに
 
-このレポジトリには、[Arm Ethos-U55 Micro NPU(uNPU)](https://www.arm.com/ja/products/silicon-ip-cpu/ethos/ethos-u55)ベースのプラットフォーム向けアプリケーションをビルド及び実行する環境をセットアップするための手順とスクリプトが含まれます。
+このレポジトリには、[Arm Ethos-U55 Micro NPU(µNPU)](https://www.arm.com/ja/products/silicon-ip-cpu/ethos/ethos-u55)ベースのプラットフォーム向けアプリケーションをビルド及び実行する環境をセットアップするための手順とスクリプトが含まれます。
 
 [Arm Cortex-M55](https://www.arm.com/ja/products/silicon-ip-cpu/cortex-m/cortex-m55)をメインCPUとしてNPUに[Arm Ethos-U55](https://www.arm.com/ja/products/silicon-ip-cpu/ethos/ethos-u55)を搭載する[Corstone-300リファレンスプラットフォーム](https://developer.arm.com/ip-products/subsystem/corstone/corstone-300)をモデル化した Corstone-300FVP(Fixed Virtual Platform)をシュミレーションに利用しています。
 
@@ -335,6 +335,7 @@ $ ./linux_build_eval_kit_apps.sh
 ```
 `linux_build_eval_kit_apps.sh` option紹介
 * `--compiler`　ビルドに利用するコンパイラを設定します。
+* `--num_macs`　使用するEthos-U55構成を選択します。 `{32,64,128または256}`
 * `--model　<path/to/quantized/model.tflite>`  ネットワークを指定します。
 * `--use_case`　どのユースケースをビルドするか設定します。サンプル外のカスタムネットワークをビルドする場合`--use_case inference_runner`を設定し、ネットワークを `--model <path/to/quantized/model.tflite>`と指定します。`inference_runner`については[ユーザーによる応用](#ユーザーによる応用)を参照下さい。
 * `--help`　ヘルプを確認出来ます。
@@ -438,7 +439,9 @@ X11 Windowが設定されている場合、実行コマンドで下記の様なF
 `data_injection_demo.py` option紹介
  * `--image_path=</full/path/to/image/or/folder>` デモにインジェクトすべき画像を指定します 
 
- * `--use_camera=True` ホスト側USBカメラからの静止画像をインジェクトします。ビデオストリーム入力を行う場合は、静止画像に変換してからインジェクトする必要があります。ビデオストリームを直接扱うことは出来ません。
+ * `--enable_camera` ホスト側USBカメラからの静止画像をインジェクトします。ビデオストリーム入力を行う場合は、静止画像に変換してからインジェクトする必要があります。ビデオストリームを直接扱うことは出来ません。
+
+ * `--help` 全てのoptionを表示します。
 
 データインジェクションモードで推論を実行すると下記の様なWindowが立ち上がり、(a)推論結果, (b)メモリread/Writeカウント,(c)NPUサイクルカウントが表示されます。 
 
