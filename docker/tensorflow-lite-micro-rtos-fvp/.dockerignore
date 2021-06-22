@@ -1,0 +1,10 @@
+*
+!docker
+!downloads
+!scripts
+!sw
+!linux_build*
+!run_demo_app.sh
+!data_injection_demo.py
+!download_use_case_model.sh
+!requirements.txt

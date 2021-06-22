@@ -48,7 +48,7 @@ fi
 echo ""
 echo "Downloading Corstone 300 FVP..."
 echo ""
-[ -f FVP_Corstone_SSE-300_Ethos-U55_11.13_41.tgz ] || wget https://developer.arm.com/-/media/Arm%20Developer%20Community/Downloads/OSS/FVP/Corstone-300/FVP_Corstone_SSE-300_Ethos-U55_11.13_41.tgz
+[ -f FVP_Corstone_SSE-300_Ethos-U55_11.14_24.tgz ] || wget https://developer.arm.com/-/media/Arm%20Developer%20Community/Downloads/OSS/FVP/Corstone-300/MPS3/FVP_Corstone_SSE-300_Ethos-U55_11.14_24.tgz
 
 
 popd

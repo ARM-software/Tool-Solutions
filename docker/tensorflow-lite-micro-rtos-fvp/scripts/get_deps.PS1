@@ -10,7 +10,7 @@ pushd $BASEDIR\downloads
 
 $AC6_exists = Test-Path DS500-BN-00026-r5p0-18rel0.tgz
 $GCC_exists = Test-Path gcc-arm-none-eabi-10-2020-q4-major-x86_64-linux.tar.bz2
-$FVP_exists = Test-Path FVP_Corstone_SSE-300_Ethos-U55_11.13_41.tgz
+$FVP_exists = Test-Path FVP_Corstone_SSE-300_Ethos-U55_11.14_24.tgz
 $ProgressPreference = 'SilentlyContinue'
 
 if($compiler -eq "armclang")
@@ -47,7 +47,7 @@ Usage: ./get_deps.PS1 -compiler <armclang|gcc>
 
 if ($FVP_exists -eq $False)
 {
-	Invoke-WebRequest -Uri https://developer.arm.com/-/media/Arm%20Developer%20Community/Downloads/OSS/FVP/Corstone-300/FVP_Corstone_SSE-300_Ethos-U55_11.13_41.tgz -OutFile FVP_Corstone_SSE-300_Ethos-U55_11.13_41.tgz
+	Invoke-WebRequest -Uri https://developer.arm.com/-/media/Arm%20Developer%20Community/Downloads/OSS/FVP/Corstone-300/MPS3/FVP_Corstone_SSE-300_Ethos-U55_11.14_24.tgz -OutFile FVP_Corstone_SSE-300_Ethos-U55_11.14_24.tgz
 }
 
 popd

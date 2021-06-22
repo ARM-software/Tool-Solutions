@@ -16,7 +16,7 @@ WORKDIR /work
 #----------------------------------------------------------------------------
 # Download and Install Arm Corstone-300 FVP with Ethos-U55 into system directory 
 #----------------------------------------------------------------------------
-ADD downloads/FVP_Corstone_SSE-300_Ethos-U55_11.13_41.tgz /tmp
+ADD downloads/FVP_Corstone_SSE-300_Ethos-U55_11.14_24.tgz /tmp
 RUN /tmp/FVP_Corstone_SSE-300_Ethos-U55.sh --i-agree-to-the-contained-eula --no-interactive \
   && rm -rf /tmp/*
 

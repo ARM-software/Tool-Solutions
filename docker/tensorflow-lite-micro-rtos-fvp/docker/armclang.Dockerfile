@@ -22,7 +22,7 @@ RUN /tmp/AC6/install_x86_64.sh --i-agree-to-the-contained-eula --no-interactive 
 # Step 2: Install Arm Corstone-300 FVP with Ethos-U55 into system directory 
 #----------------------------------------------------------------------------
 FROM multiarch/ubuntu-core:amd64-bionic as fvp_install
-ADD downloads/FVP_Corstone_SSE-300_Ethos-U55_11.13_41.tgz /tmp/FVP
+ADD downloads/FVP_Corstone_SSE-300_Ethos-U55_11.14_24.tgz /tmp/FVP
 RUN /tmp/FVP/FVP_Corstone_SSE-300_Ethos-U55.sh --i-agree-to-the-contained-eula -d /usr/local/FVP_Corstone_SSE-300_Ethos-U55 --no-interactive \
   && rm -rf /tmp/FVP
 
@@ -112,6 +112,7 @@ WORKDIR /work
 # copy sw
 #----------------------------------------------------------------------------
 COPY sw /work/sw
+RUN sed -i 's/\r//' sw/data_injection_utils/*.py
 
 #----------------------------------------------------------------------------
 # Add build Script

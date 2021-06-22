@@ -3,16 +3,15 @@
 These instructions are available in the following languages
     
 [<img src="https://upload.wikimedia.org/wikipedia/commons/8/80/United-Kingdom-orb.png" data-canonical-src="https://upload.wikimedia.org/wikipedia/commons/8/80/United-Kingdom-orb.png" width="15" height="15" alt="English" style="vertical-align:middle" /> English](README.md) | 
-[<img src="https://upload.wikimedia.org/wikipedia/commons/b/bf/Japan-orb.png" data-canonical-src="https://upload.wikimedia.org/wikipedia/commons/b/bf/Japan-orb.png" width="15" height="15" alt="Japanese" style="vertical-align:middle" /> 日本語](README-ja.md) | 
-[<img src="https://upload.wikimedia.org/wikipedia/commons/8/83/Sweden-orb.png" data-canonical-src="https://upload.wikimedia.org/wikipedia/commons/8/83/Sweden-orb.png" width="15" height="15" alt="Swedish" style="vertical-align:middle" /> Svenska](README-sv.md) 
+[<img src="https://upload.wikimedia.org/wikipedia/commons/b/bf/Japan-orb.png" data-canonical-src="https://upload.wikimedia.org/wikipedia/commons/b/bf/Japan-orb.png" width="15" height="15" alt="Japanese" style="vertical-align:middle" /> 日本語](README-ja.md)
 
 ## Introduction
 
 This repository contains instructions and scripts for setting up an environment for building and running applications for an Arm® Ethos™-U55 based platform.
 
-Docker is for setting up an environment that can be widely accessible, easy to deploy and reproducible. 
+Docker is used for setting up an environment that can be widely accessible, easy to deploy and reproducible. 
 
-The environment comes with tools like the [Corstone 300 FVP](https://developer.arm.com/ip-products/subsystem/corstone/corstone-300) (Fixed Virtual Platform), and [Vela NN Optimizer](https://git.mlplatform.org/ml/ethos-u/ethos-u-vela.git/about/) The FVP simulates an Arm® Cortex®-M and Arm® Ethos™-U55 (µNPU) platform. 
+The environment comes with tools like the [Corstone 300 FVP](https://developer.arm.com/ip-products/subsystem/corstone/corstone-300) (Fixed Virtual Platform), and [Vela NN Optimizer](https://git.mlplatform.org/ml/ethos-u/ethos-u-vela.git/about/). The FVP simulates an Arm® Cortex®-M and Arm® Ethos™-U55 (µNPU) platform. 
 
 The repository includes a couple of example applications to get started with developing applications for a Cortex®-M and Ethos™-U platform.
 
@@ -26,11 +25,11 @@ The repository includes a couple of example applications to get started with dev
 - [Dependencies](#dependencies)
 - [Setup Environment](#setup-environment)
     - [Option 1: Using Docker (Recommended)](#option-1-using-docker-recommended)
-    - [Option 2: Using local linux machine.](#option-2-using-local-linux-machine)
-        - [Setting up python](#setting-up-python)
+    - [Option 2: Using native linux machine](#option-2-using-native-linux-machine)
+        - [Install python](#install-python)
         - [Install new CMake](#install-new-cmake)
-        - [Installing ArmCompiler](#installing-armcompiler)
-        - [Installing Arm GNU toolchain](#installing-arm-gnu-toolchain)
+        - [Install ArmCompiler](#install-armcompiler)
+        - [Install Arm GNU toolchain](#install-arm-gnu-toolchain)
 - [Build demo applications](#build-demo-applications)
     - [Building ml-embedded-evaluation-kit applications](#building-ml-embedded-evaluation-kit-applications)
         - [Building and running demo applications](#building-and-running-demo-applications)
@@ -52,8 +51,7 @@ This project aims to support building applications using either the [ml-embedded
 
 ### ethos-u repository
 
-This is the root repository for all Arm® Ethos™-U software. It is provided
-to help users download required repositories and place them in a tree structure.
+This is the root repository for all Arm® Ethos™-U software. It is provided to help users download required repositories and place them in a tree structure.
 
 It comes with a couple of basic demo applications running on the Corstone-300 (Cortex-M55 + Ethos-U55) platform. The demo applications has support for FreeRTOS, as well as bare-metal.
 
@@ -69,7 +67,7 @@ or a fixed virtual platform (FVP) that supports Ethos-U55 software fast model. B
 the new [Arm® Cortex™-M55 processor](https://www.arm.com/products/silicon-ip-cpu/cortex-m/cortex-m55) and the
 [Arm® Ethos™-U55 NPU](https://www.arm.com/products/silicon-ip-cpu/ethos/ethos-u55).
 
-The following sample applocations are available in the ml-embedded-evaluation-kit:<br>
+The following sample applications are available in the ml-embedded-evaluation-kit:<br>
 * ad (Anomaly Detection)
 * asr (Automatic Speech Recognition)
 * img_class (Imange Classification)
@@ -89,7 +87,7 @@ When building the docker image the following packages will be downloaded to the 
 
 * ArmCompiler 6.16 for Linux64: [DS500-BN-00026-r5p0-18rel0.tgz](https://developer.arm.com/-/media/Files/downloads/compiler/DS500-BN-00026-r5p0-18rel0.tgz)
 * GNU Arm Embedded Toolchain: [gcc-arm-none-eabi-10-2020-q4-major-x86_64-linux.tar.bz2](https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-rm/downloads)
-* Corstore-300 FVP with Arm® Ethos™-U55 support for Linux64: [FVP_Corstone_SSE-300_Ethos-U55_11.13_41.tgz](https://developer.arm.com/-/media/Arm%20Developer%20Community/Downloads/OSS/FVP/Corstone-300/FVP_Corstone_SSE-300_Ethos-U55_11.13_41.tgz)
+* Corstore-300 FVP with Arm® Ethos™-U55 support for Linux64: [FVP_Corstone_SSE-300_Ethos-U55_11.14_24.tgz](https://developer.arm.com/-/media/Arm%20Developer%20Community/Downloads/OSS/FVP/Corstone-300/MPS3/FVP_Corstone_SSE-300_Ethos-U55_11.14_24.tgz)
 
 ## Dependencies
 
@@ -110,7 +108,7 @@ Models and Sample images used in this project are open source and the details ca
 
 ## Setup Environment
 
-The build scripts has been tested on CentOS7, Ubuntu 18.04, and Windows 10 PowerShell
+The build scripts has been tested on CentOS7, Ubuntu 18.04 and 20.04, and Windows 10 PowerShell
 
 ### Option 1: Using Docker (Recommended)
 
@@ -123,7 +121,7 @@ The build scripts has been tested on CentOS7, Ubuntu 18.04, and Windows 10 Power
             ```commandline
             $ ./docker_build.PS1 -compiler armclang
             ```
-        * If you wish to use the GNU GCC Compiler (Not available for ml-embedded-evaluation-kit)
+        * If you wish to use the GNU GCC Compiler
             ```commandline
             $ ./docker_build.PS1 -compiler gcc
             ```
@@ -132,7 +130,7 @@ The build scripts has been tested on CentOS7, Ubuntu 18.04, and Windows 10 Power
             ```commandline
             $ ./docker_build.sh -c armclang
             ```
-        * If you wish to use the GNU GCC Compiler (Not available for ml-embedded-evaluation-kit)
+        * If you wish to use the GNU GCC Compiler
             ```commandline
             $ ./docker_build.sh -c gcc
             ```
@@ -178,11 +176,11 @@ The build scripts has been tested on CentOS7, Ubuntu 18.04, and Windows 10 Power
                 $ ./docker_run.sh -i <compiler> --share_folder share_folder
                 ```
 
-### Option 2: Using native linux machine.
+### Option 2: Using native linux machine
 
-***This has been tested on Ubuntu 18.04, 20.04 and CentOS7 ***
+***This has been tested on Ubuntu 18.04, 20.04 and CentOS7***
 
-#### Setting up python
+#### Install python
 
 We use python for some scripts. So you need to install some dependencies.
 
@@ -232,7 +230,7 @@ Follow the installation instructions on the CMake website:
 >
 > `export PATH=/path/to/cmake/bin:$PATH`
 
-#### Installing ArmCompiler
+#### Install ArmCompiler
 
 If you are choosing to use ArmCompler over GCC, follow these instructions for installation.
 
@@ -264,14 +262,14 @@ If you are choosing to use ArmCompler over GCC, follow these instructions for in
         - Corstone-300 FVP version 11.12 or higher
         ```commandline
         $ FVP_Corstone_SSE-300_Ethos-U55 --version
-        Fast Models [11.13.41 (Feb  2 2021)]
+        Fast Models [11.14.24 (Mar 23 2021)]
         Copyright 2000-2021 ARM Limited.
         All Rights Reserved.
         ```
 
     If you have any issues, make sure your PATH is configured correctly, and that you have the `ARMLMD_LICENSE_FILE` and `ARM_TOOL_VARIANT` configured correctly.
 
-#### Installing Arm GNU toolchain
+#### Install Arm GNU toolchain
 
 If you choose to use GCC over ArmCompiler, follow these instructions to install.
 
@@ -297,7 +295,7 @@ If you choose to use GCC over ArmCompiler, follow these instructions to install.
         ```
         ```commandline
         $ FVP_Corstone_SSE-300_Ethos-U55 --version
-        Fast Models [11.13.41 (Feb  2 2021)]
+        Fast Models [11.14.24 (Mar 23 2021)]
         Copyright 2000-2021 ARM Limited.
         All Rights Reserved.
         ```
@@ -334,6 +332,10 @@ The script `linux_build_eval_kit_apps.sh` will download and build the kit evalua
         ```commandline
         $ FVP_Corstone_SSE-300_Ethos-U55 -a dependencies/ml-embedded-evaluation-kit/build/bin/<sample-name>.axf
         ```
+
+    * The following windows will be opened. The Telnet terminal can be used for interaction with the application and shows evaluation results such as cycle count. The FVP main window, shows a virtual display, printing out the inference data and inference results.
+
+    ![ethos-u-img_class.axf](res/FDv21.05-img_class.png)
     
     * To bake in your own data, copy your data (images/sound files) into the application sample folder and run the build script. 
         * Person Detection: `sw/ml-eval-kit/samples/resources/person_detection/samples/`
@@ -351,7 +353,7 @@ The script `linux_build_eval_kit_apps.sh` will download and build the kit evalua
             -C mps3_board.uart0.shutdown_tag="releasing platform" \
             -a dependencies/ml-embedded-evaluation-kit/build/bin/<sample-name>.axf
         ```
-        
+
 1. Interact with the sample
     Somtimes you need to interact with the sample applications.
     To do this, please open a second terminal and run
@@ -373,7 +375,6 @@ The script `linux_build_eval_kit_apps.sh` will download and build the kit evalua
 This is a demo doing data injection to an person_detection/img_class demo application. The application will have a single image built in, but this can be overwritten when starting the application. You can select a folder of images to use for the input, or you can choose to use a USB webcam. Each inference will take some time, since it is a simulation, so real time performance is not to be expected.
 
 `data_injection_demo.py` will download, build and run the person_detection/img_class sample applications. Use this as a POC of how to inject data dynamically into the application.
-_NOTE: This script only works properly with armclang._
 
 * On docker:
     ```commandline
@@ -383,10 +384,11 @@ _NOTE: This script only works properly with armclang._
 * On native host:
     ```commandline
     $ source .pyenv-tflm/bin/activate
-    $ ./data_injection_demo.py
+    $ ./data_injection_demo.py --compiler <armclang/gcc>
     ```
-    * Images to inject into the application can be selected using the command line argument `--image_path=<path/to/image/or/folder>`
+    * Images to inject into the application can be selected using the command line argument `--image_path=</full/path/to/image/or/folder>`
     * It is also possible use a USB camera to get the input data by using the option `--use_camera=True` (Each inference takes at least 10 seconds, so don't expect a smooth real time video)
+    * Using `--speed_mode=True` will speed up the inference. This will invalidate the cycle count.
     * To perform inference on a video stream, the best way would be to convert the video frames into still images and use the frames as input
     
 ##### Interpreting the results
@@ -434,7 +436,13 @@ These applications are FreeRTOS sample applications and can run with either the 
 
 There are helper scripts available to convert tflite models and images to cp code.
 
-They are located in `~/work/sw/convert_scripts`
+They are located in:
+
+* Docker: 
+    `/usr/local/convert_scripts`
+    
+* Linux: 
+    `scripts/convert_scripts`
 
 ##### Converting a model
 
