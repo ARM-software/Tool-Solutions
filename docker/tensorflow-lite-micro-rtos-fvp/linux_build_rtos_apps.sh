@@ -4,13 +4,12 @@ BASEDIR="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 
 # Usage: takes compiler as input
 usage() { 
-    echo "Usage: $0 [-c <gcc|armclang>]" 1>&2
-    echo "   -c|--compiler  : The compiler to use to build the applications, gcc|armclang (default: armclang)" 1>&2
+    echo -e "\e[1;33mUsage: $0 [-c <gcc|armclang>]\e[m" 1>&2
+    echo -e "\e[1;34m   -c|--compiler\e[m  : The compiler to use to build the applications, gcc|armclang (default: armclang)" 1>&2
     exit 1 
 }
 
 COMPILER=${COMPILER:-'armclang'}
-NPROC=`nproc`
 mkdir -p ${BASEDIR}/dependencies/logs
 
 while [[ "$#" -gt 0 ]]; do
@@ -70,7 +69,7 @@ pushd ${BASEDIR}/dependencies/ethos-u
     rm -rf target/core_software/tensorflow
     cmake -DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_FILE} -DCMAKE_INSTALL_PREFIX=. ../core_platform/targets/corstone-300 \
         | tee ${BASEDIR}/dependencies/logs/rtos_cmake_$(date '+%Y-%m-%d-%H').log
-    make -j$NPROC \
+    make -j \
         | tee ${BASEDIR}/dependencies/logs/rtos_make_$(date '+%Y-%m-%d-%H').log
     make install \
         | tee ${BASEDIR}/dependencies/logs/rtos_make_install_$(date '+%Y-%m-%d-%H').log

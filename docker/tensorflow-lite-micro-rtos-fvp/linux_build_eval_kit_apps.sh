@@ -8,15 +8,16 @@ pushd ${BASEDIR}
 
 # Usage: takes use_case as input
 usage() { 
-    echo "Usage: $0 [-c <gcc|armclang> -u <use_case>]" 1>&2
-    echo "   -c|--compiler  : The compiler to use to build the applications, gcc|armclang (default: armclang)" 1>&2
-    echo "   -u|--use_case  : The use case to build (default: img_class)" 1>&2
-    echo "   -d|--data_path  : Full path to a folder of custom images" 1>&2
-    echo "   -m|--model     : Path to the model to use. Full path, or relative to ml-embedded-evaluation-kit root. " 1>&2
-    echo "   -k|--kws_model : Path to the kws model for kws_asr use_case to use. This option is only uded for the kws_asr use case" 1>&2
-    echo "            Default models exists for all use_cases except inference_runner" 1>&2
-    echo "            Available use_cases: { img_class, person_detection, ad, asr, kws, kws_asr, inference_runner }" 1>&2
-    echo "            Read more about the use cases in the ml-embedded-evaluation-kit documentation" 1>&2
+    echo -e "\e[1;33mUsage: $0 [-c <gcc|armclang> -u <use_case>]\e[m" 1>&2
+    echo -e "\e[1;34m   -c|--compiler  \e[m: The compiler to use to build the applications, gcc|armclang (default: armclang)" 1>&2
+    echo -e "\e[1;34m   -u|--use_case  \e[m: The use case to build (default: img_class)" 1>&2
+    echo -e "\e[1;34m   -d|--data_path \e[m: Full path to a folder of custom images" 1>&2
+    echo -e "\e[1;34m   -m|--model     \e[m: Path to the model to use. Full path, or relative to ml-embedded-evaluation-kit root. " 1>&2
+    echo -e "\e[1;34m   --num_macs     \e[m: Ethos-U Configuration for num macs (default: 128)" 1>&2
+    echo -e "\e[1;34m   -k|--kws_model \e[m: Path to the kws model for kws_asr use_case to use. This option is only uded for the kws_asr use case" 1>&2
+    echo -e "\e[1;32m            Default models exists for all use_cases except inference_runner" 1>&2
+    echo -e "            Available use_cases: { img_class, person_detection, ad, asr, kws, kws_asr, inference_runner }" 1>&2
+    echo -e "            Read more about the use cases in the ml-embedded-evaluation-kit documentation\e[m" 1>&2
     
     popd
     exit 1 
@@ -27,8 +28,7 @@ USE_CASE='img_class'
 MODEL=''
 DATA_PATH=''
 MODEL_kws=''
-
-NPROC=`nproc`
+NUM_MACS=128
 
 mkdir -p ${BASEDIR}/dependencies/logs
 
@@ -38,9 +38,10 @@ while [[ "$#" -gt 0 ]]; do
         -u|--use_case) USE_CASE="$2"; shift ;;
         -d|--data_path) DATA_PATH="$2"; shift ;;
         -m|--model) MODEL="$2"; shift ;;
+        --num_macs) NUM_MACS="$2"; shift ;;
         -k|--kws_model) MODEL_kws="$2"; shift ;;
         -h|--help) usage ;;
-        *) echo "Unknown parameter passed: $1"; usage ;;
+        *) echo -e "\e[1;31mUnknown parameter passed: $1\e[m"; usage ;;
     esac
     shift
 done
@@ -57,12 +58,14 @@ mkdir -p ${BASEDIR}/dependencies
 if [ ! -d ${BASEDIR}/dependencies/ml-embedded-evaluation-kit ];
 then
     pushd ${BASEDIR}/dependencies
-        echo "Cloning ml-embedded-evaluation-kit repository"
+        echo -e "\e[1;32m Cloning ml-embedded-evaluation-kit repository \e[m"
         git clone -b 21.05 --recursive https://git.mlplatform.org/ml/ethos-u/ml-embedded-evaluation-kit.git
         mkdir -p ml-embedded-evaluation-kit/dependencies/tensorflow/tensorflow/lite/micro/tools/make/downloads/gcc_embedded
     popd
 else
+    echo -e "\e[1;33m"
     echo "Skipping cloning of ml-embedded-evaluation-kit, already exists"
+    echo -e  "\e[m"
 fi
 
 if [ ! -d ${BASEDIR}/dependencies/ml-embedded-evaluation-kit/dependencies/tensorflow/tensorflow ];
@@ -89,7 +92,9 @@ cp -r ${BASEDIR}/sw/ml-eval-kit/samples/* ${BASEDIR}/dependencies/ml-embedded-ev
 
 if [ ! -d "${BASEDIR}/dependencies/ml-embedded-evaluation-kit/source/use_case/${USE_CASE}" ];
 then
+    echo -e "\e[1;31m"
     echo "ERROR: Selected use case source was not found in ml-embedded-evaluation-kit source folder"
+    echo -e "\e[m"
     usage;
 fi
 
@@ -132,8 +137,10 @@ if [ "${COMPILER}" = 'armclang' ];
 then
     if [ -z ${ARMLMD_LICENSE_FILE} ]; 
     then 
+        echo -e "\e[1;31m"
         echo "ARMLMD_LICENSE_FILE is unset"
         echo "Please configure the Arm license before proceeding"
+        echo -e "\e[m"
         popd
         exit;
     fi
@@ -153,8 +160,7 @@ pushd ${BASEDIR}/dependencies/ml-embedded-evaluation-kit
 mkdir -p output
 echo "Optimizing ${USE_CASE} model with vela"
 vela ${MODEL} \
-    --accelerator-config=ethos-u55-128 \
-    --block-config-limit=0 \
+    --accelerator-config=ethos-u55-$NUM_MACS \
     --config scripts/vela/default_vela.ini \
     --memory-mode Shared_Sram \
     --system-config Ethos_U55_High_End_Embedded \
@@ -168,7 +174,7 @@ if [ "${USE_CASE}" = 'kws_asr' ];
 then
     echo "Optimizing ${USE_CASE} model with vela"
     vela ${MODEL_kws} \
-        --accelerator-config=ethos-u55-128 \
+        --accelerator-config=ethos-u55-$NUM_MACS \
         --block-config-limit=0 \
         --config scripts/vela/default_vela.ini \
         --memory-mode Shared_Sram \
@@ -218,7 +224,7 @@ pushd ${BUILDDIR}
         .. \
             | tee ${BASEDIR}/dependencies/logs/eval_kit_cmake_$(date '+%Y%m%d-%H:%M:%S').log
 
-    make -j${NPROC} \
+    make -j \
         | tee ${BASEDIR}/dependencies/logs/eval_kit_make_$(date '+%Y%m%d-%H:%M:%S').log
 popd
 
