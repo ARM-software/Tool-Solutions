@@ -15,11 +15,12 @@
 #include "armnn/Exceptions.hpp"
 #include "armnn/Tensor.hpp"
 #include "armnn/INetwork.hpp"
-#include "armnnTfParser/ITfParser.hpp"
+#include "armnnTfLiteParser/ITfLiteParser.hpp"
+#include "stdlib.h"
 
 #include "mnist_loader.hpp"
 
-#define MAX_IMAGES 3000 
+#define MAX_IMAGES 3000
 
 // Helper function to make input tensors
 armnn::InputTensors MakeInputTensors(const std::pair<armnn::LayerBindingId,
@@ -73,15 +74,14 @@ int main(int argc, char** argv)
       return 1;
     }
 
-    // Import the TensorFlow model. Note: use CreateNetworkFromBinaryFile for .pb files.
-    armnnTfParser::ITfParserPtr parser = armnnTfParser::ITfParser::Create();
-    armnn::INetworkPtr network = parser->CreateNetworkFromBinaryFile("model/convol_mnist_tf.pb",
-                                                                   { {"input_tensor", {nrOfImages, 784, 1, 1}} },
-                                                                   { "fc2/output_tensor" });
+    //Converts the .pb file to tflite file with appropriate shaped (requries tensorflow 1.x)
+    std::cout << "Converting to tflite." << std::endl;
+    std::string nrImagesString = std::to_string(nrOfImages);
+    system(("./convert.sh " + nrImagesString).c_str());
 
-    // Find the binding points for the input and output nodes
-    armnnTfParser::BindingPointInfo inputBindingInfo = parser->GetNetworkInputBindingInfo("input_tensor");
-    armnnTfParser::BindingPointInfo outputBindingInfo = parser->GetNetworkOutputBindingInfo("fc2/output_tensor");
+    // Import the TensorFlow Lite model.
+    armnnTfLiteParser::ITfLiteParserPtr parser = armnnTfLiteParser::ITfLiteParser::Create();
+    armnn::INetworkPtr network = parser->CreateNetworkFromBinaryFile("model/convol_mnist.tflite");
 
     // Create ArmNN runtime
     armnn::IRuntime::CreationOptions options; // default options
@@ -99,11 +99,19 @@ int main(int argc, char** argv)
       case 2: device = armnn::Compute::GpuAcc; std::cout << "GpuAcc" << std::endl; break;
     }
 
-    armnn::IOptimizedNetworkPtr optNet = Optimize(*network, {device}, runtime->GetDeviceSpec());
+    armnn::IOptimizedNetworkPtr optNet = Optimize(*network, {device}, runtime->GetDeviceSpec(), armnn::OptimizerOptions());
 
     // Load the optimized network onto the runtime device
     armnn::NetworkId networkIdentifier;
     runtime->LoadNetwork(networkIdentifier, std::move(optNet));
+
+    //Finding the binding points for the input and output nodes
+
+    std::vector<std::string> inputNames = parser->GetSubgraphInputTensorNames(0);
+    auto inputBindingInfo = parser->GetNetworkInputBindingInfo(0, inputNames[0]);
+
+    std::vector<std::string> outputNames = parser->GetSubgraphOutputTensorNames(0);
+    auto outputBindingInfo = parser->GetNetworkOutputBindingInfo(0, outputNames[0]);
 
     // Load multiple images from the data directory
     std::string dataDir = "data/";
@@ -153,6 +161,6 @@ int main(int argc, char** argv)
     delete[] input;
     delete[] output;
     delete[] labels;
- 
+
     return 0;
 }
