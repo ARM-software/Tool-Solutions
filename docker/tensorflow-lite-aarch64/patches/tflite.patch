@@ -1,0 +1,91 @@
+ *******************************************************************************
+ Copyright 2021 Arm Limited and affiliates.
+ SPDX-License-Identifier: Apache-2.0
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+ *******************************************************************************
+
+diff --git a/tensorflow/lite/CMakeLists.txt b/tensorflow/lite/CMakeLists.txt
+index ae956a747dd..4cbae4604de 100644
+--- a/tensorflow/lite/CMakeLists.txt
++++ b/tensorflow/lite/CMakeLists.txt
+@@ -446,6 +446,11 @@ if(TFLITE_ENABLE_GPU)
+   )
+ endif()  # TFLITE_ENABLE_GPU
+
++list(APPEND TFLITE_BENCHMARK_SRCS
++  ${TFLITE_SOURCE_DIR}/tools/delegates/external_delegate_provider.cc
++  ${TFLITE_SOURCE_DIR}/delegates/external/external_delegate.cc
++)
++
+ add_executable(benchmark_model
+   EXCLUDE_FROM_ALL
+   ${TFLITE_BENCHMARK_SRCS}
+diff --git a/tensorflow/lite/tools/benchmark/benchmark_model.cc b/tensorflow/lite/tools/benchmark/benchmark_model.cc
+index 617fa7d84b6..f77f1c87e02 100644
+--- a/tensorflow/lite/tools/benchmark/benchmark_model.cc
++++ b/tensorflow/lite/tools/benchmark/benchmark_model.cc
+@@ -55,7 +55,8 @@ void BenchmarkLoggingListener::OnBenchmarkEnd(const BenchmarkResults& results) {
+                    << "Init: " << init_us << ", "
+                    << "First inference: " << warmup_us.first() << ", "
+                    << "Warmup (avg): " << warmup_us.avg() << ", "
+-                   << "Inference (avg): " << inference_us.avg();
++                   << "Inference (avg): " << inference_us.avg() << ", "
++                   << "Inference (min): " << inference_us.min();
+
+   if (!init_mem_usage.IsSupported()) return;
+   TFLITE_LOG(INFO)
+diff --git a/tensorflow/lite/tools/benchmark/benchmark_tflite_model.cc b/tensorflow/lite/tools/benchmark/benchmark_tflite_model.cc
+index 511244cee88..bf4636b9351 100644
+--- a/tensorflow/lite/tools/benchmark/benchmark_tflite_model.cc
++++ b/tensorflow/lite/tools/benchmark/benchmark_tflite_model.cc
+@@ -610,6 +610,7 @@ TfLiteStatus BenchmarkTfLiteModel::Init() {
+   interpreter_->SetAllowFp16PrecisionForFp32(params_.Get<bool>("allow_fp16"));
+
+   owned_delegates_.clear();
++  std::unordered_set<int> checked_node_ids;
+   for (const auto& delegate_provider :
+        tools::GetRegisteredDelegateProviders()) {
+     auto delegate = delegate_provider->CreateTfLiteDelegate(params_);
+@@ -626,12 +627,17 @@ TfLiteStatus BenchmarkTfLiteModel::Init() {
+       int num_delegated_kernels = 0;
+       for (int i = 0; i < interpreter_->execution_plan().size(); ++i) {
+         int node_id = interpreter_->execution_plan()[i];
++	if(checked_node_ids.find(node_id) != checked_node_ids.end()) {
++	  continue;
++	}
+         const TfLiteNode& node =
+             interpreter_->node_and_registration(node_id)->first;
+-        if (delegate.get() == node.delegate) {
++	if(node.delegate != nullptr) {
+           num_delegated_kernels++;
++	  checked_node_ids.insert(node_id);
+         }
+       }
++
+       bool fully_delegated = (num_delegated_kernels == 1 &&
+                               interpreter_->execution_plan().size() == 1);
+
+diff --git a/tensorflow/lite/tools/cmake/modules/xnnpack.cmake b/tensorflow/lite/tools/cmake/modules/xnnpack.cmake
+index e5f205c0b0b..b6f8772dd27 100644
+--- a/tensorflow/lite/tools/cmake/modules/xnnpack.cmake
++++ b/tensorflow/lite/tools/cmake/modules/xnnpack.cmake
+@@ -22,7 +22,7 @@ include(FetchContent)
+ OverridableFetchContent_Declare(
+   xnnpack
+   GIT_REPOSITORY https://github.com/google/xnnpack
+-  GIT_TAG 0af63ab36b899559bd1a92bbc327f8137e53c15c
++  GIT_TAG be3d8fdffe8eb71b80835f168d4a550bb5d80f12
+   GIT_PROGRESS TRUE
+   PREFIX "${CMAKE_BINARY_DIR}"
+   SOURCE_DIR "${CMAKE_BINARY_DIR}/xnnpack"

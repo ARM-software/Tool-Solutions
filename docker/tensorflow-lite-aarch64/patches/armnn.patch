@@ -1,0 +1,179 @@
+ *******************************************************************************
+ Copyright 2021 Arm Limited and affiliates.
+ SPDX-License-Identifier: Apache-2.0
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+ *******************************************************************************
+
+diff --git a/delegate/CMakeLists.txt b/delegate/CMakeLists.txt
+index 707877fc1..95afa12bd 100644
+--- a/delegate/CMakeLists.txt
++++ b/delegate/CMakeLists.txt
+@@ -67,6 +67,8 @@ target_link_libraries(armnnDelegate PUBLIC Armnn::Armnn)
+ find_package(TfLite REQUIRED MODULE)
+
+ target_link_libraries(armnnDelegate PUBLIC ${TfLite_LIB})
++target_link_libraries(armnnDelegate PUBLIC -lpthread)
++target_link_libraries(armnnDelegate PUBLIC -ldl)
+
+ # Various tflite header files are not warning clean
+ # We can't change compilation flags on header files directly, so we need to add them to an interface library first
+diff --git a/delegate/cmake/Modules/FindTfLite.cmake b/delegate/cmake/Modules/FindTfLite.cmake
+index 41f55e3e8..9d7283141 100644
+--- a/delegate/cmake/Modules/FindTfLite.cmake
++++ b/delegate/cmake/Modules/FindTfLite.cmake
+@@ -14,24 +14,43 @@ find_path(TfLite_INCLUDE_DIR
+             ${TENSORFLOW_ROOT})
+
+ find_library(TfLite_LIB
+-        NAMES
+-            "libtensorflow_lite_all.so"
+-            "libtensorflowlite.so"
++       NAMES
++           "libtensorflow-lite.a"
+         HINTS
+             ${TFLITE_LIB_ROOT}
+             ${TFLITE_LIB_ROOT}/tensorflow/lite)
+
++find_library(TfLite_ruy_LIB
++            "libruy.a"
++        PATH
++            ${TFLITE_LIB_ROOT}/_deps/ruy-build)
++
++find_library(TfLite_fft2d_LIB
++            "libfft2d_fftsg.a"
++        PATH
++            ${TFLITE_LIB_ROOT}/_deps/fft2d-build)
++
++find_library(TfLite_farmhash_LIB
++            "libfarmhash.a"
++        PATH
++            ${TFLITE_LIB_ROOT}/_deps/farmhash-build)
++
++find_library(TfLite_flatbuffers_LIB
++            "libflatbuffers.a"
++        PATH
++            ${TFLITE_LIB_ROOT}/_deps/flatbuffers-build)
++
+ find_path(TfLite_Schema_INCLUDE_PATH
+             schema_generated.h
+         HINTS
+-            ${TFLITE_LIB_ROOT}/tensorflow/lite/schema)
++            ${TENSORFLOW_ROOT}/tensorflow/lite/schema)
+
+ ## Set TFLITE_FOUND
+-find_package_handle_standard_args(TfLite DEFAULT_MSG TfLite_INCLUDE_DIR TfLite_LIB TfLite_Schema_INCLUDE_PATH)
++find_package_handle_standard_args(TfLite DEFAULT_MSG TfLite_INCLUDE_DIR TfLite_LIB TfLite_ruy_LIB TfLite_fft2d_LIB TfLite_farmhash_LIB TfLite_flatbuffers_LIB TfLite_Schema_INCLUDE_PATH)
+
+ ## Set external variables for usage in CMakeLists.txt
+ if(TFLITE_FOUND)
+-    set(TfLite_LIB ${TfLite_LIB})
++    set(TfLite_LIB ${TfLite_LIB} ${TfLite_ruy_LIB} ${TfLite_fft2d_LIB} ${TfLite_farmhash_LIB} ${TfLite_flatbuffers_LIB})
+     set(TfLite_INCLUDE_DIR ${TfLite_INCLUDE_DIR})
+     set(TfLite_Schema_INCLUDE_PATH ${TfLite_Schema_INCLUDE_PATH})
+-endif()
+\ No newline at end of file
++endif()
+diff --git a/delegate/src/FullyConnected.hpp b/delegate/src/FullyConnected.hpp
+index e94304fb2..85d1635eb 100644
+--- a/delegate/src/FullyConnected.hpp
++++ b/delegate/src/FullyConnected.hpp
+@@ -31,7 +31,7 @@ TfLiteStatus VisitFullyConnectedOperator(DelegateData& delegateData,
+         return kTfLiteError;
+     }
+     TF_LITE_ENSURE_STATUS(ValidateNumOutputs(tfLiteContext, tfLiteNode, 1, nodeIndex));
+-    bool biasEnabled = (numInputs == 3);
++    bool biasEnabled = (numInputs == 3) && tfLiteNode->inputs->data[2] > 0;
+
+     const TfLiteTensor* tfLiteTensors = tfLiteContext->tensors;
+     const TfLiteTensor& tfLiteInputTensor = tfLiteTensors[tfLiteNode->inputs->data[0]];
+@@ -199,4 +199,4 @@ TfLiteStatus VisitFullyConnectedOperator(DelegateData& delegateData,
+     return FusedActivation(tfLiteContext, tfLiteNode, activationType, layer, 0, delegateData);
+ }
+
+-} // namespace armnnDelegate
+\ No newline at end of file
++} // namespace armnnDelegate
+diff --git a/src/armnnTfLiteParser/TfLiteParser.cpp b/src/armnnTfLiteParser/TfLiteParser.cpp
+index 5070d5b22..2145c9d15 100644
+--- a/src/armnnTfLiteParser/TfLiteParser.cpp
++++ b/src/armnnTfLiteParser/TfLiteParser.cpp
+@@ -717,8 +717,8 @@ INetworkPtr TfLiteParserImpl::CreateNetworkFromModel()
+             for (OperatorPtr const& op : subgraph->operators)
+             {
+                 auto const& opCodePtr = m_Model->operator_codes[op->opcode_index];
+-                auto builtinCode = opCodePtr->builtin_code;
+-
++		auto builtinCode = std::max(opCodePtr->builtin_code,
++                        static_cast<tflite::BuiltinOperator>(opCodePtr->deprecated_builtin_code));
+                 if (builtinCode > tflite::BuiltinOperator_MAX)
+                 {
+                     throw ParseException(fmt::format("Operator code {} is out of range 0-{}. "
+@@ -837,7 +837,8 @@ void TfLiteParserImpl::ParseUnsupportedOperator(size_t subgraphIndex, size_t ope
+     const auto & operatorPtr = m_Model->subgraphs[subgraphIndex]->operators[operatorIndex];
+
+     auto opcodeIndex = operatorPtr->opcode_index;
+-    auto opcode      = m_Model->operator_codes[opcodeIndex]->builtin_code;
++    auto opcode      = std::max(m_Model->operator_codes[opcodeIndex]->builtin_code,
++            static_cast<tflite::BuiltinOperator>(m_Model->operator_codes[opcodeIndex]->deprecated_builtin_code));
+
+     if (!m_Options || !m_Options.value().m_StandInLayerForUnsupported)
+     {
+diff --git a/src/backends/backendsCommon/WorkloadData.cpp b/src/backends/backendsCommon/WorkloadData.cpp
+index 100d23ee3..10af3a736 100644
+--- a/src/backends/backendsCommon/WorkloadData.cpp
++++ b/src/backends/backendsCommon/WorkloadData.cpp
+@@ -1096,7 +1096,7 @@ void FullyConnectedQueueDescriptor::Validate(const WorkloadInfo& workloadInfo) c
+             biasTensorInfo  = workloadInfo.m_InputTensorInfos[2];
+         }
+         // Validates type and quantization values.
+-        ValidateBiasTensorQuantization(biasTensorInfo, inputTensorInfo, weightTensorInfo, descriptorName);
++        //ValidateBiasTensorQuantization(biasTensorInfo, inputTensorInfo, weightTensorInfo, descriptorName);
+         ValidateTensorDataType(biasTensorInfo, GetBiasDataType(inputTensorInfo.GetDataType()), descriptorName, "bias");
+         ValidateTensorNumDimensions(biasTensorInfo, descriptorName, 1, "bias");
+     }
+diff --git a/tests/ExecuteNetwork/ExecuteNetwork.cpp b/tests/ExecuteNetwork/ExecuteNetwork.cpp
+index 2bbb51783..51cafa7bc 100644
+--- a/tests/ExecuteNetwork/ExecuteNetwork.cpp
++++ b/tests/ExecuteNetwork/ExecuteNetwork.cpp
+@@ -398,15 +398,12 @@ int MainImpl(const ExecuteNetworkParams& params,
+                 // model.Run returns the inference time elapsed in EnqueueWorkload (in milliseconds)
+                 auto inference_duration = model.Run(inputs[0], outputs[0]);
+
+-                if (params.m_GenerateTensorData)
+-                {
+-                    ARMNN_LOG(warning) << "The input data was generated, note that the output will not be useful";
+-                }
+-
+-                // Print output tensors
+-                const auto& infosOut = model.GetOutputBindingInfos();
+-                for (size_t i = 0; i < numOutputs; i++)
++                if (!params.m_GenerateTensorData)
+                 {
++		  // Print output tensors
++		  const auto& infosOut = model.GetOutputBindingInfos();
++		  for (size_t i = 0; i < numOutputs; i++)
++		  {
+                     const armnn::TensorInfo& infoOut = infosOut[i].second;
+                     auto outputTensorFile = params.m_OutputTensorFiles.empty() ? "" : params.m_OutputTensorFiles[i];
+
+@@ -415,7 +412,8 @@ int MainImpl(const ExecuteNetworkParams& params,
+                                           outputTensorFile,
+                                           params.m_DequantizeOutput);
+                     mapbox::util::apply_visitor(printer, outputs[0][i]);
+-                }
++		  }
++		}
+
+                 ARMNN_LOG(info) << "\nInference time: " << std::setprecision(2)
+                                 << std::fixed << inference_duration.count() << " ms\n";
