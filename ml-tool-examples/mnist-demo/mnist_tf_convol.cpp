@@ -75,9 +75,9 @@ int main(int argc, char** argv)
     }
 
     //Converts the .pb file to tflite file with appropriate shaped (requries tensorflow 1.x)
-    std::cout << "Converting to tflite." << std::endl;
-    std::string nrImagesString = std::to_string(nrOfImages);
-    system(("./convert.sh " + nrImagesString).c_str());
+    //std::cout << "Converting to tflite." << std::endl;
+    //std::string nrImagesString = std::to_string(nrOfImages);
+    //system(("./convert.sh " + nrImagesString).c_str());
 
     // Import the TensorFlow Lite model.
     armnnTfLiteParser::ITfLiteParserPtr parser = armnnTfLiteParser::ITfLiteParser::Create();
@@ -116,26 +116,52 @@ int main(int argc, char** argv)
     // Load multiple images from the data directory
     std::string dataDir = "data/";
 
-    auto input = new float[nrOfImages][g_kMnistImageByteSize];
-    auto output = new float[nrOfImages][10];
+    //auto input = new float[nrOfImages][g_kMnistImageByteSize];
     auto labels = new int[nrOfImages];
 
+    int nrOfCorrectPredictions = 0;
     for (int i = 0; i < nrOfImages; ++i)
     {
+      auto input = new float[g_kMnistImageByteSize];
+      auto output = new float[10]; 
       std::unique_ptr<MnistImage> imgInfo = loadMnistImage(dataDir, i);
       if (imgInfo == nullptr)
           return 1;
 
-      std::memcpy(input[i], imgInfo->image, sizeof(imgInfo->image));
+      std::memcpy(input, imgInfo->image, sizeof(imgInfo->image));
       labels[i] = imgInfo->label;
+      //Execute network
+      armnn::InputTensors inputTensor = MakeInputTensors(inputBindingInfo, &input[0]);
+      armnn::OutputTensors outputTensor = MakeOutputTensors(outputBindingInfo, &output[0]);
+  
+      armnn::Status ret = runtime->EnqueueWorkload(networkIdentifier, inputTensor, outputTensor);
+      
+      float max = output[0];
+      int label = 0;
+      
+      for (int j = 0; j < 10; ++j)
+      {
+	      //Translate 1-hot output to find integer label
+	      if (output[j] > max)
+	      {
+	      	max = output[j];
+		label = j;
+	      }
+      }
+	      if (label == labels[i]) nrOfCorrectPredictions++;
+	      std::cout << "#" << i + 1 << " | Predicted: " << label << " Actual: " << labels[i] << std::endl;
+      
+      delete[] input;
+      delete[] output;
     }
 
     // Execute network
-    armnn::InputTensors inputTensor = MakeInputTensors(inputBindingInfo, &input[0]);
-    armnn::OutputTensors outputTensor = MakeOutputTensors(outputBindingInfo, &output[0]);
+    //armnn::InputTensors inputTensor = MakeInputTensors(inputBindingInfo, &input[0]);
+    //armnn::OutputTensors outputTensor = MakeOutputTensors(outputBindingInfo, &output[0]);
 
-    armnn::Status ret = runtime->EnqueueWorkload(networkIdentifier, inputTensor, outputTensor);
+    //armnn::Status ret = runtime->EnqueueWorkload(networkIdentifier, inputTensor, outputTensor);
 
+    /*
     // Check output and compute correct predictions
     int nrOfCorrectPredictions = 0;
     for (int i = 0; i < nrOfImages; ++i)
@@ -155,11 +181,13 @@ int main(int argc, char** argv)
       if (label == labels[i]) nrOfCorrectPredictions++;
       std::cout << "#" << i+1 << " | Predicted: " << label << " Actual: " << labels[i] << std::endl;
     }
+
+    */
     std::cout << "Prediction accuracy: " << (float)nrOfCorrectPredictions/nrOfImages*100 << "%";
     std::cout << std::endl;
 
-    delete[] input;
-    delete[] output;
+    //delete[] input;
+    //delete[] output;
     delete[] labels;
 
     return 0;
