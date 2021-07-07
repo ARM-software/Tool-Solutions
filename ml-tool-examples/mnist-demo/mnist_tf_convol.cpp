@@ -74,11 +74,6 @@ int main(int argc, char** argv)
       return 1;
     }
 
-    //Converts the .pb file to tflite file with appropriate shaped (requries tensorflow 1.x)
-    //std::cout << "Converting to tflite." << std::endl;
-    //std::string nrImagesString = std::to_string(nrOfImages);
-    //system(("./convert.sh " + nrImagesString).c_str());
-
     // Import the TensorFlow Lite model.
     armnnTfLiteParser::ITfLiteParserPtr parser = armnnTfLiteParser::ITfLiteParser::Create();
     armnn::INetworkPtr network = parser->CreateNetworkFromBinaryFile("model/convol_mnist.tflite");
@@ -154,35 +149,6 @@ int main(int argc, char** argv)
       delete[] input;
       delete[] output;
     }
-
-    // Execute network
-    //armnn::InputTensors inputTensor = MakeInputTensors(inputBindingInfo, &input[0]);
-    //armnn::OutputTensors outputTensor = MakeOutputTensors(outputBindingInfo, &output[0]);
-
-    //armnn::Status ret = runtime->EnqueueWorkload(networkIdentifier, inputTensor, outputTensor);
-
-    /*
-    // Check output and compute correct predictions
-    int nrOfCorrectPredictions = 0;
-    for (int i = 0; i < nrOfImages; ++i)
-    {
-      float max = output[i][0];
-      int label = 0;
-
-      for (int j = 0; j < 10; ++j)
-      {
-        // Translate 1-hot output to find integer label
-        if (output[i][j] > max)
-        {
-          max = output[i][j];
-          label = j;
-        }
-      }
-      if (label == labels[i]) nrOfCorrectPredictions++;
-      std::cout << "#" << i+1 << " | Predicted: " << label << " Actual: " << labels[i] << std::endl;
-    }
-
-    */
     std::cout << "Prediction accuracy: " << (float)nrOfCorrectPredictions/nrOfImages*100 << "%";
     std::cout << std::endl;
 
