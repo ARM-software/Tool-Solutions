@@ -75,7 +75,7 @@ int main(int argc, char** argv)
 
     // Import the TensorFlow model. Note: use CreateNetworkFromBinaryFile for .pb files.
     armnnTfLiteParser::ITfLiteParserPtr parser = armnnTfLiteParser::ITfLiteParser::Create();
-    armnn::INetworkPtr network = parser->CreateNetworkFromBinaryFile("model/simple_mnist.tflite")
+    armnn::INetworkPtr network = parser->CreateNetworkFromBinaryFile("model/simple_mnist.tflite");
 
     // Create ArmNN runtime
     armnn::IRuntime::CreationOptions options; // default options
