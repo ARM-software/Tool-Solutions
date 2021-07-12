@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-# *******************************************************************************
-# Copyright 2020-2021 Arm Limited and affiliates.
+# ******************************************************************************
+# Copyright 2021 Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,25 +15,23 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# *******************************************************************************
+# ******************************************************************************
+
 
 set -euo pipefail
 
-cd $PACKAGE_DIR
-readonly package=openblas
-readonly version=$OPENBLAS_VERSION
-readonly src_host="https://github.com/xianyi"
-readonly src_repo="OpenBLAS"
+cd $PROD_DIR
+readonly package=yaml-cpp
+readonly src_host=https://github.com/jbeder
+readonly src_repo=yaml-cpp
 
 git clone ${src_host}/${src_repo}.git
-cd ${src_repo}
-git checkout v$version -b v$version
+cd $src_repo
+mkdir -p build
+cd build
 
-install_dir=$PROD_DIR/$package/$version
+export CFLAGS="${BASE_CFLAGS} -O3"
+cmake ..
+make -j
 
-export CFLAGS="-O3"
-extra_args="USE_OPENMP=1"
-[[ ${BLAS_CPU} ]] && extra_args="$extra_args TARGET=${blas_cpu}"
 
-make -j $NP_MAKE $extra_args
-make -j $NP_MAKE PREFIX=$install_dir install

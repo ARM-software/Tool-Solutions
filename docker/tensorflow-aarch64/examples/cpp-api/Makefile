@@ -20,7 +20,7 @@ resnet50_url = https://tfhub.dev/tensorflow/resnet_50/classification/1\?tf-hub-f
 inception_url = https://storage.googleapis.com/download.tensorflow.org/models/inception_v3_2016_08_28_frozen.pb.tar.gz
 
 cows_img_url = https://images.reference.com/amg-cms-reference-images/media/habitat-cow_9291b3a902721a26.jpg?width=740&height=420&fit=crop&format=pjpg
-guineapig_img_url = https://lamondvet.co.uk/wp-content/uploads/2016/06/guinea-pig-cavy-pet-guinea-60693.jpeg
+guineapig_img_url = https://upload.wikimedia.org/wikipedia/commons/6/6a/Guinea_Pigs.jpg
 
 coco_labels_url = https://raw.githubusercontent.com/amikelive/coco-labels/master/coco-labels-paper.txt
 imagenet_labels_url = https://storage.googleapis.com/download.tensorflow.org/data/ImageNetLabels.txt
@@ -29,6 +29,8 @@ TF_INCLUDE_DIR = /home/ubuntu/python3-venv/tensorflow/include
 TF_LIB_DIR     = /home/ubuntu/python3-venv/tensorflow/lib
 CV_INCLUDE_DIR = /opt/opencv/install/include/opencv4
 CV_LIB_DIR     = /opt/opencv/install/lib
+YAML_INCLUDE_DIR = /opt/yaml-cpp/include
+YAML_LIB_DIR     = /opt/yaml-cpp/build
 
 CC=g++
 CFLAGS=-std=c++11
@@ -37,20 +39,26 @@ LDFLAGS=-Wl,-rpath,$(TF_LIB_DIR):$(CV_LIB_DIR)
 all : detect_objects classify_image inception_inference
 
 detect_objects: models images labels
-	$(CC) $(CFLAGS) $(LDFLAGS) detect_objects.cc common.hpp -o detect_objects \
+	$(CC) $(CFLAGS) $(LDFLAGS) detect_objects.cc common.hpp \
+	  $(YAML_LIB_DIR)/libyaml-cpp.a -o detect_objects \
 	  -I $(TF_INCLUDE_DIR) -L $(TF_LIB_DIR) \
 	  -I $(CV_INCLUDE_DIR) -L $(CV_LIB_DIR) \
+	  -I $(YAML_INCLUDE_DIR) \
 	  -ltensorflow_cc -ltensorflow_framework \
 	  -lopencv_core -lopencv_imgcodecs -lopencv_imgproc
 
 classify_image: models images labels
-	$(CC) $(CFLAGS) $(LDFLAGS) classify_image.cc common.hpp -o classify_image \
+	$(CC) $(CFLAGS) $(LDFLAGS) classify_image.cc common.hpp \
+	  $(YAML_LIB_DIR)/libyaml-cpp.a -o classify_image \
 	  -I $(TF_INCLUDE_DIR) -L $(TF_LIB_DIR) \
+	  -I $(YAML_INCLUDE_DIR) \
 	  -ltensorflow_cc -ltensorflow_framework
 
 inception_inference: models images labels
-	$(CC) $(CFLAGS) $(LDFLAGS) inception_inference.cc common.hpp -o inception_inference \
+	$(CC) $(CFLAGS) $(LDFLAGS) inception_inference.cc common.hpp \
+	  $(YAML_LIB_DIR)/libyaml-cpp.a -o inception_inference \
 	  -I $(TF_INCLUDE_DIR) -L $(TF_LIB_DIR) \
+	  -I $(YAML_INCLUDE_DIR) \
 	  -ltensorflow_cc -ltensorflow_framework
 
 models:
@@ -74,7 +82,7 @@ labels:
 	mkdir -p labels
 	wget -O "labels/coco-labels.txt" $(coco_labels_url)
 	wget -O "labels/imagenet-labels.txt" $(imagenet_labels_url)
-	mv models/imagenet_slim_labels.txt labels/
 
 clean:
-	rm -rf classify_image detect_objects images models labels output_image.jpg
+	rm -rf classify_image detect_objects inception_inference \
+	       images models labels output_image.jpg

@@ -108,18 +108,17 @@ RUN echo '[ ! -z "$TERM" -a -r /home/$DOCKER_USER/welcome.txt ] && cat /home/$DO
 # ========
 FROM tensorflow-base AS tensorflow-libs
 ARG njobs
-ARG onednn_opt
-ARG onednn_version
 ARG cpu
+ARG arch
+ARG blas_cpu
 
 ENV NP_MAKE="${njobs}" \
-    ONEDNN_BUILD="${onednn_opt}" \
-    ONEDNN_VERSION="${onednn_version}" \
-    CPU="${cpu}"
+    CPU="${cpu}" \
+    ARCH="${arch}" \
+    BLAS_CPU="${blas_cpu}"
 
 # Key version numbers
-ENV ACL_VERSION="v21.02" \
-    OPENBLAS_VERSION=0.3.9
+ENV OPENBLAS_VERSION=0.3.10
 
 # Package build parameters
 ENV PROD_DIR=/opt \
@@ -133,7 +132,7 @@ RUN mkdir -p $PACKAGE_DIR && \
 # Common compiler settings
 ENV CC=gcc \
     CXX=g++ \
-    BASE_CFLAGS="-mcpu=${CPU} -moutline-atomics" \
+    BASE_CFLAGS="-mcpu=${CPU} -march=${ARCH} -O3" \
     BASE_LDFLAGS=""
 
 # Build OpenBLAS from source
@@ -142,23 +141,13 @@ RUN $PACKAGE_DIR/build-openblas.sh
 ENV OPENBLAS_DIR=$PROD_DIR/openblas/$OPENBLAS_VERSION
 ENV LD_LIBRARY_PATH=$OPENBLAS_DIR/lib:$LD_LIBRARY_PATH
 
-# Build Compute Library from source
-COPY scripts/build-acl.sh $PACKAGE_DIR/.
-RUN $PACKAGE_DIR/build-acl.sh
-ENV ACL_ROOT_DIR=$PROD_DIR/acl/ComputeLibrary
-ENV LD_LIBRARY_PATH=$ACL_ROOT_DIR/build:$LD_LIBRARY_PATH
-
-# Build oneDNN from source (Compute Library/reference)
-COPY scripts/build-onednn.sh $PACKAGE_DIR/.
-# Patch for oneDNN  v1.x
-COPY patches/oneDNN.patch $PACKAGE_DIR/oneDNN.patch
-RUN $PACKAGE_DIR/build-onednn.sh
-ENV ONEDNN_DIR=$PROD_DIR/onednn/release
-ENV LD_LIBRARY_PATH=$ONEDNN_DIR/lib:$LD_LIBRARY_PATH
-
 # Build and install OpenCV from GitHub sources (needed for C++ API examples)
 COPY scripts/build-opencv.sh $PACKAGE_DIR/.
 RUN $PACKAGE_DIR/build-opencv.sh
+
+# Build and install yaml-cpp from Github source (needed for C++ API examples)
+COPY scripts/build-yamlcpp.sh $PACKAGE_DIR/.
+RUN $PACKAGE_DIR/build-yamlcpp.sh
 
 # ========
 # Stage 3: install essential python dependencies into a venv
@@ -166,12 +155,16 @@ RUN $PACKAGE_DIR/build-opencv.sh
 FROM tensorflow-libs AS tensorflow-tools
 ARG njobs
 ARG default_py_version
-ENV PY_VERSION="${default_py_version}" \
-    NP_MAKE="${njobs}"
+ARG cpu
+ARG arch
 
+ENV PY_VERSION="${default_py_version}" \
+    NP_MAKE="${njobs}" \
+    CPU="${cpu}" \
+    ARCH="${arch}"
 # Key version numbers
-ENV NUMPY_VERSION=1.18.4 \
-    SCIPY_VERSION=1.4.1 \
+ENV NUMPY_VERSION=1.19.5 \
+    SCIPY_VERSION=1.5.2 \
     NPY_DISTUTILS_APPEND_FLAGS=1
 
 # Using venv means this can be done in userspace
@@ -213,9 +206,9 @@ RUN pip install --no-cache-dir keras_preprocessing==1.1.2 --no-deps
 # it is installed as a dependency for an earlier package and needs
 # to be removed in order for the OpenCV build to complete.
 RUN pip uninstall enum34 -y
-RUN HDF5_DIR=/usr/lib/aarch64-linux-gnu/hdf5/serial pip install h5py==2.10.0
-RUN pip install --no-cache-dir grpcio
-RUN pip install --no-cache-dir ck==1.55.5 absl-py pycocotools pillow
+RUN HDF5_DIR=/usr/lib/aarch64-linux-gnu/hdf5/serial pip install h5py==3.1.0
+RUN pip install --no-cache-dir grpcio pytest
+RUN pip install --no-cache-dir ck==1.55.5 absl-py pycocotools pillow==8.2.0
 RUN pip install --no-cache-dir transformers pandas
 
 # Install OpenCV into our venv (needed for MLCommons benchmarks)
@@ -233,10 +226,14 @@ ARG onednn_opt
 ARG tf_version
 ARG bazel_version
 ARG default_py_version
+ARG cpu
+ARG arch
 
 ENV NP_MAKE="${njobs}" \
     BZL_RAM="${bazel_mem}" \
-    ONEDNN_BUILD="${onednn_opt}"
+    ONEDNN_BUILD="${onednn_opt}" \
+    CPU="${cpu}" \
+    ARCH="${arch}"
 
 # Key version numbers
 ENV PY_VERSION="${default_py_version}" \
@@ -260,14 +257,8 @@ RUN $PACKAGE_DIR/get-bazel.sh
 ENV PATH=$PACKAGE_DIR/bazel:$PATH
 
 # Build TensorFlow
+COPY patches/tf_acl.patch $PACKAGE_DIR/.
 COPY scripts/build-tensorflow.sh $PACKAGE_DIR/.
-COPY patches/tf2_onednn_decoupling.patch $PACKAGE_DIR/tf2_onednn_decoupling.patch
-COPY patches/tensorflow2.patch $PACKAGE_DIR/tensorflow2.patch
-# Patches to resolve intel binary blob dependencies for TensorFlow 2.x - oneDNN 1.x builds
-COPY patches/oneDNN-opensource.patch $PACKAGE_DIR/oneDNN-opensource.patch
-# Patches to support different flavours of oneDNN
-COPY patches/tf2-acl.patch $PACKAGE_DIR/tf2-acl.patch
-COPY patches/tf2-onednn-explicit.patch $PACKAGE_DIR/tf2-onednn-explicit.patch
 RUN $PACKAGE_DIR/build-tensorflow.sh
 
 CMD ["bash", "-l"]

@@ -19,18 +19,52 @@
 
 int main(int argc, char **argv) {
 
+  // Parse commandline parameters
+  if (argc != 5) {
+    LOG(ERROR) << "Required arguments: -m <yaml_path> and -i <image_path>\n";
+    exit(EXIT_FAILURE);
+  }
+
+  char *arg_m = NULL;
+  char *arg_i = NULL;
+  int c;
+
+  opterr = 0;
+
+  while ((c = getopt(argc, argv, "m:i:")) != -1)
+    switch (c) {
+    case 'm':
+      arg_m = optarg;
+      break;
+    case 'i':
+      arg_i = optarg;
+      break;
+    default:
+      exit(EXIT_FAILURE);
+    }
+
+  // Parse YAML file
+  YAML::Node config = YAML::LoadFile(arg_m);
+
   // Paths for the model, image and labels files
-  string arg_model_path = "models/resnet50";
-  string arg_image_path = "images/guineapig.jpeg";
-  string arg_label_path = "labels/imagenet-labels.txt";
+  std::string model_path = utils::get_yaml_model(config);
+  std::string labels_path = utils::get_yaml_labels(config);
+
+  // Expected input size
+  int img_h = utils::get_yaml_img_h(config);
+  int img_w = utils::get_yaml_img_w(config);
+
+  // Input and output node names
+  std::string input_node_ = utils::get_yaml_input(config);
+  auto output_nodes_ = utils::get_yaml_output(config);
 
   // Load model in SavedModel format
   tf::SessionOptions session_options;
   tf::RunOptions run_options;
   tf::SavedModelBundle bundle; // i.e. a loaded SavedModel in a Session
 
-  auto status_load_model = tf::LoadSavedModel(
-      session_options, run_options, arg_model_path, {"serve"}, &bundle);
+  auto status_load_model = tf::LoadSavedModel(session_options, run_options,
+                                              model_path, {"serve"}, &bundle);
 
   if (!status_load_model.ok()) {
     LOG(ERROR) << status_load_model.ToString();
@@ -40,7 +74,7 @@ int main(int argc, char **argv) {
   // Load image and preprocess
   std::vector<tf::Tensor> processed_image_tensors;
   tf::Status status_read_image = utils::read_image_into_tensor(
-      arg_image_path, 224, 224, &processed_image_tensors);
+      arg_i, img_w, img_h, &processed_image_tensors);
 
   if (!status_read_image.ok()) {
     LOG(ERROR) << status_read_image.ToString();
@@ -53,8 +87,8 @@ int main(int argc, char **argv) {
   tf::Scope root = tf::Scope::NewRootScope();
   tf::ClientSession session(root);
 
-  const string input_node = "serving_default_input_1";
-  std::vector<string> output_nodes = {{"StatefulPartitionedCall:0"}};
+  const string input_node = input_node_;
+  std::vector<string> output_nodes = output_nodes_;
 
   std::vector<std::pair<string, tf::Tensor>> input_feed = {
       {input_node, input_tensor}};
@@ -72,10 +106,10 @@ int main(int argc, char **argv) {
   }
 
   // Read labels
-  std::vector<string> labels = utils::get_labels(arg_label_path);
+  std::vector<string> labels = utils::get_labels(labels_path);
 
-  // Unpack the outputs and print top 3 labels
-  int count_labels = 3;
+  // Unpack the outputs and print top 5 labels
+  int count_labels = 5;
   tf::Tensor indices_tensor;
   tf::Tensor scores_tensor;
 

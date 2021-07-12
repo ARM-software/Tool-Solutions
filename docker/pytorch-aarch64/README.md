@@ -19,11 +19,11 @@ Pre-built images are available for download from [Arm's Software Developers Dock
   * Compiler: GCC 9.3
   * Maths libraries: [Arm Optimized Routines](https://github.com/ARM-software/optimized-routines) and [OpenBLAS](https://www.openblas.net/) 0.3.10
   * [oneDNN](https://github.com/oneapi-src/oneDNN) 2.2.
-    - [Compute Library for the Arm architecture](https://developer.arm.com/ip-products/processors/machine-learning/compute-library) 21.02, providing AArch64 optimised primitives for oneDNN.
+    - [Compute Library for the Arm architecture](https://developer.arm.com/ip-products/processors/machine-learning/compute-library) 21.05, providing AArch64 optimised primitives for oneDNN.
   * Python3 environment containing:
     - NumPy 1.19.5
     - SciPy 1.5.2
-    - PyTorch 1.8.1
+    - PyTorch 1.9.0
   * [ML Commons :tm: (MLPerf)](https://mlperf.org/)
   * [Example scripts](./examples/README.md) that demonstrate how to run ML models
 
@@ -83,6 +83,14 @@ For example:
     This will generate an image named 'DockerTest/ubuntu/base'.
 
 PyTorch can optionally be built with oneDNN, using the '--onednn' or '--dnnl' flag. By default this will use AArch64 optimised primitives from Arm Compute Library where available. Specifying `--onednn reference` will disable Compute Library primitives and use oneDNN's reference C++ kernels throughout.
+
+By default, all packages will built with optimisations for the host machine, equivalent to setting `-mcpu=native` at compile time for each component build.
+It is possible to choose a specific build target using the `--build-target` flag:
+  * native       - optimize for the current host machine (default).
+  * neoverse-n1  - optimize for Neoverse-N1.
+  * thunderx2t99 - optimize for Marvell ThunderX2.
+  * generic      - generate portable build suitable for any Armv8a target.
+  * custom       - apply a custom set of architecture and tuning flags, as defined in [cpu_info.sh](cpu_info.sh).
 
 ## Running the Docker image
 To run the finished image:

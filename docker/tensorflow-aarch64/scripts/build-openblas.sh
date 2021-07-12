@@ -30,10 +30,12 @@ git clone ${src_host}/${src_repo}.git
 cd ${src_repo}
 git checkout v$version -b v$version
 
-export CFLAGS="-O3"
-
 install_dir=$PROD_DIR/$package/$version
 
-make -j $NP_MAKE USE_OPENMP=1
+export CFLAGS="-O3"
+extra_args="USE_OPENMP=1"
+[[ ${BLAS_CPU} ]] && extra_args="$extra_args TARGET=${blas_cpu}"
+
+make -j $NP_MAKE $extra_args
 make -j $NP_MAKE PREFIX=$install_dir install
 
