@@ -19,15 +19,49 @@
 
 int main(int argc, char **argv) {
 
+  // Parse commandline parameters
+  if (argc != 5) {
+    LOG(ERROR) << "Required arguments: -m <yaml_path> and -i <image_path>\n";
+    exit(EXIT_FAILURE);
+  }
+
+  char *arg_m = NULL;
+  char *arg_i = NULL;
+  int c;
+
+  opterr = 0;
+
+  while ((c = getopt(argc, argv, "m:i:")) != -1)
+    switch (c) {
+    case 'm':
+      arg_m = optarg;
+      break;
+    case 'i':
+      arg_i = optarg;
+      break;
+    default:
+      exit(EXIT_FAILURE);
+    }
+
+  // Parse YAML file
+  YAML::Node config = YAML::LoadFile(arg_m);
+
   // Paths for the model, image and labels files
-  string arg_model_path = "models/inception_v3_2016_08_28_frozen.pb";
-  string arg_image_path = "images/guineapig.jpeg";
-  string arg_label_path = "labels/imagenet_slim_labels.txt";
+  std::string model_path = utils::get_yaml_model(config);
+  std::string labels_path = utils::get_yaml_labels(config);
+
+  // Expected input size
+  int img_h = utils::get_yaml_img_h(config);
+  int img_w = utils::get_yaml_img_w(config);
+
+  // Input and output node names
+  std::string input_node_ = utils::get_yaml_input(config);
+  auto output_nodes_ = utils::get_yaml_output(config);
 
   // Read model into graph
   tf::GraphDef graph_def;
   tf::Status status;
-  status = ReadBinaryProto(tf::Env::Default(), arg_model_path, &graph_def);
+  status = ReadBinaryProto(tf::Env::Default(), model_path, &graph_def);
   if (!status.ok()) {
     LOG(ERROR) << status.ToString();
     exit(EXIT_FAILURE);
@@ -52,7 +86,7 @@ int main(int argc, char **argv) {
   // Load image and preprocess
   std::vector<tf::Tensor> resized_tensors;
   tf::Status read_tensor_status =
-      utils::read_image_into_tensor(arg_image_path, 299, 299, &resized_tensors);
+      utils::read_image_into_tensor(arg_i, img_h, img_w, &resized_tensors);
   if (!read_tensor_status.ok()) {
     LOG(ERROR) << read_tensor_status;
     exit(EXIT_FAILURE);
@@ -60,10 +94,8 @@ int main(int argc, char **argv) {
   const tf::Tensor &input_tensor = resized_tensors[0];
 
   // Run graph
-  const string input_node = "input";
-  std::vector<string> output_nodes = {{
-      "InceptionV3/Predictions/Reshape_1", // only node we want to evaluate
-  }};
+  const string input_node = input_node_;
+  std::vector<string> output_nodes = output_nodes_;
 
   std::vector<std::pair<string, tf::Tensor>> inputs = {
       {input_node, input_tensor}};
@@ -79,10 +111,10 @@ int main(int argc, char **argv) {
   }
 
   // Read labels
-  std::vector<string> labels = utils::get_labels(arg_label_path);
+  std::vector<string> labels = utils::get_labels(labels_path);
 
-  // Unpack the outputs and print top 3 labels
-  int count_labels = 3;
+  // Unpack the outputs and print top 5 labels
+  int count_labels = 5;
   tf::Tensor indices_tensor;
   tf::Tensor scores_tensor;
 

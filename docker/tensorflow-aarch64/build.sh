@@ -17,11 +17,11 @@
 # limitations under the License.
 # *******************************************************************************
 
-
 # Staged docker build for TensorFlow
 # ==================================
 
 ################################################################################
+
 function print_usage_and_exit {
   echo "Usage: build.sh [OPTIONS]"
   echo ""
@@ -41,9 +41,10 @@ function print_usage_and_exit {
   echo "                                 * full         - build all images."
   echo "      --build-target           AArch64 CPU target:"
   echo "                                 * native       - optimize for the current host machine (default)."
-  echo "                                 * neoverse-n1  - optimize for Neoverse-N1."
+  echo "                                 * neoverse-n1  - optimize for Neoverse-N1"
   echo "                                 * thunderx2t99 - optimize for Marvell ThunderX2."
   echo "                                 * generic      - generate portable build suitable for any Armv8a target."
+  echo "                                 * custom       - use custom settings defined in cpu_info.sh"
   echo "                                 GCC provides support for additional target cpu's refer to the gcc manual for details."
   echo "      --clean                  Pull a new base image and build without using any cached images."
   echo ""
@@ -53,6 +54,9 @@ function print_usage_and_exit {
 }
 
 ################################################################################
+
+# Import routines to set CPU properties.
+source ./cpu_info.sh
 
 # Enable Buildkit
 # Required for advanced multi-stage builds
@@ -205,15 +209,19 @@ if [[ $clean_build ]]; then
 fi
 
 # Set TensorFlow, bazel and oneDNN version
-version="v2.3.0"
-bazel_version="3.4.0"
-onednn_version="v2.2"
+version="v2.5.0"
+bazel_version="3.7.2"
+# Add build-args to pass version numbers,
 extra_args="$extra_args \
     --build-arg tf_version=$version \
-    --build-arg bazel_version=$bazel_version \
-    --build-arg onednn_version=$onednn_version"
+    --build-arg bazel_version=$bazel_version"
 
-extra_args="$extra_args --build-arg cpu=$target"
+# Set CPU target props
+set_target $target
+extra_args="$extra_args --build-arg cpu=$cpu \
+    --build-arg tune=$tune \
+    --build-arg arch=$arch \
+    --build-arg blas_cpu=$blas_cpu"
 
 if [[ $build_base_image ]]; then
   # Stage 1: Base image, Ubuntu with core packages and GCC9

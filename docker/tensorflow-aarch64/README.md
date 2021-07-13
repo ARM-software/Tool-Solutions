@@ -15,12 +15,12 @@ Pre-built images are available for download from [Arm's Software Developers Dock
 ## What's in the final image?
   * OS: Ubuntu 20.04
   * Compiler: GCC 9.3.0
-  * Maths libraries: [OpenBLAS](https://www.openblas.net/) 0.3.9, [Arm Compute Library](https://developer.arm.com/ip-products/processors/machine-learning/compute-library) 21.02.
+  * Maths libraries: [OpenBLAS](https://www.openblas.net/) 0.3.10, [Arm Compute Library](https://developer.arm.com/ip-products/processors/machine-learning/compute-library) 21.05.
   * [oneDNN](https://github.com/oneapi-src/oneDNN) 2.2. Previously known as (MKL-DNN/DNNL).
   * Python3 environment containing:
-    - NumPy 1.18.4
-    - TensorFlow 2.3.0. (_Note: support for TensorFlow 1.x is now deprecated. Please use the [tensorflow-v1-aarch64)](https://github.com/ARM-software/Tool-Solutions/releases/tag/tensorflow-v1-aarch64) tag_).
-    - SciPy 1.4.1
+    - NumPy 1.19.5
+    - TensorFlow 2.5.0. (_Note: support for TensorFlow 1.x is now deprecated. Please use the [tensorflow-v1-aarch64)](https://github.com/ARM-software/Tool-Solutions/releases/tag/tensorflow-v1-aarch64) tag_).
+    - SciPy 1.5.2
   * TensorFlow Benchmarks
   * [MLCommons :tm: (MLPerf)](https://mlperf.org/) benchmarks with an optional patch to support benchmarking for TF oneDNN builds.
   * [Example scripts](./examples/README.md) that demonstrate how to run ML models.
@@ -103,6 +103,7 @@ It is possible to choose a specific build target using the `--build-target` flag
   * neoverse-n1  - optimize for Neoverse-N1.
   * thunderx2t99 - optimize for Marvell ThunderX2.
   * generic      - generate portable build suitable for any Armv8a target.
+  * custom       - apply a custom set of architecture and tuning flags, as defined in [cpu_info.sh](cpu_info.sh).
 
 Memory requirements for building TensorFlow can be significant, and may exceed the available
 memory, particularly for parallel builds (the default). There are two flags which can be used to

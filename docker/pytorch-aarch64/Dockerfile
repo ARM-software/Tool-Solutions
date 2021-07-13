@@ -107,11 +107,19 @@ RUN echo '[ ! -z "$TERM" -a -r /home/$DOCKER_USER/welcome.txt ] && cat /home/$DO
 # ========
 FROM pytorch-base AS pytorch-libs
 ARG njobs
+ARG cpu
+ARG arch
+ARG blas_cpu
+ARG acl_arch
 
-ENV NP_MAKE="${njobs}"
+ENV NP_MAKE="${njobs}" \
+    CPU="${cpu}" \
+    ARCH="${arch}" \
+    BLAS_CPU="${blas_cpu}" \
+    ACL_ARCH="${acl_arch}"
 
 # Key version numbers
-ENV ACL_VERSION="v21.02" \
+ENV ACL_VERSION="v21.05" \
     OPENBLAS_VERSION=0.3.10 \
     NINJA_VERSION=1.9.0
 
@@ -135,7 +143,7 @@ RUN $PACKAGE_DIR/build-arm_opt_routines.sh
 # this ads arm_opt_routined into the LDFLAGS by default.
 ENV CC=gcc \
     CXX=g++ \
-    BASE_CFLAGS="-mcpu=native" \
+    BASE_CFLAGS="-mcpu=${CPU} -march=${ARCH} -O3" \
     BASE_LDFLAGS="-L$PROD_DIR/arm_opt_routines/lib -lmathlib -lm" \
     LD_LIBRARY_PATH="$PROD_DIR/arm_opt_routines/lib"
 
@@ -161,10 +169,13 @@ ENV PATH=$PROD_DIR/ninja/$NINJA_VERSION:$PATH
 FROM pytorch-libs AS pytorch-tools
 ARG njobs
 ARG default_py_version
+ARG cpu
+ARG arch
 
 ENV PY_VERSION="${default_py_version}" \
-    NP_MAKE="${njobs}"
-
+    NP_MAKE="${njobs}" \
+    CPU="${cpu}" \
+    ARCH="${arch}"
 # Key version numbers
 ENV NUMPY_VERSION=1.19.5 \
     SCIPY_VERSION=1.5.2 \
@@ -237,13 +248,15 @@ FROM pytorch-libs AS pytorch-dev
 ARG njobs
 ARG onednn_opt
 ARG default_py_version
+ARG cpu
 
 ENV ONEDNN_BUILD="${onednn_opt}" \
-    NP_MAKE="${njobs}"
+    NP_MAKE="${njobs}" \
+    CPU="${cpu}"
 
 # Key version numbers
 ENV PY_VERSION="${default_py_version}" \
-    TORCH_VERSION=1.8.1 \
+    TORCH_VERSION=1.9.0 \
     ONEDNN_VERSION="v2.2" \
     VISION_VERSION="v0.9.1"
 
@@ -260,7 +273,6 @@ ENV PATH="$VENV_DIR/bin:$PATH"
 
 # Build PyTorch
 COPY scripts/build-pytorch.sh $PACKAGE_DIR/.
-COPY patches/pytorch_onednn.patch $PACKAGE_DIR/.
 RUN $PACKAGE_DIR/build-pytorch.sh
 RUN pip install torchvision==$VISION_VERSION
 

@@ -22,17 +22,47 @@
 
 int main(int argc, char **argv) {
 
-  string arg_model_path =
-      "models/ssd_resnet50_v1_fpn_640x640_coco17_tpu-8/saved_model";
-  string arg_image_path = "images/cows.jpeg";
-  string arg_label_path = "labels/coco-labels.txt";
+  // Parse commandline parameters
+  if (argc != 5) {
+    LOG(ERROR) << "Required arguments: -m <yaml_path> and -i <image_path>\n";
+    exit(EXIT_FAILURE);
+  }
+
+  char *arg_m = NULL;
+  char *arg_i = NULL;
+  int c;
+
+  opterr = 0;
+
+  while ((c = getopt(argc, argv, "m:i:")) != -1)
+    switch (c) {
+    case 'm':
+      arg_m = optarg;
+      break;
+    case 'i':
+      arg_i = optarg;
+      break;
+    default:
+      exit(EXIT_FAILURE);
+    }
+
+  // Parse YAML file
+  YAML::Node config = YAML::LoadFile(arg_m);
+
+  // Paths for the model, image and labels files
+  std::string model_path = utils::get_yaml_model(config);
+  std::string labels_path = utils::get_yaml_labels(config);
+
+  // Input and output node names
+  std::string input_node_ = utils::get_yaml_input(config);
+  std::vector<string> output_nodes_ = utils::get_yaml_output(config);
 
   // Load model in SavedModel format
   tf::SessionOptions session_options;
   tf::RunOptions run_options;
   tf::SavedModelBundle bundle; // i.e. a loaded SavedModel in a Session
 
-  auto status = tf::LoadSavedModel(session_options, run_options, arg_model_path,
+  auto status = tf::LoadSavedModel(session_options, run_options, model_path,
                                    {"serve"}, &bundle);
 
   if (!status.ok()) {
@@ -41,7 +71,7 @@ int main(int argc, char **argv) {
   }
 
   // Load image using OpenCV
-  cv::Mat image = cv::imread(arg_image_path);
+  cv::Mat image = cv::imread(arg_i);
   if (!image.data) {
     LOG(ERROR) << "ERROR: cannot load image";
     exit(EXIT_FAILURE);
@@ -68,15 +98,8 @@ int main(int argc, char **argv) {
   tf::Scope root = tf::Scope::NewRootScope();
   tf::ClientSession session(root);
 
-  const string input_node = "serving_default_input_tensor:0";
-  std::vector<string> output_nodes = {{
-      "StatefulPartitionedCall:0", // detection_anchor_indices
-      "StatefulPartitionedCall:1", // detection_boxes
-      "StatefulPartitionedCall:2", // detection_classes
-      "StatefulPartitionedCall:3", // detection_multiclass_scores
-      "StatefulPartitionedCall:4", // detection_scores
-      "StatefulPartitionedCall:5"  // num_detections
-  }};
+  const string input_node = input_node_;
+  std::vector<string> output_nodes = output_nodes_;
 
   std::vector<std::pair<string, tf::Tensor>> input_feed = {
       {input_node, input_tensor}};
@@ -94,7 +117,7 @@ int main(int argc, char **argv) {
   }
 
   // Post-processing and read labels
-  std::vector<string> labels = utils::get_labels(arg_label_path);
+  std::vector<string> labels = utils::get_labels(labels_path);
 
   // Unpack the outputs
   auto predicted_boxes = predictions[1].tensor<float, 3>();
@@ -105,7 +128,7 @@ int main(int argc, char **argv) {
   std::vector<float> out_pred_scores;
   std::vector<int> out_pred_labels;
 
-  const float confidence_threshold = 0.7;
+  const float confidence_threshold = utils::get_yaml_threshold(config);
   for (int i = 0; i < 100; i++) {
     std::vector<float> coords;
     for (int j = 0; j < 4; j++) {

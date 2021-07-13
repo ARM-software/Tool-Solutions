@@ -17,7 +17,6 @@
 # limitations under the License.
 # *******************************************************************************
 
-
 # Staged docker build for PyTorch
 # ==================================
 
@@ -38,6 +37,13 @@ function print_usage_and_exit {
   echo "                                 * dev        - build image including Bazel and PyTorch, with sources."
   echo "                                 * pytorch    - build image including PyTorch build and benchmarks installed"
   echo "                                 * full       - build all images."
+  echo "      --build-target           AArch64 CPU target:"
+  echo "                                 * native       - optimize for the current host machine (default)."
+  echo "                                 * neoverse-n1  - optimize for Neoverse-N1"
+  echo "                                 * thunderx2t99 - optimize for Marvell ThunderX2."
+  echo "                                 * generic      - generate portable build suitable for any Armv8a target."
+  echo "                                 * custom       - use custom settings defined in cpu_info.sh"
+  echo "                                 GCC provides support for additional target cpu's refer to the gcc manual for details."
   echo "      --clean                  Pull a new base image and build without using any cached images."
   echo ""
   echo "Example:"
@@ -46,6 +52,9 @@ function print_usage_and_exit {
 }
 
 ################################################################################
+
+# Import routines to set CPU properties.
+source ./cpu_info.sh
 
 # Enable Buildkit
 # Required for advanced multi-stage builds
@@ -71,8 +80,9 @@ fi
 # Default args
 extra_args=""
 nproc_build=
-clean_build=
 onednn=
+target="native"
+clean_build=
 
 while [ $# -gt 0 ]
 do
@@ -129,6 +139,11 @@ do
       shift
       ;;
 
+    --build-target )
+      target=$2
+      shift
+      ;;
+
     --jobs )
       nproc_build=$2
       shift
@@ -181,7 +196,13 @@ if [[ $onednn ]]; then
   extra_args="--build-arg onednn_opt=$onednn $extra_args"
 fi
 
-echo $extra_args
+# Set CPU target props
+set_target $target
+extra_args="$extra_args --build-arg cpu=$cpu \
+    --build-arg tune=$tune \
+    --build-arg arch=$arch \
+    --build-arg blas_cpu=$blas_cpu \
+    --build-arg acl_arch=$acl_arch"
 
 if [[ $build_base_image ]]; then
   # Stage 1: Base image, Ubuntu with core packages and GCC9

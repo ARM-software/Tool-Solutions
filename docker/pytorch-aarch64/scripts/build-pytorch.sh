@@ -34,10 +34,7 @@ git submodule sync
 git submodule update --init --recursive
 
 if [[ $ONEDNN_BUILD ]]; then
-  # Patch to enable oneDNN (MKL-DNN).
-  patch -p1 < $PACKAGE_DIR/pytorch_onednn.patch
   export USE_MKLDNN="ON"
-
   case $ONEDNN_BUILD in
     reference )
     ;;
@@ -50,10 +47,14 @@ fi
 # Update the oneDNN tag in third_party/ideep
 cd third_party/ideep/mkl-dnn
 git checkout $ONEDNN_VERSION
+# Add missing include for arm_compute::Scheduler
+git checkout 89fbae8 -- src/cpu/aarch64/acl_indirect_gemm_convolution.hpp
 
 cd $PACKAGE_DIR/$src_repo
 
-MAX_JOBS=${NP_MAKE:-$((num_cpus / 2))} OpenBLAS_HOME=$OPENBLAS_DIR BLAS="OpenBLAS" CXX_FLAGS="$BASE_CFLAGS -O3" LDFLAGS=$BASE_LDFLAGS USE_OPENMP=1 USE_LAPACK=1 USE_CUDA=0 USE_FBGEMM=0 USE_DISTRIBUTED=0 python setup.py install
+MAX_JOBS=${NP_MAKE:-$((num_cpus / 2))} OpenBLAS_HOME=$OPENBLAS_DIR BLAS="OpenBLAS" \
+  CXX_FLAGS="$BASE_CFLAGS -O3 -mcpu=$CPU" LDFLAGS=$BASE_LDFLAGS USE_OPENMP=1 \
+  USE_LAPACK=1 USE_CUDA=0 USE_FBGEMM=0 USE_DISTRIBUTED=0 python setup.py install
 
 # Check the installation was sucessfull
 cd $HOME

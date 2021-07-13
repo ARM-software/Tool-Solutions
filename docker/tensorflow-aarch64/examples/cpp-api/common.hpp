@@ -1,23 +1,25 @@
 /*******************************************************************************
-* Copyright 2021 Arm Ltd. and affiliates.
-* SPDX-License-Identifier: Apache-2.0
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+ * Copyright 2021 Arm Ltd. and affiliates.
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ ******************************************************************************/
 
 #include <fstream>
 #include <string>
 #include <vector>
+
+#include "yaml-cpp/yaml.h"
 
 #include "tensorflow/cc/client/client_session.h"
 #include "tensorflow/cc/ops/const_op.h"
@@ -57,8 +59,8 @@ void print_graph_nodes(tf::GraphDef &graph_def) {
 
 // Print prediction
 void print_prediction(float score, int label_index, std::string label_name) {
-  printf(">> Prediction confidence %6.3f - %s (label %d)\n",
-         score * 100, label_name.c_str(), label_index);
+  printf(">> Prediction confidence %6.3f - %s (label %d)\n", score * 100,
+         label_name.c_str(), label_index);
 }
 
 // Get the image from disk as a float array of numbers, resized and normalized
@@ -68,7 +70,8 @@ tf::Status read_image_into_tensor(const std::string &filename, tf::int32 img_w,
 
   string output_name = "normalized";
   tf::Scope root = tf::Scope::NewRootScope();
-  auto file_reader = tf::ops::ReadFile(root.WithOpName("file_reader"), filename);
+  auto file_reader =
+      tf::ops::ReadFile(root.WithOpName("file_reader"), filename);
 
   const int wanted_channels = 3;
   tf::Output image_reader =
@@ -124,6 +127,46 @@ tf::Status get_top_labels(const std::vector<tf::Tensor> &outputs, int count,
   *scores = out_tensors[0];
   *indices = out_tensors[1];
   return tf::Status::OK();
+}
+
+// Returns the relative model path as a string
+std::string get_yaml_model(YAML::Node config) {
+  return config["model"][0]["source"].as<std::string>();
+}
+
+// Returns the relative labels path as a string
+std::string get_yaml_labels(YAML::Node config) {
+  return config["model"][0]["labels"].as<std::string>();
+}
+
+// Returns the image width
+int get_yaml_img_w(YAML::Node config) {
+  return config["arguments"][0]["input_shape"][1].as<int>();
+}
+
+// Returns the image height
+int get_yaml_img_h(YAML::Node config) {
+  return config["arguments"][0]["input_shape"][2].as<int>();
+}
+
+// Returns the input node name
+std::string get_yaml_input(YAML::Node config) {
+  return config["arguments"][0]["input"].as<std::string>();
+}
+
+// Returns the output node names in a vector of strings
+std::vector<std::string> get_yaml_output(YAML::Node config) {
+  auto output = config["arguments"][0]["output"];
+  std::vector<string> output_nodes_;
+  for (int i = 0; i < output.size(); i++)
+    output_nodes_.push_back(output[i].as<string>());
+
+  return output_nodes_;
+}
+
+// Returns the confidence threshold as a float
+float get_yaml_threshold(YAML::Node config) {
+  return config["model"][0]["threshold"].as<float>();
 }
 
 } // namespace utils

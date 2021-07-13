@@ -1,7 +1,5 @@
-#!/usr/bin/env bash
-
-# *******************************************************************************
-# Copyright 2020 Arm Limited and affiliates.
+# ******************************************************************************
+# Copyright 2021 Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,20 +13,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# *******************************************************************************
+# *****************************************************************************
 
-
-set -euo pipefail
-
-cd $PACKAGE_DIR
-readonly package=bazel
-readonly version=$BZL_VERSION
-
-mkdir -p $package
-cd $package
-
-wget https://github.com/bazelbuild/bazel/releases/download/$version/bazel-$version-dist.zip
-unzip bazel-$version-dist.zip
-
-#EXTRA_BAZEL_ARGS="--host_javabase=@local_jdk//:jdk" 
-bash ./compile.sh
+description: >-
+  Resnet Model
+model:
+  - name: resnet50
+    source: models/resnet50
+    labels: labels/imagenet-labels.txt
+arguments:
+  - input_shape: [1,224,224,3]
+    input: serving_default_input_1
+    output: ["StatefulPartitionedCall:0"]

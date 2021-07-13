@@ -6,7 +6,7 @@ The `py-api` folder contains number of scripts that demonstrate how to run infer
 
 ### Image Classification
 
-The script [classify_image.py](classify_image.py) demonstrates how to run inference using the ResNet-50 model trained on the ImageNet data set.
+The script [classify_image.py](py-api/classify_image.py) demonstrates how to run inference using the ResNet-50 model trained on the ImageNet data set.
 
 To run inference on an image call:
 
@@ -16,7 +16,7 @@ python classify_image.py -m ./resnet_v1-50.yml -i https://upload.wikimedia.org/w
 
 Where the `-m` flag sets the configuration file (see below) that describes model, and `-i` sets the URL of the image to classify.
 
-The file [resnet_v1-50.yml](resnet_v1-50.yml) provides, in [YAML format](https://docs.ansible.com/ansible/latest/reference_appendices/YAMLSyntax.html), information about the model:
+The file [resnet_v1-50.yml](py-api/resnet_v1-50.yml) provides, in [YAML format](https://docs.ansible.com/ansible/latest/reference_appendices/YAMLSyntax.html), information about the model:
 
 - `name`: Name to use to save the model after downloading it
 - `source`: URL from where to download the model
@@ -30,7 +30,7 @@ By default, the model will be optimized for inference before the classification 
 
 ### Object Detection
 
-The script [detect_objects.py](detect_object.py) demonstrates how to run inference using SSD-ResNet-34 model trained from the Common Object in Context (COCO) image dataset. This is a multiscale SSD (Single Shot Detection) model based on the ResNet-34 backbone network that performs object detection.
+The script [detect_objects.py](py-api/detect_object.py) demonstrates how to run inference using SSD-ResNet-34 model trained from the Common Object in Context (COCO) image dataset. This is a multiscale SSD (Single Shot Detection) model based on the ResNet-34 backbone network that performs object detection.
 
 To run inference on example image call:
 
@@ -40,7 +40,7 @@ python detect_objects.py -m ./ssd_resnet34.yml -i https://raw.githubusercontent.
 
 Where `-m` sets the configuration file (see below) that describes the model, and `-i` sets the URL of the image in which you want to detect objects. The output of the script will list what object the model detected and with what confidence. It will also draw bounding boxes around those objects in a new image.
 
-The file [ssd_resnet34.yml](ssd_resnet34.yml) provides, in [YAML format](https://docs.ansible.com/ansible/latest/reference_appendices/YAMLSyntax.html) information about the model:
+The file [ssd_resnet34.yml](py-api/ssd_resnet34.yml) provides, in [YAML format](https://docs.ansible.com/ansible/latest/reference_appendices/YAMLSyntax.html) information about the model:
 - `name`: Name of the model used for inference
 - `source`: URL from where to download the model
 - `labels`: URL from where to download labels for the model
@@ -85,7 +85,7 @@ python answer_questions.py -id 56de16ca4396321400ee25c7
 
 will attempt to answer "When was the battle of Hastings?" based on one of the entries on the [Normans from the SQuAD dataset](https://rajpurkar.github.io/SQuAD-explorer/explore/v2.0/dev/Normans.html) (originally derived from Wikipedia). The expected answer is "In 1066".
 
-In the `utils` folder, [nlp.py](utils/nlp.py) provides a some simple tools for obtaining and browsing the dataset. This also displays the ID of each question which can be supplied to `answer_questions.py`. Calling `print_squad_questions` will display a list of the various subjects contained in the dataset and supplying a `subject` argument will print the details of all the questions on that subject, for example, from within your Python environment:
+In the `utils` folder, [nlp.py](py-api/utils/nlp.py) provides a some simple tools for obtaining and browsing the dataset. This also displays the ID of each question which can be supplied to `answer_questions.py`. Calling `print_squad_questions` will display a list of the various subjects contained in the dataset and supplying a `subject` argument will print the details of all the questions on that subject, for example, from within your Python environment:
 
 ```
 from utils import nlp
@@ -188,20 +188,22 @@ In order to reduce the runtime, for the purposes of confirming that it runs as e
 
 # C++ Examples
 
-To build the C++ examples, simply run `make` from inside the `cpp-api` directory.
+When executing the resulting binaries, the following flags are required:
+* `-m` flag sets the configuration file that describes model in YAML format (see Python section above)
+* `-i` sets the input image
 
-This will first download the `models`, `images` and `labels` and then compile the example programs.
+_Note:_ unlike in the python examples, the model/labels/image paths are local relative paths. The examples expect these files to be downloaded before execution. By default, the makefile build will download the required models, labels and input images.
 
 To run the examples:
-* `./classify_image`
+* `./classify_image` -m resnet50.yml -i images/guineapig.jpeg
   * Resnet50 in `SavedModel` format (single image inference)
   * _input_: images/guineapig.jpeg | _labels:_ labels/imagenet-labels.txt
   * _output:_ Top 3 predictions with confidence and labels
-* `./inception_inference`
+* `./inception_inference` -m inception.yml -i images/guineapig.jpeg
   * Inception model in `FrozenModel.pb` format (single image inference)
   * _input:_ images/guineapig.jpes | _labels_: labels/imagenet_slim_labels.txt
   * _output:_ Top 3 predictions with confidence and labels
-* `./detect_objects`
+* `./detect_objects` -m ssd_resnet50.yml -i images/cows.jpeg
   * SSD-Resnet50 in `SavedModel` format (single image inference)
   * uses OpenCV to load _and_ post-process the image.
   * post-processing create a new image `output_image.jpeg` where the detected objects are framed in red rectangles.
