@@ -15,7 +15,7 @@
 #include "armnn/Exceptions.hpp"
 #include "armnn/Tensor.hpp"
 #include "armnn/INetwork.hpp"
-#include "armnnTfParser/ITfParser.hpp"
+#include "armnnTfLiteParser/ITfLiteParser.hpp"
 
 #include "mnist_loader.hpp"
 
@@ -70,13 +70,13 @@ int main(int argc, char** argv)
     std::string modelFile, modelInputLayer, modelOutputLayer;
     if (modelOptimisation == 1)
     {
-        modelFile = "model/optimized_mnist_tf.pb";
+        modelFile = "model/optimized_mnist.tflite";
         modelInputLayer = "input_tensor";
         modelOutputLayer = "fc2/output_tensor";
     }
     else if (modelOptimisation == 0)
     {
-        modelFile = "model/simple_mnist_tf.pb";
+        modelFile = "model/simple_mnist.tflite";
         modelInputLayer = "Placeholder";
         modelOutputLayer = "Softmax";
     }
@@ -86,14 +86,15 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    armnnTfParser::ITfParserPtr parser = armnnTfParser::ITfParser::Create();
-    armnn::INetworkPtr network = parser->CreateNetworkFromBinaryFile(modelFile.c_str(),
-                                                                   { {modelInputLayer.c_str(), {nrOfImages, 784, 1, 1}} },
-                                                                   { modelOutputLayer.c_str() });
+    armnnTfLiteParser::ITfLiteParserPtr parser = armnnTfLiteParser::ITfLiteParser::Create();
+    armnn::INetworkPtr network = parser->CreateNetworkFromBinaryFile(modelFile.c_str());
 
     // Find the binding points for the input and output nodes
-    armnnTfParser::BindingPointInfo inputBindingInfo = parser->GetNetworkInputBindingInfo(modelInputLayer.c_str());
-    armnnTfParser::BindingPointInfo outputBindingInfo = parser->GetNetworkOutputBindingInfo(modelOutputLayer.c_str());
+    std::vector<std::string> inputNames = parser->GetSubgraphInputTensorNames(0);
+    auto inputBindingInfo = parser->GetNetworkInputBindingInfo(0, inputNames[0]);
+
+    std::vector<std::string> outputNames = parser->GetSubgraphOutputTensorNames(0);
+    auto outputBindingInfo = parser->GetNetworkOutputBindingInfo(0, outputNames[0]);
 
     // Create ArmNN runtime
     armnn::IRuntime::CreationOptions options; // default options

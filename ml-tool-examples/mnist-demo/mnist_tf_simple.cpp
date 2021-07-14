@@ -15,7 +15,7 @@
 #include "armnn/Exceptions.hpp"
 #include "armnn/Tensor.hpp"
 #include "armnn/INetwork.hpp"
-#include "armnnTfParser/ITfParser.hpp"
+#include "armnnTfLiteParser/ITfLiteParser.hpp"
 
 #include "mnist_loader.hpp"
 
@@ -74,14 +74,8 @@ int main(int argc, char** argv)
     }
 
     // Import the TensorFlow model. Note: use CreateNetworkFromBinaryFile for .pb files.
-    armnnTfParser::ITfParserPtr parser = armnnTfParser::ITfParser::Create();
-    armnn::INetworkPtr network = parser->CreateNetworkFromBinaryFile("model/simple_mnist_tf.pb",
-                                                                   { {"Placeholder", {nrOfImages, 784, 1, 1}} },
-                                                                   { "Softmax" });
-
-    // Find the binding points for the input and output nodes
-    armnnTfParser::BindingPointInfo inputBindingInfo = parser->GetNetworkInputBindingInfo("Placeholder");
-    armnnTfParser::BindingPointInfo outputBindingInfo = parser->GetNetworkOutputBindingInfo("Softmax");
+    armnnTfLiteParser::ITfLiteParserPtr parser = armnnTfLiteParser::ITfLiteParser::Create();
+    armnn::INetworkPtr network = parser->CreateNetworkFromBinaryFile("model/simple_mnist.tflite");
 
     // Create ArmNN runtime
     armnn::IRuntime::CreationOptions options; // default options
@@ -105,54 +99,58 @@ int main(int argc, char** argv)
     armnn::NetworkId networkIdentifier;
     runtime->LoadNetwork(networkIdentifier, std::move(optNet));
 
+
+    // Find the binding points for the input and output nodes
+    std::vector<std::string> inputNames = parser->GetSubgraphInputTensorNames(0);
+    auto inputBindingInfo = parser->GetNetworkInputBindingInfo(0, inputNames[0]);
+
+    std::vector<std::string> outputNames = parser->GetSubgraphOutputTensorNames(0);
+    auto outputBindingInfo = parser->GetNetworkOutputBindingInfo(0, outputNames[0]);
+
     // Load multiple images from the data directory
     std::string dataDir = "data/";
 
-    auto input = new float[nrOfImages][g_kMnistImageByteSize];
-    auto output = new float[nrOfImages][10];
     auto labels = new int[nrOfImages];
 
-    for (int i = 0; i < nrOfImages; ++i)
-    {
-      std::unique_ptr<MnistImage> imgInfo = loadMnistImage(dataDir, i);
-      if (imgInfo == nullptr)
-          return 1;
-
-      std::memcpy(input[i], imgInfo->image, sizeof(imgInfo->image));
-      labels[i] = imgInfo->label;
-    }
-
-    // Execute network
-    armnn::InputTensors inputTensor = MakeInputTensors(inputBindingInfo, &input[0]);
-    armnn::OutputTensors outputTensor = MakeOutputTensors(outputBindingInfo, &output[0]);
-
-    armnn::Status ret = runtime->EnqueueWorkload(networkIdentifier, inputTensor, outputTensor);
-
-    // Check output and compute correct predictions
     int nrOfCorrectPredictions = 0;
     for (int i = 0; i < nrOfImages; ++i)
     {
-      float max = output[i][0];
-      int label = 0;
+        auto input = new float[g_kMnistImageByteSize];
+        auto output = new float[10];
+        std::unique_ptr<MnistImage> imgInfo = loadMnistImage(dataDir, i);
+        if (imgInfo == nullptr)
+            return 1;
 
-      for (int j = 0; j < 10; ++j)
-      {
-        // Translate 1-hot output to find integer label
-        if (output[i][j] > max)
+        std::memcpy(input, imgInfo->image, sizeof(imgInfo->image));
+        labels[i] = imgInfo->label;
+        //Execute network
+        armnn::InputTensors inputTensor = MakeInputTensors(inputBindingInfo, &input[0]);
+        armnn::OutputTensors outputTensor = MakeOutputTensors(outputBindingInfo, &output[0]);
+
+        armnn::Status ret = runtime->EnqueueWorkload(networkIdentifier, inputTensor, outputTensor);
+
+        float max = output[0];
+        int label = 0;
+
+        for (int j = 0; j < 10; ++j)
         {
-          max = output[i][j];
-          label = j;
+            //Translate 1-hot output to find integer label
+            if (output[j] > max)
+            {
+                max = output[j];
+                label = j;
+            }
         }
-      }
-      if (label == labels[i]) nrOfCorrectPredictions++;
-      std::cout << "#" << i+1 << " | Predicted: " << label << " Actual: " << labels[i] << std::endl;
+        if (label == labels[i]) nrOfCorrectPredictions++;
+        std::cout << "#" << i + 1 << " | Predicted: " << label << " Actual: " << labels[i] << std::endl;
+
+        delete[] input;
+        delete[] output;
     }
-    std::cout << "Prediction accuracy: " << (float)nrOfCorrectPredictions/nrOfImages*100 << "%";
+    std::cout << "Prediction accuracy: " << (float)nrOfCorrectPredictions / nrOfImages * 100 << "%";
     std::cout << std::endl;
 
-    delete[] input;
-    delete[] output;
     delete[] labels;
- 
+
     return 0;
 }
