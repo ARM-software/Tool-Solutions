@@ -207,7 +207,7 @@ COPY patches/site.cfg $PACKAGE_DIR/site.cfg
 RUN $PACKAGE_DIR/build-numpy.sh
 
 # Install some  basic python packages needed for SciPy
-RUN pip install --no-cache-dir pybind11 pyangbind
+RUN pip install --no-cache-dir pybind11==2.6.2 pyangbind
 # Build numpy from source, using OpenBLAS for BLAS calls
 COPY scripts/build-scipy.sh $PACKAGE_DIR/.
 COPY patches/site.cfg $PACKAGE_DIR/site.cfg
@@ -257,7 +257,7 @@ ENV ONEDNN_BUILD="${onednn_opt}" \
 # Key version numbers
 ENV PY_VERSION="${default_py_version}" \
     TORCH_VERSION=1.9.0 \
-    ONEDNN_VERSION="v2.2" \
+    ONEDNN_VERSION="v2.3" \
     VISION_VERSION="v0.9.1"
 
 # Use a PACKAGE_DIR in userspace
