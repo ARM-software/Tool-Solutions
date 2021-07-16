@@ -29,9 +29,9 @@ function print_usage_and_exit {
   echo "  -h, --help                   Display this message."
   echo "      --jobs                   Specify number of jobs to run in parallel during the build."
   echo "      --bazel_memory_limit     Set a memory limit for Bazel build."
-  echo "      --onednn/--dnnl          Build and link to oneDNN / DNNL:"
+  echo "      --onednn / --dnnl        Build and link to oneDNN / DNNL:"
   echo "                                 * reference    - use the C++ reference kernels throughout."
-  echo "                                 * acl          - use Compute Library."
+  echo "                                 * acl          - use Compute Library (default)."
   echo "      --build-type             Type of build to perform:"
   echo "                                 * base         - build the basic portion of the image, OS and essential packages."
   echo "                                 * libs         - build image including maths libraries and Python3."
@@ -46,7 +46,7 @@ function print_usage_and_exit {
   echo "                                 * generic      - generate portable build suitable for any Armv8a target."
   echo "                                 * custom       - use custom settings defined in cpu_info.sh"
   echo "                                 GCC provides support for additional target cpu's refer to the gcc manual for details."
-  echo "      --clean                  Pull a new base image and build without using any cached images."
+  echo "      --no-cache / --clean       Pull a new base image and build without using any cached images."
   echo ""
   echo "Example:"
   echo "  build.sh --build-type full"
@@ -157,24 +157,28 @@ do
       ;;
 
     --onednn | --dnnl )
-      case $2 in
-        reference )
-          onednn="reference"
-          shift
-          ;;
-        acl )
-          onednn="acl"
-          shift
-          ;;
-        * )
-          echo "Defaulting to oneDNN-ACL build."
-          echo "Note: support for oneDNN builds with OpenBLAS or ArmPL is now deprecated."
-          onednn="acl"
-          ;;
-      esac
+      if [[ $# -gt 1 ]]; then
+        case $2 in
+          reference )
+            onednn="reference"
+            shift
+            ;;
+          acl )
+            onednn="acl"
+            shift
+            ;;
+          * )
+            echo "Defaulting to oneDNN-ACL build."
+            echo "Note: support for oneDNN builds with OpenBLAS or ArmPL is now deprecated."
+            onednn="acl"
+            ;;
+        esac
+      else
+        onednn="acl"
+      fi
       ;;
 
-    --clean )
+    --clean | --no-cache )
       clean_build=1
       ;;
 
