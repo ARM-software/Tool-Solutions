@@ -74,6 +74,21 @@ if [[ $ONEDNN_BUILD ]]; then
 else
     echo "TensorFlow $TF_VERSION with Eigen backend."
     extra_args="$extra_args --define tensorflow_mkldnn_contraction_kernel=0"
+
+    # Patch Eigen to fix minor issue when setting L3 cache
+    patch -p1 < ../eigen_workspace.patch
+    mv ../eigen_gebp_cache.patch ./third_party/eigen3/.
+
+    # Manually set L1,2,3 caches sizes for the GEBP kernel in Eigen.
+    [[ $EIGEN_L1_CACHE ]] && extra_args="$extra_args \
+      --cxxopt=-DEIGEN_DEFAULT_L1_CACHE_SIZE=${EIGEN_L1_CACHE} \
+      --copt=-DEIGEN_DEFAULT_L1_CACHE_SIZE=${EIGEN_L1_CACHE}"
+    [[ $EIGEN_L2_CACHE ]] && extra_args="$extra_args \
+      --cxxopt=-DEIGEN_DEFAULT_L2_CACHE_SIZE=${EIGEN_L2_CACHE} \
+      --copt=-DEIGEN_DEFAULT_L2_CACHE_SIZE=${EIGEN_L2_CACHE}"
+    [[ $EIGEN_L3_CACHE ]] && extra_args="$extra_args \
+      --cxxopt=-DEIGEN_DEFAULT_L3_CACHE_SIZE=${EIGEN_L3_CACHE} \
+      --copt=-DEIGEN_DEFAULT_L3_CACHE_SIZE=${EIGEN_L3_CACHE}"
 fi
 
 # Build the tensorflow configuration
