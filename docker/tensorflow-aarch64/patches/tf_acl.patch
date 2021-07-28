@@ -16,18 +16,24 @@
  *******************************************************************************
 
 diff --git a/tensorflow/workspace2.bzl b/tensorflow/workspace2.bzl
-index efc50709b8f..da0a769d54b 100644
+index efc50709b8f..4d1e7bf5fe2 100644
 --- a/tensorflow/workspace2.bzl
 +++ b/tensorflow/workspace2.bzl
-@@ -191,6 +191,7 @@ def _tf_repositories():
+@@ -191,23 +191,23 @@ def _tf_repositories():
      tf_http_archive(
          name = "mkl_dnn_acl_compatible",
          build_file = "//third_party/mkl_dnn:mkldnn_acl.BUILD",
-+        patch_file = "//third_party/mkl_dnn:mkldnn_acl.patch",
-         sha256 = "4d655c0751ee6439584ef5e3d465953fe0c2f4ee2700bc02699bdc1d1572af0d",
-         strip_prefix = "oneDNN-2.2",
+-        sha256 = "4d655c0751ee6439584ef5e3d465953fe0c2f4ee2700bc02699bdc1d1572af0d",
+-        strip_prefix = "oneDNN-2.2",
++        sha256 = "ccb2dbd9da36cd873cf573b4201d61bdba7438f12b144e6c7d061eb12a641751",
++        strip_prefix = "oneDNN-2.3",
          urls = [
-@@ -201,13 +202,13 @@ def _tf_repositories():
+-            "https://storage.googleapis.com/mirror.tensorflow.org/github.com/oneapi-src/oneDNN/archive/v2.2.tar.gz",
+-            "https://github.com/oneapi-src/oneDNN/archive/v2.2.tar.gz",
++            "https://storage.googleapis.com/mirror.tensorflow.org/github.com/oneapi-src/oneDNN/archive/v2.3.tar.gz",
++            "https://github.com/oneapi-src/oneDNN/archive/v2.3.tar.gz",
+         ],
+     )
  
      tf_http_archive(
          name = "compute_library",
@@ -81,7 +87,7 @@ index 43b0c9a1c0d..ee811b03a57 100644
  \ No newline at end of file
 \ No newline at end of file
 diff --git a/third_party/mkl_dnn/mkldnn_acl.BUILD b/third_party/mkl_dnn/mkldnn_acl.BUILD
-index 017abff688a..2e249927f0c 100644
+index 017abff688a..7c72949d251 100644
 --- a/third_party/mkl_dnn/mkldnn_acl.BUILD
 +++ b/third_party/mkl_dnn/mkldnn_acl.BUILD
 @@ -9,9 +9,10 @@ _DNNL_RUNTIME_OMP = {
@@ -98,21 +104,15 @@ index 017abff688a..2e249927f0c 100644
  }
  
  template_rule(
-diff --git a/third_party/mkl_dnn/mkldnn_acl.patch b/third_party/mkl_dnn/mkldnn_acl.patch
-new file mode 100644
-index 00000000000..6d25872f88b
---- /dev/null
-+++ b/third_party/mkl_dnn/mkldnn_acl.patch
-@@ -0,0 +1,12 @@
-+diff --git a/src/cpu/aarch64/acl_indirect_gemm_convolution.hpp b/src/cpu/aarch64/acl_indirect_gemm_convolution.hpp
-+index 86d2bed73..040311f8c 100644
-+--- a/src/cpu/aarch64/acl_indirect_gemm_convolution.hpp
-++++ b/src/cpu/aarch64/acl_indirect_gemm_convolution.hpp
-+@@ -26,6 +26,7 @@
-+ 
-+ #include "arm_compute/runtime/FunctionDescriptors.h"
-+ #include "arm_compute/runtime/NEON/NEFunctions.h"
-++#include "arm_compute/runtime/Scheduler.h"
-+ 
-+ namespace dnnl {
-+ namespace impl {
+@@ -27,9 +28,9 @@ template_rule(
+     out = "include/oneapi/dnnl/dnnl_version.h",
+     substitutions = {
+         "@DNNL_VERSION_MAJOR@": "2",
+-        "@DNNL_VERSION_MINOR@": "2",
++        "@DNNL_VERSION_MINOR@": "3",
+         "@DNNL_VERSION_PATCH@": "0",
+-        "@DNNL_VERSION_HASH@": "269680b228218158fc172e9d5277446f73ac1917",
++        "@DNNL_VERSION_HASH@": "593e0de6267d2575f3e4c9e9818f0f11253d093a",
+     },
+ )
+ 

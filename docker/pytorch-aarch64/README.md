@@ -18,7 +18,7 @@ Pre-built images are available for download from [Arm's Software Developers Dock
   * OS: Ubuntu 20.04
   * Compiler: GCC 9.3
   * Maths libraries: [Arm Optimized Routines](https://github.com/ARM-software/optimized-routines) and [OpenBLAS](https://www.openblas.net/) 0.3.10
-  * [oneDNN](https://github.com/oneapi-src/oneDNN) 2.2.
+  * [oneDNN](https://github.com/oneapi-src/oneDNN) 2.3.
     - [Compute Library for the Arm architecture](https://developer.arm.com/ip-products/processors/machine-learning/compute-library) 21.05, providing AArch64 optimised primitives for oneDNN.
   * Python3 environment containing:
     - NumPy 1.19.5
