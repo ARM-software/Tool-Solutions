@@ -228,13 +228,18 @@ ARG bazel_version
 ARG default_py_version
 ARG cpu
 ARG arch
+ARG eigen_l1_cache
+ARG eigen_l2_cache
+ARG eigen_l3_cache
 
 ENV NP_MAKE="${njobs}" \
     BZL_RAM="${bazel_mem}" \
     ONEDNN_BUILD="${onednn_opt}" \
     CPU="${cpu}" \
-    ARCH="${arch}"
-
+    ARCH="${arch}" \
+    EIGEN_L1_CACHE="${eigen_l1_cache}" \
+    EIGEN_L2_CACHE="${eigen_l2_cache}" \
+    EIGEN_L3_CACHE="${eigen_l3_cache}"
 # Key version numbers
 ENV PY_VERSION="${default_py_version}" \
     BZL_VERSION="${bazel_version}" \
@@ -258,6 +263,8 @@ ENV PATH=$PACKAGE_DIR/bazel:$PATH
 
 # Build TensorFlow
 COPY patches/tf_acl.patch $PACKAGE_DIR/.
+COPY patches/eigen_workspace.patch $PACKAGE_DIR/.
+COPY patches/eigen_gebp_cache.patch  $PACKAGE_DIR/.
 COPY scripts/build-tensorflow.sh $PACKAGE_DIR/.
 RUN $PACKAGE_DIR/build-tensorflow.sh
 

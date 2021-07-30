@@ -82,18 +82,27 @@ function set_target {
       tune="neoverse-n1"
       arch="armv8.2-a"
       blas_cpu="NEOVERSEN1"
+      eigen_l1_cache="64*1024"
+      eigen_l2_cache="1024*1024"
+      eigen_l3_cache=
     ;;
     thunderx2t99 )
       cpu="thunderx2t99"
       tune="thunderx2t99"
       arch="armv8.1-a"
       blas_cpu="THUNDERX2T99"
+      eigen_l1_cache="32*1024"
+      eigen_l2_cache="256*1024"
+      eigen_l3_cache="512*1024"
     ;;
     generic )
       cpu="generic"
       tune="generic"
       arch="armv8-a"
       blas_cpu="ARMV8"
+      eigen_l1_cache=
+      eigen_l2_cache=
+      eigen_l3_cache=
     ;;
     custom )
     # Update with custom settings
@@ -101,20 +110,28 @@ function set_target {
       tune="neoverse-n1"
       arch="armv8.2-a"
       blas_cpu="NEOVERSEN1"
+      eigen_l1_cache="64*1024"
+      eigen_l2_cache="1024*1024"
+      eigen_l3_cache="1024*1024"
     ;;
     * )
       cpu="native"
       tune="native"
       arch="native"
       blas_cpu=
+      eigen_l1_cache=
+      eigen_l2_cache=
+      eigen_l3_cache=
     ;;
  esac
-echo "================================="
-echo "Building for target: $target"
-echo "---------------------------------"
-echo " -mcpu           = $cpu"
-echo " -mtune          = $tune"
-echo " -march          = $arch"
-echo " OpenBLAS target = $blas_cpu"
-echo "================================="
+echo "======================================="
+echo "Building for target: ${target}"
+echo "---------------------------------------"
+echo " -mcpu            = ${cpu}"
+echo " -mtune           = ${tune}"
+echo " -march           = ${arch}"
+echo " OpenBLAS target  = ${blas_cpu}"
+echo " Eigen GEBP cache = ${eigen_l1_cache}, ${eigen_l2_cache}, ${eigen_l3_cache}"
+echo "                    L1, L2, L3 in bytes"
+echo "======================================="
 }

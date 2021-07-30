@@ -225,7 +225,10 @@ set_target $target
 extra_args="$extra_args --build-arg cpu=$cpu \
     --build-arg tune=$tune \
     --build-arg arch=$arch \
-    --build-arg blas_cpu=$blas_cpu"
+    --build-arg blas_cpu=$blas_cpu \
+    --build-arg eigen_l1_cache=$eigen_l1_cache \
+    --build-arg eigen_l2_cache=$eigen_l2_cache \
+    --build-arg eigen_l3_cache=$eigen_l3_cache"
 
 if [[ $build_base_image ]]; then
   # Stage 1: Base image, Ubuntu with core packages and GCC9
