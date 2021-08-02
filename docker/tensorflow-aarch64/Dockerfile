@@ -34,17 +34,25 @@ RUN apt-get -y update && \
     apt-get -y install software-properties-common && \
     add-apt-repository ppa:ubuntu-toolchain-r/test && \
     apt-get -y install \
+      accountsservice \
+      apport \
+      at \
       autoconf \
       bc \
       build-essential \
       cmake \
+      cpufrequtils \
       curl \
+      ethtool \
       g++-9 \
+      gcc-7 \
       gcc-9 \
       gettext-base \
       gfortran-9 \
       git \
+      iproute2 \
       iputils-ping \
+      lxd \
       libbz2-dev \
       libc++-dev \
       libcgal-dev \
@@ -62,9 +70,15 @@ RUN apt-get -y update && \
       libxml2-dev \
       libxslt-dev \
       locales \
+      lsb-release \
+      lvm2 \
       moreutils \
+      net-tools \
+      open-iscsi \
       openjdk-8-jdk \
       openssl \
+      pciutils \
+      policykit-1 \
       python${PY_VERSION} \
       python${PY_VERSION}-dev \
       python${PY_VERSION}-distutils \
@@ -72,16 +86,22 @@ RUN apt-get -y update && \
       python3-pip \
       python-openssl \
       rsync \
+      rsyslog \
+      snapd \
       scons \
       ssh \
       sudo \
       time \
+      udev \
       unzip \
+      ufw \
+      uuid-runtime \
       vim \
       wget \
       xz-utils \
       zip \
       zlib1g-dev
+
 
 # Make gcc 9 and python 3(.8) the default
 RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 1 --slave /usr/bin/g++ g++ /usr/bin/g++-9 && \
