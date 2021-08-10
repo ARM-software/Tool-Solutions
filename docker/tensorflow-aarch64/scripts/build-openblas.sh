@@ -33,7 +33,7 @@ git checkout v$version -b v$version
 install_dir=$PROD_DIR/$package/$version
 
 export CFLAGS="-O3"
-extra_args="USE_OPENMP=1"
+extra_args="USE_OPENMP=1 NUM_THREADS=64"
 [[ ${BLAS_CPU} ]] && extra_args="$extra_args TARGET=${blas_cpu}"
 
 make -j $NP_MAKE $extra_args
