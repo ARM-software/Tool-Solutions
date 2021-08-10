@@ -38,7 +38,8 @@ arch=${ACL_ARCH:-"arm64-v8a"}
 echo "Compute Library arch = ${arch}"
 
 # Build with scons
-scons -j16  Werror=0 debug=0 neon=1 gles_compute=0 embed_kernels=0 \
+scons -j16  Werror=0 debug=0 neon=1 openmp=1 cppthreads=0 \
+  gles_compute=0 embed_kernels=0 \
   os=linux arch=$arch build=native \
   build_dir=$install_dir/build
 
