@@ -17,7 +17,7 @@ The example is split into two sub-folders:
 * software contains the example application.  This is supplied as source code with support for building the code. The software directory also has a README with instructions to run on the Arm Ecosystem FVP and the FVP included with Arm Development Studio.
 * system contains the Fast Models based platform.  This is supplied with build scripts to compile the model for execution.
 
-## Cortex-A55 Fast Models Platform
+## Cortex-M55 Fast Models Platform
 
 Folder Contents:
 
