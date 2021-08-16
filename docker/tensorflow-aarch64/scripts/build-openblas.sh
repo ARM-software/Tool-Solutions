@@ -17,7 +17,6 @@
 # limitations under the License.
 # *******************************************************************************
 
-
 set -euo pipefail
 
 cd $PACKAGE_DIR
@@ -35,7 +34,7 @@ install_dir=$PROD_DIR/$package/$version
 export CFLAGS="-O3"
 extra_args="USE_OPENMP=1"
 [[ ${BLAS_CPU} ]] && extra_args="$extra_args TARGET=${blas_cpu}"
+[[ ${BLAS_NCORES} ]] && extra_args="$extra_args NUM_THREADS=${blas_ncores}"
 
 make -j $NP_MAKE $extra_args
-make -j $NP_MAKE PREFIX=$install_dir install
-
+make -j $NP_MAKE $extra_args PREFIX=$install_dir install

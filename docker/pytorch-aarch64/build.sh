@@ -207,6 +207,7 @@ extra_args="$extra_args --build-arg cpu=$cpu \
     --build-arg tune=$tune \
     --build-arg arch=$arch \
     --build-arg blas_cpu=$blas_cpu \
+    --build-arg blas_ncores=$blas_ncores \
     --build-arg acl_arch=$acl_arch"
 
 if [[ $build_base_image ]]; then

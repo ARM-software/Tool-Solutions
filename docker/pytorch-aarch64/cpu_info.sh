@@ -60,7 +60,19 @@ echo $target
 }
 
 ################################################################################
-# Sets required -mtune, -mcou, -march flags for chosen target
+# Sets target-specific flags used in the build:
+#
+# Compiler flags for chosen target:
+#   -mcpu  = Target processor, can include one or more feature modifiers.
+#   -mtune = Target processor for which the compiler should tune the performance of the code
+#   -march = Target architecture, can include  one or more feature modifiers
+# Note: further details can be found in the GCC documentation
+#
+# OpenBLAS settings:
+#   blas_cpu = target processor for OpenBLAS build
+#     Note: defaults to host processor if unset.
+#   blas_ncores = max thread count for OpenBLAS build.
+#     Note: defaults to number of cores on host machine if unset.
 
 function set_target {
 
@@ -82,6 +94,7 @@ function set_target {
       tune="neoverse-n1"
       arch="armv8.2-a"
       blas_cpu="NEOVERSEN1"
+      blas_ncores=64
       acl_arch="arm64-v8.2-a"
     ;;
     thunderx2t99 )
@@ -89,6 +102,7 @@ function set_target {
       tune="thunderx2t99"
       arch="armv8.1-a"
       blas_cpu="THUNDERX2T99"
+      blas_ncores=64
       acl_arch="arm64-v8a"
     ;;
     generic )
@@ -96,6 +110,7 @@ function set_target {
       tune="generic"
       arch="armv8-a"
       blas_cpu="ARMV8"
+      blas_ncores=
       acl_arch="arm64-v8a"
     ;;
     custom )
@@ -104,6 +119,7 @@ function set_target {
       tune="neoverse-n1"
       arch="armv8.2-a"
       blas_cpu="NEOVERSEN1"
+      blas_ncpu=64
       acl_arch="arm64-v8.2-a"
     ;;
     * )
@@ -111,6 +127,7 @@ function set_target {
       tune="native"
       arch="native"
       blas_cpu=
+      blas_ncores=
       acl_arch="arm64-v8a"
     ;;
  esac

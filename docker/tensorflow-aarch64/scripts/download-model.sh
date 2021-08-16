@@ -1,9 +1,10 @@
 #!/bin/bash
+set -euo pipefail
 
 # This script is based on the upstream MLCommon's instructions to download models.
 # Refer: https://github.com/mlperf/inference/tree/master/vision/classification_and_detection
 
-cd vision/classification_and_detection
+cd inference/vision/classification_and_detection
 # resnet50
 wget https://zenodo.org/record/2535873/files/resnet50_v1.pb
 # mobilenet

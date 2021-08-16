@@ -26,6 +26,10 @@ cd $EXAMPLE_DIR/MLCommons
 git clone https://github.com/mlcommons/inference.git --recursive
 cd inference
 git checkout r0.7
+
+patch -p1 < $MLCOMMONS_DIR/pytorch_native.patch
+rm $MLCOMMONS_DIR/pytorch_native.patch
+
 git checkout v1.0.1 -- language/bert
 patch -p1 < $MLCOMMONS_DIR/mlcommons_bert.patch
 rm $MLCOMMONS_DIR/mlcommons_bert.patch

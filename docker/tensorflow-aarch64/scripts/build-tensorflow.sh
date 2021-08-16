@@ -28,7 +28,7 @@ readonly src_repo=tensorflow
 # Clone tensorflow and benchmarks
 git clone ${src_host}/${src_repo}.git
 cd ${src_repo}
-git checkout $version -b $version
+git checkout $version
 
 # Env vars used to avoid interactive elements of the build.
 export HOST_C_COMPILER=(which gcc)
@@ -69,7 +69,12 @@ if [[ $ONEDNN_BUILD ]]; then
       sed -i '/DNNL_AARCH64_USE_ACL/d' ./third_party/mkl_dnn/mkldnn_acl.BUILD
     elif [[ $ONEDNN_BUILD == 'acl' ]]; then
       echo "TensorFlow $TF_VERSION with oneDNN backend - Compute Library build."
+      # Update Bazel build to include onednn_acl_primitives patch
       patch -p1 < ../tf_acl.patch
+      # Patch for oneDNN to implement additional Compute Library primitives
+      mv ../onednn_acl_primitives.patch ./third_party/mkl_dnn/.
+      # Patch TensorFlow to support caching of inner_product primitive
+      patch -p1 < ../TF-caching-ip.patch
     fi
 else
     echo "TensorFlow $TF_VERSION with Eigen backend."
