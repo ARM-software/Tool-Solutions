@@ -213,7 +213,7 @@ if [[ $clean_build ]]; then
 fi
 
 # Set TensorFlow, bazel and oneDNN version
-version="v2.5.0"
+version="v2.6.0"
 bazel_version="3.7.2"
 # Add build-args to pass version numbers,
 extra_args="$extra_args \
@@ -226,6 +226,7 @@ extra_args="$extra_args --build-arg cpu=$cpu \
     --build-arg tune=$tune \
     --build-arg arch=$arch \
     --build-arg blas_cpu=$blas_cpu \
+    --build-arg blas_ncores=$blas_ncores \
     --build-arg eigen_l1_cache=$eigen_l1_cache \
     --build-arg eigen_l2_cache=$eigen_l2_cache \
     --build-arg eigen_l3_cache=$eigen_l3_cache"

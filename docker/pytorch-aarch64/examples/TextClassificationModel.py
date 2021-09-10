@@ -1,7 +1,5 @@
-#!/usr/bin/env bash
-
 # *******************************************************************************
-# Copyright 2020-2021 Arm Limited and affiliates.
+# Copyright 2021 Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,24 +15,25 @@
 # limitations under the License.
 # *******************************************************************************
 
-set -euo pipefail
+from torch import nn
 
-cd $PACKAGE_DIR
-readonly package=openblas
-readonly version=$OPENBLAS_VERSION
-readonly src_host="https://github.com/xianyi"
-readonly src_repo="OpenBLAS"
+class TextClassificationModel(nn.Module):
 
-git clone ${src_host}/${src_repo}.git
-cd ${src_repo}
-git checkout v$version -b v$version
 
-install_dir=$PROD_DIR/$package/$version
+    def __init__(self, vocab_size, embed_dim, num_class):
+        super(TextClassificationModel, self).__init__()
+        self.embedding = nn.EmbeddingBag(vocab_size, embed_dim, sparse=True)
+        self.fc = nn.Linear(embed_dim, num_class)
+        self.init_weights()
 
-export CFLAGS="-O3"
-extra_args="USE_OPENMP=1"
-[[ ${BLAS_CPU} ]] && extra_args="$extra_args TARGET=${blas_cpu}"
-[[ ${BLAS_NCORES} ]] && extra_args="$extra_args NUM_THREADS=${blas_ncores}"
 
-make -j $NP_MAKE $extra_args
-make -j $NP_MAKE $extra_args PREFIX=$install_dir install
+    def init_weights(self):
+        initrange = 0.5
+        self.embedding.weight.data.uniform_(-initrange, initrange)
+        self.fc.weight.data.uniform_(-initrange, initrange)
+        self.fc.bias.data.zero_()
+
+
+    def forward(self, text, offsets):
+        embedded = self.embedding(text, offsets)
+        return self.fc(embedded)

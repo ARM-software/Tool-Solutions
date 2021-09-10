@@ -131,11 +131,13 @@ ARG njobs
 ARG cpu
 ARG arch
 ARG blas_cpu
+ARG blas_ncores
 
 ENV NP_MAKE="${njobs}" \
     CPU="${cpu}" \
     ARCH="${arch}" \
-    BLAS_CPU="${blas_cpu}"
+    BLAS_CPU="${blas_cpu}" \
+    BLAS_NCORES="${blas_ncores}"
 
 # Key version numbers
 ENV OPENBLAS_VERSION=0.3.10
@@ -282,10 +284,12 @@ RUN $PACKAGE_DIR/get-bazel.sh
 ENV PATH=$PACKAGE_DIR/bazel:$PATH
 
 # Build TensorFlow
-COPY patches/tf_acl.patch $PACKAGE_DIR/.
 COPY patches/eigen_workspace.patch $PACKAGE_DIR/.
 COPY patches/eigen_gebp_cache.patch  $PACKAGE_DIR/.
+COPY patches/tf_acl.patch $PACKAGE_DIR/.
+COPY patches/onednn_acl_primitives.patch $PACKAGE_DIR/.
 COPY scripts/build-tensorflow.sh $PACKAGE_DIR/.
+COPY patches/TF-caching-ip.patch $PACKAGE_DIR/.
 RUN $PACKAGE_DIR/build-tensorflow.sh
 
 CMD ["bash", "-l"]

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # *******************************************************************************
-# Copyright 2020-2021 Arm Limited and affiliates.
+# Copyright 2021 Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,22 +19,20 @@
 
 set -euo pipefail
 
+source python3-venv/bin/activate
 cd $PACKAGE_DIR
-readonly package=openblas
-readonly version=$OPENBLAS_VERSION
-readonly src_host="https://github.com/xianyi"
-readonly src_repo="OpenBLAS"
+readonly package=torchtext
+readonly version=$TEXT_VERSION
+readonly src_host=https://github.com/pytorch
+readonly src_repo=text
+readonly cppflags="-I$VENV_PACKAGE_DIR/pybind11/include"
 
-git clone ${src_host}/${src_repo}.git
-cd ${src_repo}
+# Clone TorchText
+git clone ${src_host}/${src_repo}.git ${package}
+cd ${package}
 git checkout v$version -b v$version
+git submodule sync
+git submodule update --init --recursive
 
-install_dir=$PROD_DIR/$package/$version
-
-export CFLAGS="-O3"
-extra_args="USE_OPENMP=1"
-[[ ${BLAS_CPU} ]] && extra_args="$extra_args TARGET=${blas_cpu}"
-[[ ${BLAS_NCORES} ]] && extra_args="$extra_args NUM_THREADS=${blas_ncores}"
-
-make -j $NP_MAKE $extra_args
-make -j $NP_MAKE $extra_args PREFIX=$install_dir install
+# Run Python build script
+CPPFLAGS=$cppflags python setup.py clean install
