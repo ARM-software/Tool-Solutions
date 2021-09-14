@@ -60,7 +60,24 @@ echo $target
 }
 
 ################################################################################
-# Sets required -mtune, -mcou, -march flags for chosen target
+# Sets target-specific flags used in the build:
+#
+# Compiler flags for chosen target:
+#   -mcpu  = Target processor, can include one or more feature modifiers.
+#   -mtune = Target processor for which the compiler should tune the performance of the code
+#   -march = Target architecture, can include  one or more feature modifiers
+# Note: further details can be found in the GCC documentation
+#
+# Eigen settings:
+#   eigen_l{1,2,3}_cache = Sets the L1, 2, 3 cache size used for Eigen's GEBP
+#     kernel. If unset, the build will use Eigen defaults.
+#
+# OpenBLAS settings:
+#   blas_cpu = target processor for OpenBLAS build
+#     Note: defaults to host processor if unset.
+#   blas_ncores = max thread count for OpenBLAS build.
+#     Note: defaults to number of cores on host machine if unset.
+
 
 function set_target {
 
@@ -82,6 +99,7 @@ function set_target {
       tune="neoverse-n1"
       arch="armv8.2-a"
       blas_cpu="NEOVERSEN1"
+      blas_ncores=64
       eigen_l1_cache="64*1024"
       eigen_l2_cache="1024*1024"
       eigen_l3_cache=
@@ -91,6 +109,7 @@ function set_target {
       tune="thunderx2t99"
       arch="armv8.1-a"
       blas_cpu="THUNDERX2T99"
+      blas_ncores=64
       eigen_l1_cache="32*1024"
       eigen_l2_cache="256*1024"
       eigen_l3_cache="512*1024"
@@ -100,6 +119,7 @@ function set_target {
       tune="generic"
       arch="armv8-a"
       blas_cpu="ARMV8"
+      blas_ncores=
       eigen_l1_cache=
       eigen_l2_cache=
       eigen_l3_cache=
@@ -110,6 +130,7 @@ function set_target {
       tune="neoverse-n1"
       arch="armv8.2-a"
       blas_cpu="NEOVERSEN1"
+      blas_ncores=64
       eigen_l1_cache="64*1024"
       eigen_l2_cache="1024*1024"
       eigen_l3_cache="1024*1024"
@@ -119,6 +140,7 @@ function set_target {
       tune="native"
       arch="native"
       blas_cpu=
+      blas_ncores=
       eigen_l1_cache=
       eigen_l2_cache=
       eigen_l3_cache=

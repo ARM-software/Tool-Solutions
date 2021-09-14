@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 
 # This script is  based on the upstream MLCommon's instructions to download datasets
 # Refer: https://github.com/mlperf/inference/tree/master/vision/classification_and_detection

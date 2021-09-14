@@ -130,16 +130,17 @@ export MODEL_DIR=${HOME}/examples/MLCommons/inference/vision/classification_and_
 
 From `$HOME/examples/MLCommons/inference/vision/classification_and_detection` use the `run_local.sh` to start the benchmark.
 
-To run ResNet34-ssd with the COCO 2017 validation dataset for object detection, download the dataset and model using the scripts provided in the `$HOME/examples/MLCommons` directory of the final image.
+```
+./run_local.sh pytorch resnet50 cpu
+```
 
-  * `download-dataset.sh` downloads the Coco 2017 dataset using CK to `${HOME}/CK-TOOLS/`
-  * `download-model.sh` downloads the resnet34-ssd model.
+#### Object detection
 
-Set `DATA_DIR` to the location of the downloaded dataset and `MODEL_DIR` to the location of the downloaded model.
+To run ResNet34-ssd with the COCO 2017 validation dataset for object detection, set `DATA_DIR` to the location of the downloaded dataset and `MODEL_DIR` to the location of the downloaded model.
 
 ```
 export DATA_DIR=${HOME}/CK-TOOLS/dataset-coco-2017-val
-export MODEL_DIR=$(pwd)
+export MODEL_DIR=${HOME}/examples/MLCommons/inference/vision/classification_and_detection
 ```
 
 From `$HOME/examples/MLCommons/inference/vision/classification_and_detection` use the `run_local.sh` to start the benchmark:

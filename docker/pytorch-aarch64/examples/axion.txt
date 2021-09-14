@@ -1,0 +1,16 @@
+There are many mysteries still to unravel in the world of
+quantum mechanics, but scientists at Northeastern believe they’ve
+made a “holy grail” discovery that could help pave the way for
+the next generation of electronic devices.  Their findings,
+published recently in Nature, center mostly on the discovery of a
+so-called topological axion insulator, a unique state of quantum
+matter of which researchers previously only theorized existed,
+according to physicist Arun Bansil, who led a team of researchers at
+Northeastern involved in the study. There were several dozen
+scientists from universities around the world involved in the
+project. This axion insulating state was realized, Bansil says,
+by combining certain metals and observing their magnetoelectric
+response. In this case, researchers used a solid state chip composed
+of manganese bismuth telluride, which were adhered together in
+two-dimensional layers, to measure the resulting electric and
+magnetic properties.

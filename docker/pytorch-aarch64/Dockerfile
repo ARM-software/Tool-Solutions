@@ -128,12 +128,14 @@ ARG njobs
 ARG cpu
 ARG arch
 ARG blas_cpu
+ARG blas_ncores
 ARG acl_arch
 
 ENV NP_MAKE="${njobs}" \
     CPU="${cpu}" \
     ARCH="${arch}" \
     BLAS_CPU="${blas_cpu}" \
+    BLAS_NCORES="{blas_ncores}" \
     ACL_ARCH="${acl_arch}"
 
 # Key version numbers
@@ -276,7 +278,8 @@ ENV ONEDNN_BUILD="${onednn_opt}" \
 ENV PY_VERSION="${default_py_version}" \
     TORCH_VERSION=1.9.0 \
     ONEDNN_VERSION="v2.3" \
-    VISION_VERSION="v0.9.1"
+    VISION_VERSION="v0.9.1" \
+    TEXT_VERSION=0.10.0
 
 # Use a PACKAGE_DIR in userspace
 WORKDIR /home/$DOCKER_USER
@@ -293,6 +296,10 @@ ENV PATH="$VENV_DIR/bin:$PATH"
 COPY scripts/build-pytorch.sh $PACKAGE_DIR/.
 RUN $PACKAGE_DIR/build-pytorch.sh
 RUN pip install torchvision==$VISION_VERSION
+# Build torchtext
+ENV VENV_PACKAGE_DIR=$VENV_DIR/lib/python$PY_VERSION/site-packages
+COPY scripts/build-torchtext.sh $PACKAGE_DIR/.
+RUN $PACKAGE_DIR/build-torchtext.sh
 
 CMD ["bash", "-l"]
 
@@ -320,6 +327,7 @@ RUN mkdir -p $MLCOMMONS_DIR
 # Clone and install  MLCommons (MLPerf)
 COPY scripts/build-mlcommons.sh $MLCOMMONS_DIR/.
 COPY patches/mlcommons_bert.patch $MLCOMMONS_DIR/.
+COPY patches/pytorch_native.patch $MLCOMMONS_DIR/.
 RUN $MLCOMMONS_DIR/build-mlcommons.sh
 RUN rm -f $MLCOMMONS_DIR/build-mlcommons.sh
 # Copy scripts to download dataset and models
@@ -331,6 +339,7 @@ RUN pip install --no-cache-dir requests
 RUN pip install --no-cache-dir tqdm
 RUN pip install --no-cache-dir boto3
 RUN pip install --no-cache-dir future onnx==1.8.1
+RUN pip install --no-cache-dir iopath
 
 # Copy examples
 ENV EXAMPLE_DIR=/home/$DOCKER_USER/examples

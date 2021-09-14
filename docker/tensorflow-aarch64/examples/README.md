@@ -185,9 +185,11 @@ In order to reduce the runtime, for the purposes of confirming that it runs as e
 *.*.min_query_count = 1
 *.*.performance_sample_count_override = 1
 ```
+TensorFlow threading can be set using environment variables TF_INTRA_OP_PARALLELISM_THREADS and TF_INTER_OP_PARALLELISM_THREADS.
 
 # C++ Examples
 
+To build the C++ examples, simply run `make` from inside the `cpp-api` directory.
 When executing the resulting binaries, the following flags are required:
 * `-m` flag sets the configuration file that describes model in YAML format (see Python section above)
 * `-i` sets the input image
@@ -195,15 +197,15 @@ When executing the resulting binaries, the following flags are required:
 _Note:_ unlike in the python examples, the model/labels/image paths are local relative paths. The examples expect these files to be downloaded before execution. By default, the makefile build will download the required models, labels and input images.
 
 To run the examples:
-* `./classify_image` -m resnet50.yml -i images/guineapig.jpeg
+* `./classify_image -m resnet50.yml -i images/guineapig.jpeg`
   * Resnet50 in `SavedModel` format (single image inference)
   * _input_: images/guineapig.jpeg | _labels:_ labels/imagenet-labels.txt
   * _output:_ Top 3 predictions with confidence and labels
-* `./inception_inference` -m inception.yml -i images/guineapig.jpeg
+* `./inception_inference -m inception.yml -i images/guineapig.jpeg`
   * Inception model in `FrozenModel.pb` format (single image inference)
   * _input:_ images/guineapig.jpes | _labels_: labels/imagenet_slim_labels.txt
   * _output:_ Top 3 predictions with confidence and labels
-* `./detect_objects` -m ssd_resnet50.yml -i images/cows.jpeg
+* `./detect_objects -m ssd_resnet50.yml -i images/cows.jpeg`
   * SSD-Resnet50 in `SavedModel` format (single image inference)
   * uses OpenCV to load _and_ post-process the image.
   * post-processing create a new image `output_image.jpeg` where the detected objects are framed in red rectangles.
