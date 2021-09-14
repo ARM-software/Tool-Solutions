@@ -116,7 +116,7 @@ Set `DATA_DIR` to the location of the downloaded dataset and `MODEL_DIR` to the 
 
 ```
 export DATA_DIR=${HOME}/CK-TOOLS/dataset-imagenet-ilsvrc2012-val-min
-export MODEL_DIR=$(pwd)
+export MODEL_DIR=${HOME}/examples/MLCommons/inference/vision/classification_and_detection
 ```
 
 From `$HOME/examples/MLCommons/inference/vision/classification_and_detection` use the `run_local.sh` to start the benchmark.

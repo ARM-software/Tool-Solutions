@@ -94,10 +94,41 @@ python answer_questions.py -t context.txt -q "When was the battle of Hastings?"
 
 where `context.txt` is the text file containing the text on which the question is based. If no text file is provided, `answer_questions.py` will search through the SQuAD dataset for the question and, if the question can be located, use the context associated with it.
 
+### Torchtext Article Reading
+
+The script 'torchtext_example.py' shows the functionality of the 'torchtext' Pytorch library. The example reads an article and determines its genre out of 4 options: world, sports, business, or science & technology.
+
+To run the script:
+
+```
+python torchtext_example.py axion.txt
+```
+
+The example reads an excerpt from an article from https://news.northeastern.edu/2021/08/09/holy-grail-discovery-in-solid-state-physics-could-usher-in-new-technologies/, and correctly determines that it is a science & technology article.
+
+This script was built following the approach detailed in https://pytorch.org/tutorials/beginner/text_sentiment_ngrams_tutorial.html
 
 ## MLCommons :tm: benchmarks
 
-### Object detection
+### Vision
+
+To run the image classification and object detection benchmarks, first download the datasets and models using the scripts provided in the `$HOME/examples/MLCommons` directory of the final image.
+
+  * `download-dataset.sh` downloads the ImageNet min-validation and Coco 2017 datasets using CK to `${HOME}/CK-TOOLS/`. Select option 1: for the val-min ImageNet dataset.
+  * `download-model.sh` downloads the ResNet50 and SSD-ResNet34 models.
+
+The environment variables `DATA_DIR` and `MODEL_DIR` will need to be set to the location of the downloaded dataset and model in each case.
+
+#### Image classification
+
+To run ResNet50 on ImageNet min-validation dataset for image classification, set `DATA_DIR` to the location of the downloaded dataset and `MODEL_DIR` to the location of the downloaded model.
+
+```
+export DATA_DIR=${HOME}/CK-TOOLS/dataset-imagenet-ilsvrc2012-val-min
+export MODEL_DIR=${HOME}/examples/MLCommons/inference/vision/classification_and_detection
+```
+
+From `$HOME/examples/MLCommons/inference/vision/classification_and_detection` use the `run_local.sh` to start the benchmark.
 
 To run ResNet34-ssd with the COCO 2017 validation dataset for object detection, download the dataset and model using the scripts provided in the `$HOME/examples/MLCommons` directory of the final image.
 
