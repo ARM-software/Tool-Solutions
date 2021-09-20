@@ -17,23 +17,18 @@
 # limitations under the License.
 # ******************************************************************************
 
-
 set -euo pipefail
 
-cd $PROD_DIR
-readonly package=yaml-cpp
-readonly version=$YAML_VERSION
-readonly src_host=https://github.com/jbeder
-readonly src_repo=yaml-cpp
+git clone https://github.com/mlcommons/inference_results_v0.7.git
+cd inference_results_v0.7
+# patching for loadgen, boost, opencv and tf paths
+patch -p1 < ../Makefile.patch
+# patching loadrun and netrun cpp
+patch -p1 < ../servermode.patch
 
-git clone ${src_host}/${src_repo}.git
-cd $src_repo
-git checkout $version
-mkdir -p build
-cd build
-
-export CFLAGS="${BASE_CFLAGS} -O3"
-cmake ..
-make -j
-
-
+cd closed/Intel/code/resnet/resnet-tf/loadrun
+make -C ../backend clean
+make -C ../backend
+make clean
+make
+chmod a+x ./*.sh

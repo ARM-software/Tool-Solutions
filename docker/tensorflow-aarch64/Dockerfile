@@ -47,8 +47,11 @@ RUN apt-get -y update && \
       g++-9 \
       gcc-7 \
       gcc-9 \
+      gcc-10 \
+      g++-10 \
       gettext-base \
       gfortran-9 \
+      gfortran-10 \
       git \
       iproute2 \
       iputils-ping \
@@ -104,8 +107,8 @@ RUN apt-get -y update && \
 
 
 # Make gcc 9 and python 3(.8) the default
-RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 1 --slave /usr/bin/g++ g++ /usr/bin/g++-9 && \
-    update-alternatives --install /usr/bin/gfortran gfortran /usr/bin/gfortran-9 1 && \
+RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 1 --slave /usr/bin/g++ g++ /usr/bin/g++-10 && \
+    update-alternatives --install /usr/bin/gfortran gfortran /usr/bin/gfortran-10 1 && \
     update-alternatives --install /usr/bin/python python /usr/bin/python3 1 && \
     update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 1
 
@@ -140,7 +143,8 @@ ENV NP_MAKE="${njobs}" \
     BLAS_NCORES="${blas_ncores}"
 
 # Key version numbers
-ENV OPENBLAS_VERSION=0.3.10
+ENV OPENBLAS_VERSION=0.3.10 \
+    YAML_VERSION=yaml-cpp-0.7.0
 
 # Package build parameters
 ENV PROD_DIR=/opt \
@@ -160,12 +164,13 @@ ENV CC=gcc \
 # Build OpenBLAS from source
 COPY scripts/build-openblas.sh $PACKAGE_DIR/.
 RUN $PACKAGE_DIR/build-openblas.sh
-ENV OPENBLAS_DIR=$PROD_DIR/openblas/$OPENBLAS_VERSION
+ENV OPENBLAS_DIR=$PROD_DIR/openblas
 ENV LD_LIBRARY_PATH=$OPENBLAS_DIR/lib:$LD_LIBRARY_PATH
 
 # Build and install OpenCV from GitHub sources (needed for C++ API examples)
 COPY scripts/build-opencv.sh $PACKAGE_DIR/.
 RUN $PACKAGE_DIR/build-opencv.sh
+ENV LD_LIBRARY_PATH=$PROD_DIR/opencv/install/lib:$LD_LIBRARY_PATH
 
 # Build and install yaml-cpp from Github source (needed for C++ API examples)
 COPY scripts/build-yamlcpp.sh $PACKAGE_DIR/.
@@ -287,9 +292,8 @@ ENV PATH=$PACKAGE_DIR/bazel:$PATH
 COPY patches/eigen_workspace.patch $PACKAGE_DIR/.
 COPY patches/eigen_gebp_cache.patch  $PACKAGE_DIR/.
 COPY patches/tf_acl.patch $PACKAGE_DIR/.
-COPY patches/onednn_acl_primitives.patch $PACKAGE_DIR/.
 COPY scripts/build-tensorflow.sh $PACKAGE_DIR/.
-COPY patches/TF-caching-ip.patch $PACKAGE_DIR/.
+COPY patches/TF-caching.patch $PACKAGE_DIR/.
 RUN $PACKAGE_DIR/build-tensorflow.sh
 
 CMD ["bash", "-l"]
@@ -306,6 +310,7 @@ USER $DOCKER_USER
 ENV VENV_DIR=/home/$DOCKER_USER/python3-venv
 COPY --chown=$DOCKER_USER:$DOCKER_USER --from=tensorflow-dev $VENV_DIR /home/$DOCKER_USER/python3-venv
 ENV PATH="$VENV_DIR/bin:$PATH"
+ENV LD_LIBRARY_PATH=$VENV_DIR/tensorflow/lib:$LD_LIBRARY_PATH
 
 # Examples, benchmarks, and associated 'helper' scripts will be installed
 # in $EXAMPLE_DIR.
@@ -325,13 +330,21 @@ COPY patches/mlcommons_bert.patch $MLCOMMONS_DIR/mlcommons_bert.patch
 COPY scripts/build-mlcommons.sh $MLCOMMONS_DIR/.
 RUN $MLCOMMONS_DIR/build-mlcommons.sh
 RUN rm -f $MLCOMMONS_DIR/build-mlcommons.sh
-# Copy scripts to download dataset and models
-COPY scripts/download-dataset.sh $MLCOMMONS_DIR/.
-COPY scripts/download-model.sh $MLCOMMONS_DIR/.
 
 # Install missing Python package dependencies required to run examples
 RUN pip install --no-cache-dir pyyaml
 RUN pip install --no-cache-dir tqdm
+
+# MLCommons ServerMode
+COPY patches/Makefile.patch $MLCOMMONS_DIR/.
+COPY patches/servermode.patch $MLCOMMONS_DIR/.
+COPY scripts/build-boost.sh $MLCOMMONS_DIR/.
+COPY scripts/build-loadgen-integration.sh $MLCOMMONS_DIR/.
+
+# Copy scripts to download dataset and models
+COPY scripts/download-dataset.sh $MLCOMMONS_DIR/.
+COPY scripts/download-model.sh $MLCOMMONS_DIR/.
+COPY scripts/setup-servermode.sh $MLCOMMONS_DIR/.
 
 # Copy examples
 COPY --chown=$DOCKER_USER:$DOCKER_USER examples $EXAMPLE_DIR

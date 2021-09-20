@@ -43,10 +43,13 @@ RUN apt-get -y update && \
       curl \
       ethtool \
       g++-9 \
+      g++-10 \
       gcc-7 \
       gcc-9 \
+      gcc-10 \
       gettext-base \
       gfortran-9 \
+      gfortran-10 \
       git \
       iproute2 \
       iputils-ping \
@@ -101,8 +104,8 @@ RUN apt-get -y update && \
       zlib1g-dev
 
 # Make gcc 9 the default
-RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 1 --slave /usr/bin/g++ g++ /usr/bin/g++-9 && \
-    update-alternatives --install /usr/bin/gfortran gfortran /usr/bin/gfortran-9 1 && \
+RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 1 --slave /usr/bin/g++ g++ /usr/bin/g++-10 && \
+    update-alternatives --install /usr/bin/gfortran gfortran /usr/bin/gfortran-10 1 && \
     update-alternatives --install /usr/bin/python python /usr/bin/python3 1 && \
     update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 1
 
@@ -139,7 +142,7 @@ ENV NP_MAKE="${njobs}" \
     ACL_ARCH="${acl_arch}"
 
 # Key version numbers
-ENV ACL_VERSION="v21.05" \
+ENV ACL_VERSION="v21.08" \
     OPENBLAS_VERSION=0.3.10 \
     NINJA_VERSION=1.9.0
 
@@ -170,7 +173,7 @@ ENV CC=gcc \
 # Build OpenBLAS from source
 COPY scripts/build-openblas.sh $PACKAGE_DIR/.
 RUN $PACKAGE_DIR/build-openblas.sh
-ENV OPENBLAS_DIR=$PROD_DIR/openblas/$OPENBLAS_VERSION
+ENV OPENBLAS_DIR=$PROD_DIR/openblas
 ENV LD_LIBRARY_PATH=$OPENBLAS_DIR/lib:$LD_LIBRARY_PATH
 
 # Build Arm Compute Library from source
@@ -277,7 +280,7 @@ ENV ONEDNN_BUILD="${onednn_opt}" \
 # Key version numbers
 ENV PY_VERSION="${default_py_version}" \
     TORCH_VERSION=1.9.0 \
-    ONEDNN_VERSION="v2.3" \
+    ONEDNN_VERSION="v2.4" \
     VISION_VERSION="v0.9.1" \
     TEXT_VERSION=0.10.0
 
@@ -294,6 +297,7 @@ ENV PATH="$VENV_DIR/bin:$PATH"
 
 # Build PyTorch
 COPY scripts/build-pytorch.sh $PACKAGE_DIR/.
+COPY patches/pocketfft_full.patch $PACKAGE_DIR/.
 RUN $PACKAGE_DIR/build-pytorch.sh
 RUN pip install torchvision==$VISION_VERSION
 # Build torchtext

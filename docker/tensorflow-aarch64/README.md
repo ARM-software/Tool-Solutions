@@ -14,9 +14,9 @@ Pre-built images are available for download from [Arm's Software Developers Dock
 
 ## What's in the final image?
   * OS: Ubuntu 20.04
-  * Compiler: GCC 9.3.0
-  * Maths libraries: [OpenBLAS](https://www.openblas.net/) 0.3.10, [Arm Compute Library](https://developer.arm.com/ip-products/processors/machine-learning/compute-library) 21.05.
-  * [oneDNN](https://github.com/oneapi-src/oneDNN) 2.3. Previously known as (MKL-DNN/DNNL).
+  * Compiler: GCC 10.3
+  * Maths libraries: [OpenBLAS](https://www.openblas.net/) 0.3.10, [Arm Compute Library](https://developer.arm.com/ip-products/processors/machine-learning/compute-library) 21.08.
+  * [oneDNN](https://github.com/oneapi-src/oneDNN) 2.4.
   * Python3 environment containing:
     - NumPy 1.19.5
     - TensorFlow 2.6.0. (_Note: support for TensorFlow 1.x is now deprecated. Please use the [tensorflow-v1-aarch64)](https://github.com/ARM-software/Tool-Solutions/releases/tag/tensorflow-v1-aarch64) tag_).

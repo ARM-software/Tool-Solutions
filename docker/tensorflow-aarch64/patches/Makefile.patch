@@ -1,0 +1,65 @@
+ *******************************************************************************
+ Copyright 2021 Arm Limited and affiliates.
+ SPDX-License-Identifier: Apache-2.0
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+ *******************************************************************************
+
+diff --git a/closed/Intel/code/resnet/resnet-tf/backend/Makefile b/closed/Intel/code/resnet/resnet-tf/backend/Makefile
+index 90c34fe1..a66b519f 100644
+--- a/closed/Intel/code/resnet/resnet-tf/backend/Makefile
++++ b/closed/Intel/code/resnet/resnet-tf/backend/Makefile
+@@ -1,13 +1,13 @@
+-LOADGEN_ROOT=/localdisk/amin/workspace/mlperf_inference/loadgen
+-TF_INSTALL=/localdisk/amin/installations/tf-cc
+-BOOST_INSTALL=/localdisk/amin/installations/boost-1.7.4
+-OPENCV_INSTALL=/localdisk/amin/installations/opencv
++LOADGEN_ROOT=/home/ubuntu/examples/MLCommons/inference/loadgen
++TF_INSTALL=/home/ubuntu/python3-venv/tensorflow
++BOOST_INSTALL=/opt/boost/install
++OPENCV_INSTALL=/opt/opencv/install
+ 
+ INCLUDE = -I$(BOOST_INSTALL)/include -I$(LOADGEN_ROOT) -I$(TF_INSTALL)/include -I$(OPENCV_INSTALL)/include/opencv4
+ LIBOPTS = -L$(BOOST_INSTALL)/lib -L$(LOADGEN_ROOT)/build -L$(TF_INSTALL)/lib -L$(OPENCV_INSTALL)/lib
+-LDFLAGS := -lpthread -lrt -lmlperf_loadgen -ltensorflow_cc -lboost_filesystem -lboost_system -lopencv_core -lopencv_highgui -lopencv_imgproc -lopencv_videoio -lopencv_imgcodecs
++LDFLAGS := -lpthread -lrt -lmlperf_loadgen -ltensorflow_cc -ltensorflow_framework -lboost_filesystem -lboost_system -lopencv_core -lopencv_highgui -lopencv_imgproc -lopencv_videoio -lopencv_imgcodecs
+ 
+-CFLAGS = -O3 -fpic -Wall -std=c++14 -g
++CFLAGS = -O3 -fpic -Wall -std=c++14
+ CC = gcc
+ CXX = g++ -fopenmp
+ NB_THREADS = 8
+diff --git a/closed/Intel/code/resnet/resnet-tf/loadrun/Makefile b/closed/Intel/code/resnet/resnet-tf/loadrun/Makefile
+index 9d78691c..6339cdd8 100644
+--- a/closed/Intel/code/resnet/resnet-tf/loadrun/Makefile
++++ b/closed/Intel/code/resnet/resnet-tf/loadrun/Makefile
+@@ -1,13 +1,13 @@
+-LOADGEN_ROOT=/localdisk/amin/workspace/mlperf_inference/loadgen
+-TF_INSTALL=/localdisk/amin/installations/tf-cc
+-BOOST_INSTALL=/localdisk/amin/installations/boost-1.7.4
+-OPENCV_INSTALL=/localdisk/amin/installations/opencv
++LOADGEN_ROOT=/home/ubuntu/examples/MLCommons/inference/loadgen
++TF_INSTALL=/home/ubuntu/python3-venv/tensorflow
++BOOST_INSTALL=/opt/boost/install
++OPENCV_INSTALL=/opt/opencv/install
+ 
+ INCLUDE = -I$(BOOST_INSTALL)/include -I$(LOADGEN_ROOT) -I$(TF_INSTALL)/include -I$(OPENCV_INSTALL)/include/opencv4
+ LIBOPTS = -L$(BOOST_INSTALL)/lib -L$(LOADGEN_ROOT)/build -L$(TF_INSTALL)/lib -L$(OPENCV_INSTALL)/lib -L$(PWD)/../backend
+-LDFLAGS := -lpthread -lrt -lmlperf_loadgen -ltensorflow_cc -ltensorflow_backend -lboost_filesystem -lboost_system -lopencv_core -lopencv_highgui -lopencv_imgproc -lopencv_videoio -lopencv_imgcodecs
++LDFLAGS := -lpthread -lrt -lmlperf_loadgen -Wl,--whole-archive -Wl,--no-as-needed -ltensorflow_cc -Wl,--allow-multiple-definition -Wl,--whole-archive -ltensorflow_framework -ltensorflow_backend -lboost_filesystem -lboost_system -lopencv_core -lopencv_highgui -lopencv_imgproc -lopencv_videoio -lopencv_imgcodecs
+ 
+-CFLAGS = -O3 -fpic -Wall -std=gnu++14 -g
++CFLAGS = -O3 -fpic -Wall -std=gnu++14
+ CC = gcc
+ CXX = g++ -fopenmp
+ NB_THREADS = 8
