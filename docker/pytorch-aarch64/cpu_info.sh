@@ -95,7 +95,7 @@ function set_target {
       arch="armv8.2-a"
       blas_cpu="NEOVERSEN1"
       blas_ncores=64
-      acl_arch="arm64-v8.2-a"
+      acl_arch="armv8.2-a"
     ;;
     thunderx2t99 )
       cpu="thunderx2t99"
@@ -120,7 +120,7 @@ function set_target {
       arch="armv8.2-a"
       blas_cpu="NEOVERSEN1"
       blas_ncpu=64
-      acl_arch="arm64-v8.2-a"
+      acl_arch="armv8.2-a"
     ;;
     * )
       cpu="native"

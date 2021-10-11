@@ -29,7 +29,7 @@ git clone ${src_host}/${src_repo}.git
 cd ${src_repo}
 git checkout v$version -b v$version
 
-install_dir=$PROD_DIR/$package/$version
+install_dir=$PROD_DIR/$package
 
 export CFLAGS="-O3"
 extra_args="USE_OPENMP=1"

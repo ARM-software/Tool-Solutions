@@ -37,9 +37,13 @@ git checkout $version
 arch=${ACL_ARCH:-"arm64-v8a"}
 echo "Compute Library arch = ${arch}"
 
+fat_binary=0
+
+[[ "$arch" == "armv8.2-a" ]] && fat_binary=1
+
 # Build with scons
 scons -j16  Werror=0 debug=0 neon=1 gles_compute=0 embed_kernels=0 \
-  os=linux arch=$arch build=native \
+  os=linux arch=$arch build=native fat_binary=$fat_binary \
   build_dir=$install_dir/build
 
 cp -r arm_compute $install_dir

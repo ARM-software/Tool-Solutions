@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# ******************************************************************************
+# *******************************************************************************
 # Copyright 2021 Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -15,25 +15,22 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# ******************************************************************************
-
+# *******************************************************************************
 
 set -euo pipefail
 
-cd $PROD_DIR
-readonly package=yaml-cpp
-readonly version=$YAML_VERSION
-readonly src_host=https://github.com/jbeder
-readonly src_repo=yaml-cpp
+export CPLUS_INCLUDE_PATH="/usr/include/python3.8/"
 
-git clone ${src_host}/${src_repo}.git
-cd $src_repo
-git checkout $version
-mkdir -p build
-cd build
-
-export CFLAGS="${BASE_CFLAGS} -O3"
-cmake ..
-make -j
-
-
+mkdir -p $PACKAGE_DIR
+cd $PACKAGE_DIR
+readonly package=boost
+readonly boost_src=https://boostorg.jfrog.io/artifactory/main/release/1.70.0/source/boost_1_70_0.tar.bz2
+readonly num_cpus=$(grep -c ^processor /proc/cpuinfo)
+wget $boost_src
+tar --bzip2 -xf boost_1_70_0.tar.bz2
+cd boost_1_70_0
+./bootstrap.sh --prefix=$PROD_DIR/$package/install
+./b2 -j $num_cpus
+./b2 headers
+sudo ./b2 install
+rm -rf $PACKAGE_DIR

@@ -71,10 +71,8 @@ if [[ $ONEDNN_BUILD ]]; then
       echo "TensorFlow $TF_VERSION with oneDNN backend - Compute Library build."
       # Update Bazel build to include onednn_acl_primitives patch
       patch -p1 < ../tf_acl.patch
-      # Patch for oneDNN to implement additional Compute Library primitives
-      mv ../onednn_acl_primitives.patch ./third_party/mkl_dnn/.
       # Patch TensorFlow to support caching of inner_product primitive
-      patch -p1 < ../TF-caching-ip.patch
+      patch -p1 < ../TF-caching.patch
     fi
 else
     echo "TensorFlow $TF_VERSION with Eigen backend."

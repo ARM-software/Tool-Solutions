@@ -1,0 +1,149 @@
+ *******************************************************************************
+ Copyright 2021 Arm Limited and affiliates.
+ SPDX-License-Identifier: Apache-2.0
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+ *******************************************************************************
+
+diff --git a/closed/Intel/code/resnet/resnet-tf/loadrun/netrun.sh b/closed/Intel/code/resnet/resnet-tf/loadrun/netrun.sh
+index ec153ffc..8802ee46 100644
+--- a/closed/Intel/code/resnet/resnet-tf/loadrun/netrun.sh
++++ b/closed/Intel/code/resnet/resnet-tf/loadrun/netrun.sh
+@@ -43,7 +43,7 @@ case $spec_override in
+     ;;
+   spec)
+     echo "use spec"
+-    total_samples=50000
++    total_samples=500
+   ;;
+   *)
+     echo "unknown spec override"
+@@ -78,18 +78,12 @@ esac
+
+
+ # feel free to use numacrl or taskset to control affinity
+-export OMP_NUM_THREADS=$4
+-export KMP_AFFINITY="proclist=[$3],granularity=fine,explicit"
+-export KMP_BLOCKTIME=0
+-export TF_XLA_FLAGS="--tf_xla_cpu_global_jit"
+-
+-export KMP_HW_SUBSET=1t
+
+ images_path=""
+ labels_file=""
+
+-imagenet_path="/home/amin/data-workloads/image-net"
+-imagenet_labels_path="/home/amin/data-workloads/image-net/val_map.txt"
++imagenet_path="/home/ubuntu/CK-TOOLS/dataset-imagenet-ilsvrc2012-val-min"
++imagenet_labels_path="/home/ubuntu/CK-TOOLS/dataset-imagenet-ilsvrc2012-val-min/val_map.txt"
+
+ coco_path=""
+ coco_labels_path=""
+@@ -115,28 +109,10 @@ else
+   exit 1
+ fi
+
+-
+-# batchsize_i * iteration_i decides how many imgs will be loaded to ram
+-echo numactl -C $3 ./netrun  --w 100 --quantized true --batch_size $1 --iterations $2 \
+-      --images $images_path \
+-      --labels $labels_file \
+-      --init_net_path ../models/${10}/int8_resnet50_v1.pb \
+-      --random_multibatch true \
+-      --shared_memory_option $7 \
+-      --shared_weight $9 \
+-      --numa_id $8 \
+-      --instance $5 \
+-      --server $6 \
+-      --mode ${11} \
+-      --include_accuracy true \
+-      --data_order NHWC \
+-      --net_conf $net_conf \
+-      ${netrun_settings}
+-
+-LD_PRELOAD=./libtcmalloc.so.4.3.0 numactl -C $3 --localalloc ./netrun  --w 100 --quantized true --batch_size $1 --iterations $2 \
++numactl -C $3 --localalloc ./netrun --w 100 --quantized false --batch_size $1 --iterations $2 \
+       --images $images_path \
+       --labels $labels_file \
+-      --init_net_path ../models/${10}/int8_resnet50_v1.pb \
++      --init_net_path /home/ubuntu/examples/MLCommons/resnet50v1fp32_optimized.pb \
+       --total_samples ${total_samples} \
+       --random_multibatch true \
+       --shared_memory_option $7 \
+
+diff --git a/closed/Intel/code/resnet/resnet-tf/loadrun/run_loadrun.sh b/closed/Intel/code/resnet/resnet-tf/loadrun/run_loadrun.sh
+old mode 100644
+new mode 100755
+index f2c567b5..40b84984
+--- a/closed/Intel/code/resnet/resnet-tf/loadrun/run_loadrun.sh
++++ b/closed/Intel/code/resnet/resnet-tf/loadrun/run_loadrun.sh
+@@ -1,4 +1,4 @@
+-#~/bin/bash
++#!/bin/bash
+ 
+ set -ex
+ 
+@@ -9,7 +9,7 @@ if [[ -f "$log_files" ]]; then
+ fi
+ 
+ batchsize_i=$1
+-iteration_i=$((50000/$batchsize_i))
++iteration_i=$((500/$batchsize_i))
+ scenario=$2
+ instance_i=$3
+ topology=$4
+diff --git a/closed/Intel/code/resnet/resnet-tf/loadrun/loadrun.sh b/closed/Intel/code/resnet/resnet-tf/loadrun/loadrun.sh
+index 8a28c5f3..f8c88739 100644
+--- a/closed/Intel/code/resnet/resnet-tf/loadrun/loadrun.sh
++++ b/closed/Intel/code/resnet/resnet-tf/loadrun/loadrun.sh
+@@ -34,14 +34,6 @@ ncores_per_socket=${ncores_per_socket:=$( lscpu | grep 'Core(s) per socket' | cu
+ 
+ logic_cores_0=$(( $nsockets * $ncores_per_socket ))
+ 
+-export OMP_NUM_THREADS=$ncores_per_socket 
+-
+-export KMP_HW_SUBSET=1t
+-
+-export KMP_AFFINITY=granularity=fine,compact,1,0
+-
+-export U8_INPUT_OPT=1
+-
+ if [ "${SCHEDULER}" = "LBF" ]; then
+   schedule_local_batch_first=true
+   sort_samples=false
+@@ -72,7 +64,7 @@ case $spec_override in
+     ;;
+   spec)
+     echo "use spec"
+-    total_samples=50000
++    total_samples=500
+     ;;    
+   *)
+     echo "unknown spec override"
+@@ -111,11 +103,11 @@ case $scenario in
+     exit 1
+     ;;
+ esac
+-  
+-numactl -C $logic_cores_0-$(( $logic_cores_0 + $ncores_per_socket - 1 )) --localalloc ./loadrun  --w 5 --quantized true --batch_size ${batchsize_i} --iterations ${iteration_i} \
+-      --images "/home/amin/data-workloads/image-net" \
+-      --labels "/home/amin/data-workloads/image-net/val_map.txt" \
+-      --init_net_path ../models/$topology/int8_resnet50_v1.pb \
++
++numactl -C 0-$(( $logic_cores_0 - 1 )) --localalloc ./loadrun  --w 5 --quantized false --batch_size ${batchsize_i} --iterations ${iteration_i} \
++      --images "/home/ubuntu/CK-TOOLS/dataset-imagenet-ilsvrc2012-val-min" \
++      --labels "/home/ubuntu/CK-TOOLS/dataset-imagenet-ilsvrc2012-val-min/val_map.txt" \
++      --init_net_path /home/ubuntu/examples/MLCommons/resnet50v1fp32_optimized.pb \
+       --performance_samples ${total_samples} \
+       --total_samples ${total_samples} \
+       --mode ${measure_mode} \

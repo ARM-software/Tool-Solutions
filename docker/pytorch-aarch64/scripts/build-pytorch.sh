@@ -30,6 +30,8 @@ readonly num_cpus=$(grep -c ^processor /proc/cpuinfo)
 git clone ${src_host}/${src_repo}.git
 cd ${src_repo}
 git checkout v$version -b v$version
+git submodule add https://github.com/mreineck/pocketfft third_party/pocketfft
+patch -p1 < ../pocketfft_full.patch
 git submodule sync
 git submodule update --init --recursive
 
@@ -47,8 +49,6 @@ fi
 # Update the oneDNN tag in third_party/ideep
 cd third_party/ideep/mkl-dnn
 git checkout $ONEDNN_VERSION
-# Add missing include for arm_compute::Scheduler
-git checkout 89fbae8 -- src/cpu/aarch64/acl_indirect_gemm_convolution.hpp
 
 cd $PACKAGE_DIR/$src_repo
 

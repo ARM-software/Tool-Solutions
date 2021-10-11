@@ -74,3 +74,48 @@ index 2c739a8567d..22db9cf1fe1 100644
  
      // Generate keys for post-ops
      for (auto const& post_op_param : mkldnn_matmul_fwd_dims.post_op_params) {
+diff --git a/tensorflow/core/kernels/mkl/mkl_batch_matmul_op.cc b/tensorflow/core/kernels/mkl/mkl_batch_matmul_op.cc
+index a4a22f463a837..79677299d47cd 100644
+--- a/tensorflow/core/kernels/mkl/mkl_batch_matmul_op.cc
++++ b/tensorflow/core/kernels/mkl/mkl_batch_matmul_op.cc
+@@ -140,6 +140,15 @@ class BatchMatMulMkl : public OpKernel {
+     MklBatchMatMulHelper bmm;
+     auto params = bmm.CreateMatMulParams(lhs.shape(), rhs.shape(), out_shape,
+                                          adj_x_, adj_y_);
++
++#ifdef DNNL_AARCH64_USE_ACL
++    // ACL does not support reuse of primitives with different data.
++    // For matmul, the previous approach (PR #47775) of using Tensor addresses
++    // does not work, as the addresses are re-used in matmul with different data
++    // The counter  ensure we still benefit from caching via SetMklMatmul().
++    static int counter = 1;
++    params->aarch64_counter = counter++;
++#endif
+     // Create or retrieve matmul primitive from cache.
+     MklMatMulPrimitive<Scalar>* matmul_prim =
+         MklMatMulPrimitiveFactory<Scalar>::Get(
+diff --git a/tensorflow/core/kernels/mkl/mkl_matmul_ops_common.h b/tensorflow/core/kernels/mkl/mkl_matmul_ops_common.h
+index 2c17526a3abf9..4a4a09f69b16f 100644
+--- a/tensorflow/core/kernels/mkl/mkl_matmul_ops_common.h
++++ b/tensorflow/core/kernels/mkl/mkl_matmul_ops_common.h
+@@ -536,6 +536,9 @@ struct MklMatMulParams {
+   memory::dims a_strides;
+   memory::dims b_strides;
+   memory::dims c_strides;
++#ifdef DNNL_AARCH64_USE_ACL
++  int aarch64_counter;
++#endif
+ 
+   MklMatMulParams(memory::dims a_dims, memory::dims b_dims, memory::dims c_dims,
+                   memory::dims a_strides, memory::dims b_strides,
+@@ -697,7 +700,9 @@ class MklMatMulPrimitiveFactory : public MklPrimitiveFactory<T> {
+     key_creator.AddAsKey(params.b_strides);
+     key_creator.AddAsKey(params.c_strides);
+     key_creator.AddAsKey(typeid(T).name());
+-
++#ifdef DNNL_AARCH64_USE_ACL
++    key_creator.AddAsKey(params.aarch64_counter);
++#endif
+     return key_creator.GetKey();
+   }
+ 
