@@ -10,7 +10,7 @@ This README is a set of instructions for the workshop entitled [IoT DevOps Made 
 2. [Accessing and launching the AMI](#amilaunch)
     - 2.1 [During the workshop](#workshop)
     - 2.2 [Find AMI on AWS Marketplace](#marketplace)
-    - 2.3 [Launch the AMI from AWS EC2](#launch)
+    - 2.3 [(Alternative) Launch the AMI from AWS EC2](#launch)
     - 2.4 [Enable AMI console](#console)
     - 2.5 [(Optional) Enable Code Server](#codeserver)
     - 2.6 [(Optional) Enable Virtual Network Computing (VNC)](#vnc)
@@ -31,8 +31,8 @@ This README is a set of instructions for the workshop entitled [IoT DevOps Made 
 ## 1. Prerequisites
 
 * a valid [Github](https://github.com/) account
-* a valid [AWS](https://aws.amazon.com/) account
 * a SSH (VNC) client installed: [PuTTY](https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html), [MobaXterm](https://mobaxterm.mobatek.net/)
+* a valid [AWS](https://aws.amazon.com/) account (optional during the workshop)
 
 <a name="amilaunch"></a>
 ## 2. Accessing and launching the AMI
@@ -45,60 +45,85 @@ Sections 2.2 and 2.3 can be skipped if you don't wish to use your own AWS accoun
 <a name="marketplace"></a>
 ### 2.2. Find AMI on AWS Marketplace
 
-1. Log into your [AWS account](https://aws.amazon.com/) and select *Elastic Compute Cloud (EC2)* service
-2. Set region to *N.Virginia (us-east-1)* in top-right corner of the console
-3. Locate *Images > AMIs* in the sidebar
-4. Search Public Images for *Arm Virtual Hardware*
-
-<a name="launch"></a>
-### 2.3. Launch the AMI from AWS EC2
-
-1. Subscribe to the AMI
+1. Log into your [AWS account](https://aws.amazon.com/) and select *AWS Marketplace Subscriptions* service
+2. Go to *Discover products* and search for *Arm Virtual Hardware* (with spaces)
 
 ![AWS AMI subscription button](img/subscribe.png)
 
-2. Choose **t3.medium** instance type and use default settings
+3. Click on *Continue to subscribe to the AMI* > *Continue to configuration* > *Continue to launch*
+4. Choose **t3.medium** instance type. This type has 2 vCPU and 4 GB of RAM which is enough resources to run the AMI.
 
 ![AWS instance size list](img/instance_type.png)
 
-3. Select key pair (or generate new key)
+5. If you don't have a VPC (Virtual Private Cloud network) already, click on *Create a VPC in EC2 * in the corresponding section. In the *Your VPCs* interface, click on *Actions* > *Create default VPC* in the top-right corner.
+
+![AWS instance size list](img/ec2_vpc.png)
+
+6. If you don't have a Security Group already, click on *Create new security group based on seller settings* in the corresponding section. This will allow SSH connection to the instance. Add a name and description to save it.
+
+![AWS instance size list](img/ec2_sg.png)
+
+7. If you don't have a Key Pair already, click on "Create a key pair in EC2" in the corresponding section. A SSH key pair correspond to a public key that will be copied on the server side (the running AVH AMI instance) and a private key needed by a client to connect to it (your local machine). In the *Key pairs* interface, click on *Create a pair* in the top-right corner and follow the default steps to download the private key that you will need to connect.
 
 ![AWS key pair selection menu](img/key_pair.png)
+
+8. Click on *Launch*. You will see a "Congratulations" message to inform you that the instance was successfully deployed. Click on the link provided "You can view this instance on EC2 Console" to check the instance status and retrieve its *Public IPv4 address*.
+
+
+<a name="launch"></a>
+### 2.3. (Alternative) Launch the AMI from AWS EC2
+
+1. Log into your [AWS account](https://aws.amazon.com/) and select *Elastic Compute Cloud (EC2)* service
+2. Locate *Images > AMIs* in the sidebar
+3. Search *Public Images* for *ArmVirtualHardware* (without spaces) and click on Launch.
+
+![AWS key pair selection menu](img/ec2_launch.png)
+
+4. Follow the steps with the default options. If this has not been configured already, you will need to create a VPC, a new security group similar to what is described in [section 2.4](#marketplace).
+
+8. Click on *Review and launch* > *Launch* to select or create a key pair (see [section 2.4](#marketplace)). You will see a message to inform you that the instance was successfully launched. Click on the *View instances* link provided to check its status and retrieve its *Public IPv4 address*.
+
 
 <a name="console"></a>
 ### 2.4. Enable AMI console
 
-1. Use SSH command on Linux or MacOS:
+To connect to the running instance, you will need its *Public IPv4 address*. If you don't have it already, you can get from the *EC2* > *Instances*.
 
-    `ssh -i <key.pem> ubuntu@<AMI_IP_addr>`
+Use SSH command on Linux, MacOS or [Windows Powershell](https://www.howtogeek.com/336775/how-to-enable-and-use-windows-10s-built-in-ssh-commands/):
 
-    Or, if using MobaXterm on Windows:
+        ssh -i <key.pem> ubuntu@<AMI_IP_addr>
 
-    * Add new SSH session
-    * Specify `<AMI_IP_addr>` as *Remote host*
-    * Specify `ubuntu` as *username*
-    * Enable *Use private key* and specify path to `<key.pem>`
+Or, if using MobaXterm on Windows:
 
-    ![MobaXterm SSH configuration](img/moba_ssh.png)
+* Add new SSH session
+* Specify `<AMI_IP_addr>` as *Remote host*
+* Specify `ubuntu` as *username*
+* Enable *Use private key* and specify path to `<key.pem>`
+
+![MobaXterm SSH configuration](img/moba_ssh.png)
 
 
-	Or, if using PuTTY:
-	
-	* Use **PuTTYgen** to convert the .pem file to .ppk
-	* Specify `ubuntu@<AMI_IP_addr>` in *Session > Host name*
+Or, if using PuTTY:
 
-    ![PuTTY username and hostname/IP configuration](img/putty_ip.png)
+* Use **PuTTYgen** to convert the .pem file to .ppk
+* Specify `ubuntu@<AMI_IP_addr>` in *Session > Host name*
 
-	* Specify path to `key.pem` in *Session > Connection > SSH > Auth > Private key file for authentication*
+![PuTTY username and hostname/IP configuration](img/putty_ip.png)
 
-    ![PuTTY private key configuration](img/putty_key.png)
+* Specify path to `key.pem` in *Session > Connection > SSH > Auth > Private key file for authentication*
+
+![PuTTY private key configuration](img/putty_key.png)
 
 <a name="codeserver"></a>
 ### 2.5. [Optional] Enable [Code Server](https://github.com/cdr/code-server) (Visual Studio Code)
 
-1. Start a SSH tunnel to the instance and forward port 8080. On Linux or MacOS:
+The Arm Virtual Hardware AMI comes with an IDE (Visual Studio Code) which can be accessed with a web browser. To access it, you will need to:
 
-    `ssh -I <key.pem> -N -L 8080:localhost:8080 ubuntu@<AMI_IP_addr>`
+1. Start a SSH tunnel to the instance and forward port 8080. On Linux, MacOS or [Windows Powershell](https://www.howtogeek.com/336775/how-to-enable-and-use-windows-10s-built-in-ssh-commands/):
+
+    `ssh -i <key.pem> -N -L 8080:localhost:8080 ubuntu@<AMI_IP_addr>`
+
+    The -N option holds the SSH tunnel connection and does not allow to execute other remote commands. This is useful for just forwarding ports.
 
     Or, with MobaXterm on Windows:
 
@@ -119,19 +144,26 @@ Sections 2.2 and 2.3 can be skipped if you don't wish to use your own AWS accoun
 <a name="vnc"></a>
 ### 2.6. [Optional] Enable Virtual Network Computing (VNC)
 
+VNC is a protocol to enable remote desktop. The instruction below will securely enable VNC through a SSH tunnel.
+
 In the AMI terminal:
 
-1. Enable VNC password
+1. Enable VNC password (no need to enter a view-only password)
 
     `vncpasswd`
     
-2. Start VNC server
+2. Start the VNC server for the session
 
     `sudo systemctl start vncserver@1.service`
 
+    To restart the VNC server after reboot
+    
+    `sudo systemctl enable vncserver@1.service`
+
+
 On your local machine:
 
-3. Forward port 5901 on local machine​. On Linux or MacOS:
+3. Forward port 5901 on local machine​. On Linux, MacOS or [Windows Powershell](https://www.howtogeek.com/336775/how-to-enable-and-use-windows-10s-built-in-ssh-commands/):
 
     `ssh -I <key.pem> -N –L 5901:localhost:5901 ubuntu@<AMI_IP_addr>​`
 
@@ -174,11 +206,11 @@ In the AMI terminal:
 
     `cd VHT-TFLmicrospeech/Platform_FVP_Corstone_SSE-300_Ethos-U55​`
 
-2. Use cp_install utility (do once) to install necessary CMSIS Packs​
+2. Use [cp_install](https://arm-software.github.io/CMSIS_5/Build/html/cp_install.html) utility (do once) to install the necessary [CMSIS](https://developer.arm.com/tools-and-software/embedded/cmsis) Packs​ dependencies
 
     `cp_install.sh packlist​`
 
-3. Use cbuild to build .cprj project​
+3. Use (cbuild)[https://arm-software.github.io/CMSIS_5/Build/html/index.html] to build the software project​ (this will take a few minutes)
 
     `cbuild.sh microspeech.Example.cprj`
 
@@ -189,9 +221,15 @@ In the AMI terminal:
 
 1. Run script to load application to model and execute​
 
-    `./run_example.sh (--cyclelimit 100000000)​`
+        ./run_example.sh
+    
 
-2. Observe banner and output log​ (use Ctrl+C to terminate early if needed)
+    This will run the application until it terminates (about a minute). You can terminate the simulation faster by specifying the number of cycles:
+
+        ./run_example.sh --cyclelimit 100000000
+    
+
+2. Observe banner and output log​
 
         Fast Models [11.16.14 (Sep 29 2021)]​
         Copyright 2000-2021 ARM Limited.​
@@ -233,11 +271,15 @@ In the AMI terminal:
     `cd ../micro_speech/src/​`
 
 
-2. Edit `command_responder.cc` and change output (e.g. add your name as below)​
+2. Edit `command_responder.cc` using the nano text editor for example:
+
+    `nano command_responder.cc`
+
+    And change output (e.g. add your name as below)​
 
         TF_LITE_REPORT_ERROR(error_reporter, “YourName Heard %s (%d) @%dms", found_command, score, current_time);
 
-3. Save and rebuild, and run to verify change​
+3. Save (Ctrl+X with nano), rebuild (cbuild will just rebuild the files that have changed) and run to verify change​
 
         cd ../../Platform_FVP_Corstone_SSE-300_Ethos-U55​
         cbuild.sh microspeech.Example.cprj​
@@ -267,7 +309,7 @@ In the AMI terminal
 
     You will be asked your login and Personal Access Token (password) information​
 
-In Github, observe the change registered
+In your own fork on Github, observe the change registered
 
 `https://github.com/<YourGitHubName>/VHT-TFLmicrospeech​/blob/main/micro_speech/src/command_responder.cc​`
 
@@ -277,7 +319,7 @@ In Github, observe the change registered
 <a name="confactions"></a>
 ### 4.1. Configure GitHub Actions
 
-In GitHub
+In your own fork on GitHub
 
 1. Navigate to *Settings > Actions > Runners*
 2. Add `New self-hosted runner`
@@ -297,7 +339,7 @@ In the AMI terminal
 
         cd /home/ubuntu
 
-2. Copy the commands from GitHub to configure
+2. Copy the commands from GitHub to configure with default options (no need for a runner group name)
 3. Once configured, use run.sh to start the runner on the AMI
 
         ./run.sh
@@ -358,4 +400,6 @@ The Machine Learning Group at Arm have developed [other examples](https://review
 
 The instructions in the [quick start guide](https://review.mlplatform.org/plugins/gitiles/ml/ethos-u/ml-embedded-evaluation-kit/+/HEAD/docs/quick_start.md) are easily reproducible in the AMI. You will need to enable VNC to visualize.
 
-        VHT-Corstone-300 -a ethos-u-img_class.axf -C cpu_core.ethosu.extra_args="--fast"
+For more information on Arm's solution for IoT: [https://www.arm.com/solutions/iot/total-solutions-iot](https://www.arm.com/solutions/iot/total-solutions-iot)
+
+Have questions, comments, and/or suggestions? Contact [arm-tool-solutions@arm.com](mailto: arm-tool-solutions@arm.com)
