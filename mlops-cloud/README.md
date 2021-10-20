@@ -369,6 +369,7 @@ In Github
 
 2. **In a new AMI terminal**, revert your change in command_responder.cc and push to the repo
 
+        cd VHT-TFLmicrospeech/micro_speech/src
         git add .
         git commit -m "Original message"
         git push
@@ -401,7 +402,9 @@ In Github
         <timestamp>: Running job: ci_demonstration
         <timestamp>: Job ci_demonstration completed with result: Failed
 
-   Same in GitHub's *Actions* tab
+    Same in GitHub's *Actions* tab
+
+    ![GitHub actions reports](img/github_actionreports_failed.png)
 
 
 <a name="further"></a>
