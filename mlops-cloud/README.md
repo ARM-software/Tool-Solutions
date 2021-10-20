@@ -312,11 +312,17 @@ In the AMI terminal
 
         git push​
 
-    You will be asked your login and Personal Access Token (password) information​
+    You will be asked your login and Personal Access Token (password) information.
+    
+    To ​enable Personal Access Token in GitHub:
+    
+    - go to *Settings > Developer settings > Personal access tokens > Generate new token*
+    - Enable **repo** to access the repository from the command-line
+    - Generate and copy the token to provide
 
-In your own fork on Github, observe the change registered
+    In your own fork on Github, observe the change registered
 
-`https://github.com/<YourGitHubName>/VHT-TFLmicrospeech​/blob/main/micro_speech/src/command_responder.cc​`
+    `https://github.com/<YourGitHubName>/VHT-TFLmicrospeech​/blob/main/micro_speech/src/command_responder.cc​`
 
 <a name="actions"></a>
 ## 4. Automated CI/CD with GitHub Actions
