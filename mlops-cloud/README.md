@@ -51,7 +51,7 @@ Sections 2.2 and 2.3 can be skipped if you don't wish to use your own AWS accoun
 ![AWS AMI subscription button](img/subscribe.png)
 
 3. Click on *Continue to subscribe to the AMI* > *Continue to configuration* > *Continue to launch*
-4. Choose **t3.medium** instance type. This type has 2 vCPU and 4 GB of RAM which is enough resources to run the AMI.
+4. Choose **c5.large** instance type. This type has 2 powerful vCPU and 4 GB of RAM which is enough resources to run the AMI and simulation fast.
 
 ![AWS instance size list](img/instance_type.png)
 
@@ -210,7 +210,7 @@ In the AMI terminal:
 
     `cp_install.sh packlist​`
 
-3. Use (cbuild)[https://arm-software.github.io/CMSIS_5/Build/html/index.html] to build the software project​ (this will take a few minutes)
+3. Use (cbuild)[https://arm-software.github.io/CMSIS_5/Build/html/index.html] to build the software project​ (this should take about a minute)
 
     `cbuild.sh microspeech.Example.cprj`
 
@@ -244,21 +244,26 @@ In the AMI terminal:
         (C) COPYRIGHT 2019-2021 Arm Limited​
         ALL RIGHTS RESERVED​
         
-        Heard yes (144) @1100ms​
-        Heard no (142) @5600ms​
-        Heard yes (149) @9100ms​
-        Heard no (142) @13600ms​
+        Heard yes (146) @1000ms
+        Heard no (145) @5600ms
+        Heard yes (143) @9100ms
+        Heard no (145) @13600ms
+        Heard yes (143) @17100ms
+        Heard no (145) @21600ms
         
-        …​
+        Info: Simulation is stopping. Reason: Cycle limit has been exceeded.
         
-        --- cpu_core statistics: ------------------------------------------------------​
-        Simulated time                          : 24.000002s​
-        User time                               : 57.887562s​
-        System time                             : 0.321178s​
-        Wall time                               : 58.273418s​
-        Performance index                       : 0.41​
-        cpu_core.cpu0                           :  13.19 MIPS (   768000000 Inst)​
-        -------------------------------------------------------------------------------​
+        Info: /OSCI/SystemC: Simulation stopped by user.
+        [warning ][main@0][01 ns] Simulation stopped by user
+        
+        --- cpu_core statistics: ------------------------------------------------------
+        Simulated time                          : 23.999999s
+        User time                               : 25.804117s
+        System time                             : 3.336213s
+        Wall time                               : 29.132544s
+        Performance index                       : 0.82
+        cpu_core.cpu0                           :  26.36 MIPS (   768000000 Inst)
+        -------------------------------------------------------------------------------
 ​
 
 <a name="edit"></a>
