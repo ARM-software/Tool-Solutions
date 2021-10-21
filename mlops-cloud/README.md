@@ -302,11 +302,11 @@ In the AMI terminal
 
 2. Commit changes, with arbitrary message​
 
-        git commit –m “Added my name to output message”​
+        git commit -m "Added my name to output message"
 
 3. Verify the repository referenced is your forked copy​
 
-        git remote –v​
+        git remote -v​
 
 4. Submit changes back to your repository​
 
@@ -357,10 +357,9 @@ In the AMI terminal
         Connected to GitHub
         yyyy-mm-dd hh:mm:ss: Listening for Jobs
 
-In Github
-4. Go the *Runner* tab to see the runner listed and idle
+In Github, go the *Runner* tab to see the runner listed and idle
 
-    ![GitHub runner list](img/github_idlerunner.png)
+![GitHub runner list](img/github_idlerunner.png)
 
 <a name="workflow"></a>
 ### 4.3. GitHub Actions workflow
@@ -377,8 +376,8 @@ In Github
 3. **Back to the first AMI terminal where the runner has been started with ./run.sh**, the runner reports the status
 
         <timestamp>: Listening for Jobs
-        <timestamp>: Running job: environment_setup
-        <timestamp>: Job environment_setup completed with result: Succeeded
+        <timestamp>: Running job: ci_demonstration
+        <timestamp>: Job ci_demonstration completed with result: Succeeded
 
 4. In GitHub, locate the *Actions* sections and inspect the history of the workflow runs on the AMI instance
 
