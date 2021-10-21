@@ -192,7 +192,7 @@ On your local machine:
 2. Log in to your github account and click on *Fork* (upper right)
 3. In the AMI terminal:
 
-        git config --global user.name “YourGitHubName"​
+        git config --global user.name YourGitHubName​
         git config --global user.email Your.Email@domain.com​
         git config --list​
         git clone https://github.com/<YourGitHubName>/VHT-TFLmicrospeech
