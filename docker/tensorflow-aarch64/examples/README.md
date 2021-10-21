@@ -14,17 +14,17 @@ To run inference on an image call:
 python classify_image.py -m ./resnet_v1-50.yml -i https://upload.wikimedia.org/wikipedia/commons/3/32/Weimaraner_wb.jpg
 ```
 
-Where the `-m` flag sets the configuration file (see below) that describes model, and `-i` sets the URL of the image to classify.
+Where the `-m` flag sets the configuration file (see below) that describes the model, and `-i` sets the URL of the image to classify.
 
 The file [resnet_v1-50.yml](py-api/resnet_v1-50.yml) provides, in [YAML format](https://docs.ansible.com/ansible/latest/reference_appendices/YAMLSyntax.html), information about the model:
 
 - `name`: Name to use to save the model after downloading it
 - `source`: URL from where to download the model
-- `labels`: URL from where to download labels for the model
+- `labels`: URL from where to download labels for the model.
 In addition to the model, pass the `arguments` record required to build the graph for inference of the trained model:
 - `input_shape`: Input shape used for inference in the format NHWC
 - `input`: Name of the input tensor in the trained model
-- `output`: Name of the output tensor in the trained model
+- `output`: Name of the output tensor in the trained model.
 
 By default, the model will be optimized for inference before the classification task is performed. This optimization takes a couple of minutes to complete. Set the flag `-u` to disable this optimization.
 
@@ -44,7 +44,7 @@ The file [ssd_resnet34.yml](py-api/ssd_resnet34.yml) provides, in [YAML format](
 - `name`: Name of the model used for inference
 - `source`: URL from where to download the model
 - `labels`: URL from where to download labels for the model
-- `threshold`: If confidence is below this threshold then object will not be reported as detected
+- `threshold`: If confidence is below this threshold, then object will not be reported as detected
 In addition to the model, pass the `arguments` record required to build the graph for inference of the trained model:
 - `input`: Name of the input tensor in the trained model
 - `output`: Name of the output tensor in the trained model
@@ -105,7 +105,7 @@ where `context.txt` is the text file containing the text on which the question i
 
 ## MLCommons :tm: benchmarks
 
-### Image clasification
+### Image classification
 
 To run ResNet50 on ImageNet min-validation dataset for image classification, download the dataset and model using the scripts provided in the `$HOME/examples/MLCommons` directory of the final image.
 
@@ -208,6 +208,6 @@ To run the examples:
 * `./detect_objects -m ssd_resnet50.yml -i images/cows.jpeg`
   * SSD-Resnet50 in `SavedModel` format (single image inference)
   * uses OpenCV to load _and_ post-process the image.
-  * post-processing create a new image `output_image.jpeg` where the detected objects are framed in red rectangles.
+  * post-processing creates a new image `output_image.jpeg` where the detected objects are framed in red rectangles.
   * _input:_ images/cows.jpeg | _labels:_ labels/coco-labels.txt
   *  _output:_ All detected objects with confidence above 70% threshold

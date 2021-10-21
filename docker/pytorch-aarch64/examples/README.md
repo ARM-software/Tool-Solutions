@@ -14,14 +14,14 @@ To run inference on an image call:
 python classify_image.py -m ./resnet_v1-50.yml -i https://upload.wikimedia.org/wikipedia/commons/3/32/Weimaraner_wb.jpg
 ```
 
-Where the `-m` flag sets the configuration file (see below) that describes model, and `-i` sets the URL of the image to classify.
+Where the `-m` flag sets the configuration file (see below) that describes the model, and `-i` sets the URL of the image to classify.
 
 The file [resnet_v1-50.yml](resnet_v1-50.yml) provides, in [YAML format](https://docs.ansible.com/ansible/latest/reference_appendices/YAMLSyntax.html), information about the model:
 
 - `name`: Name to use to save the model after downloading it
 - `class`: The name of class that implements model architecture in torchvision.models
 - `source`: URL from where to download saved checkpoint
-- `labels`: URL from where to download labels for the model
+- `labels`: URL from where to download labels for the model.
 
 ### Object detection
 
@@ -40,7 +40,7 @@ The file [ssd_resnet34.yml](ssd_resnet34.yml) provides, in [YAML format](https:/
 - `script`: Script to download the Python model class and put it in the `PYTHONPATH`
 - `source`: URL from where to download the model
 - `labels`: URL from where to download labels for the model
-- `threshold`: If confidence is below this threshold then object will not be reported as detected
+- `threshold`: If confidence is below this threshold, then object will not be reported as detected
 There is also additional information in `image_preprocess` that is used to preprocess image before doing inference:
 - `input_shape`: Input shape used for inference in format NCHW
 - `mean`: Mean values per channel for normalizing image

@@ -46,7 +46,7 @@ Confirm Docker is working:
 
 ``` docker run hello-world ```
 
-If there are any problems make sure the service is running:
+If there are any problems, make sure the service is running:
 
 ``` systemctl start docker ```
 
@@ -65,7 +65,7 @@ Use the build.sh script to build the image. This script implements a multi-stage
   * Stage 2: 'libs' image including essential tools and libraries such as Python and OpenBLAS.
   * Stage 3: 'tools' image, including a Python3 virtual environment in userspace and a build of NumPy and SciPy against OpenBLAS, as well as other Python essentials.
   * Stage 4: 'dev' image, including Bazel and TensorFlow and the source code
-  * Stage 5: 'tensorflow' image, including only the Python3 virtual environment, the TensorFlow module,the basic benchmarks and the example scripts. Bazel and TensorFlow sources are not included in this image.
+  * Stage 5: 'tensorflow' image, including only the Python3 virtual environment, the TensorFlow module, the basic benchmarks, and the example scripts. Bazel and TensorFlow sources are not included in this image.
 
 To see the command line options for build.sh use:
 
@@ -88,9 +88,9 @@ For example:
 
     ```  ./build.sh --build-type base ```
 
-For the base build: This will generate an image named 'DockerTest/ubuntu/base-v2', hyphenated with the version of TensorFlow chosen.
+For the base build: This will generate an image named 'tensorflow-base-v2', hyphenated with the version of TensorFlow chosen.
 
-TensorFlow can optionally be built with oneDNN, using the '--onednn' or '--dnnl' flag. Tensorflow 2.x is built with oneDNN 2.2.
+TensorFlow can optionally be built with oneDNN, using the '--onednn' or '--dnnl' flag.
 Without the '--onednn' flag, the default Eigen backend of Tensorflow is chosen. For the final TensorFlow image with oneDNN: This will generate an image 'tensorflow-v2$onednn with the type of onednn backend chosen.
 
 The backend for oneDNN can also be selected using the '--onednn' or '--dnnl' flags:
@@ -98,9 +98,9 @@ This defaults to using Compute Library for Arm Architecture, but '--onednn refer
 
 For builds where Compute Library is enabled, setting the environment variable `DNNL_DEFAULT_FPMATH_MODE` to `BF16` or `ANY` will instruct Compute Library to dispatch fp32 workloads to bfloat16 kernels where hardware support permits. Note: this may introduce a drop in accuracy.
 
-_Note: The oneDNN backend chosen will be apended to the image name: `tensorflow-v2$onednn`._
+_Note: The oneDNN backend chosen will be appended to the image name: `tensorflow-v2$onednn`._
 
-By default, all packages will built with optimisations for the host machine, equivalent to setting `-mcpu=native` at compile time for each component build.
+By default, all packages will be built with optimisations for the host machine, equivalent to setting `-mcpu=native` at compile time for each component build.
 It is possible to choose a specific build target using the `--build-target` flag:
   * native       - optimize for the current host machine (default).
   * neoverse-n1  - optimize for Neoverse-N1.
@@ -124,6 +124,6 @@ where <image name> is the name of the finished image, for example 'tensorflow-v2
 
   ``` docker run -it --init tensorflow-v2 ```
 
-To display available images use the Docker command:
+To display available images, use the Docker command:
 
   ``` docker images ```
