@@ -39,7 +39,7 @@ Confirm Docker is working:
 
 ``` docker run hello-world ```
 
-If there are any problems make sure the service is running:
+If there are any problems, make sure the service is running:
 
 ``` systemctl start docker ```
 
@@ -80,13 +80,13 @@ For example:
 
     ```./build.sh --build-type base ```
 
-    This will generate an image named 'DockerTest/ubuntu/base'.
+    This will generate an image named 'pytorch-base'.
 
 PyTorch can optionally be built with oneDNN, using the '--onednn' or '--dnnl' flag. By default this will use AArch64 optimised primitives from Arm Compute Library where available. Specifying `--onednn reference` will disable Compute Library primitives and use oneDNN's reference C++ kernels throughout.
 
 For builds where Compute Library is enabled, setting the environment variable `DNNL_DEFAULT_FPMATH_MODE` to `BF16` or `ANY` will instruct Compute Library to dispatch fp32 workloads to bfloat16 kernels where hardware support permits. Note: this may introduce a drop in accuracy.
 
-By default, all packages will built with optimisations for the host machine, equivalent to setting `-mcpu=native` at compile time for each component build.
+By default, all packages will be built with optimisations for the host machine, equivalent to setting `-mcpu=native` at compile time for each component build.
 It is possible to choose a specific build target using the `--build-target` flag:
   * native       - optimize for the current host machine (default).
   * neoverse-n1  - optimize for Neoverse-N1.
@@ -103,6 +103,6 @@ where <image name> is the name of the finished image, for example 'pytorch'.
 
 ```docker run -it --init pytorch```
 
-To display available images use the Docker command:
+To display available images, use the Docker command:
 
 ```docker images ```
