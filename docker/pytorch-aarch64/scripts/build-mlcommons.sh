@@ -38,8 +38,13 @@ rm $MLCOMMONS_DIR/mlcommons_bert.patch
 cd loadgen
 CFLAGS="-std=c++14" python setup.py develop
 
+# patch RNNT
+cd $MLCOMMONS_DIR/inference/
+patch -p1 < $MLCOMMONS_DIR/mlcommons_rnnt.patch
+rm $MLCOMMONS_DIR/mlcommons_rnnt.patch
+
 # Build image classification and object detection benchmarks
-cd ../vision/classification_and_detection
+cd $MLCOMMONS_DIR/inference/vision/classification_and_detection
 python setup.py develop
 # view method generates a runtime error where tensor is not
 # contigious in memory. Using reshape avoids this.

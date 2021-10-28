@@ -23,7 +23,7 @@ Pre-built images are available for download from [Arm's Software Developers Dock
   * Python3 environment containing:
     - NumPy 1.19.5
     - SciPy 1.5.2
-    - PyTorch 1.9.0
+    - PyTorch 1.10.0
   * [ML Commons :tm: (MLPerf)](https://mlperf.org/)
   * [Example scripts](./examples/README.md) that demonstrate how to run ML models
 

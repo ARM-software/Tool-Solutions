@@ -19,7 +19,7 @@ Pre-built images are available for download from [Arm's Software Developers Dock
   * [oneDNN](https://github.com/oneapi-src/oneDNN) 2.4.
   * Python3 environment containing:
     - NumPy 1.19.5
-    - TensorFlow 2.6.0. (_Note: support for TensorFlow 1.x is now deprecated. Please use the [tensorflow-v1-aarch64)](https://github.com/ARM-software/Tool-Solutions/releases/tag/tensorflow-v1-aarch64) tag_).
+    - TensorFlow 2.7.0. (_Note: support for TensorFlow 1.x is now deprecated. Please use the [tensorflow-v1-aarch64)](https://github.com/ARM-software/Tool-Solutions/releases/tag/tensorflow-v1-aarch64) tag_).
     - SciPy 1.5.2
   * TensorFlow Benchmarks
   * [MLCommons :tm: (MLPerf)](https://mlperf.org/) benchmarks with an optional patch to support benchmarking for TF oneDNN builds.
@@ -90,7 +90,7 @@ For example:
 
 For the base build: This will generate an image named 'tensorflow-base-v2', hyphenated with the version of TensorFlow chosen.
 
-TensorFlow can optionally be built with oneDNN, using the '--onednn' or '--dnnl' flag.
+TensorFlow can optionally be built with oneDNN, using the '--onednn' or '--dnnl' flag; in this case the oneDNN backend will be enabled by default, but can be disabled at runtime by setting the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
 Without the '--onednn' flag, the default Eigen backend of Tensorflow is chosen. For the final TensorFlow image with oneDNN: This will generate an image 'tensorflow-v2$onednn with the type of onednn backend chosen.
 
 The backend for oneDNN can also be selected using the '--onednn' or '--dnnl' flags:

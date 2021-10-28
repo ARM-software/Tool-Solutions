@@ -33,7 +33,7 @@ YAML_INCLUDE_DIR = /opt/yaml-cpp/include
 YAML_LIB_DIR     = /opt/yaml-cpp/build
 
 CC=g++
-CFLAGS=-std=c++11
+CFLAGS=-std=c++14 -Wno-deprecated-declarations
 LDFLAGS=-Wl,-rpath,$(TF_LIB_DIR):$(CV_LIB_DIR)
 
 all : detect_objects classify_image inception_inference

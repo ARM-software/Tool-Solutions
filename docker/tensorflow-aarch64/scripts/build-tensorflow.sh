@@ -71,16 +71,12 @@ if [[ $ONEDNN_BUILD ]]; then
       echo "TensorFlow $TF_VERSION with oneDNN backend - Compute Library build."
       # Update Bazel build to include onednn_acl_primitives patch
       patch -p1 < ../tf_acl.patch
-      # Patch TensorFlow to support caching of inner_product primitive
-      patch -p1 < ../TF-caching.patch
+      # Patch TensorFlow to support caching of softmax primitive
+      patch -p1 < ../tf_softmax.patch
     fi
 else
     echo "TensorFlow $TF_VERSION with Eigen backend."
     extra_args="$extra_args --define tensorflow_mkldnn_contraction_kernel=0"
-
-    # Patch Eigen to fix minor issue when setting L3 cache
-    patch -p1 < ../eigen_workspace.patch
-    mv ../eigen_gebp_cache.patch ./third_party/eigen3/.
 
     # Manually set L1,2,3 caches sizes for the GEBP kernel in Eigen.
     [[ $EIGEN_L1_CACHE ]] && extra_args="$extra_args \

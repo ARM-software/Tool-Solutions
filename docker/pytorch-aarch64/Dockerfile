@@ -103,8 +103,9 @@ RUN apt-get -y update && \
       zip \
       zlib1g-dev
 
-# Make gcc 9 the default
-RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 1 --slave /usr/bin/g++ g++ /usr/bin/g++-10 && \
+# Set default gcc, python and pip versions
+RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 1 && \
+    update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-10 1 && \
     update-alternatives --install /usr/bin/gfortran gfortran /usr/bin/gfortran-10 1 && \
     update-alternatives --install /usr/bin/python python /usr/bin/python3 1 && \
     update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 1
@@ -279,7 +280,7 @@ ENV ONEDNN_BUILD="${onednn_opt}" \
 
 # Key version numbers
 ENV PY_VERSION="${default_py_version}" \
-    TORCH_VERSION=1.9.0 \
+    TORCH_VERSION=1.10.0 \
     ONEDNN_VERSION="v2.4" \
     VISION_VERSION="v0.9.1" \
     TEXT_VERSION=0.10.0
@@ -297,7 +298,6 @@ ENV PATH="$VENV_DIR/bin:$PATH"
 
 # Build PyTorch
 COPY scripts/build-pytorch.sh $PACKAGE_DIR/.
-COPY patches/pocketfft_full.patch $PACKAGE_DIR/.
 RUN $PACKAGE_DIR/build-pytorch.sh
 RUN pip install torchvision==$VISION_VERSION
 # Build torchtext
@@ -331,6 +331,7 @@ RUN mkdir -p $MLCOMMONS_DIR
 # Clone and install  MLCommons (MLPerf)
 COPY scripts/build-mlcommons.sh $MLCOMMONS_DIR/.
 COPY patches/mlcommons_bert.patch $MLCOMMONS_DIR/.
+COPY patches/mlcommons_rnnt.patch $MLCOMMONS_DIR/.
 COPY patches/pytorch_native.patch $MLCOMMONS_DIR/.
 RUN $MLCOMMONS_DIR/build-mlcommons.sh
 RUN rm -f $MLCOMMONS_DIR/build-mlcommons.sh
