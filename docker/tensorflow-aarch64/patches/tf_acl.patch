@@ -14,24 +14,11 @@
  See the License for the specific language governing permissions and
  limitations under the License.
  *******************************************************************************
-diff --git a/tensorflow/tensorflow.bzl b/tensorflow/tensorflow.bzl
-index 1666feb7503..11bbc595f31 100644
---- a/tensorflow/tensorflow.bzl
-+++ b/tensorflow/tensorflow.bzl
-@@ -378,7 +378,7 @@ def tf_copts(
-         # optimizations for Intel builds using oneDNN if configured
-         if_enable_mkl(["-DENABLE_MKL"]) +
-         if_mkldnn_openmp(["-DENABLE_ONEDNN_OPENMP"]) +
--        if_mkldnn_aarch64_acl(["-DENABLE_MKL", "-DENABLE_ONEDNN_OPENMP", "-DDNNL_AARCH64_USE_ACL=1"]) +
-+        if_mkldnn_aarch64_acl(["-DENABLE_ONEDNN_OPENMP", "-DDNNL_AARCH64_USE_ACL=1"]) +
-         if_android_arm(["-mfpu=neon"]) +
-         if_linux_x86_64(["-msse3"]) +
-         if_ios_x86_64(["-msse4.1"]) +
 diff --git a/.bazelrc b/.bazelrc
-index 7724d2a6e69..8f74e580cd9 100644
+index 3425144bf9f..a07e956dc33 100644
 --- a/.bazelrc
 +++ b/.bazelrc
-@@ -217,9 +217,8 @@ build:mkl_threadpool -c opt
+@@ -219,9 +219,8 @@ build:mkl_threadpool -c opt
  
  # Config setting to build oneDNN with Compute Library for the Arm Architecture (ACL).
  # This build is for the inference regime only.
@@ -42,3 +29,28 @@ index 7724d2a6e69..8f74e580cd9 100644
  build:mkl_aarch64 --define=build_with_openmp=true
  build:mkl_aarch64 -c opt
  
+diff --git a/tensorflow/tensorflow.bzl b/tensorflow/tensorflow.bzl
+index c72a0d414bd..06e62f0c3c0 100644
+--- a/tensorflow/tensorflow.bzl
++++ b/tensorflow/tensorflow.bzl
+@@ -388,7 +388,7 @@ def tf_copts(
+         # optimizations for Intel builds using oneDNN if configured
+         if_enable_mkl(["-DENABLE_MKL"]) +
+         if_mkldnn_openmp(["-DENABLE_ONEDNN_OPENMP"]) +
+-        if_mkldnn_aarch64_acl(["-DENABLE_MKL", "-DENABLE_ONEDNN_OPENMP", "-DDNNL_AARCH64_USE_ACL=1"]) +
++        if_mkldnn_aarch64_acl(["-DENABLE_ONEDNN_OPENMP", "-DDNNL_AARCH64_USE_ACL=1"]) +
+         if_android_arm(["-mfpu=neon"]) +
+         if_linux_x86_64(["-msse3"]) +
+         if_ios_x86_64(["-msse4.1"]) +
+diff --git a/tensorflow/workspace2.bzl b/tensorflow/workspace2.bzl
+index eaa2863cfaa..feb3bbb6f66 100644
+--- a/tensorflow/workspace2.bzl
++++ b/tensorflow/workspace2.bzl
+@@ -199,6 +199,7 @@ def _tf_repositories():
+     tf_http_archive(
+         name = "mkl_dnn_acl_compatible",
+         build_file = "//third_party/mkl_dnn:mkldnn_acl.BUILD",
++        patch_file = "//third_party/mkl_dnn:mkldnn_acl.patch",
+         sha256 = "a7f2a4d80d5406d156dfc1d7b27d10b0af5ed061cf0b6197d3d12cddc6790fcb",
+         strip_prefix = "oneDNN-2.4",
+         urls = [

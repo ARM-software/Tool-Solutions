@@ -69,10 +69,13 @@ if [[ $ONEDNN_BUILD ]]; then
       sed -i '/DNNL_AARCH64_USE_ACL/d' ./third_party/mkl_dnn/mkldnn_acl.BUILD
     elif [[ $ONEDNN_BUILD == 'acl' ]]; then
       echo "TensorFlow $TF_VERSION with oneDNN backend - Compute Library build."
-      # Update Bazel build to include onednn_acl_primitives patch
+      # Patch Bazel configuration to include Arm Compute Library build
       patch -p1 < ../tf_acl.patch
-      # Patch TensorFlow to support caching of softmax primitive
-      patch -p1 < ../tf_softmax.patch
+      # Patch to enable bf16 matmul/inneprod in Compute Library
+      # Note: overrites upstream file
+      mv ../compute_library.patch ./third_party/compute_library/.
+      # Patch to enable both softmax caching and bf16 matmul/innerprod in oneDNN
+      mv ../mkldnn_acl.patch ./third_party/mkl_dnn/.
     fi
 else
     echo "TensorFlow $TF_VERSION with Eigen backend."
