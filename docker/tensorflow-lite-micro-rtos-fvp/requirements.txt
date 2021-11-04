@@ -1,5 +1,5 @@
 ethos-u-vela==3.0.0
-pillow==8.2.0
+pillow==8.3.2
 pygame==2.0.1
 PySimpleGui==4.41.2 
 requests==2.25.1
