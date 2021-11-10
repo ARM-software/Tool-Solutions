@@ -30,8 +30,6 @@ readonly num_cpus=$(grep -c ^processor /proc/cpuinfo)
 git clone ${src_host}/${src_repo}.git
 cd ${src_repo}
 git checkout v$version -b v$version
-git submodule add https://github.com/mreineck/pocketfft third_party/pocketfft
-patch -p1 < ../pocketfft_full.patch
 git submodule sync
 git submodule update --init --recursive
 

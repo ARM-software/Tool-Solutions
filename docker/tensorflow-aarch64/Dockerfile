@@ -106,8 +106,9 @@ RUN apt-get -y update && \
       zlib1g-dev
 
 
-# Make gcc 9 and python 3(.8) the default
-RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 1 --slave /usr/bin/g++ g++ /usr/bin/g++-10 && \
+# Set default gcc, python and pip versions
+RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 1 && \
+    update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-10 1 && \
     update-alternatives --install /usr/bin/gfortran gfortran /usr/bin/gfortran-10 1 && \
     update-alternatives --install /usr/bin/python python /usr/bin/python3 1 && \
     update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 1
@@ -249,6 +250,7 @@ CMD ["bash", "-l"]
 FROM tensorflow-libs AS tensorflow-dev
 ARG njobs
 ARG bazel_mem
+ARG enable_onednn
 ARG onednn_opt
 ARG tf_version
 ARG bazel_version
@@ -271,6 +273,8 @@ ENV NP_MAKE="${njobs}" \
 ENV PY_VERSION="${default_py_version}" \
     BZL_VERSION="${bazel_version}" \
     TF_VERSION="${tf_version}"
+# Set runtime flag to enable/disable oneDNN backend
+ENV TF_ENABLE_ONEDNN_OPTS="${enable_onednn}"
 
 # Use a PACKAGE_DIR in userspace
 WORKDIR /home/$DOCKER_USER
@@ -289,11 +293,11 @@ RUN $PACKAGE_DIR/get-bazel.sh
 ENV PATH=$PACKAGE_DIR/bazel:$PATH
 
 # Build TensorFlow
-COPY patches/eigen_workspace.patch $PACKAGE_DIR/.
-COPY patches/eigen_gebp_cache.patch  $PACKAGE_DIR/.
 COPY patches/tf_acl.patch $PACKAGE_DIR/.
+COPY patches/tf_softmax.patch $PACKAGE_DIR/.
+COPY scripts/build-tensorflow-io-gcs-filesystem.sh $PACKAGE_DIR/.
 COPY scripts/build-tensorflow.sh $PACKAGE_DIR/.
-COPY patches/TF-caching.patch $PACKAGE_DIR/.
+RUN $PACKAGE_DIR/build-tensorflow-io-gcs-filesystem.sh
 RUN $PACKAGE_DIR/build-tensorflow.sh
 
 CMD ["bash", "-l"]
@@ -302,6 +306,10 @@ CMD ["bash", "-l"]
 # Stage 5: Install benchmarks and examples
 # ========
 FROM tensorflow-libs AS tensorflow
+ARG enable_onednn
+
+# Set runtime flag to enable/disable oneDNN backend
+ENV TF_ENABLE_ONEDNN_OPTS="${enable_onednn}"
 
 WORKDIR /home/$DOCKER_USER
 USER $DOCKER_USER

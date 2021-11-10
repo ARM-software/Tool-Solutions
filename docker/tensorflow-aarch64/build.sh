@@ -46,7 +46,8 @@ function print_usage_and_exit {
   echo "                                 * generic      - generate portable build suitable for any Armv8a target."
   echo "                                 * custom       - use custom settings defined in cpu_info.sh"
   echo "                                 GCC provides support for additional target cpu's refer to the gcc manual for details."
-  echo "      --no-cache / --clean       Pull a new base image and build without using any cached images."
+  echo "      --no-cache / --clean     Pull a new base image and build without using any cached images."
+  echo "      --tag                    Specify a tag name for the image (default 'latest')."
   echo ""
   echo "Example:"
   echo "  build.sh --build-type full"
@@ -83,8 +84,10 @@ extra_args=""
 nproc_build=
 bazel_mem=
 onednn=
+enable_onednn=0
 target="native"
 clean_build=
+image_tag="latest"
 
 while [ $# -gt 0 ]
 do
@@ -157,6 +160,7 @@ do
       ;;
 
     --onednn | --dnnl )
+      enable_onednn=1
       if [[ $# -gt 1 ]]; then
         case $2 in
           reference )
@@ -182,6 +186,11 @@ do
       clean_build=1
       ;;
 
+    --tag )
+      image_tag=$2
+      shift
+      ;;
+
     -h | --help )
       print_usage_and_exit 0
       ;;
@@ -204,7 +213,7 @@ fi
 
 # Add oneDNN build options
 if [[ $onednn ]]; then
-  extra_args="$extra_args --build-arg onednn_opt=$onednn"
+  extra_args="$extra_args --build-arg onednn_opt=$onednn --build-arg enable_onednn=$enable_onednn"
 fi
 
 if [[ $clean_build ]]; then
@@ -213,7 +222,7 @@ if [[ $clean_build ]]; then
 fi
 
 # Set TensorFlow, bazel and oneDNN version
-version="v2.6.0"
+version="v2.7.0"
 bazel_version="3.7.2"
 # Add build-args to pass version numbers,
 extra_args="$extra_args \
@@ -233,25 +242,25 @@ extra_args="$extra_args --build-arg cpu=$cpu \
 
 if [[ $build_base_image ]]; then
   # Stage 1: Base image, Ubuntu with core packages and GCC9
-  docker build $extra_args --target tensorflow-base -t tensorflow-base-v2:latest .
+  docker build $extra_args --target tensorflow-base -t tensorflow-base-v2:$image_tag .
 fi
 
 if [[ $build_libs_image ]]; then
   # Stage 2: Libs image, essential maths libs and Python built and installed
-  docker build $extra_args --target tensorflow-libs -t tensorflow-libs-v2:latest .
+  docker build $extra_args --target tensorflow-libs -t tensorflow-libs-v2:$image_tag .
 fi
 
 if [[ $build_tools_image ]]; then
   # Stage 3: Tools image, Python3 venv added with additional Python essentials
-  docker build $extra_args --target tensorflow-tools -t tensorflow-tools-v2:latest .
+  docker build $extra_args --target tensorflow-tools -t tensorflow-tools-v2:$image_tag .
 fi
 
 if [[ $build_dev_image ]]; then
   # Stage 4: Adds bazel and TensorFlow builds with sources and creates a whl.
-  docker build $extra_args --target tensorflow-dev -t tensorflow-dev-v2$onednn:latest .
+  docker build $extra_args --target tensorflow-dev -t tensorflow-dev-v2$onednn:$image_tag .
 fi
 
 if [[ $build_tensorflow_image ]]; then
   # Stage 5: Add examples and clone benchmarks with TensorFlow installed.
-  docker build $extra_args --target tensorflow -t tensorflow-v2$onednn:latest .
+  docker build $extra_args --target tensorflow -t tensorflow-v2$onednn:$image_tag .
 fi

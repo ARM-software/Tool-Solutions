@@ -45,6 +45,7 @@ function print_usage_and_exit {
   echo "                                 * custom       - use custom settings defined in cpu_info.sh"
   echo "                                 GCC provides support for additional target cpu's refer to the gcc manual for details."
   echo "      --no-cache / --clean     Pull a new base image and build without using any cached images."
+  echo "      --tag                    Specify a tag name for the image (default 'latest')."
   echo ""
   echo "Example:"
   echo "  build.sh --build-type full"
@@ -173,6 +174,11 @@ do
 
     --clean | --no-cache )
       clean_build=1
+      ;;
+
+    --tag )
+      image_tag=$2
+      shift
       ;;
 
     -h | --help )
