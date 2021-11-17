@@ -2,18 +2,17 @@
 
 *Accelerating MLOps in the cloud*
 
-This README is a set of instructions for the workshop entitled [IoT DevOps Made Simple and Scalable in the Cloud](https://devsummit.arm.com/en/sessions/539) part of the DevSummit 2021 virtual conference.
+This README is a set of instructions for the [Introductory IoT DevOps workshop](https://www.arm.com/company/contact-us/virtual-hardware).
 
 **Table of contents**
 
 1. [Prerequisites](#prerequisites)
 2. [Accessing and launching the AMI](#amilaunch)
-    - 2.1 [During the workshop](#workshop)
-    - 2.2 [Find AMI on AWS Marketplace](#marketplace)
-    - 2.3 [(Alternative) Launch the AMI from AWS EC2](#launch)
-    - 2.4 [Enable AMI console](#console)
-    - 2.5 [(Optional) Enable Code Server](#codeserver)
-    - 2.6 [(Optional) Enable Virtual Network Computing (VNC)](#vnc)
+    - 2.1 [Find AMI on AWS Marketplace](#marketplace)
+    - 2.2 [(Alternative) Launch the AMI from AWS EC2](#launch)
+    - 2.3 [Enable AMI console](#console)
+    - 2.4 [(Optional) Enable Code Server](#codeserver)
+    - 2.5 [(Optional) Enable Virtual Network Computing (VNC)](#vnc)
 3. [Import and build example](#buildexample)
     - 3.1 [Fork and clone example](#clone)
     - 3.2 [Build example within the AMI](#build)
@@ -30,20 +29,16 @@ This README is a set of instructions for the workshop entitled [IoT DevOps Made 
 <a name="prerequisites"></a>
 ## 1. Prerequisites
 
+* a valid [AWS](https://aws.amazon.com/) account
 * a valid [Github](https://github.com/) account
-* a SSH (VNC) client installed: [PuTTY](https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html), [MobaXterm](https://mobaxterm.mobatek.net/)
-* a valid [AWS](https://aws.amazon.com/) account (optional during the workshop)
+* a SSH (VNC) client installed: e.g. [PuTTY](https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html), [MobaXterm](https://mobaxterm.mobatek.net/)
+
 
 <a name="amilaunch"></a>
 ## 2. Accessing and launching the AMI
 
-<a name="workshop"></a>
-### 2.1. During the workshop
-
-Sections 2.2 and 2.3 can be skipped if you don't wish to use your own AWS account. A list of running instances with their IP will be provided during the workshop, with instructions on how to connect with SSH. You can go directly to [section 2.4](#console).
-
 <a name="marketplace"></a>
-### 2.2. Find AMI on AWS Marketplace
+### 2.1. Find AMI on AWS Marketplace
 
 1. Log into your [AWS account](https://aws.amazon.com/) and select *AWS Marketplace Subscriptions* service
 2. Go to *Discover products* and search for *Arm Virtual Hardware* (with spaces)
@@ -71,7 +66,7 @@ Sections 2.2 and 2.3 can be skipped if you don't wish to use your own AWS accoun
 
 
 <a name="launch"></a>
-### 2.3. (Alternative) Launch the AMI from AWS EC2
+### 2.2. (Alternative) Launch the AMI from AWS EC2
 
 1. Log into your [AWS account](https://aws.amazon.com/) and select *Elastic Compute Cloud (EC2)* service
 2. Locate *Images > AMIs* in the sidebar
@@ -85,7 +80,7 @@ Sections 2.2 and 2.3 can be skipped if you don't wish to use your own AWS accoun
 
 
 <a name="console"></a>
-### 2.4. Enable AMI console
+### 2.3. Enable AMI console
 
 To connect to the running instance, you will need its *Public IPv4 address*. If you don't have it already, you can get from the *EC2* > *Instances*.
 
@@ -115,7 +110,7 @@ Or, if using PuTTY:
 ![PuTTY private key configuration](img/putty_key.png)
 
 <a name="codeserver"></a>
-### 2.5. [Optional] Enable [Code Server](https://github.com/cdr/code-server) (Visual Studio Code)
+### 2.4. [Optional] Enable [Code Server](https://github.com/cdr/code-server) (Visual Studio Code)
 
 The Arm Virtual Hardware AMI comes with an IDE (Visual Studio Code) which can be accessed with a web browser. To access it, you will need to:
 
@@ -142,7 +137,7 @@ The Arm Virtual Hardware AMI comes with an IDE (Visual Studio Code) which can be
 2. Launch a web browser on your local machine and open the following URL: [http://localhost:8080](http://localhost:8080)
 
 <a name="vnc"></a>
-### 2.6. [Optional] Enable Virtual Network Computing (VNC)
+### 2.5. [Optional] Enable Virtual Network Computing (VNC)
 
 VNC is a protocol to enable remote desktop. The instruction below will securely enable VNC through a SSH tunnel.
 
@@ -409,10 +404,8 @@ In Github, go the *Runner* tab to see the runner listed and idle
 <a name="further"></a>
 ### 5. To go further
 
-The Machine Learning Group at Arm have developed [other examples](https://review.mlplatform.org/plugins/gitiles/ml/ethos-u/ml-embedded-evaluation-kit/) which can be run in with the Arm Virtual Hardware AMI.
+Arm Virtual Hardware enables the deployment of [Arm Total Solutions for IoT](https://www.arm.com/solutions/iot/total-solutions-iot), complete software stacks of general purpose compute and ML workloads.
 
-The instructions in the [quick start guide](https://review.mlplatform.org/plugins/gitiles/ml/ethos-u/ml-embedded-evaluation-kit/+/HEAD/docs/quick_start.md) are easily reproducible in the AMI. You will need to enable VNC to visualize.
+The [Arm ML evaluation kit examples](https://review.mlplatform.org/plugins/gitiles/ml/ethos-u/ml-embedded-evaluation-kit/) can also be built and executed with the Arm Virtual Hardware AMI. The instructions in the [quick start guide](https://review.mlplatform.org/plugins/gitiles/ml/ethos-u/ml-embedded-evaluation-kit/+/HEAD/docs/quick_start.md) are easily reproducible in the AMI. You will need to enable VNC to visualize.
 
-For more information on Arm's solution for IoT: [https://www.arm.com/solutions/iot/total-solutions-iot](https://www.arm.com/solutions/iot/total-solutions-iot)
-
-Have questions, comments, and/or suggestions? Contact [arm-tool-solutions@arm.com](mailto: arm-tool-solutions@arm.com)
+Have questions, comments, and/or suggestions? Contact [arm-tool-solutions@arm.com](mailto:arm-tool-solutions@arm.com)
