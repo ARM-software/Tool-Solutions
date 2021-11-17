@@ -71,6 +71,8 @@ if [[ $ONEDNN_BUILD ]]; then
       echo "TensorFlow $TF_VERSION with oneDNN backend - Compute Library build."
       # Patch Bazel configuration to include Arm Compute Library build
       patch -p1 < ../tf_acl.patch
+      # Patch to disable softmax caching in TensorFlow
+      patch -p1 < ../tf_softmax.patch
       # Patch to enable bf16 matmul/inneprod in Compute Library
       # Note: overrites upstream file
       mv ../compute_library.patch ./third_party/compute_library/.

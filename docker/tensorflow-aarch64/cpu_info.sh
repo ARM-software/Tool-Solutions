@@ -115,11 +115,12 @@ function set_target {
       eigen_l3_cache="512*1024"
     ;;
     generic )
+    # A portable build, suitible for all v8.x-a targets
       cpu="generic"
       tune="generic"
       arch="armv8-a"
       blas_cpu="ARMV8"
-      blas_ncores=
+      blas_ncores=64
       eigen_l1_cache=
       eigen_l2_cache=
       eigen_l3_cache=

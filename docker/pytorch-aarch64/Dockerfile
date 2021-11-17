@@ -66,8 +66,9 @@ RUN apt-get -y update && \
       libncursesw5-dev \
       libpng-dev \
       libreadline-dev \
-      libssl-dev \
+      libsox-fmt-all \
       libsqlite3-dev \
+      libssl-dev \
       libxml2-dev \
       libxslt-dev \
       locales \
@@ -90,6 +91,7 @@ RUN apt-get -y update && \
       rsyslog \
       snapd \
       scons \
+      sox \
       ssh \
       sudo \
       time \
@@ -143,7 +145,7 @@ ENV NP_MAKE="${njobs}" \
     ACL_ARCH="${acl_arch}"
 
 # Key version numbers
-ENV ACL_VERSION="v21.08" \
+ENV ACL_VERSION="v21.11" \
     OPENBLAS_VERSION=0.3.10 \
     NINJA_VERSION=1.9.0
 
@@ -345,6 +347,10 @@ RUN pip install --no-cache-dir tqdm
 RUN pip install --no-cache-dir boto3
 RUN pip install --no-cache-dir future onnx==1.8.1
 RUN pip install --no-cache-dir iopath
+RUN pip install --no-cache-dir sox
+RUN pip install --no-cache-dir unidecode
+RUN pip install --no-cache-dir inflect
+RUN pip install --no-cache-dir 'librosa==0.8.0'
 
 # Copy examples
 ENV EXAMPLE_DIR=/home/$DOCKER_USER/examples
