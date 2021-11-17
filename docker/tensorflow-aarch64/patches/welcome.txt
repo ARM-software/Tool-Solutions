@@ -1,9 +1,30 @@
 
 ================================================================================
 TensorFlow for AArch64
-Built using:
- https://github.com/ARM-software/Tool-Solutions
-For more details, see:
- https://github.com/ARM-software/Tool-Solutions/blob/master/docker/tensorflow-aarch64/README.md
+================================================================================
+
+Built using: https://github.com/ARM-software/Tool-Solutions
+For more details, see: https://git.io/JMEy5
+
+--
+
+The default user's home (/home/ubuntu) contains:
+
+- examples/ - a selection of inference examples and benchmarks:
+-- py-api/ - Vision and Natural Language Processing (NLP) inference
+   examples using TensorFlow's Python API;
+-- cpp-api/ - Vision and NLP inference examples using TensorFlow's C++ API;
+-- MLCommons/ - sample inference benchmarks for Vision and NLP,
+   see https://github.com/mlcommons/inference;
+-- benchmarks/ - TensorFlow benchmarks,
+   see https://github.com/tensorflow/benchmarks.
+
+  For more details, and instructions on how to run the benchmarks see:
+   examples/README.md (https://git.io/J1pJf)
+
+- python3-venv/ - the complete python environment including TensorFlow.
+
+- CK/ containing Collective Knowledge (https://cknowledge.org) repositories
+  used to manange datasets for the MLCommons benchmarks.
 ================================================================================
 

@@ -40,10 +40,10 @@ function print_usage_and_exit {
   echo "                                 * tensorflow   - build image including TensorFlow build and benchmarks installed (default)."
   echo "                                 * full         - build all images."
   echo "      --build-target           AArch64 CPU target:"
-  echo "                                 * native       - optimize for the current host machine (default)."
+  echo "                                 * generic      - portable build suitable for any ARMv8-A target (default)."
+  echo "                                 * native       - optimize for the current host machine."
   echo "                                 * neoverse-n1  - optimize for Neoverse-N1"
   echo "                                 * thunderx2t99 - optimize for Marvell ThunderX2."
-  echo "                                 * generic      - generate portable build suitable for any Armv8a target."
   echo "                                 * custom       - use custom settings defined in cpu_info.sh"
   echo "                                 GCC provides support for additional target cpu's refer to the gcc manual for details."
   echo "      --no-cache / --clean     Pull a new base image and build without using any cached images."
@@ -85,7 +85,7 @@ nproc_build=
 bazel_mem=
 onednn=
 enable_onednn=0
-target="native"
+target="generic"
 clean_build=
 image_tag="latest"
 

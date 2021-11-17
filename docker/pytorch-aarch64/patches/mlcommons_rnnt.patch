@@ -22,10 +22,10 @@
 #
 # *******************************************************************************
 diff --git a/speech_recognition/rnnt/README.md b/speech_recognition/rnnt/README.md
-index 27fbabd..6be2742 100644
+index 27fbabd..2794bed 100644
 --- a/speech_recognition/rnnt/README.md
 +++ b/speech_recognition/rnnt/README.md
-@@ -4,18 +4,13 @@ character transcription, without an external language model.
+@@ -4,18 +4,12 @@ character transcription, without an external language model.
  
  # 2. Directions
  
@@ -41,7 +41,6 @@ index 27fbabd..6be2742 100644
 -
 -As you complete individual stages, you can set the variable "stage" to
 -a higher number for restarting from a later stage.
-+To build and install necessary dependencies, run `build-rnnt.sh`.
 +To download the dataset and model, run `download_dataset_model.sh`.
 +To run the model, use `run.sh`; this shell script runs the SingleStream
 +scenario by default if no others are specified. Use `run.sh --help` to
@@ -51,19 +50,19 @@ index 27fbabd..6be2742 100644
  
  # 3. Dataset/Environment
  ### Publication/Attribution
-@@ -113,4 +108,4 @@ The differences are as follows:
+@@ -113,4 +107,4 @@ The differences are as follows:
  ### Quality metric
  7.452253714852645% Word Error Rate (WER) across all words in the output text of
  all samples less than 15 seconds in length in the dev-clean set, using a greedy
 -decoder and a fully FP32 model.
 \ No newline at end of file
 +decoder and a fully FP32 model.
-diff --git a/speech_recognition/rnnt/build-rnnt.sh b/speech_recognition/rnnt/build-rnnt.sh
+diff --git a/speech_recognition/rnnt/download_dataset_model.sh b/speech_recognition/rnnt/download_dataset_model.sh
 new file mode 100755
-index 0000000..c2563c3
+index 0000000..8d4ac05
 --- /dev/null
-+++ b/speech_recognition/rnnt/build-rnnt.sh
-@@ -0,0 +1,47 @@
++++ b/speech_recognition/rnnt/download_dataset_model.sh
+@@ -0,0 +1,46 @@
 +#!/bin/bash
 +# *******************************************************************************
 +# Copyright 2021 Arm Limited and affiliates.
@@ -90,66 +89,10 @@ index 0000000..c2563c3
 +
 +mkdir -p $librispeech_download_dir
 +
-+install_dir=$base/third_party/install
-+mkdir -p $install_dir
-+install_dir=$(readlink -f $install_dir)
-+
 +# if venv not active, activate
 +if [[ $(python -c "import sys; print(sys.prefix)") != "/home/ubuntu/python3-venv" ]]; then
 +    source /home/ubuntu/python3-venv/bin/activate
 +fi
-+
-+# We need to convert .flac files to .wav files via sox. Not all sox installs have flac support, so we install from source.
-+wget https://ftp.osuosl.org/pub/xiph/releases/flac/flac-1.3.2.tar.xz -O third_party/flac-1.3.2.tar.xz
-+(cd third_party; tar xf flac-1.3.2.tar.xz; cd flac-1.3.2; CFLAGS="-I/home/ubuntu/inference/speech_recognition/rnnt/third_party/pybind/include"; ./configure --prefix=$install_dir && make && make install)
-+
-+wget https://sourceforge.net/projects/sox/files/sox/14.4.2/sox-14.4.2.tar.gz -O third_party/sox-14.4.2.tar.gz
-+(cd third_party; tar zxf sox-14.4.2.tar.gz; cd sox-14.4.2; LDFLAGS="-L${install_dir}/lib" CFLAGS="-I${install_dir}/include -I/home/ubuntu/inference/speech_recognition/rnnt/third_party/pybind/include" ./configure --prefix=$install_dir --with-flac && make && make install)
-+
-+(cd $(git rev-parse --show-toplevel)/loadgen; python setup.py install)
-+
-+pip install sox
-+pip install unidecode inflect
-+pip install 'librosa==0.8.0'
-diff --git a/speech_recognition/rnnt/download_dataset_model.sh b/speech_recognition/rnnt/download_dataset_model.sh
-new file mode 100755
-index 0000000..348cdb7
---- /dev/null
-+++ b/speech_recognition/rnnt/download_dataset_model.sh
-@@ -0,0 +1,49 @@
-+#!/bin/bash
-+# *******************************************************************************
-+# Copyright 2021 Arm Limited and affiliates.
-+# SPDX-License-Identifier: Apache-2.0
-+#
-+# Licensed under the Apache License, Version 2.0 (the "License");
-+# you may not use this file except in compliance with the License.
-+# You may obtain a copy of the License at
-+#
-+#     http://www.apache.org/licenses/LICENSE-2.0
-+#
-+# Unless required by applicable law or agreed to in writing, software
-+# distributed under the License is distributed on an "AS IS" BASIS,
-+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-+# See the License for the specific language governing permissions and
-+# limitations under the License.
-+# *******************************************************************************
-+set -euo pipefail
-+
-+base="$(dirname "${BASH_SOURCE[0]}")"
-+work_dir=$base/temp_work
-+local_data_dir=$work_dir/local_data
-+librispeech_download_dir=$local_data_dir/LibriSpeech
-+
-+install_dir=$base/third_party/install
-+install_dir=$(readlink -f $install_dir)
-+
-+# if venv not active, activate
-+if [[ $(python -c "import sys; print(sys.prefix)") != "/home/ubuntu/python3-venv" ]]; then
-+    source /home/ubuntu/python3-venv/bin/activate
-+fi
-+
-+export PATH="$install_dir/bin/:$PATH"
 +
 +# stage 0: download model. Check checksum to skip?
 +wget https://zenodo.org/record/3662521/files/DistributedDataParallel_1576581068.9962234-epoch-100.pt?download=1 -O $work_dir/rnnt.pt
@@ -194,10 +137,10 @@ index 9bbea9c..39e2121 100644
 -        return torch.cat(seq, dim=2)[::self.factor, :, :], x_lens
 +        return rt, x_lens
 diff --git a/speech_recognition/rnnt/run.sh b/speech_recognition/rnnt/run.sh
-index 7538df9..c9ebe43 100755
+index 7538df9..d65a87c 100755
 --- a/speech_recognition/rnnt/run.sh
 +++ b/speech_recognition/rnnt/run.sh
-@@ -1,90 +1,114 @@
+@@ -1,90 +1,108 @@
 -#/bin/bash
 -
 +#!/bin/bash
@@ -339,9 +282,10 @@ index 7538df9..c9ebe43 100755
 -      --input_dir $librispeech_download_dir/dev-clean \
 -      --dest_dir $local_data_dir/dev-clean-wav \
 -      --output_json $local_data_dir/dev-clean-wav.json
--fi
-+install_dir=$base/third_party/install
-+install_dir=$(readlink -f $install_dir)
++# if venv not active, activate
++if [[ $(python -c "import sys; print(sys.prefix)") != "/home/ubuntu/python3-venv" ]]; then
++    source /home/ubuntu/python3-venv/bin/activate
+ fi
  
 -if [[ $stage -le 3 ]]; then
 -  for backend in pytorch; do
@@ -352,11 +296,7 @@ index 7538df9..c9ebe43 100755
 -          log_dir+=_accuracy
 -        fi
 -        log_dir+=rerun
-+# if venv not active, activate
-+if [[ $(python -c "import sys; print(sys.prefix)") != "/home/ubuntu/python3-venv" ]]; then
-+    source /home/ubuntu/python3-venv/bin/activate
-+fi
- 
+-
 -        python run.py --backend pytorch \
 -               --dataset_dir $local_data_dir \
 -               --manifest $local_data_dir/dev-clean-wav.json \
@@ -366,9 +306,7 @@ index 7538df9..c9ebe43 100755
 -               --backend ${backend} \
 -               --log_dir ${log_dir} \
 -               ${accuracy} &
-+# make sox executable findable by the Python package
-+export PATH="$install_dir/bin/:$PATH"
- 
+-
 -      done
 -    done
 -  done

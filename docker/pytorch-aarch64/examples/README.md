@@ -185,11 +185,10 @@ In order to reduce the runtime, for the purposes of confirming that it runs as e
 
 #### RNNT
 
-The speech recognition RNNT benchmark ([original paper available here](https://arxiv.org/pdf/1811.06621.pdf)) generates character transcriptions from raw audio samples. It is not built by default due to the time requirements for building its dependencies, and the size of the dataset (over 1000 hours of audio).
+The speech recognition RNNT benchmark ([original paper available here](https://arxiv.org/pdf/1811.06621.pdf)) generates character transcriptions from raw audio samples. The data and model parameters are not included in the Docker image by default due to their size (~1GB), but can be downloaded easily using the shell scripts described below.
 
-Three separate shell scripts for dependency build, model and data download, and running stages are generated for the built image using a patch file. These scripts can be found in `$HOME/examples/MLCommons/inference/speech_recognition/rnnt/` of the built image.
+Two shell scripts for model and data download, and running scenarios are generated for the built image using a patch file. These scripts can be found in `$HOME/examples/MLCommons/inference/speech_recognition/rnnt/` of the built image.
 
-  * `build-rnnt.sh` builds sox with flac support from source and installs the requisite Python packages
   * `download_dataset_model.sh` downloads the model and test dataset
   * `run.sh` runs the test, by default only the SingleStream scenario latency test
 
