@@ -408,4 +408,5 @@ Arm Virtual Hardware enables the deployment of [Arm Total Solutions for IoT](htt
 
 The [Arm ML evaluation kit examples](https://review.mlplatform.org/plugins/gitiles/ml/ethos-u/ml-embedded-evaluation-kit/) can also be built and executed with the Arm Virtual Hardware AMI. The instructions in the [quick start guide](https://review.mlplatform.org/plugins/gitiles/ml/ethos-u/ml-embedded-evaluation-kit/+/HEAD/docs/quick_start.md) are easily reproducible in the AMI. You will need to enable VNC to visualize.
 
-Have questions, comments, and/or suggestions? Contact [arm-tool-solutions@arm.com](mailto:arm-tool-solutions@arm.com)
+Have questions, comments, and/or suggestions? We invite you to take this brief [survey](https://www.surveymonkey.co.uk/r/ArmVirtualHardware) to provide feedback.
+Alternatively please reach out to the Arm Development Tool Solutions team at [arm-tool-solutions@arm.com](mailto:arm-tool-solutions@arm.com)
