@@ -110,10 +110,12 @@ pip install $(ls -tr wheel-TF$TF_VERSION-py$PY_VERSION-$CC/*.whl | tail)
 # Install Tensorflow C++ interface
 mkdir -p $VENV_DIR/$package/lib
 mkdir -p $VENV_DIR/$package/include
+mkdir -p $VENV_DIR/$package/wheel
 cp ./bazel-bin/tensorflow/libtensorflow* $VENV_DIR/$package/lib
 cp -r ./bazel-bin/tensorflow/include $VENV_DIR/$package/
 cp -r $VENV_DIR/lib/python$PY_VERSION/site-packages/tensorflow/include/google \
       $VENV_DIR/$package/include
+cp $(ls -tr wheel-TF$TF_VERSION-py$PY_VERSION-$CC/*.whl | tail) $VENV_DIR/$package/wheel
 
 # Check the Python installation was sucessfull
 cd $HOME
