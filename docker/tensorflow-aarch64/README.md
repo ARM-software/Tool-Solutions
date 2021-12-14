@@ -96,9 +96,11 @@ Without the '--onednn' flag, the default Eigen backend of Tensorflow is chosen. 
 The backend for oneDNN can also be selected using the '--onednn' or '--dnnl' flags:
 This defaults to using Compute Library for Arm Architecture, but '--onednn reference' can also be selected to use the reference C++ kernels.
 
-For builds where Compute Library is enabled, setting the environment variable `DNNL_DEFAULT_FPMATH_MODE` to `BF16` or `ANY` will instruct Compute Library to dispatch fp32 workloads to bfloat16 kernels where hardware support permits. Note: this may introduce a drop in accuracy.
-
 _Note: The oneDNN backend chosen will be appended to the image name: `tensorflow-v2$onednn`._
+
+### oneDNN runtime flags
+- `DNNL_DEFAULT_FPMATH_MODE`: For builds where Compute Library is enabled, setting the environment variable `DNNL_DEFAULT_FPMATH_MODE` to `BF16` or `ANY` will instruct Compute Library to dispatch fp32 workloads to bfloat16 kernels where hardware support permits. Note: this may introduce a drop in accuracy.
+- `ARM_COMPUTE_SPIN_WAIT_CPP_SCHEDULER`: When running models with a high core count that have layers operating on small to medium inputs, the scheduling overhead for Compute Library can be reduced by setting the environment variable `ARM_COMPUTE_SPIN_WAIT_CPP_SCHEDULER` to `1`. Note: this will increase CPU utilisation as worker threads in Compute Library will busy wait for new work and might create contention with other threads.
 
 By default, all packages will be built with optimisations for the host machine, equivalent to setting `-mcpu=native` at compile time for each component build.
 It is possible to choose a specific build target using the `--build-target` flag:
