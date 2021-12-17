@@ -211,3 +211,16 @@ To run the examples:
   * post-processing creates a new image `output_image.jpeg` where the detected objects are framed in red rectangles.
   * _input:_ images/cows.jpeg | _labels:_ labels/coco-labels.txt
   *  _output:_ All detected objects with confidence above 70% threshold
+
+
+## TensorFlow benchmarks
+
+The TensorFlow Benchmarks repository is installed into the examples folder.
+
+For example, to run the `tf_cnn_benchmark` for ResNet50:
+
+```
+cd examples/benchmarks/scripts/tf_cnn_benchmarks
+python tf_cnn_benchmarks.py --device=CPU --batch_size=64 --model=resnet50 --variable_update=parameter_server --data_format=NHWC
+```
+
