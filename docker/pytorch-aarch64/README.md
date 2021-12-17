@@ -3,14 +3,14 @@
 A script to build a Docker image containing [PyTorch](https://www.pytorch.org/) and dependencies for the [Armv8-A architecture](https://developer.arm.com/architectures/cpu-architecture/a-profile) with AArch64 execution.
 For more information, see this Arm Developer Community [blog post](https://community.arm.com/developer/tools-software/tools/b/tools-software-ides-blog/posts/aarch64-docker-images-for-pytorch-and-tensorflow).
 
-Before using this project run the uname command to confirm the machine is aarch64. Other architectures will not work.
+Before using these images, please confirm the machine is AArch64. Other architectures will not work.
 
 ```
 uname -m
 aarch64
 ```
 
-Pre-built images are available for download from [Arm's Software Developers DockerHub](https://hub.docker.com/r/armswdev/pytorch-arm-neoverse-n1).
+Pre-built images are available for download from the [Arm Software Developers DockerHub](https://hub.docker.com/r/armswdev/pytorch-arm-neoverse-n1).
 
 
 ## What's in the final image?
@@ -18,16 +18,18 @@ Pre-built images are available for download from [Arm's Software Developers Dock
   * OS: Ubuntu 20.04
   * Compiler: GCC 10.3
   * Maths libraries: [Arm Optimized Routines](https://github.com/ARM-software/optimized-routines) and [OpenBLAS](https://www.openblas.net/) 0.3.10
-  * [oneDNN](https://github.com/oneapi-src/oneDNN) 2.4.
-    - [Compute Library for the Arm architecture](https://developer.arm.com/ip-products/processors/machine-learning/compute-library) 21.08, providing AArch64 optimised primitives for oneDNN.
+  * [oneDNN](https://github.com/oneapi-src/oneDNN) 2.4
+    - [Compute Library for the Arm® Architecture (ACL)](https://developer.arm.com/ip-products/processors/machine-learning/compute-library) 21.11, provides optimized implementations on AArch64 for main oneDNN primitives
   * Python3 environment containing:
     - NumPy 1.19.5
     - SciPy 1.5.2
     - PyTorch 1.10.0
-  * [ML Commons :tm: (MLPerf)](https://mlperf.org/)
-  * [Example scripts](./examples/README.md) that demonstrate how to run ML models
+  * [Examples](./examples/README.md) that demonstrate how to run ML models
+    - [ML Commons :tm: (MLPerf)](https://mlperf.org/)
+    - Python scripts
+    - C++ API examples
 
-A user account with username 'ubuntu' is created with sudo privileges and password of 'Portland'.
+The default user account has sudo privileges (username `ubuntu`, password `Portland`).
 
 In addition to the Dockerfile, please refer to the files in the `scripts/` and `patches/` directories to see how the software is built.
 
@@ -47,18 +49,18 @@ and make sure you are in the Docker group:
 
 ```  usermod -aG docker $USER ```
 
-These steps may require root privlages and usermod requires logout and login to take effect.
+These steps may require root privileges and usermod requires logout and login to take effect.
 
 See https://docs.docker.com for more information.
 
 
 ## Building the Docker image
 Use the build.sh script to build the image. This script implements a multi-stage build to minimise the size of the finished image:
-  * Stage 1: 'base' image including Ubuntu with core packages and GCC9.
-  * Stage 2: 'libs' image including essential tools and libraries such as Python and OpenBLAS.
-  * Stage 3: 'tools' image, including a Python3 virtual environment in userspace and a build of NumPy against OpenBLAS, as well as other Python essentials.
+  * Stage 1: 'base' image including Ubuntu with core packages and GCC
+  * Stage 2: 'libs' image including essential tools and libraries such as Python and OpenBLAS
+  * Stage 3: 'tools' image, including a Python3 virtual environment in userspace and a build of NumPy against OpenBLAS, as well as other Python essentials
   * Stage 4: 'dev' image, including PyTorch with sources
-  * Stage 5: 'pytorch' image, including only the Python3 virtual environment, the PyTorch module, and the example scripts. PyTorch sources are not included in this image.
+  * Stage 5: 'pytorch' image, including only the Python3 virtual environment, the PyTorch module, and the example scripts. PyTorch sources are not included in this image
 
 To see the command line options for build.sh use:
 
@@ -82,7 +84,7 @@ For example:
 
     This will generate an image named 'pytorch-base'.
 
-PyTorch can optionally be built with oneDNN, using the '--onednn' or '--dnnl' flag. By default this will use AArch64 optimised primitives from Arm Compute Library where available. Specifying `--onednn reference` will disable Compute Library primitives and use oneDNN's reference C++ kernels throughout.
+PyTorch can optionally be built with oneDNN, using the '--onednn' or '--dnnl' flag. By default this will use AArch64 optimised primitives from ACL where available. Specifying `--onednn reference` will disable Compute Library primitives and use oneDNN's reference C++ kernels throughout.
 
 For builds where Compute Library is enabled, setting the environment variable `DNNL_DEFAULT_FPMATH_MODE` to `BF16` or `ANY` will instruct Compute Library to dispatch fp32 workloads to bfloat16 kernels where hardware support permits. Note: this may introduce a drop in accuracy.
 
