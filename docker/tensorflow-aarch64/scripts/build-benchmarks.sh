@@ -24,6 +24,6 @@ cd $EXAMPLE_DIR
 readonly package=benchmarks
 readonly src_host=https://github.com/tensorflow
 readonly src_repo=benchmarks
-src_branch=cnn_tf_v2.1_compatible
+src_branch=master
 # Clone tensorflow and benchmarks
 git clone -b ${src_branch} ${src_host}/${src_repo}.git
