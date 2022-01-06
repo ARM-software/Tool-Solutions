@@ -1,110 +1,151 @@
-# Build PyTorch for AArch64 using Docker
+# PyTorch for AArch64
 
-A script to build a Docker image containing [PyTorch](https://www.pytorch.org/) and dependencies for the [Armv8-A architecture](https://developer.arm.com/architectures/cpu-architecture/a-profile) with AArch64 execution.
+## Contents
+* [Getting started with PyTorch on AArch64](#getting-started-with-pytorch-on-aarch64)
+   * [Downloading an image from Docker Hub](#downloading-an-image-from-docker-hub)
+   * [Running the Docker image](#running-the-docker-image)
+* [Image contents](#image-contents)
+   * [Optimized backend for AArch64](#optimized-backend-for-aarch64)
+      * [oneDNN runtime flags](#onednn-runtime-flags)
+   * [Hardware support](#hardware-support)
+   * [Examples](#examples)
+* [Build PyTorch for AArch64 using Docker](#build-pytorch-for-aarch64-using-docker)
+
+## Getting started with PyTorch on AArch64
+
+This [component](https://github.com/ARM-software/Tool-Solutions/tree/master/docker/pytorch-aarch64) of [ARM-Software's](https://github.com/ARM-software) [Tool Solutions](https://github.com/ARM-software/Tool-Solutions) repository provides scripts to build a Docker image containing [PyTorch](https://www.pytorch.org/) and dependencies for the [Armv8-A architecture](https://developer.arm.com/architectures/cpu-architecture/a-profile), optionally with AArch64 specific optimizations via [Compute Library for the Arm® Architecture (ACL)](https://developer.arm.com/ip-products/processors/machine-learning/compute-library), as well as a selection of [examples and benchmarks](./examples/README.md).
+
+Images are available from [Arm SW Developers Docker Hub](https://hub.docker.com/u/armswdev), and are updated monthly.
+
 For more information, see this Arm Developer Community [blog post](https://community.arm.com/developer/tools-software/tools/b/tools-software-ides-blog/posts/aarch64-docker-images-for-pytorch-and-tensorflow).
 
-Before using these images, please confirm the machine is AArch64. Other architectures will not work.
+### Downloading an image from Docker Hub
+
+Completed images can be pulled from [armswdev/pytorch-arm-neoverse](https://hub.docker.com/r/armswdev/pytorch-arm-neoverse).
 
 ```
-uname -m
-aarch64
+docker pull armswdev/pytorch-arm-neoverse:<image tag>
 ```
 
-Pre-built images are available for download from the [Arm Software Developers DockerHub](https://hub.docker.com/r/armswdev/pytorch-arm-neoverse-n1).
+Where `<image tag>` identifies the image version, as well as the PyTorch version and backend:
+
+`<image tag>` = `r<yy>.<mm>-torch-<torch version>-<backend>`
+
+- `r<yy>.<mm>` = this identifies the monthly update to the images on Docker Hub; `yy` = year (e.g. 22 for 2022) and `mm` = month (e.g. 01 for January).
+- `<torch version>` = PyTorch version, see [image contents](#image-contents).
+- `<backend>` = `openblas` or `onednn`, see [optimized backend for AArch64](#optimized-backend-for-aarch64).
+
+For example: `r22.01-torch-1.10.0-onednn`.
+
+### Running the Docker image
+To run the downloaded image:
+
+  ``` docker run -it --init <image name> ```
+
+where `<image name>` is the name of the image, i.e. `armswdev/pytorch-arm-neoverse:<image tag>`.
 
 
-## What's in the final image?
+## Image contents
 
   * OS: Ubuntu 20.04
   * Compiler: GCC 10.3
   * Maths libraries: [Arm Optimized Routines](https://github.com/ARM-software/optimized-routines) and [OpenBLAS](https://www.openblas.net/) 0.3.10
   * [oneDNN](https://github.com/oneapi-src/oneDNN) 2.4
-    - [Compute Library for the Arm® Architecture (ACL)](https://developer.arm.com/ip-products/processors/machine-learning/compute-library) 21.11, provides optimized implementations on AArch64 for main oneDNN primitives
-  * Python3 environment containing:
+    - ACL 21.11, provides optimized implementations on AArch64 for main oneDNN primitives
+  * Python 3.8 environment containing:
     - NumPy 1.19.5
     - SciPy 1.5.2
     - PyTorch 1.10.0
   * [Examples](./examples/README.md) that demonstrate how to run ML models
-    - [ML Commons :tm: (MLPerf)](https://mlperf.org/)
-    - Python scripts
+    - [MLCommons :tm:](https://mlcommons.org/en/) benchmarks
+    - Python API examples
     - C++ API examples
 
 The default user account has sudo privileges (username `ubuntu`, password `Portland`).
 
-In addition to the Dockerfile, please refer to the files in the `scripts/` and `patches/` directories to see how the software is built.
 
+### Optimized backend for AArch64
 
-## Installing Docker
-The [Docker Engine](https://docs.docker.com/get-docker/) is used. Instructions on how to install Docker are available for various Linux distributions such as [CentOS](https://docs.docker.com/engine/install/centos/) and [Ubuntu](https://docs.docker.com/engine/install/ubuntu/).
+Separate images are provided with OpenBLAS and oneDNN backends (as given in the image tag). The scripts in this repository can be used to build either.
 
-Confirm Docker is working:
+ * **OpenBLAS:** this is the default fp32 backend for a PyTorch build on AArch64, suitable for both training and inference workloads.
+ * **oneDNN:** this uses oneDNN with ACL, providing optimized implementations on AArch64 for key oneDNN primitives. It is intended for inference workloads on infrastructure-scale platforms.
 
-``` docker run hello-world ```
+#### oneDNN runtime flags
 
-If there are any problems, make sure the service is running:
+- `DNNL_DEFAULT_FPMATH_MODE`: For builds where ACL is enabled, setting the environment variable `DNNL_DEFAULT_FPMATH_MODE` to `BF16` or `ANY` will instruct ACL to dispatch fp32 workloads to bfloat16 kernels where hardware support permits. _Note: this may introduce a drop in accuracy._
 
-``` systemctl start docker ```
+### Hardware support
 
-and make sure you are in the Docker group:
+The images provided are intended for Arm Neoverse platforms. The oneDNN+ACL backend includes optimizations for Armv8.2-a and beyond for Neoverse targets, and support for hardware features such as SVE and bfloat16, where available.
 
-```  usermod -aG docker $USER ```
+### Examples
 
-These steps may require root privileges and usermod requires logout and login to take effect.
+A small selection of inference benchmarks and examples are provided with the image:
 
-See https://docs.docker.com for more information.
+  * [MLCommons :tm:](https://mlcommons.org/en/) benchmarks
+  * Python API examples
+  * C++ API examples
 
+More details can be found in the [examples](./examples/README.md) folder.
 
-## Building the Docker image
-Use the build.sh script to build the image. This script implements a multi-stage build to minimise the size of the finished image:
+# Build PyTorch for AArch64 using Docker
+
+Confirm the machine is AArch64, other architectures are not supported.
+
+```
+> uname -m
+aarch64
+```
+
+Use the `build.sh` script to build the image. This script implements a multi-stage build to minimize the size of the final image:
+
   * Stage 1: 'base' image including Ubuntu with core packages and GCC
   * Stage 2: 'libs' image including essential tools and libraries such as Python and OpenBLAS
   * Stage 3: 'tools' image, including a Python3 virtual environment in userspace and a build of NumPy against OpenBLAS, as well as other Python essentials
   * Stage 4: 'dev' image, including PyTorch with sources
   * Stage 5: 'pytorch' image, including only the Python3 virtual environment, the PyTorch module, and the example scripts. PyTorch sources are not included in this image
 
-To see the command line options for build.sh use:
+To see the command line options for `build.sh` use:
 
 ```./build.sh -h ```
 
-The image to build is selected with the '--build-type' flag. The options are base, libs, tools, dev, pytorch, or full. Selecting full builds all of the images. The default value is 'pytorch'
+The image to build is selected with the `--build-type` flag. The options are base, libs, tools, dev, pytorch, or full. Selecting full builds all of the images. The default value is 'pytorch'
 
 
 For example:
+
   * To build the final pytorch image:
 
-    ```./build.sh --build-type pytorch ```
+    ```
+    ./build.sh --build-type pytorch
+    ```
 
   * For a full build:
 
-    ```./build.sh --build-type full ```
+    ```
+    ./build.sh --build-type full
+    ```
 
   * For a base build:
 
-    ```./build.sh --build-type base ```
+    ```
+    ./build.sh --build-type base
+    ```
 
-    This will generate an image named 'pytorch-base'.
+    This will generate an image named `pytorch-base`.
 
-PyTorch can optionally be built with oneDNN, using the '--onednn' or '--dnnl' flag. By default this will use AArch64 optimised primitives from ACL where available. Specifying `--onednn reference` will disable Compute Library primitives and use oneDNN's reference C++ kernels throughout.
+PyTorch can optionally be built with oneDNN, using the `--onednn` flag. By default this will use AArch64 optimized primitives from ACL where available. Specifying `--onednn reference` will disable ACL primitives and use oneDNN's reference C++ kernels throughout.
 
-For builds where Compute Library is enabled, setting the environment variable `DNNL_DEFAULT_FPMATH_MODE` to `BF16` or `ANY` will instruct Compute Library to dispatch fp32 workloads to bfloat16 kernels where hardware support permits. Note: this may introduce a drop in accuracy.
+For builds where ACL is enabled, setting the environment variable `DNNL_DEFAULT_FPMATH_MODE` to `BF16` or `ANY` will instruct ACL to dispatch fp32 workloads to bfloat16 kernels where hardware support permits. Note: this may introduce a drop in accuracy.
 
-By default, all packages will be built with optimisations for the host machine, equivalent to setting `-mcpu=native` at compile time for each component build.
+By default, all packages will be built with optimizations for the host machine, equivalent to setting `-mcpu=native` at compile time for each component build.
 It is possible to choose a specific build target using the `--build-target` flag:
+
   * native       - optimize for the current host machine (default).
   * neoverse-n1  - optimize for Neoverse-N1.
   * thunderx2t99 - optimize for Marvell ThunderX2.
   * generic      - generate portable build suitable for any Armv8a target.
   * custom       - apply a custom set of architecture and tuning flags, as defined in [cpu_info.sh](cpu_info.sh).
 
-## Running the Docker image
-To run the finished image:
-
-```docker run -it --init <image name> ```
-
-where <image name> is the name of the finished image, for example 'pytorch'.
-
-```docker run -it --init pytorch```
-
-To display available images, use the Docker command:
-
-```docker images ```
+In addition to the Dockerfile, please refer to the files in the `scripts/` and `patches/` directories to see how the software is built.

@@ -1,102 +1,153 @@
-# Build TensorFlow (2.x) for AArch64 using Docker
+# TensorFlow for AArch64
 
-A script to build a Docker image containing [TensorFlow](https://www.tensorflow.org/) and dependencies for the [Armv8-A architecture](https://developer.arm.com/architectures/cpu-architecture/a-profile) with AArch64 execution.
+## Contents
+* [Getting started with TensorFlow on AArch64](#getting-started-with-tensorflow-on-aarch64)
+   * [Downloading an image from Docker Hub](#downloading-an-image-from-docker-hub)
+   * [Running the Docker image](#running-the-docker-image)
+* [Image contents](#image-contents)
+   * [Optimized backend for AArch64](#optimized-backend-for-aarch64)
+      * [oneDNN runtime flags](#onednn-runtime-flags)
+   * [Hardware support](#hardware-support)
+   * [Examples](#examples)
+* [Build TensorFlow (2.x) for AArch64 using Docker](#build-tensorflow-2x-for-aarch64-using-docker)
+
+## Getting started with TensorFlow on AArch64
+This [component](https://github.com/ARM-software/Tool-Solutions/tree/master/docker/tensorflow-aarch64) of [ARM-Software's](https://github.com/ARM-software) [Tool Solutions](https://github.com/ARM-software/Tool-Solutions) repository provides scripts to build a Docker image containing [TensorFlow](https://www.tensorflow.org/) and dependencies for the [Armv8-A architecture](https://developer.arm.com/architectures/cpu-architecture/a-profile), optionally with AArch64 specific optimizations via [Compute Library for the Arm® Architecture (ACL)](https://developer.arm.com/ip-products/processors/machine-learning/compute-library), as well as a selection of [examples and benchmarks](./examples/README.md).
+
+Images are available from [Arm SW Developers Docker Hub](https://hub.docker.com/u/armswdev), and are updated monthly.
+
 For more information, see this Arm Developer Community [blog post](https://community.arm.com/developer/tools-software/tools/b/tools-software-ides-blog/posts/aarch64-docker-images-for-pytorch-and-tensorflow).
 
-Before using these images, please confirm the machine is AArch64. Other architectures will not work.
+### Downloading an image from Docker Hub
+
+Completed images can be pulled from [armswdev/tensorflow-arm-neoverse](https://hub.docker.com/r/armswdev/tensorflow-arm-neoverse).
 
 ```
-uname -m
-aarch64
+docker pull armswdev/tensorflow-arm-neoverse:<image tag>
 ```
 
-Pre-built images are available for download from the [Arm Software Developers DockerHub](https://hub.docker.com/r/armswdev/tensorflow-arm-neoverse-n1).
+Where `<image tag>` identifies the image version, as well as the TensorFlow version and backend:
 
-## What's in the final image?
+`<image tag>` = `r<yy>.<mm>-tf-<TF version>-<backend>`
+
+- `r<yy>.<mm>` = this identifies the monthly update to the images on Docker Hub; `yy` = year (e.g. 22 for 2022) and `mm` = month (e.g. 01 for January).
+- `<TF version>` = TensorFlow version, see [image contents](#image-contents).
+- `<backend>` = `eigen` or `onednn`, see [optimized backend for AArch64](#optimized-backend-for-aarch64).
+
+For example: `r22.01-tf-2.7.0-onednn`.
+
+### Running the Docker image
+To run the downloaded image:
+
+  ``` docker run -it --init <image name> ```
+
+where `<image name> `is the name of the image, i.e. `armswdev/tensorflow-arm-neoverse:<image tag>`.
+
+## Image contents
+
   * OS: Ubuntu 20.04
   * Compiler: GCC 10.3
-  * Maths libraries: [OpenBLAS](https://www.openblas.net/) 0.3.10
+  * Maths libraries: [OpenBLAS](https://www.openblas.net/) 0.3.10, used for NumPy's BLAS functionality
   * [oneDNN](https://github.com/oneapi-src/oneDNN) 2.4
-    - [Compute Library for the Arm® Architecture (ACL)](https://developer.arm.com/ip-products/processors/machine-learning/compute-library) 21.11, provides optimized implementations on AArch64 for main oneDNN primitives
-  * Python3 environment containing:
+    - ACL 21.11, provides optimized implementations on AArch64 for main oneDNN primitives
+  * Python 3.8 environment containing:
     - NumPy 1.19.5
-    - TensorFlow 2.7.0 (_Note: support for TensorFlow 1.x is now deprecated. Please use the [tensorflow-v1-aarch64](https://github.com/ARM-software/Tool-Solutions/releases/tag/tensorflow-v1-aarch64) tag_)
     - SciPy 1.5.2
+    - TensorFlow 2.7.0
   * [Examples](./examples/README.md) that demonstrate how to run ML models
-    - [MLCommons :tm: (MLPerf)](https://mlperf.org/) benchmarks with an optional patch to support benchmarking for TF oneDNN builds
+    - [MLCommons :tm:](https://mlcommons.org/en/) benchmarks with an optional patch to support benchmarking for TF oneDNN builds
     - TensorFlow Benchmarks
-    - Python scripts
+    - Python API examples
     - C++ API examples
 
 The default user account has sudo privileges (username `ubuntu`, password `Portland`).
 
-In addition to the Dockerfile, please refer to the files in the `scripts/` and `patches/` directories to see how the software is built.
+### Optimized backend for AArch64
 
-## Installing Docker
-The [Docker Community Engine](https://docs.docker.com/install/) is used. Instructions on how to install Docker CE are available for various Linux distributions such as [CentOS](https://docs.docker.com/install/linux/docker-ce/centos/) and [Ubuntu](https://docs.docker.com/install/linux/docker-ce/ubuntu/).
+Separate images are provided with Eigen and oneDNN backends (as given in the image tag). The scripts in this repository can be used to build either.
 
-Confirm Docker is working:
+ * **Eigen:** this is the default backend for a TensorFlow build on AArch64, suitable for both training and inference workloads.
+ * **oneDNN:** this uses oneDNN with ACL, providing optimized implementations on AArch64 for key oneDNN primitives. It is intended for inference workloads on infrastructure-scale platforms. oneDNN optimizations can be disabled at runtime by setting the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
 
-``` docker run hello-world ```
+#### oneDNN runtime flags
 
-If there are any problems, make sure the service is running:
+- `DNNL_DEFAULT_FPMATH_MODE`: For builds where ACL is enabled, setting the environment variable `DNNL_DEFAULT_FPMATH_MODE` to `BF16` or `ANY` will instruct ACL to dispatch fp32 workloads to bfloat16 kernels where hardware support permits. _Note: this may introduce a drop in accuracy._
+- `ARM_COMPUTE_SPIN_WAIT_CPP_SCHEDULER`: When running models with a high core count that have layers operating on small to medium inputs, the scheduling overhead for ACL can be reduced by setting the environment variable `ARM_COMPUTE_SPIN_WAIT_CPP_SCHEDULER` to `1`. _Note: this will increase CPU utilisation as worker threads in ACL will busy wait for new work and might create contention with other threads._
+- `TF_ENABLE_ONEDNN_OPTS`: enables the oneDNN backend and is set to 1 (i.e. enabled) by default. To disable the oneDNN+ACL backend, set to `0`. _Note: this flag is only available for imaged built with the oneDNN+ACL backend._
 
-``` systemctl start docker ```
+### Hardware support
 
-and make sure you are in the Docker group:
+The images provided are intended for Arm Neoverse platforms. The oneDNN+ACL backend includes optimizations for Armv8.2-a and beyond to deliver improved performance on Neoverse targets, and support for hardware features such as SVE and bfloat16, where available.
 
-```  usermod -aG docker $USER ```
+They are compatible with all ARMv8-A targets. However, resource constraints may make them impractical for use on systems with low core counts and low memory. Server-scale platforms are recommended.
 
-These steps may require root privileges and usermod requires logout and login to take effect.
+### Examples
 
-See https://docs.docker.com for more information.
+A small selection of inference benchmarks and examples are provided with the image:
 
+  * [MLCommons :tm:](https://mlcommons.org/en/) benchmarks
+  * Python API examples
+  * C++ API examples
 
-## Building the Docker image
-Use the build.sh script to build the image. This script implements a multi-stage build to minimise the size of the finished image:
+More details can be found in the [examples](./examples/README.md) folder.
+
+# Build TensorFlow (2.x) for AArch64 using Docker
+
+Confirm the machine is AArch64, other architectures are not supported.
+
+```
+> uname -m
+aarch64
+```
+
+Use the `build.sh` script to build the image. This script implements a multi-stage build to minimize the size of the final image:
+
   * Stage 1: 'base' image including Ubuntu with core packages and GCC
   * Stage 2: 'libs' image including essential tools and libraries such as Python and OpenBLAS
   * Stage 3: 'tools' image, including a Python3 virtual environment in userspace and a build of NumPy and SciPy against OpenBLAS, as well as other Python essentials
   * Stage 4: 'dev' image, including Bazel and TensorFlow and the source code
   * Stage 5: 'tensorflow' image, including only the Python3 virtual environment, the TensorFlow module, the basic benchmarks, and the example scripts. Bazel and TensorFlow sources are not included in this image
 
-To see the command line options for build.sh use:
+To see the command line options for `build.sh` use:
 
 ``` ./build.sh -h ```
 
-The image to build is selected with the '--build-type' flag. The options are base, libs, tools, dev, tensorflow, or full. Selecting full builds all of the images. The default value is 'tensorflow'
+The image to build is selected with the `--build-type` flag. The options are base, libs, tools, dev, tensorflow, or full. Selecting full builds all of the images. The default value is 'tensorflow'
 
 
 For example:
 
   * To build the final tensorflow image:
 
-    ``` ./build.sh --build-type tensorflow ```
+    ```
+    ./build.sh --build-type tensorflow
+    ```
 
   * For a full build:
 
-    ``` ./build.sh --build-type full ```
+    ```
+    ./build.sh --build-type full
+    ```
 
   * For a base build:
 
-    ```  ./build.sh --build-type base ```
+    ```
+    ./build.sh --build-type base
+    ```
 
 For the base build: This will generate an image named 'tensorflow-base-v2', hyphenated with the version of TensorFlow chosen.
 
-TensorFlow can optionally be built with oneDNN, using the '--onednn' or '--dnnl' flag; in this case the oneDNN backend will be enabled by default, but can be disabled at runtime by setting the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
-Without the '--onednn' flag, the default Eigen backend of Tensorflow is chosen. For the final TensorFlow image with oneDNN: This will generate an image `tensorflow-v2$onednn` with the type of oneDNN backend chosen.
+TensorFlow can optionally be built with oneDNN, using the `--onednn` flag; in this case the oneDNN backend will be enabled by default, but can be disabled at runtime by setting the environment variable `TF_ENABLE_ONEDNN_OPTS=0`. 
+The backend for oneDNN can also be selected using the `--onednn` flag:
+This defaults to using ACL, but `--onednn reference` can also be selected to use the reference C++ kernels.
+Without the `--onednn` flag, the default Eigen backend of Tensorflow is chosen. For the final TensorFlow image with oneDNN: This will generate an image `tensorflow-v2$onednn` with the type of oneDNN backend chosen.
 
-The backend for oneDNN can also be selected using the '--onednn' or '--dnnl' flags:
-This defaults to using Compute Library for Arm Architecture, but '--onednn reference' can also be selected to use the reference C++ kernels.
 
 _Note: The oneDNN backend chosen will be appended to the image name: `tensorflow-v2$onednn`._
 
-### oneDNN runtime flags
-- `DNNL_DEFAULT_FPMATH_MODE`: For builds where Compute Library is enabled, setting the environment variable `DNNL_DEFAULT_FPMATH_MODE` to `BF16` or `ANY` will instruct Compute Library to dispatch fp32 workloads to bfloat16 kernels where hardware support permits. Note: this may introduce a drop in accuracy.
-- `ARM_COMPUTE_SPIN_WAIT_CPP_SCHEDULER`: When running models with a high core count that have layers operating on small to medium inputs, the scheduling overhead for Compute Library can be reduced by setting the environment variable `ARM_COMPUTE_SPIN_WAIT_CPP_SCHEDULER` to `1`. Note: this will increase CPU utilisation as worker threads in Compute Library will busy wait for new work and might create contention with other threads.
-
-By default, all packages will be built with optimisations for the host machine, equivalent to setting `-mcpu=native` at compile time for each component build.
+By default, all packages will be built with optimizations for the host machine, equivalent to setting `-mcpu=native` at compile time for each component build.
 It is possible to choose a specific build target using the `--build-target` flag:
+
   * native       - optimize for the current host machine (default).
   * neoverse-n1  - optimize for Neoverse-N1.
   * thunderx2t99 - optimize for Marvell ThunderX2.
@@ -107,18 +158,7 @@ Memory requirements for building TensorFlow can be significant, and may exceed t
 memory, particularly for parallel builds (the default). There are two flags which can be used to
 control the resources Bazel consumes:
 
-  * --jobs sets the number of jobs to run in parallel during the build, this will apply to all parallel builds
-  * --bazel_memory_limit sets a memory limit for Bazel build, in MiB
+  * `--jobs` sets the number of jobs to run in parallel during the build, this will apply to all parallel builds
+  * `--bazel_memory_limit` sets a memory limit for Bazel build, in MiB
 
-## Running the Docker image
-To run the finished image:
-
-  ``` docker run -it --init <image name> ```
-
-where <image name> is the name of the finished image, for example 'tensorflow-v2'.
-
-  ``` docker run -it --init tensorflow-v2 ```
-
-To display available images, use the Docker command:
-
-  ``` docker images ```
+In addition to the Dockerfile, please refer to the files in the `scripts/` and `patches/` directories to see how the software is built.
