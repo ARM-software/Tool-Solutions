@@ -34,9 +34,9 @@ int sc_main(int argc , char * argv[]) {
     // NOTE: select 1 of the 2 possible terminal models:
     //       refer to the source code for the parameter values
     // Uncomment the tterm model for a full terminal with xterm or telnet
-    tterm       term("term", true);
+    //tterm       term("term", true);
     // Uncomment the fterm for simple file I/O (no input)
-    //fterm       term("term", true, false);
+    fterm       term("term", true, false);
 
     /*
      * Simulation configuration
