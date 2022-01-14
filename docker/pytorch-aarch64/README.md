@@ -13,9 +13,11 @@
 
 ## Getting started with PyTorch on AArch64
 
-This [component](https://github.com/ARM-software/Tool-Solutions/tree/master/docker/pytorch-aarch64) of [ARM-Software's](https://github.com/ARM-software) [Tool Solutions](https://github.com/ARM-software/Tool-Solutions) repository provides scripts to build a Docker image containing [PyTorch](https://www.pytorch.org/) and dependencies for the [Armv8-A architecture](https://developer.arm.com/architectures/cpu-architecture/a-profile), optionally with AArch64 specific optimizations via [Compute Library for the Arm® Architecture (ACL)](https://developer.arm.com/ip-products/processors/machine-learning/compute-library), as well as a selection of [examples and benchmarks](./examples/README.md).
+This [component](https://github.com/ARM-software/Tool-Solutions/tree/master/docker/pytorch-aarch64) of [ARM-Software's](https://github.com/ARM-software) [Tool Solutions](https://github.com/ARM-software/Tool-Solutions) repository provides instructions to obtain, and scripts to build, a Docker image containing [PyTorch](https://www.pytorch.org/) and dependencies for the [Armv8-A architecture](https://developer.arm.com/architectures/cpu-architecture/a-profile), optionally with AArch64 specific optimizations via [Compute Library for the Arm® Architecture (ACL)](https://developer.arm.com/ip-products/processors/machine-learning/compute-library), as well as a selection of [examples and benchmarks](./examples/README.md).
 
-Images are available from [Arm SW Developers Docker Hub](https://hub.docker.com/u/armswdev), and are updated monthly.
+Ready-made Docker images including Pytorch, dependencies, and examples, are available from [Arm SW Developers Docker Hub](https://hub.docker.com/u/armswdev), and are updated monthly, see [Downloading an image from Docker Hub](#downloading-an-image-from-docker-hub) for details.
+
+Instructions for building PyTorch for AArch64 from scratch in a Docker image, using the `build.sh` script provided in this repository, are available here: [Build PyTorch for AArch64 using Docker](#build-pytorch-for-aarch64-using-docker).
 
 For more information, see this Arm Developer Community [blog post](https://community.arm.com/developer/tools-software/tools/b/tools-software-ides-blog/posts/aarch64-docker-images-for-pytorch-and-tensorflow).
 
@@ -98,7 +100,16 @@ Confirm the machine is AArch64, other architectures are not supported.
 aarch64
 ```
 
-Use the `build.sh` script to build the image. This script implements a multi-stage build to minimize the size of the final image:
+Clone the Tool-Solutions repository, and go to the `docker/pytorch-aarch64` directory:
+
+```
+git clone https://github.com/ARM-software/Tool-Solutions.git
+cd Tool-Solutions/docker/pytorch-aarch64
+```
+
+Use the `build.sh` script to build the image.
+
+This script implements a multi-stage build to minimize the size of the final image:
 
   * Stage 1: 'base' image including Ubuntu with core packages and GCC
   * Stage 2: 'libs' image including essential tools and libraries such as Python and OpenBLAS
@@ -108,7 +119,9 @@ Use the `build.sh` script to build the image. This script implements a multi-sta
 
 To see the command line options for `build.sh` use:
 
-```./build.sh -h ```
+```
+./build.sh -h
+```
 
 The image to build is selected with the `--build-type` flag. The options are base, libs, tools, dev, pytorch, or full. Selecting full builds all of the images. The default value is 'pytorch'
 
