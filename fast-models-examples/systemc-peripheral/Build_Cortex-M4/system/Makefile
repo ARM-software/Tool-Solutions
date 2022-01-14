@@ -21,7 +21,7 @@ BUILDDIR = ./$(CONFIG)
 WRAPPERLIB = scx-cpu_core-$(CONFIG)
 EVSLIB = cpu_core-$(CONFIG)
 
-CXXFLAGS += -I$(GENDIR) -Wno-deprecated -Wno-maybe-uninitialized -Wno-unused-variable
+CXXFLAGS += -I$(GENDIR) -Wno-deprecated -Wno-maybe-uninitialized -Wno-unused-variable -Wno-format-overflow
 
 LDFLAGS += -L$(BUILDDIR) -l$(WRAPPERLIB) -l$(EVSLIB) -lcomponents -lpugixml -lpvbus \
 	$(PVLIB_HOME)/lib/Linux$(BITNESS_IN_NAME)_GCC-$(GCC_VER)/libarmctmodel.a -lscx -lfmruntime -lIrisSupport -lsystemc -ldl -lrt \
