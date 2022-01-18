@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # *******************************************************************************
-# Copyright 2020-2021 Arm Limited and affiliates.
+# Copyright 2020-2022 Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -38,6 +38,7 @@ function print_usage_and_exit {
   echo "                                 * tools        - build image including Python3 venv, with numpy."
   echo "                                 * dev          - build image including Bazel and TensorFlow, with sources."
   echo "                                 * tensorflow   - build image including TensorFlow build and benchmarks installed (default)."
+  echo "                                 * serving      - build image including TensorFlow Serving build."
   echo "                                 * full         - build all images."
   echo "      --build-target           AArch64 CPU target:"
   echo "                                 * generic      - portable build suitable for any ARMv8-A target (default)."
@@ -69,6 +70,7 @@ build_base_image=
 build_libs_image=
 build_tools_image=
 build_dev_image=
+build_serving_image=
 build_tensorflow_image=1
 readonly target_arch="aarch64"
 readonly host_arch=$(arch)
@@ -99,6 +101,7 @@ do
           build_libs_image=
           build_tools_image=
           build_dev_image=
+          build_serving_image=
           build_tensorflow_image=
           ;;
         libs )
@@ -106,6 +109,7 @@ do
           build_libs_image=1
           build_tools_image=
           build_dev_image=
+          build_serving_image=
           build_tensorflow_image=
           ;;
         tools )
@@ -113,6 +117,7 @@ do
           build_libs_image=
           build_tools_image=1
           build_dev_image=
+          build_serving_image=
           build_tensorflow_image=
           ;;
         dev )
@@ -120,6 +125,15 @@ do
           build_libs_image=
           build_tools_image=
           build_dev_image=1
+          build_serving_image=
+          build_tensorflow_image=
+          ;;
+        serving )
+          build_base_image=
+          build_libs_image=
+          build_tools_image=
+          build_dev_image=
+          build_serving_image=1
           build_tensorflow_image=
           ;;
         full )
@@ -127,6 +141,7 @@ do
           build_libs_image=1
           build_tools_image=1
           build_dev_image=1
+          build_serving_image=1
           build_tensorflow_image=1
           ;;
         tensorflow )
@@ -134,6 +149,7 @@ do
           build_libs_image=
           build_tools_image=
           build_dev_image=
+          build_serving_image=
           build_tensorflow_image=1
           ;;
         * )
@@ -221,13 +237,17 @@ if [[ $clean_build ]]; then
   extra_args="--pull --no-cache $extra_args"
 fi
 
-# Set TensorFlow, bazel and oneDNN version
-version="v2.7.0"
+# Set Bazel, TensorFlow and TensorFlow serving versions
 bazel_version="3.7.2"
+tf_version="v2.7.0"
+# Note: TF serving release tags do not have a `v` prefix
+tfserving_version=${tf_version:1}
+
 # Add build-args to pass version numbers,
 extra_args="$extra_args \
-    --build-arg tf_version=$version \
-    --build-arg bazel_version=$bazel_version"
+    --build-arg bazel_version=$bazel_version \
+    --build-arg tf_version=$tf_version \
+    --build-arg tfserving_version=$tfserving_version"
 
 # Set CPU target props
 set_target $target
@@ -258,6 +278,11 @@ fi
 if [[ $build_dev_image ]]; then
   # Stage 4: Adds bazel and TensorFlow builds with sources and creates a whl.
   docker build $extra_args --target tensorflow-dev -t tensorflow-dev-v2$onednn:$image_tag .
+fi
+
+if [[ $build_serving_image ]]; then
+  # Stage 4b: Adds bazel and TensorFlow Serving builds with sources and creates a whl.
+  docker build $extra_args --target tensorflow-serving -t tensorflow-serving-v2$onednn:$image_tag .
 fi
 
 if [[ $build_tensorflow_image ]]; then
