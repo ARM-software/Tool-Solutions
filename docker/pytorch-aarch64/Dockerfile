@@ -146,7 +146,7 @@ ENV NP_MAKE="${njobs}" \
 
 # Key version numbers
 ENV ACL_VERSION="v21.11" \
-    OPENBLAS_VERSION=0.3.10 \
+    OPENBLAS_VERSION=0.3.19 \
     NINJA_VERSION=1.9.0
 
 # Package build parameters
@@ -203,8 +203,8 @@ ENV PY_VERSION="${default_py_version}" \
     CPU="${cpu}" \
     ARCH="${arch}"
 # Key version numbers
-ENV NUMPY_VERSION=1.19.5 \
-    SCIPY_VERSION=1.5.2 \
+ENV NUMPY_VERSION=1.21.5 \
+    SCIPY_VERSION=1.7.3 \
     NPY_DISTUTILS_APPEND_FLAGS=1
 
 # Using venv means this can be done in userspace
@@ -233,7 +233,7 @@ COPY patches/site.cfg $PACKAGE_DIR/site.cfg
 RUN $PACKAGE_DIR/build-numpy.sh
 
 # Install some  basic python packages needed for SciPy
-RUN pip install --no-cache-dir pybind11==2.6.2 pyangbind
+RUN pip install --no-cache-dir pybind11==2.6.2 pyangbind pythran
 # Build numpy from source, using OpenBLAS for BLAS calls
 COPY scripts/build-scipy.sh $PACKAGE_DIR/.
 COPY patches/site.cfg $PACKAGE_DIR/site.cfg
