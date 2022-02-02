@@ -99,7 +99,9 @@ fi
 bazel build $extra_args \
         --config=v2 --config=noaws \
         --copt="-mcpu=${CPU}" --copt="-march=${ARCH}" --copt="-O3"  --copt="-fopenmp" \
+        --copt="-flax-vector-conversions" \
         --cxxopt="-mcpu=${CPU}" --cxxopt="-march=${ARCH}" --cxxopt="-O3"  --cxxopt="-fopenmp" \
+        --cxxopt="-flax-vector-conversions" \
         --linkopt="-lgomp  -lm" \
         //tensorflow/tools/pip_package:build_pip_package \
         //tensorflow:libtensorflow_cc.so \
