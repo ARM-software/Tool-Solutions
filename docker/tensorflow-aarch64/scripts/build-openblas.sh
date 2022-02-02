@@ -29,11 +29,12 @@ git clone ${src_host}/${src_repo}.git
 cd ${src_repo}
 
 if [ ${blas_cpu} == NEOVERSEV1 ] || [ ${blas_cpu} == NEOVERSEN2 ]; then
-   # WA (to be removed once OpenBLAS v0.3.20 is released):
-   # support for NEOVERSEV1 and NEOVERSEN2 build option has been added post
-   # OpenBLAS v0.3.19 release. Till v0.3.20 is avaialble, ignore the
-   # $OPENBLAS_VERSION configured in Dockerfile and directly checkout
-   # the commit where the device support has been added.
+   # TODO: Remove this clause once OpenBLAS v0.3.20 is released:
+   # support for NEOVERSEV1 and NEOVERSEN2 build options has been added post
+   # OpenBLAS v0.3.19 release. 
+   # Until OpenBLAS v0.3.20 is available, the $OPENBLAS_VERSION
+   # set in Dockerfile will be ignored for Neoverse-V1/N2 builds, and
+   # the commit where support has been added is checked out instead
    git checkout b6b024232d2f99591610b9da5c550923f7d7c39a
 else
    git checkout v$version -b v$version
