@@ -28,6 +28,7 @@ readonly src_repo=scipy
 
 git clone ${src_host}/${src_repo}.git
 cd ${src_repo}
+git submodule update --init
 git checkout v$version -b v$version
 
 # OpenBLAS libraries are used to build SciPy
