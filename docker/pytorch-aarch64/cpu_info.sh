@@ -38,6 +38,12 @@ case $CPU_IMPL in
       0xd0c) # Neoverse N1
         target="neoverse-n1"
       ;;
+      0xd40) #Neoverse V1
+       target="neoverse-v1"
+      ;;
+      0xd49) #Neoverse N2
+       target="neoverse-n2"
+      ;;
       *)
       ;;
     esac
@@ -89,11 +95,29 @@ function set_target {
   echo "Setting target to $target"
 
   case $target in
-    neoverse-n1 )
+    neoverse | neoverse-n1 )
       cpu="neoverse-n1"
       tune="neoverse-n1"
       arch="armv8.2-a"
       blas_cpu="NEOVERSEN1"
+      blas_ncores=64
+      acl_arch="armv8.2-a"
+    ;;
+    neoverse-v1 )
+      cpu="neoverse-v1"
+      tune="neoverse-v1"
+      arch="armv8.4-a"
+      blas_cpu="NEOVERSEV1"
+      blas_ncores=64
+      acl_arch="armv8.2-a"
+    ;;
+    neoverse-n2 )
+    # neoverse-n2 is armv9 architecture. This section needs to be updated
+    # when the build has a compiler with armv9 support.
+      cpu="neoverse-n2"
+      tune="neoverse-n2"
+      arch="armv8.5-a"
+      blas_cpu="NEOVERSEN2"
       blas_ncores=64
       acl_arch="armv8.2-a"
     ;;
