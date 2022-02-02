@@ -27,7 +27,17 @@ readonly src_repo="OpenBLAS"
 
 git clone ${src_host}/${src_repo}.git
 cd ${src_repo}
-git checkout v$version -b v$version
+
+if [ ${blas_cpu} == NEOVERSEV1 ] || [ ${blas_cpu} == NEOVERSEN2 ]; then
+   # WA (to be removed once OpenBLAS v0.3.20 is released):
+   # support for NEOVERSEV1 and NEOVERSEN2 build option has been added post
+   # OpenBLAS v0.3.19 release. Till v0.3.20 is avaialble, ignore the
+   # $OPENBLAS_VERSION configured in Dockerfile and directly checkout
+   # the commit where the device support has been added.
+   git checkout b6b024232d2f99591610b9da5c550923f7d7c39a
+else
+   git checkout v$version -b v$version
+fi
 
 install_dir=$PROD_DIR/$package
 

@@ -40,6 +40,9 @@ function print_usage_and_exit {
   echo "      --build-target           AArch64 CPU target:"
   echo "                                 * native       - optimize for the current host machine (default)."
   echo "                                 * neoverse-n1  - optimize for Neoverse-N1"
+  echo "                                 * neoverse-v1  - optimize for Neoverse-V1"
+  echo "                                 * neoverse-n2  - optimize for Neoverse-N2"
+  echo "                                 * neoverse     - generic optimization for all Neoverse cores"
   echo "                                 * thunderx2t99 - optimize for Marvell ThunderX2."
   echo "                                 * generic      - generate portable build suitable for any Armv8a target."
   echo "                                 * custom       - use custom settings defined in cpu_info.sh"
@@ -233,11 +236,11 @@ fi
 
 if [[ $build_dev_image ]]; then
   # Stage 4: Adds PyTorch build with sources
-  docker build $extra_args --target pytorch-dev -t pytorch-dev${onednn:+"-$onednn"}:latest .
+  docker build $extra_args --target pytorch-dev -t pytorch-dev${onednn:+"-$onednn"}-$target:latest .
 fi
 
 if [[ $build_pytorch_image ]]; then
   # Stage 5: Adds PyTorch examples
-  docker build $extra_args --target pytorch -t pytorch${onednn:+"-$onednn"}:latest .
+  docker build $extra_args --target pytorch -t pytorch${onednn:+"-$onednn"}-$target:latest .
 fi
 

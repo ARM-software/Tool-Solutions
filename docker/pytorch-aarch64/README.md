@@ -157,6 +157,9 @@ It is possible to choose a specific build target using the `--build-target` flag
 
   * native       - optimize for the current host machine (default).
   * neoverse-n1  - optimize for Neoverse-N1.
+  * neoverse-v1  - optimize for Neoverse-V1.
+  * neoverse-n2  - optimize for Neoverse-N2.
+  * neoverse     - generic optimization for all Neoverse cores.
   * thunderx2t99 - optimize for Marvell ThunderX2.
   * generic      - generate portable build suitable for any Armv8a target.
   * custom       - apply a custom set of architecture and tuning flags, as defined in [cpu_info.sh](cpu_info.sh).
