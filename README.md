@@ -22,9 +22,6 @@ A tutorial to get started with Arm Fast Model tools, from install to running you
 #### fast-models-examples
 Various example systems and software for Arm Fast Models.
 
-#### ml-tool-examples
-Examples to run performance analysis for Machine Learning applications. 
-
 #### acet-developer
 Demonstration of ETAS ASCET-DEVELOPER model based design and code generation with Arm Development Studio 
 
