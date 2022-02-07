@@ -5,17 +5,28 @@ set -euo pipefail
 # Refer: https://github.com/mlperf/inference/tree/master/vision/classification_and_detection
 
 cd inference/vision/classification_and_detection
+
 # resnet50
 wget https://zenodo.org/record/2535873/files/resnet50_v1.pb
+
 # mobilenet
 wget http://download.tensorflow.org/models/mobilenet_v1_2018_08_02/mobilenet_v1_1.0_224.tgz
 tar -zxf mobilenet_v1_1.0_224.tgz
+rm mobilenet_v1_1.0_224.tgz
+
 # sdd-mobilenet
 wget http://download.tensorflow.org/models/object_detection/ssd_mobilenet_v1_coco_2018_01_28.tar.gz
 tar -zxf ssd_mobilenet_v1_coco_2018_01_28.tar.gz
+rm ssd_mobilenet_v1_coco_2018_01_28.tar.gz
 cp ssd_mobilenet_v1_coco_2018_01_28/frozen_inference_graph.pb  ssd_mobilenet_v1_coco_2018_01_28.pb
+
 # ssd-resnet34
 wget https://zenodo.org/record/3246481/files/ssd_resnet34_mAP_20.2.pb
 wget https://zenodo.org/record/3345892/files/tf_ssd_resnet34_22.1.zip
 unzip tf_ssd_resnet34_22.1.zip
-cp tf_ssd_resnet34_22.1/resnet34_tf.22.1.pb .
+rm tf_ssd_resnet34_22.1.zip
+mv tf_ssd_resnet34_22.1 tf_ssd_resnet34_22.1_NCHW
+# Use MLCommons script to convert resnet34_tf.22.1.pb to channels-last
+python tools/ssd-nhwc.py tf_ssd_resnet34_22.1_NCHW/resnet34_tf.22.1.pb
+mv tf_ssd_resnet34_22.1_NCHW/resnet34_tf.22.1.pb.patch resnet34_tf.22.1.pb
+

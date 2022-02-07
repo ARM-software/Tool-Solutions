@@ -21,13 +21,18 @@
 set -euo pipefail
 
 cd $PACKAGE_DIR
-readonly package=tensorflow-io-gcs-filesystem
-readonly version=0.23.1
+readonly package=tensorflow-addons
+readonly version=master
 readonly src_host=https://github.com/tensorflow
-readonly src_repo=io
+readonly src_repo=addons
 
 git clone ${src_host}/${src_repo}.git
 cd ${src_repo}
-git checkout v$version -b v$version
+git checkout $version
 
-python setup.py --project tensorflow-io-gcs-filesystem install
+python ./configure.py
+
+bazel build build_pip_pkg
+bazel-bin/build_pip_pkg artifacts
+
+pip install artifacts/tensorflow_addons-*.whl

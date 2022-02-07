@@ -1,0 +1,51 @@
+# *******************************************************************************
+# Copyright 2022 Arm Limited and affiliates.
+# SPDX-License-Identifier: Apache-2.0
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# *******************************************************************************
+diff --git a/aten/src/ATen/Version.cpp b/aten/src/ATen/Version.cpp
+index 0c0ea61ceb..f6118d1ccb 100644
+--- a/aten/src/ATen/Version.cpp
++++ b/aten/src/ATen/Version.cpp
+@@ -6,7 +6,7 @@
+ #endif
+ 
+ #if AT_MKLDNN_ENABLED()
+-#include <mkldnn.hpp>
++#include <oneapi/dnnl/dnnl.hpp>
+ #include <ideep.hpp>
+ #endif
+ 
+@@ -42,7 +42,7 @@ std::string get_mkldnn_version() {
+     // Apparently no way to get ideep version?
+     // https://github.com/intel/ideep/issues/29
+     {
+-      const mkldnn_version_t* ver = mkldnn_version();
++      const dnnl_version_t* ver = dnnl_version();
+       ss << "Intel(R) MKL-DNN v" << ver->major << "." << ver->minor << "." << ver->patch
+          << " (Git Hash " << ver->hash << ")";
+     }
+diff --git a/cmake/Modules/FindMKLDNN.cmake b/cmake/Modules/FindMKLDNN.cmake
+index f6c22a1530..f4fd165ca2 100644
+--- a/cmake/Modules/FindMKLDNN.cmake
++++ b/cmake/Modules/FindMKLDNN.cmake
+@@ -22,7 +22,7 @@ SET(MKLDNN_ROOT "${IDEEP_ROOT}/mkl-dnn")
+ 
+ FIND_PACKAGE(BLAS)
+ FIND_PATH(IDEEP_INCLUDE_DIR ideep.hpp PATHS ${IDEEP_ROOT} PATH_SUFFIXES include)
+-FIND_PATH(MKLDNN_INCLUDE_DIR mkldnn.hpp mkldnn.h PATHS ${MKLDNN_ROOT} PATH_SUFFIXES include)
++FIND_PATH(MKLDNN_INCLUDE_DIR dnnl.hpp dnnl.h PATHS ${MKLDNN_ROOT} PATH_SUFFIXES include)
+ IF (NOT MKLDNN_INCLUDE_DIR)
+   EXECUTE_PROCESS(COMMAND git${CMAKE_EXECUTABLE_SUFFIX} submodule update --init --jobs 0 mkl-dnn WORKING_DIRECTORY ${IDEEP_ROOT})
+   FIND_PATH(MKLDNN_INCLUDE_DIR mkldnn.hpp mkldnn.h PATHS ${MKLDNN_ROOT} PATH_SUFFIXES include)

@@ -258,7 +258,7 @@ ARG onednn_opt
 ARG tf_version
 ARG bazel_version
 ARG default_py_version
-ARG cpu
+ARG tune
 ARG arch
 ARG eigen_l1_cache
 ARG eigen_l2_cache
@@ -267,7 +267,7 @@ ARG eigen_l3_cache
 ENV NP_MAKE="${njobs}" \
     BZL_RAM="${bazel_mem}" \
     ONEDNN_BUILD="${onednn_opt}" \
-    CPU="${cpu}" \
+    TUNE="${tune}" \
     ARCH="${arch}" \
     EIGEN_L1_CACHE="${eigen_l1_cache}" \
     EIGEN_L2_CACHE="${eigen_l2_cache}" \
@@ -297,13 +297,13 @@ ENV PATH=$PACKAGE_DIR/bazel:$PATH
 
 # Build TensorFlow
 COPY patches/tf_acl.patch $PACKAGE_DIR/.
-COPY patches/tf_softmax.patch $PACKAGE_DIR/.
-COPY patches/mkldnn_acl.patch $PACKAGE_DIR/.
 COPY patches/compute_library.patch $PACKAGE_DIR/.
 COPY scripts/build-tensorflow-io-gcs-filesystem.sh $PACKAGE_DIR/.
 RUN $PACKAGE_DIR/build-tensorflow-io-gcs-filesystem.sh
 COPY scripts/build-tensorflow.sh $PACKAGE_DIR/.
 RUN $PACKAGE_DIR/build-tensorflow.sh
+COPY scripts/build-tensorflow-addons.sh $PACKAGE_DIR/.
+RUN $PACKAGE_DIR/build-tensorflow-addons.sh
 
 CMD ["bash", "-l"]
 

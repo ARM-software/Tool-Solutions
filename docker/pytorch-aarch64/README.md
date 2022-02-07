@@ -37,7 +37,7 @@ Where `<image tag>` identifies the image version, as well as the PyTorch version
 - `<torch version>` = PyTorch version, see [image contents](#image-contents).
 - `<backend>` = `openblas` or `onednn`, see [optimized backend for AArch64](#optimized-backend-for-aarch64).
 
-For example: `r22.01-torch-1.10.0-onednn`.
+For example: `r22.02-torch-1.10.0-onednn`.
 
 ### Running the Docker image
 To run the downloaded image:
@@ -52,7 +52,7 @@ where `<image name>` is the name of the image, i.e. `armswdev/pytorch-arm-neover
   * OS: Ubuntu 20.04
   * Compiler: GCC 10.3
   * Maths libraries: [Arm Optimized Routines](https://github.com/ARM-software/optimized-routines) and [OpenBLAS](https://www.openblas.net/) 0.3.10
-  * [oneDNN](https://github.com/oneapi-src/oneDNN) 2.4
+  * [oneDNN](https://github.com/oneapi-src/oneDNN) 2.5
     - ACL 21.11, provides optimized implementations on AArch64 for main oneDNN primitives
   * Python 3.8 environment containing:
     - NumPy 1.19.5

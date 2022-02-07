@@ -1,5 +1,5 @@
  *******************************************************************************
- Copyright 2021 Arm Limited and affiliates.
+ Copyright 2022 Arm Limited and affiliates.
  SPDX-License-Identifier: Apache-2.0
 
  Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,174 +14,16 @@
  See the License for the specific language governing permissions and
  limitations under the License.
  *******************************************************************************
-diff --git a/.bazelrc b/.bazelrc
-index 3425144bf9f..a07e956dc33 100644
---- a/.bazelrc
-+++ b/.bazelrc
-@@ -219,9 +219,8 @@ build:mkl_threadpool -c opt
- 
- # Config setting to build oneDNN with Compute Library for the Arm Architecture (ACL).
- # This build is for the inference regime only.
--build:mkl_aarch64 --define=build_with_mkl_aarch64=true --define=enable_mkl=true
-+build:mkl_aarch64 --define=build_with_mkl_aarch64=true
- build:mkl_aarch64 --define=tensorflow_mkldnn_contraction_kernel=0
--build:mkl_aarch64 --define=build_with_mkl_opensource=true
- build:mkl_aarch64 --define=build_with_openmp=true
- build:mkl_aarch64 -c opt
- 
-diff --git a/tensorflow/tensorflow.bzl b/tensorflow/tensorflow.bzl
-index c72a0d414bd..06e62f0c3c0 100644
---- a/tensorflow/tensorflow.bzl
-+++ b/tensorflow/tensorflow.bzl
-@@ -388,7 +388,7 @@ def tf_copts(
-         # optimizations for Intel builds using oneDNN if configured
-         if_enable_mkl(["-DENABLE_MKL"]) +
-         if_mkldnn_openmp(["-DENABLE_ONEDNN_OPENMP"]) +
--        if_mkldnn_aarch64_acl(["-DENABLE_MKL", "-DENABLE_ONEDNN_OPENMP", "-DDNNL_AARCH64_USE_ACL=1"]) +
-+        if_mkldnn_aarch64_acl(["-DENABLE_ONEDNN_OPENMP", "-DDNNL_AARCH64_USE_ACL=1"]) +
-         if_android_arm(["-mfpu=neon"]) +
-         if_linux_x86_64(["-msse3"]) +
-         if_ios_x86_64(["-msse4.1"]) +
-diff --git a/tensorflow/workspace2.bzl b/tensorflow/workspace2.bzl
-index eaa2863cfaa..66db2625b76 100644
---- a/tensorflow/workspace2.bzl
-+++ b/tensorflow/workspace2.bzl
-@@ -199,6 +199,7 @@ def _tf_repositories():
-     tf_http_archive(
-         name = "mkl_dnn_acl_compatible",
-         build_file = "//third_party/mkl_dnn:mkldnn_acl.BUILD",
-+        patch_file = "//third_party/mkl_dnn:mkldnn_acl.patch",
-         sha256 = "a7f2a4d80d5406d156dfc1d7b27d10b0af5ed061cf0b6197d3d12cddc6790fcb",
-         strip_prefix = "oneDNN-2.4",
-         urls = [
-@@ -209,13 +210,13 @@ def _tf_repositories():
- 
-     tf_http_archive(
-         name = "compute_library",
--        sha256 = "1c62d41be62c14c8ff196d6aaa9f9efe0597b82a923350d922e8cde217dd1d86",
--        strip_prefix = "ComputeLibrary-21.08",
-+        sha256 = "8322ed2e135999569082a95e7fbb2fa87786ffb1c67935b3ef71e00b53f2c887",
-+        strip_prefix = "ComputeLibrary-21.11",
-         build_file = "//third_party/compute_library:BUILD",
-         patch_file = "//third_party/compute_library:compute_library.patch",
-         urls = [
--            "https://storage.googleapis.com/mirror.tensorflow.org/github.com/ARM-software/ComputeLibrary/archive/v21.08.tar.gz",
--            "https://github.com/ARM-software/ComputeLibrary/archive/v21.08.tar.gz",
-+            "https://storage.googleapis.com/mirror.tensorflow.org/github.com/ARM-software/ComputeLibrary/archive/v21.11.tar.gz",
-+            "https://github.com/ARM-software/ComputeLibrary/archive/v21.11.tar.gz",
-         ],
-     )
- 
 diff --git a/third_party/compute_library/BUILD b/third_party/compute_library/BUILD
-index 82b62cf23f7..a635e581253 100644
+index e15c3104c92..7aaa225ab31 100644
 --- a/third_party/compute_library/BUILD
 +++ b/third_party/compute_library/BUILD
-@@ -17,17 +17,16 @@ _COMPUTE_LIBRARY_DEFINES = [
-         "ARM_COMPUTE_ENABLE_NEON",
-         "ENABLE_SVE",
-         "ARM_COMPUTE_ENABLE_SVE",
--        "ARM_COMPUTE_ENABLE_FP16",
-         "ARM_COMPUTE_ENABLE_BF16",
-         "ARM_COMPUTE_ENABLE_I8MM",
-         "ARM_COMPUTE_ENABLE_SVEF32MM",
--        "ENABLE_FP16_KERNELS",
-         "ENABLE_FP32_KERNELS",
-         "ENABLE_QASYMM8_KERNELS",
-         "ENABLE_QASYMM8_SIGNED_KERNELS",
-         "ENABLE_QSYMM16_KERNELS",
-         "ENABLE_INTEGER_KERNELS",
-         "ENABLE_NHWC_KERNELS",
-+        "ENABLE_NCHW_KERNELS",
-     ]
- 
- cc_library(
-@@ -37,14 +36,14 @@ cc_library(
-         "src/core/NEON/kernels/arm_gemm/kernels/sve_*/*.cpp",
-         "src/core/NEON/kernels/arm_conv/**/kernels/sve_*/*.cpp",
-         "src/core/NEON/kernels/arm_conv/depthwise/interleaves/sve_*.cpp",
--        "src/core/cpu/kernels/**/sve/*.cpp",
-+        "src/core/NEON/kernels/batchnormalization/impl/SVE/*.cpp",
-+        "src/cpu/kernels/**/sve/*.cpp",
-+        "src/cpu/kernels/**/impl/sve/*.cpp",
-         "**/*.h"
-     ]
-     ) + [
-             "src/core/NEON/kernels/arm_gemm/transform-sve.cpp",
-             "src/core/NEON/kernels/arm_gemm/mergeresults-sve.cpp",
--            "src/core/NEON/kernels/batchnormalization/impl/SVE/fp16.cpp",
--            "src/core/NEON/kernels/batchnormalization/impl/SVE/fp32.cpp",
+@@ -119,7 +119,7 @@ cc_library(
+     ]) + [
+         "arm_compute_version.embed",
      ],
-     hdrs = glob([
-         "arm_compute/runtime/**/*.h",
-@@ -56,8 +55,10 @@ cc_library(
-     ],
-     defines = _COMPUTE_LIBRARY_DEFINES,
-     includes = [
-+        "src/cpu/kernels/assembly",
-         "src/core/cpu/kernels/assembly",
-         "src/core/NEON/kernels/arm_gemm",
-+        "src/core/NEON/kernels/arm_conv",
-         "src/core/NEON/kernels/assembly",
-     ],
-     linkopts = ["-lpthread"],
-@@ -77,14 +78,20 @@ cc_library(
-             "src/core/utils/**/*.cpp",
-             "src/runtime/**/*.cpp",
-             "src/c/*.cpp",
--            "src/cpu/*.cpp",
-             "src/core/NEON/kernels/*.cpp",
-+            "src/core/NEON/kernels/convolution/**/*.cpp",
-             "src/core/NEON/kernels/arm_gemm/kernels/a64_*/*.cpp",
-+            "src/core/NEON/kernels/arm_conv/pooling/*.cpp",
-             "src/core/NEON/kernels/arm_conv/**/kernels/a64_*/*.cpp",
--            "src/core/NEON/kernels/convolution/**/*.cpp",
-+            "src/core/NEON/kernels/arm_conv/depthwise/*.cpp",
-             "src/core/NEON/kernels/arm_conv/depthwise/interleaves/a64_*.cpp",
--            "src/core/cpu/kernels/*.cpp",
--            "src/core/cpu/kernels/**/neon/*.cpp",
-+            "src/core/NEON/kernels/batchnormalization/impl/NEON/*.cpp",
-+            "src/cpu/*.cpp",
-+            "src/cpu/kernels/*.cpp",
-+            "src/cpu/operators/**/*.cpp",
-+            "src/cpu/utils/*.cpp",
-+            "src/cpu/kernels/internal/*.cpp",
-+            "src/cpu/kernels/**/neon/*.cpp",
-             "src/core/NEON/kernels/arm_gemm/*.cpp",
-             "**/*.h",
-         ],
-@@ -94,15 +101,14 @@ cc_library(
-             "src/core/NEON/kernels/arm_gemm/mergeresults-sve.cpp",
-             "src/core/NEON/kernels/arm_gemm/transform-sve.cpp",
-             "src/runtime/CL/**",
--            "src/runtime/gpu/**",
-+            "src/gpu/**",
-         ],
-     ) + [
-+            "src/cpu/kernels/pool2d/neon/nchw/all.cpp",
-             "src/core/CPP/CPPTypes.cpp",
-             "src/c/operators/AclActivation.cpp",
-             "src/core/NEON/kernels/arm_conv/pooling/kernels/cpp_nhwc_1x1_stride_any_depthfirst/generic.cpp",
-             "src/core/NEON/kernels/arm_conv/depthwise/interleaves/8b_mla.cpp",
--            "src/core/NEON/kernels/batchnormalization/impl/NEON/fp16.cpp",
--            "src/core/NEON/kernels/batchnormalization/impl/NEON/fp32.cpp",
-         ],
-     hdrs = glob([
-         "src/core/NEON/kernels/**/*.h",
-@@ -116,6 +122,7 @@ cc_library(
-     ],
-     defines = _COMPUTE_LIBRARY_DEFINES,
-     includes = [
-+        "src/cpu/kernels/assembly",
-         "src/core/cpu/kernels/assembly",
-         "src/core/NEON/kernels/assembly",
-         "src/core/NEON/kernels/convolution/common",
-@@ -124,7 +131,8 @@ cc_library(
-     ],
-     linkopts = ["-lpthread"],
-     visibility = ["//visibility:public"],
+-    copts = ["-march=armv8.2-a"],
 +    copts = ["-march=armv8-a"],
-     deps = ["include",
--	    "arm_compute_sve"]
-+        "arm_compute_sve"]
- )
- 
+     defines = _COMPUTE_LIBRARY_DEFINES,
+     includes = [
+         "arm_compute/runtime",

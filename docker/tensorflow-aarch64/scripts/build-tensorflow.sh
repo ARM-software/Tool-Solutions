@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # *******************************************************************************
-# Copyright 2020-2021 Arm Limited and affiliates.
+# Copyright 2020-2022 Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -69,15 +69,11 @@ if [[ $ONEDNN_BUILD ]]; then
       sed -i '/DNNL_AARCH64_USE_ACL/d' ./third_party/mkl_dnn/mkldnn_acl.BUILD
     elif [[ $ONEDNN_BUILD == 'acl' ]]; then
       echo "TensorFlow $TF_VERSION with oneDNN backend - Compute Library build."
-      # Patch Bazel configuration to include Arm Compute Library build
+      # Patch Compute Library Bazel build
       patch -p1 < ../tf_acl.patch
-      # Patch to disable softmax caching in TensorFlow
-      patch -p1 < ../tf_softmax.patch
-      # Patch to enable bf16 matmul/inneprod in Compute Library
-      # Note: overrites upstream file
+      # Patch to add experimental spin-wait scheduler to Compute Library
+      # Note: overwrites upstream version
       mv ../compute_library.patch ./third_party/compute_library/.
-      # Patch to enable both softmax caching and bf16 matmul/innerprod in oneDNN
-      mv ../mkldnn_acl.patch ./third_party/mkl_dnn/.
     fi
 else
     echo "TensorFlow $TF_VERSION with Eigen backend."
@@ -98,9 +94,9 @@ fi
 # Build the tensorflow configuration
 bazel build $extra_args \
         --config=v2 --config=noaws \
-        --copt="-mcpu=${CPU}" --copt="-march=${ARCH}" --copt="-O3"  --copt="-fopenmp" \
+        --copt="-mtune=${TUNE}" --copt="-march=${ARCH}" --copt="-O3"  --copt="-fopenmp" \
         --copt="-flax-vector-conversions" \
-        --cxxopt="-mcpu=${CPU}" --cxxopt="-march=${ARCH}" --cxxopt="-O3"  --cxxopt="-fopenmp" \
+        --cxxopt="-mtune=${TUNE}" --cxxopt="-march=${ARCH}" --cxxopt="-O3"  --cxxopt="-fopenmp" \
         --cxxopt="-flax-vector-conversions" \
         --linkopt="-lgomp  -lm" \
         //tensorflow/tools/pip_package:build_pip_package \

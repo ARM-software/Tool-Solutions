@@ -44,9 +44,15 @@ if [[ $ONEDNN_BUILD ]]; then
   esac
 fi
 
+# Updating pytorch to use dnnl naming from oneDNN instead of mkldnn
+patch -p1 < $PACKAGE_DIR/pytorch.patch
+
 # Update the oneDNN tag in third_party/ideep
 cd third_party/ideep/mkl-dnn
 git checkout $ONEDNN_VERSION
+# Do not add C++11 CMake CXX flag when building ACL and
+# rename test_api to test_api_dnnl so it does not clash with PyTorch test_api
+patch -p1 < $PACKAGE_DIR/onednn.patch
 
 cd $PACKAGE_DIR/$src_repo
 
