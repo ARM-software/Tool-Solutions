@@ -39,10 +39,10 @@ case $CPU_IMPL in
         target="neoverse-n1"
       ;;
       0xd40) #Neoverse V1
-       target="neoverse-v1"
+        target="neoverse-v1"
       ;;
       0xd49) #Neoverse N2
-       target="neoverse-n2"
+        target="neoverse-n2"
       ;;
       *)
       ;;

@@ -1,5 +1,5 @@
 # *******************************************************************************
-# Copyright 2020-2021 Arm Limited and affiliates.
+# Copyright 2020-2022 Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -283,7 +283,7 @@ ENV ONEDNN_BUILD="${onednn_opt}" \
 # Key version numbers
 ENV PY_VERSION="${default_py_version}" \
     TORCH_VERSION=1.10.0 \
-    ONEDNN_VERSION="v2.4" \
+    ONEDNN_VERSION="v2.5" \
     VISION_VERSION="v0.9.1" \
     TEXT_VERSION=0.10.0
 
@@ -300,6 +300,8 @@ ENV PATH="$VENV_DIR/bin:$PATH"
 
 # Build PyTorch
 COPY scripts/build-pytorch.sh $PACKAGE_DIR/.
+COPY patches/pytorch.patch $PACKAGE_DIR/.
+COPY patches/onednn.patch $PACKAGE_DIR/.
 RUN $PACKAGE_DIR/build-pytorch.sh
 RUN pip install torchvision==$VISION_VERSION
 # Build torchtext
@@ -342,14 +344,8 @@ COPY scripts/download-dataset.sh $MLCOMMONS_DIR/.
 COPY scripts/download-model.sh $MLCOMMONS_DIR/.
 
 # Install missing Python package dependencies required to run examples
-RUN pip install --no-cache-dir requests
-RUN pip install --no-cache-dir tqdm
-RUN pip install --no-cache-dir boto3
+RUN pip install --no-cache-dir requests tqdm boto3 iopath sox unidecode inflect toml
 RUN pip install --no-cache-dir future onnx==1.8.1
-RUN pip install --no-cache-dir iopath
-RUN pip install --no-cache-dir sox
-RUN pip install --no-cache-dir unidecode
-RUN pip install --no-cache-dir inflect
 RUN pip install --no-cache-dir 'librosa==0.8.0'
 
 # Copy examples
