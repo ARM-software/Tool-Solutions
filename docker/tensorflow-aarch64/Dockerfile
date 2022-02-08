@@ -297,6 +297,7 @@ ENV PATH=$PACKAGE_DIR/bazel:$PATH
 
 # Build TensorFlow
 COPY patches/tf_acl.patch $PACKAGE_DIR/.
+COPY patches/onednn_acl.patch $PACKAGE_DIR/.
 COPY patches/compute_library.patch $PACKAGE_DIR/.
 COPY scripts/build-tensorflow-io-gcs-filesystem.sh $PACKAGE_DIR/.
 RUN $PACKAGE_DIR/build-tensorflow-io-gcs-filesystem.sh
