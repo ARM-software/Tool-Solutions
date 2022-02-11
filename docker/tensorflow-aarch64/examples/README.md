@@ -97,10 +97,10 @@ will print all the SQuAD entries on Normans - the context, questions, reference 
 It is also possible to supply a question, and context, to `answer_questions.py` directly at the command line using the flags `-t` and `-q`, for example:
 
 ```
-python answer_questions.py -t context.txt -q "When was the battle of Hastings?"
+python answer_questions.py -t <context> -q <question>
 ```
 
-where `context.txt` is the text file containing the text on which the question is based. If no text file is provided, `answer_questions.py` will search through the SQuAD dataset for the question and, if the question can be located, use the context associated with it.
+where `<context>` is the text file containing the text on which the `<question>` is based. If no text file is provided, `answer_questions.py` will search through the SQuAD dataset for the question and, if the question can be located, use the context associated with it.
 
 
 ## MLCommons :tm: benchmarks
