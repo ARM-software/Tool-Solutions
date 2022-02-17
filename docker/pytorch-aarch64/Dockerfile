@@ -284,7 +284,7 @@ ENV ONEDNN_BUILD="${onednn_opt}" \
 ENV PY_VERSION="${default_py_version}" \
     TORCH_VERSION=1.10.0 \
     ONEDNN_VERSION="v2.5" \
-    VISION_VERSION="v0.9.1" \
+    VISION_VERSION="v0.11.3" \
     TEXT_VERSION=0.10.0
 
 # Use a PACKAGE_DIR in userspace
