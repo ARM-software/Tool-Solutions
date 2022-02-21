@@ -147,7 +147,7 @@ ENV NP_MAKE="${njobs}" \
     BLAS_NCORES="${blas_ncores}"
 
 # Key version numbers
-ENV OPENBLAS_VERSION=0.3.19 \
+ENV OPENBLAS_VERSION=0.3.20 \
     YAML_VERSION=yaml-cpp-0.7.0
 
 # Package build parameters
