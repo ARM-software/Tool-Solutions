@@ -231,14 +231,12 @@ COPY patches/site.cfg $PACKAGE_DIR/site.cfg
 RUN $PACKAGE_DIR/build-scipy.sh
 
 # Install some TensorFlow essentials
-RUN pip install --no-cache-dir keras_applications==1.0.8 --no-deps
-RUN pip install --no-cache-dir keras_preprocessing==1.1.2 --no-deps
 # enum34 is not compatible with Python 3.6+, and not required
 # it is installed as a dependency for an earlier package and needs
 # to be removed in order for the OpenCV build to complete.
 RUN pip uninstall enum34 -y
 RUN HDF5_DIR=/usr/lib/aarch64-linux-gnu/hdf5/serial pip install h5py==3.1.0
-RUN pip install --no-cache-dir grpcio pytest
+RUN pip install --no-cache-dir grpcio tensorflow-io-gcs-filesystem pytest
 RUN pip install --no-cache-dir ck==1.55.5 absl-py pycocotools pillow==8.2.0
 RUN pip install --no-cache-dir transformers pandas
 
@@ -299,8 +297,6 @@ ENV PATH=$PACKAGE_DIR/bazel:$PATH
 COPY patches/tf_acl.patch $PACKAGE_DIR/.
 COPY patches/onednn_acl.patch $PACKAGE_DIR/.
 COPY patches/compute_library.patch $PACKAGE_DIR/.
-COPY scripts/build-tensorflow-io-gcs-filesystem.sh $PACKAGE_DIR/.
-RUN $PACKAGE_DIR/build-tensorflow-io-gcs-filesystem.sh
 COPY scripts/build-tensorflow.sh $PACKAGE_DIR/.
 RUN $PACKAGE_DIR/build-tensorflow.sh
 COPY scripts/build-tensorflow-addons.sh $PACKAGE_DIR/.
@@ -363,8 +359,6 @@ RUN $PACKAGE_DIR/get-bazel.sh
 ENV PATH=$PACKAGE_DIR/bazel:$PATH
 
 # Build TensorFlow Serving
-COPY scripts/build-tensorflow-io-gcs-filesystem.sh $PACKAGE_DIR/.
-RUN $PACKAGE_DIR/build-tensorflow-io-gcs-filesystem.sh
 COPY scripts/build-tensorflow-serving.sh $PACKAGE_DIR/.
 RUN $PACKAGE_DIR/build-tensorflow-serving.sh
 
