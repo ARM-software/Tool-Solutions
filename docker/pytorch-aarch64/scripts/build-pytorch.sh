@@ -56,9 +56,17 @@ patch -p1 < $PACKAGE_DIR/onednn.patch
 
 cd $PACKAGE_DIR/$src_repo
 
-MAX_JOBS=${NP_MAKE:-$((num_cpus / 2))} OpenBLAS_HOME=$OPENBLAS_DIR BLAS="OpenBLAS" \
+MAX_JOBS=${NP_MAKE:-$((num_cpus / 2))} PYTORCH_BUILD_VERSION=$TORCH_VERSION \
+  PYTORCH_BUILD_NUMBER=1 OpenBLAS_HOME=$OPENBLAS_DIR BLAS="OpenBLAS" \
   CXX_FLAGS="$BASE_CFLAGS -O3 -mcpu=$CPU" LDFLAGS=$BASE_LDFLAGS USE_OPENMP=1 \
-  USE_LAPACK=1 USE_CUDA=0 USE_FBGEMM=0 USE_DISTRIBUTED=0 python setup.py install
+  USE_LAPACK=1 USE_CUDA=0 USE_FBGEMM=0 USE_DISTRIBUTED=0 python setup.py bdist_wheel
+
+# Install the PyTorch python wheel via pip
+pip install $(ls -tr dist/*.whl | tail)
+
+# Move the whl into venv for easy extraction from container
+mkdir -p $VENV_DIR/$package/wheel
+mv $(ls -tr dist/*.whl | tail) $VENV_DIR/$package/wheel
 
 # Check the installation was sucessfull
 cd $HOME
