@@ -14,10 +14,347 @@
  See the License for the specific language governing permissions and
  limitations under the License.
  *******************************************************************************
+diff --git a/src/cpu/aarch64/acl_binary.cpp b/src/cpu/aarch64/acl_binary.cpp
+new file mode 100644
+index 0000000000..d82e075211
+--- /dev/null
++++ b/src/cpu/aarch64/acl_binary.cpp
+@@ -0,0 +1,55 @@
++/*******************************************************************************
++* Copyright 2022 Arm Ltd. and affiliates
++*
++* Licensed under the Apache License, Version 2.0 (the "License");
++* you may not use this file except in compliance with the License.
++* You may obtain a copy of the License at
++*
++*     http://www.apache.org/licenses/LICENSE-2.0
++*
++* Unless required by applicable law or agreed to in writing, software
++* distributed under the License is distributed on an "AS IS" BASIS,
++* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++* See the License for the specific language governing permissions and
++* limitations under the License.
++*******************************************************************************/
++
++#include "cpu/aarch64/acl_binary.hpp"
++
++namespace dnnl {
++namespace impl {
++namespace cpu {
++namespace aarch64 {
++
++status_t acl_binary_t::execute_forward(const exec_ctx_t &ctx) const {
++
++    auto src0 = CTX_IN_MEM(const void *, DNNL_ARG_SRC_0);
++    auto src1 = CTX_IN_MEM(const void *, DNNL_ARG_SRC_1);
++    auto dst = CTX_OUT_MEM(void *, DNNL_ARG_DST);
++
++    // Lock here is needed because resource_mapper does not support
++    // concurrent multithreaded access.
++    std::lock_guard<std::mutex> _lock {this->mtx};
++
++    // Retrieve primitive resource and configured Compute Library objects
++    acl_binary_obj_t &acl_obj = ctx.get_resource_mapper()
++                                        ->get<acl_binary_resource_t>(this)
++                                        ->get_acl_obj();
++
++    acl_obj.src0_tensor.allocator()->import_memory(const_cast<void *>(src0));
++    acl_obj.src1_tensor.allocator()->import_memory(const_cast<void *>(src1));
++    acl_obj.dst_tensor.allocator()->import_memory(dst);
++
++    acl_obj.binary_op->run();
++
++    acl_obj.src0_tensor.allocator()->free();
++    acl_obj.src1_tensor.allocator()->free();
++    acl_obj.dst_tensor.allocator()->free();
++
++    return status::success;
++}
++
++} // namespace aarch64
++} // namespace cpu
++} // namespace impl
++} // namespace dnnl
+diff --git a/src/cpu/aarch64/acl_binary.hpp b/src/cpu/aarch64/acl_binary.hpp
+new file mode 100644
+index 0000000000..77adb45bef
+--- /dev/null
++++ b/src/cpu/aarch64/acl_binary.hpp
+@@ -0,0 +1,263 @@
++/*******************************************************************************
++* Copyright 2022 Arm Ltd. and affiliates
++*
++* Licensed under the Apache License, Version 2.0 (the "License");
++* you may not use this file except in compliance with the License.
++* You may obtain a copy of the License at
++*
++*     http://www.apache.org/licenses/LICENSE-2.0
++*
++* Unless required by applicable law or agreed tos in writing, software
++* distributed under the License is distributed on an "AS IS" BASIS,
++* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++* See the License for the specific language governing permissions and
++* limitations under the License.
++*******************************************************************************/
++
++#ifndef CPU_AARCH64_ACL_BINARY_HPP
++#define CPU_AARCH64_ACL_BINARY_HPP
++
++#include "cpu/cpu_binary_pd.hpp"
++
++#include "cpu/aarch64/acl_utils.hpp"
++
++namespace dnnl {
++namespace impl {
++namespace cpu {
++namespace aarch64 {
++
++struct acl_binary_obj_t {
++    std::unique_ptr<arm_compute::IFunction> binary_op;
++    arm_compute::Tensor src0_tensor;
++    arm_compute::Tensor src1_tensor;
++    arm_compute::Tensor dst_tensor;
++};
++
++struct acl_binary_conf_t {
++    arm_compute::TensorInfo src0_info;
++    arm_compute::TensorInfo src1_info;
++    arm_compute::TensorInfo dst_info;
++    alg_kind_t alg;
++};
++
++struct acl_binary_resource_t : public resource_t {
++    acl_binary_resource_t()
++        : acl_obj_(utils::make_unique<acl_binary_obj_t>()) {}
++
++    status_t configure(const acl_binary_conf_t &asp) {
++        if (!acl_obj_) return status::out_of_memory;
++
++        // Init Compute Library tensors based on info from descriptor
++        acl_obj_->src0_tensor.allocator()->init(asp.src0_info);
++        acl_obj_->src1_tensor.allocator()->init(asp.src1_info);
++        acl_obj_->dst_tensor.allocator()->init(asp.dst_info);
++
++        switch (asp.alg) {
++            case alg_kind::binary_add: {
++                auto add_op
++                        = std::make_unique<arm_compute::NEArithmeticAddition>();
++                add_op->configure(&acl_obj_->src0_tensor,
++                        &acl_obj_->src1_tensor, &acl_obj_->dst_tensor,
++                        arm_compute::ConvertPolicy::SATURATE);
++                acl_obj_->binary_op = std::move(add_op);
++                break;
++            }
++            case alg_kind::binary_sub: {
++                auto sub_op = std::make_unique<
++                        arm_compute::NEArithmeticSubtraction>();
++                sub_op->configure(&acl_obj_->src0_tensor,
++                        &acl_obj_->src1_tensor, &acl_obj_->dst_tensor,
++                        arm_compute::ConvertPolicy::SATURATE);
++                acl_obj_->binary_op = std::move(sub_op);
++                break;
++            }
++            case alg_kind::binary_div: {
++                auto div_op = std::make_unique<
++                        arm_compute::NEElementwiseDivision>();
++                div_op->configure(&acl_obj_->src0_tensor,
++                        &acl_obj_->src1_tensor, &acl_obj_->dst_tensor);
++                acl_obj_->binary_op = std::move(div_op);
++                break;
++            }
++            case alg_kind::binary_mul: {
++                auto mul_op = std::make_unique<
++                        arm_compute::NEPixelWiseMultiplication>();
++                mul_op->configure(&acl_obj_->src0_tensor,
++                        &acl_obj_->src1_tensor, &acl_obj_->dst_tensor, 1.0f,
++                        arm_compute::ConvertPolicy::SATURATE,
++                        arm_compute::RoundingPolicy::TO_ZERO);
++                acl_obj_->binary_op = std::move(mul_op);
++                break;
++            }
++            case alg_kind::binary_min: {
++                auto min_op = std::make_unique<arm_compute::NEElementwiseMin>();
++                min_op->configure(&acl_obj_->src0_tensor,
++                        &acl_obj_->src1_tensor, &acl_obj_->dst_tensor);
++                acl_obj_->binary_op = std::move(min_op);
++                break;
++            }
++            case alg_kind::binary_max: {
++                auto max_op = std::make_unique<arm_compute::NEElementwiseMax>();
++                max_op->configure(&acl_obj_->src0_tensor,
++                        &acl_obj_->src1_tensor, &acl_obj_->dst_tensor);
++                acl_obj_->binary_op = std::move(max_op);
++                break;
++            }
++            default: return status::runtime_error;
++        }
++
++        return status::success;
++    }
++
++    acl_binary_obj_t &get_acl_obj() const { return *acl_obj_; }
++
++    DNNL_DISALLOW_COPY_AND_ASSIGN(acl_binary_resource_t);
++
++private:
++    std::unique_ptr<acl_binary_obj_t> acl_obj_;
++}; // acl_binary_resource_t
++
++struct acl_binary_t : public primitive_t {
++    struct pd_t : public cpu_binary_pd_t {
++        using cpu_binary_pd_t::cpu_binary_pd_t;
++
++        DECLARE_COMMON_PD_T("acl", acl_binary_t);
++
++        status_t init(engine_t *engine) {
++
++            using namespace acl_common_utils;
++
++            // Only support f32 and s32 for now
++            data_type_t ddt = dst_md(0)->data_type;
++            if (ddt != data_type::f32 && ddt != data_type::s32)
++                return status::unimplemented;
++
++            // Only support src and dst all matching for now
++            if (ddt != src_md(0)->data_type || src_md(1)->data_type != ddt)
++                return status::unimplemented;
++
++            // Sets the memory format of dst from any to src_md(0) blocking desc
++            CHECK(set_default_params());
++
++            if (!attr()->has_default_values()) return status::unimplemented;
++
++            asp_.alg = desc()->alg_kind;
++
++            // All the algorithms we support
++            if (!utils::one_of(asp_.alg, alg_kind::binary_add,
++                        alg_kind::binary_sub, alg_kind::binary_mul,
++                        alg_kind::binary_div, alg_kind::binary_max,
++                        alg_kind::binary_min))
++                return status::unimplemented;
++
++            // s32 div in ACL does not round as oneDNN expects
++            if (ddt == data_type::s32 && asp_.alg == alg_kind::binary_div)
++                return status::unimplemented;
++
++            // ACL pointwise arithmetic operators assume that the innermost
++            // dimensions are dense for src0, src1 and dst. So we try to permute
++            // the logical dims so that the innermost dim on each desc is dense
++            // (without any data reordering)
++            memory_desc_t src_d0_permed, src_d1_permed, dst_d_permed;
++            CHECK(permute_common_dense_dimension_to_last(&src_d0_permed,
++                    &src_d1_permed, &dst_d_permed, src_md(0), src_md(1),
++                    dst_md()));
++
++            // Create ACL tensor infos with permuted descs
++            CHECK(tensor_info(asp_.src0_info, src_d0_permed));
++            CHECK(tensor_info(asp_.src1_info, src_d1_permed));
++            CHECK(tensor_info(asp_.dst_info, dst_d_permed));
++
++            // This forces ACL not to parallelise with small workloads, this is
++            // a temporary fix and should be removed in future versions (TODO)
++            memory_desc_wrapper dst_d(dst_md());
++            if (dst_d.nelems() < 40000) {
++                size_t acl_y_axis_i = 1;
++                CHECK(insert_singleton_dimension(asp_.src0_info, acl_y_axis_i));
++                CHECK(insert_singleton_dimension(asp_.src1_info, acl_y_axis_i));
++                CHECK(insert_singleton_dimension(asp_.dst_info, acl_y_axis_i));
++            }
++
++            // Call operator specific validate function to check support
++            arm_compute::Status acl_st = validate(asp_);
++            if (acl_st.error_code() != arm_compute::ErrorCode::OK) {
++                MAYBE_REPORT_ACL_ERROR(acl_st.error_description().c_str());
++                return status::unimplemented;
++            }
++
++            // Initialize the ACL threads
++            acl_thread_bind();
++
++            return status::success;
++        }
++
++        acl_binary_conf_t asp_;
++
++    private:
++        arm_compute::Status validate(const acl_binary_conf_t &asp) {
++            switch (asp.alg) {
++                case alg_kind::binary_add:
++                    return arm_compute::NEArithmeticAddition::validate(
++                            &asp.src0_info, &asp.src1_info, &asp.dst_info,
++                            arm_compute::ConvertPolicy::SATURATE);
++                case alg_kind::binary_sub:
++                    return arm_compute::NEArithmeticSubtraction::validate(
++                            &asp.src0_info, &asp.src1_info, &asp.dst_info,
++                            arm_compute::ConvertPolicy::SATURATE);
++                case alg_kind::binary_div:
++                    return arm_compute::NEElementwiseDivision::validate(
++                            &asp.src0_info, &asp.src1_info, &asp.dst_info);
++                case alg_kind::binary_mul:
++                    return arm_compute::NEPixelWiseMultiplication::validate(
++                            &asp.src0_info, &asp.src1_info, &asp.dst_info, 1.0f,
++                            arm_compute::ConvertPolicy::SATURATE,
++                            arm_compute::RoundingPolicy::TO_ZERO);
++                case alg_kind::binary_min:
++                    return arm_compute::NEElementwiseMin::validate(
++                            &asp.src0_info, &asp.src1_info, &asp.dst_info);
++                case alg_kind::binary_max:
++                    return arm_compute::NEElementwiseMax::validate(
++                            &asp.src0_info, &asp.src1_info, &asp.dst_info);
++                default:
++                    return arm_compute::Status(
++                            arm_compute::ErrorCode::RUNTIME_ERROR,
++                            "unsupported alg_kind");
++            }
++        }
++
++    }; // pd_t
++
++    acl_binary_t(const pd_t *apd) : primitive_t(apd) {}
++
++    status_t create_resource(
++            engine_t *engine, resource_mapper_t &mapper) const override {
++        if (mapper.has_resource(this)) return status::success;
++
++        auto r = utils::make_unique<acl_binary_resource_t>();
++        if (!r) return status::out_of_memory;
++
++        // Configure the resource based on information from primitive descriptor
++        auto st = r->configure(pd()->asp_);
++        if (st == status::success) { mapper.add(this, std::move(r)); }
++
++        return st;
++    }
++
++    status_t execute(const exec_ctx_t &ctx) const override {
++        return execute_forward(ctx);
++    }
++
++private:
++    // To guard the const execute_forward, the mutex must be 'mutable'
++    mutable std::mutex mtx;
++    status_t execute_forward(const exec_ctx_t &ctx) const;
++    const pd_t *pd() const { return (const pd_t *)primitive_t::pd().get(); }
++
++}; // acl_binary_t
++
++} // namespace aarch64
++} // namespace cpu
++} // namespace impl
++} // namespace dnnl
++
++#endif
 diff --git a/src/cpu/aarch64/acl_utils.cpp b/src/cpu/aarch64/acl_utils.cpp
-index ed1376dbf..84a7ff639 100644
+index ed1376dbf5..978472c615 100644
 --- a/src/cpu/aarch64/acl_utils.cpp
 +++ b/src/cpu/aarch64/acl_utils.cpp
+@@ -1,5 +1,5 @@
+ /*******************************************************************************
+-* Copyright 2021 Arm Ltd. and affiliates
++* Copyright 2021-2022 Arm Ltd. and affiliates
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
 @@ -105,7 +105,11 @@ void acl_thread_bind() {
      static std::once_flag flag_once;
      // The threads in Compute Library are bound for the cores 0..max_threads-1
@@ -31,3 +368,213 @@ index ed1376dbf..84a7ff639 100644
      // arm_compute::Scheduler does not support concurrent access thus a
      // workaround here restricts it to only one call
      std::call_once(flag_once, [&]() {
+@@ -113,6 +117,140 @@ void acl_thread_bind() {
+     });
+ }
+ 
++status_t tensor_info(arm_compute::TensorInfo &info, const memory_desc_t &md) {
++    const memory_desc_wrapper md_wrap(&md);
++    return tensor_info(info, md_wrap);
++}
++
++status_t tensor_info(
++        arm_compute::TensorInfo &info, const memory_desc_wrapper &md) {
++
++    // All the cases we don't support
++    if (!md.is_blocking_desc() || !md.is_dense() || !md.is_plain()
++            || md.has_zero_dim())
++        return status::unimplemented;
++
++    // Set each of the dimensions in the TensorShape from the memory desc
++    // ACL indexes dimensions the opposite way to oneDNN
++    arm_compute::TensorShape shape;
++    size_t acl_dim_i = 0;
++    for (int i = md.ndims() - 1; i >= 0; --i) {
++        shape.set(acl_dim_i, md.dims()[i]);
++        acl_dim_i++;
++    }
++
++    // Set each of the ACL Strides from the memory blocking desc
++    // ACL indexes strides the opposite way to oneDNN
++    arm_compute::Strides strides_in_bytes;
++    const blocking_desc_t &blocking_desc = md.blocking_desc();
++    size_t acl_stride_i = 0;
++    for (int i = md.ndims() - 1; i >= 0; --i) {
++        // ACL strides are in bytes, oneDNN strides are in numbers of elements,
++        // multiply by data type size to convert
++        strides_in_bytes.set(
++                acl_stride_i, blocking_desc.strides[i] * md.data_type_size());
++        ++acl_stride_i;
++    }
++
++    arm_compute::DataType data_type = get_acl_data_t(md.data_type());
++    size_t num_channels = 1;
++    size_t offset_first_element_in_bytes = 0;
++    size_t total_size_in_bytes = md.size();
++
++    info.init(shape, num_channels, data_type, strides_in_bytes,
++            offset_first_element_in_bytes, total_size_in_bytes);
++
++    return status::success;
++}
++
++status_t insert_singleton_dimension(arm_compute::TensorInfo &ti, size_t dim_i) {
++
++    // Max 6 dims in ACL, so we can't insert another
++    if (ti.num_dimensions() >= 6) return status::unimplemented;
++
++    // Copy dimensions from old to new shape, inserting a dimension of size 1
++    arm_compute::TensorShape shape = ti.tensor_shape();
++    for (size_t old_i = 0, new_i = 0; old_i < ti.num_dimensions(); ++old_i) {
++        if (old_i == dim_i) {
++            shape.set(new_i, 1, false);
++            ++new_i;
++        }
++        shape.set(new_i, ti.tensor_shape()[old_i], false);
++        ++new_i;
++    }
++
++    // Copy strides from old to new tensor, inserting a duplicate stride
++    arm_compute::Strides strides;
++    for (size_t old_i = 0, new_i = 0; old_i < ti.num_dimensions(); ++old_i) {
++        if (old_i == dim_i) {
++            strides.set(new_i, ti.strides_in_bytes()[old_i], false);
++            ++new_i;
++        }
++        strides.set(new_i, ti.strides_in_bytes()[old_i], false);
++        ++new_i;
++    }
++
++    // Reinit TensorInfo with modified shape and strides
++    ti.init(shape, ti.num_channels(), ti.data_type(), strides,
++            ti.offset_first_element_in_bytes(), ti.total_size());
++
++    return status::success;
++}
++
++status_t permute_common_dense_dimension_to_last(memory_desc_t *d0_permed,
++        memory_desc_t *d1_permed, memory_desc_t *d2_permed,
++        const memory_desc_t *d0, const memory_desc_t *d1,
++        const memory_desc_t *d2) {
++
++    // Number of dimensions must match
++    int ndims = d0->ndims;
++    if (ndims != d1->ndims || ndims != d2->ndims) return status::unimplemented;
++
++    if (d0->format_kind != format_kind::blocked
++            || d1->format_kind != format_kind::blocked
++            || d2->format_kind != format_kind::blocked)
++        return status::unimplemented;
++
++    const dnnl_dims_t &d0_strides = d0->format_desc.blocking.strides;
++    const dnnl_dims_t &d1_strides = d1->format_desc.blocking.strides;
++    const dnnl_dims_t &d2_strides = d2->format_desc.blocking.strides;
++
++    int inner_dim = ndims - 1;
++
++    // descs already share a common dense axis, no need to permute, just copy
++    // By dense we mean that it has a stride of 1
++    if (d0_strides[inner_dim] == 1 && d1_strides[inner_dim] == 1
++            && d2_strides[inner_dim] == 1) {
++        *d0_permed = *d0;
++        *d1_permed = *d1;
++        *d2_permed = *d2;
++        return status::success;
++    }
++
++    // Create permutation which swaps nothing
++    std::vector<int> perm(ndims);
++    for (int i = inner_dim; i >= 0; --i) {
++        perm[i] = i;
++    }
++
++    // Look for the innermost common dense axis
++    for (int i = inner_dim; i >= 0; --i) {
++        if (d0_strides[i] == 1 && d1_strides[i] == 1 && d2_strides[i] == 1) {
++            // We have found it! Swap this dimension with inner one
++            perm[i] = inner_dim;
++            perm[inner_dim] = i;
++            break;
++        }
++        // Got to the outermost dimension without finding a common dense axis
++        if (i == 0) return status::unimplemented;
++    }
++
++    dnnl_memory_desc_permute_axes(d0_permed, d0, perm.data());
++    dnnl_memory_desc_permute_axes(d1_permed, d1, perm.data());
++    dnnl_memory_desc_permute_axes(d2_permed, d2, perm.data());
++    return status::success;
++}
++
+ } // namespace acl_common_utils
+ 
+ } // namespace aarch64
+diff --git a/src/cpu/aarch64/acl_utils.hpp b/src/cpu/aarch64/acl_utils.hpp
+index ca4500da53..565cde66a9 100644
+--- a/src/cpu/aarch64/acl_utils.hpp
++++ b/src/cpu/aarch64/acl_utils.hpp
+@@ -1,5 +1,5 @@
+ /*******************************************************************************
+-* Copyright 2021 Arm Ltd. and affiliates
++* Copyright 2021-2022 Arm Ltd. and affiliates
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+@@ -46,6 +46,28 @@ arm_compute::ActivationLayerInfo get_acl_act(const eltwise_desc_t &ed);
+ bool acl_act_ok(alg_kind_t eltwise_activation);
+ void acl_thread_bind();
+ 
++// Convert a memory desc to an arm_compute::TensorInfo. Note that memory desc
++// must be blocking format, plain, dense and have no zero dimensions.
++status_t tensor_info(arm_compute::TensorInfo &info, const memory_desc_t &md);
++status_t tensor_info(
++        arm_compute::TensorInfo &info, const memory_desc_wrapper &md);
++
++// Insert a dimension of size 1 at the index dim_i of TensorInfo
++status_t insert_singleton_dimension(arm_compute::TensorInfo &ti, size_t dim_i);
++
++// Copy the memory descs {d0, d1, d2} to {d0_perm, d1_perm, d2_perm}, but with
++// the dimensions permuted so that their last logical dimensions are all dense
++// (stride of 1). The function finds the highest indexed dimension with a
++// stride of 1 for all descs (common). Then it permutes this to be the last
++// dimension. Note that the last dimension is the one that is dense in an
++// unpermuted tensor, in this case it would copy the descs unchanged. The
++// function may fail to find a common dense dimension, and will return
++// unimplemented.
++status_t permute_common_dense_dimension_to_last(memory_desc_t *d0_permed,
++        memory_desc_t *d1_permed, memory_desc_t *d2_permed,
++        const memory_desc_t *d0, const memory_desc_t *d1,
++        const memory_desc_t *d2);
++
+ #define MAYBE_REPORT_ACL_ERROR(msg) \
+     do { \
+         if (get_verbose()) printf("onednn_verbose,cpu,error,acl,%s\n", (msg)); \
+diff --git a/src/cpu/cpu_binary_list.cpp b/src/cpu/cpu_binary_list.cpp
+index 83db8d2247..99606e5866 100644
+--- a/src/cpu/cpu_binary_list.cpp
++++ b/src/cpu/cpu_binary_list.cpp
+@@ -1,5 +1,6 @@
+ /*******************************************************************************
+ * Copyright 2019-2021 Intel Corporation
++* Copyright 2022 Arm Ltd. and affiliates
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+@@ -21,6 +22,9 @@
+ #if DNNL_X64
+ #include "cpu/x64/jit_uni_binary.hpp"
+ using namespace dnnl::impl::cpu::x64;
++#elif DNNL_AARCH64 && DNNL_AARCH64_USE_ACL
++#include "cpu/aarch64/acl_binary.hpp"
++using namespace dnnl::impl::cpu::aarch64;
+ #endif
+ 
+ namespace dnnl {
+@@ -33,6 +37,7 @@ using namespace dnnl::impl::data_type;
+ // clang-format off
+ const impl_list_item_t impl_list[] = REG_BINARY_P({
+         CPU_INSTANCE_X64(jit_uni_binary_t)
++        CPU_INSTANCE_AARCH64_ACL(acl_binary_t)
+         CPU_INSTANCE(ref_binary_t)
+         /* eol */
+         nullptr,

@@ -1,5 +1,5 @@
  *******************************************************************************
- Copyright 2021 Arm Limited and affiliates.
+ Copyright 2022 Arm Limited and affiliates.
  SPDX-License-Identifier: Apache-2.0
 
  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,7 +20,7 @@ index 000000000..c986ad52a
 --- /dev/null
 +++ b/arm_compute_version.embed
 @@ -0,0 +1,1 @@
-+"arm_compute_version=v21.11 Build options: {} Git hash=b'N/A'"
++"arm_compute_version=v22.02 Build options: {} Git hash=b'N/A'"
 \ No newline at end of file
 diff --git a/arm_compute/runtime/CPP/SpinWaitCPPScheduler.h b/arm_compute/runtime/CPP/SpinWaitCPPScheduler.h
 new file mode 100644
@@ -29,7 +29,7 @@ index 000000000..ad4d8537b
 +++ b/arm_compute/runtime/CPP/SpinWaitCPPScheduler.h
 @@ -0,0 +1,67 @@
 +/*
-+ * Copyright (c) 2021 Arm Limited.
++ * Copyright (c) 2022 Arm Limited.
 + *
 + * SPDX-License-Identifier: MIT
 + *
@@ -115,7 +115,7 @@ index 000000000..76bf9637a
 +++ b/src/runtime/CPP/SpinWaitCPPScheduler.cpp
 @@ -0,0 +1,345 @@
 +/*
-+ * Copyright (c) 2021 Arm Limited.
++ * Copyright (c) 2022 Arm Limited.
 + *
 + * SPDX-License-Identifier: MIT
 + *
@@ -317,10 +317,10 @@ index 000000000..76bf9637a
 +
 +        while(!(_thr_start->load()));
 +
-+	if(_thr_stop->load())
-+	{
-+	    break;
-+	}
++        if(_thr_stop->load())
++        {
++            break;
++        }
 +
 +        if(_info.thread_id < int(_num_threads_to_use->load()) - 1)
 +        {
@@ -350,15 +350,15 @@ index 000000000..76bf9637a
 +    {
 +        _num_threads = num_threads == 0 ? thread_hint : num_threads;
 +        _threads.resize(_num_threads - 1);
-+	auto thread_it = _threads.begin();
-+	unsigned int tid = 0;
-+	for(; thread_it != _threads.end(); ++tid, ++thread_it)
-+	{
-+	    thread_it->set_thread_info(tid, &CPUInfo::get());
-+	    thread_it->set_sched(&_thr_start, &_thr_stop, &_thr_remain, &_thr_restarts);
-+	    thread_it->set_workload(&_workloads, &_feeder);
-+	    thread_it->start(&_num_threads_to_use);
-+	}
++        auto thread_it = _threads.begin();
++        unsigned int tid = 0;
++        for(; thread_it != _threads.end(); ++tid, ++thread_it)
++        {
++            thread_it->set_thread_info(tid, &CPUInfo::get());
++            thread_it->set_sched(&_thr_start, &_thr_stop, &_thr_remain, &_thr_restarts);
++            thread_it->set_workload(&_workloads, &_feeder);
++            thread_it->start(&_num_threads_to_use);
++        }
 +
 +    }
 +

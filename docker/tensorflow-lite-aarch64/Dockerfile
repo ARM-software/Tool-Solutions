@@ -1,5 +1,5 @@
 # *******************************************************************************
-# Copyright 2021 Arm Limited and affiliates.
+# Copyright 2021-2022 Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -91,7 +91,7 @@ COPY patches/welcome.txt /home/$DOCKER_USER/.
 RUN echo '[ ! -z "$TERM" -a -r /home/$DOCKER_USER/welcome.txt ] && \
   cat /home/$DOCKER_USER/welcome.txt' >> /etc/bash.bashrc
 
-ENV TF_VERSION=2.4.1
+ENV TF_VERSION=2.8.0
 
 # Package build parameters
 ENV PROD_DIR=/opt \
@@ -105,10 +105,12 @@ RUN mkdir -p $PACKAGE_DIR && \
 # Build tensorflow
 COPY scripts/build-tensorflow.sh $PACKAGE_DIR/.
 COPY patches/tflite.patch $PACKAGE_DIR/.
+COPY scripts/libruy.mri $PACKAGE_DIR/.
 RUN $PACKAGE_DIR/build-tensorflow.sh
 
 # Build Arm Compute Library
 COPY scripts/build-armcl.sh $PACKAGE_DIR/.
+# This patch adds support for spin wait scheduler to ACL
 COPY patches/acl.patch $PACKAGE_DIR/.
 RUN $PACKAGE_DIR/build-armcl.sh
 
