@@ -241,7 +241,7 @@ RUN pip install --no-cache-dir ck==1.55.5 absl-py pycocotools pillow==8.2.0
 RUN pip install --no-cache-dir transformers pandas
 
 # Install OpenCV into our venv (needed for MLCommons benchmarks)
-RUN pip install --no-cache-dir opencv-python-headless==4.4.0.46
+RUN pip install --no-cache-dir opencv-python-headless
 
 CMD ["bash", "-l"]
 

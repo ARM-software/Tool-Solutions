@@ -74,7 +74,7 @@ if [[ $ONEDNN_BUILD ]]; then
       # Patch to add experimental spin-wait scheduler to Compute Library
       # Note: overwrites upstream version
       mv ../compute_library.patch ./third_party/compute_library/.
-      # Patch to improve resource allocation for ACL primitives
+      # Patch to improve resource allocation for ACL primitives and add binary primitive
       mv ../onednn_acl.patch ./third_party/mkl_dnn/.
     fi
 else

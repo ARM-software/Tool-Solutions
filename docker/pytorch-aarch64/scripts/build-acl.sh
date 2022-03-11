@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # *******************************************************************************
-# Copyright 2020-2021 Arm Limited and affiliates.
+# Copyright 2020-2022 Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -37,13 +37,13 @@ git checkout $version
 arch=${ACL_ARCH:-"arm64-v8a"}
 echo "Compute Library arch = ${arch}"
 
-fat_binary=0
+multi_isa=0
 
-[[ "$arch" == "armv8.2-a" ]] && fat_binary=1
+[[ "$arch" == "armv8.2-a" ]] || [[ "$arch" == "armv8a" ]] && multi_isa=1
 
 # Build with scons
-scons -j16  Werror=0 debug=0 neon=1 gles_compute=0 embed_kernels=0 \
-  os=linux arch=$arch build=native fat_binary=$fat_binary \
+scons -j16  Werror=0 debug=0 neon=1 opencl=0 embed_kernels=0 \
+  os=linux arch=$arch build=native multi_isa=$multi_isa \
   build_dir=$install_dir/build
 
 cp -r arm_compute $install_dir

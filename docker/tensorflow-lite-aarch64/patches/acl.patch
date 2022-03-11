@@ -1,5 +1,5 @@
  *******************************************************************************
- Copyright 2021 Arm Limited and affiliates.
+ Copyright 2022 Arm Limited and affiliates.
  SPDX-License-Identifier: Apache-2.0
 
  Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,37 +14,485 @@
  See the License for the specific language governing permissions and
  limitations under the License.
  *******************************************************************************
-
-diff --git a/src/runtime/CPP/CPPScheduler.cpp b/src/runtime/CPP/CPPScheduler.cpp
-index 3bd80eb51..f590cd67f 100644
---- a/src/runtime/CPP/CPPScheduler.cpp
-+++ b/src/runtime/CPP/CPPScheduler.cpp
-@@ -34,6 +34,7 @@
-
- #include <atomic>
- #include <condition_variable>
-+#include <cstdlib>
- #include <iostream>
- #include <list>
- #include <memory>
-@@ -350,14 +351,18 @@ struct CPPScheduler::Impl final
-     {
-         _num_threads = num_threads == 0 ? thread_hint : num_threads;
-
-+	int start_core = 0;
-+	if(const char* env_c = std::getenv("START_CORE"))
-+	  start_core = std::atoi(env_c);
+diff --git a/arm_compute/runtime/CPP/SpinWaitCPPScheduler.h b/arm_compute/runtime/CPP/SpinWaitCPPScheduler.h
+new file mode 100644
+index 000000000..e5de2349a
+--- /dev/null
++++ b/arm_compute/runtime/CPP/SpinWaitCPPScheduler.h
+@@ -0,0 +1,75 @@
++/*
++ * Copyright (c) 2016-2022 Arm Limited.
++ *
++ * SPDX-License-Identifier: MIT
++ *
++ * Permission is hereby granted, free of charge, to any person obtaining a copy
++ * of this software and associated documentation files (the "Software"), to
++ * deal in the Software without restriction, including without limitation the
++ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
++ * sell copies of the Software, and to permit persons to whom the Software is
++ * furnished to do so, subject to the following conditions:
++ *
++ * The above copyright notice and this permission notice shall be included in all
++ * copies or substantial portions of the Software.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
++ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
++ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
++ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
++ * SOFTWARE.
++ */
++#ifndef ARM_COMPUTE_SPIN_WAIT_CPPSCHEDULER_H
++#define ARM_COMPUTE_SPIN_WAIT_CPPSCHEDULER_H
 +
-         // Set affinity on main thread
--        set_thread_affinity(func(0, thread_hint));
-+        set_thread_affinity(func(start_core, thread_hint));
-
-         // Set affinity on worked threads
-         _threads.clear();
-         for(auto i = 1U; i < _num_threads; ++i)
-         {
--            _threads.emplace_back(func(i, thread_hint));
-+	  _threads.emplace_back(func(start_core + i, thread_hint));
-         }
-         auto_switch_mode(_num_threads);
++#include "arm_compute/core/experimental/Types.h"
++#include "arm_compute/runtime/IScheduler.h"
++
++#include <memory>
++
++namespace arm_compute
++{
++class SpinWaitCPPScheduler final : public IScheduler
++{
++public:
++    /** Constructor: create a pool of threads. */
++    SpinWaitCPPScheduler();
++    /** Default destructor */
++    ~SpinWaitCPPScheduler();
++
++    /** Access the scheduler singleton
++     *
++     * @note this method has been deprecated and will be remover in future releases
++     * @return The scheduler
++     */
++    static SpinWaitCPPScheduler &get();
++
++    // Inherited functions overridden
++    void set_num_threads(unsigned int num_threads) override;
++    void set_num_threads_with_affinity(unsigned int num_threads, BindFunc func) override {
++        // On high-core count we noticed that affinity doesn't affect performance so
++        // the method is called without thread affinity
++        (void)func;
++        set_num_threads(num_threads);
++    }
++
++    unsigned int num_threads() const override;
++
++    void schedule(ICPPKernel *kernel, const Hints &hints) override;
++    void schedule_op(ICPPKernel *kernel, const Hints &hints, const Window &window, ITensorPack &tensors) override;
++
++protected:
++    /** Will run the workloads in parallel using num_threads
++     *
++     * @param[in] workloads Workloads to run
++     */
++    void run_workloads(std::vector<Workload> &workloads) override;
++
++private:
++    struct Impl;
++    std::unique_ptr<Impl> _impl;
++};
++} // namespace arm_compute
++#endif /* ARM_COMPUTE_CPPSCHEDULER_H */
+diff --git a/filelist.json b/filelist.json
+index ba19321a5..e29b71087 100644
+--- a/filelist.json
++++ b/filelist.json
+@@ -78,7 +78,7 @@
+   ],
+   "scheduler": {
+     "single": [ "src/runtime/CPP/SingleThreadScheduler.cpp" ],
+-    "threads": [ "src/runtime/CPP/CPPScheduler.cpp" ],
++    "threads": [ "src/runtime/CPP/CPPScheduler.cpp", "src/runtime/CPP/SpinWaitCPPScheduler.cpp" ],
+     "omp": [ "src/runtime/OMP/OMPScheduler.cpp"]
+   },
+   "c_api": {
+@@ -1989,4 +1989,4 @@
+       }
      }
+   }
+-}
+\ No newline at end of file
++}
+diff --git a/src/runtime/CPP/SpinWaitCPPScheduler.cpp b/src/runtime/CPP/SpinWaitCPPScheduler.cpp
+new file mode 100644
+index 000000000..b5683b0e5
+--- /dev/null
++++ b/src/runtime/CPP/SpinWaitCPPScheduler.cpp
+@@ -0,0 +1,346 @@
++/*
++ * Copyright (c) 2016-2022 Arm Limited.
++ *
++ * SPDX-License-Identifier: MIT
++ *
++ * Permission is hereby granted, free of charge, to any person obtaining a copy
++ * of this software and associated documentation files (the "Software"), to
++ * deal in the Software without restriction, including without limitation the
++ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
++ * sell copies of the Software, and to permit persons to whom the Software is
++ * furnished to do so, subject to the following conditions:
++ *
++ * The above copyright notice and this permission notice shall be included in all
++ * copies or substantial portions of the Software.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
++ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
++ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
++ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
++ * SOFTWARE.
++ */
++#include "arm_compute/runtime/CPP/SpinWaitCPPScheduler.h"
++
++#include "arm_compute/core/CPP/ICPPKernel.h"
++#include "arm_compute/core/Error.h"
++#include "arm_compute/core/Helpers.h"
++#include "arm_compute/core/Log.h"
++#include "arm_compute/core/Utils.h"
++#include "arm_compute/core/utils/misc/Utility.h"
++#include "support/Mutex.h"
++
++#include <atomic>
++#include <condition_variable>
++#include <iostream>
++#include <list>
++#include <memory>
++#include <mutex>
++#include <system_error>
++#include <thread>
++#include <vector>
++
++namespace arm_compute
++{
++namespace
++{
++class ThreadFeeder
++{
++public:
++    /** Constructor
++     *
++     * @param[in] start First value that will be returned by the feeder
++     * @param[in] end   End condition (The last value returned by get_next() will be end - 1)
++     */
++    explicit ThreadFeeder(unsigned int start = 0, unsigned int end = 0)
++        : _atomic_counter(start), _end(end)
++    {
++    }
++    /** Return the next element in the range if there is one.
++     *
++     * @param[out] next Will contain the next element if there is one.
++     *
++     * @return False if the end of the range has been reached and next wasn't set.
++     */
++    bool get_next(unsigned int &next)
++    {
++        next = atomic_fetch_add_explicit(&_atomic_counter, 1u, std::memory_order_relaxed);
++        return next < _end;
++    }
++
++private:
++    std::atomic_uint   _atomic_counter;
++    const unsigned int _end;
++};
++
++/** Execute workloads[info.thread_id] first, then call the feeder to get the index of the next workload to run.
++ *
++ * Will run workloads until the feeder reaches the end of its range.
++ *
++ * @param[in]     workloads The array of workloads
++ * @param[in,out] feeder    The feeder indicating which workload to execute next.
++ * @param[in]     info      Threading and CPU info.
++ */
++void process_workloads(std::vector<IScheduler::Workload> &workloads, ThreadFeeder &feeder, const ThreadInfo &info)
++{
++    unsigned int workload_index = info.thread_id;
++    do
++    {
++        ARM_COMPUTE_ERROR_ON(workload_index >= workloads.size());
++        workloads[workload_index](info);
++    }
++    while(feeder.get_next(workload_index));
++}
++
++class Thread final
++{
++public:
++    /** Start a new thread
++     *
++     * Thread will be pinned to a given core id if value is non-negative
++     *
++     * @param[in] core_pin Core id to pin the thread on. If negative no thread pinning will take place
++     */
++    explicit Thread();
++
++    Thread(const Thread &) = delete;
++    Thread &operator=(const Thread &) = delete;
++    Thread(Thread &&)                 = delete;
++    Thread &operator=(Thread &&) = delete;
++
++    /** Destructor. Make the thread join. */
++    ~Thread();
++
++    /** Sets internal information for the thread: unique identifier and CPU information */
++    void set_thread_info(unsigned int tid, const CPUInfo* cpu_info);
++
++    /** Sets atomic variables that are used to schedule the work
++     *
++     * Each thread waits for go to change from false to true. Once it is set to true if fin
++     * is set to true the thread will finish execution otherwise it will check whether there
++     * there is enough work for the thread to do and if it is it will process workload. Once
++     * the workload is processed it will reduce by one number (atomic variable left) of threads
++     * that are yet to finish and  spin wait for all other threads to finish their execution
++     * (atomic variable resets will increment by one in the main thread once all children have finished).
++     */
++    void set_sched(std::atomic_bool* go, std::atomic_bool* fin, std::atomic_int* left, std::atomic_uint* resets);
++
++    /** Sets workload information */
++    void set_workload(std::vector<IScheduler::Workload>** workload, ThreadFeeder** feeder);
++
++    /** Request the worker thread to start executing workloads.
++     *
++     * The thread will start by executing workloads[info.thread_id] and will then call the feeder to
++     * get the index of the following workload to run.
++     *
++     * @note This function will return as soon as the workloads have been sent to the worker thread.
++     * wait() needs to be called to ensure the execution is complete.
++     */
++    void start(std::atomic_uint* threads);
++
++    /** Function ran by the worker thread. */
++    void worker_thread();
++
++private:
++    std::thread                        _thread{};
++    ThreadInfo                         _info{};
++
++    std::atomic_bool                   *_go{nullptr};
++    std::atomic_bool                   *_finished{nullptr};
++    std::atomic_int                    *_left{nullptr};
++    std::atomic_uint                   *_resets{nullptr};
++
++    std::atomic_uint*                  _num_threads_to_use{nullptr};
++
++    unsigned int                       _reps{0};
++
++    std::vector<IScheduler::Workload>  **_workloads{nullptr};
++    ThreadFeeder                       **_feeder{nullptr};
++};
++
++Thread::Thread()
++{
++}
++
++Thread::~Thread()
++{
++    // Make sure worker thread has ended
++    if(_thread.joinable())
++    {
++	_thread.join();
++    }
++}
++
++void Thread::set_thread_info(unsigned int tid, const CPUInfo* cpu_info) {
++    _info.thread_id = tid;
++    _info.cpu_info = cpu_info;
++}
++
++
++void Thread::set_sched(std::atomic_bool* go, std::atomic_bool* fin, std::atomic_int* left, std::atomic_uint* resets) {
++    _go = go;
++    _finished = fin;
++    _left = left;
++    _resets = resets;
++}
++
++void Thread::set_workload(std::vector<IScheduler::Workload>** workload, ThreadFeeder** feeder) {
++    _workloads = workload;
++    _feeder = feeder;
++}
++
++void Thread::start(std::atomic_uint* threads) {
++    _num_threads_to_use = threads;
++    _thread = std::thread(&Thread::worker_thread, this);
++}
++
++void Thread::worker_thread()
++{
++    while(true)
++    {
++
++        while(!(_go->load()));
++
++	if(_finished->load())
++	{
++	    break;
++	}
++
++	if(_info.thread_id < int(_num_threads_to_use->load() - 1))
++	{
++	    _info.num_threads = _num_threads_to_use->load();
++	    process_workloads(**_workloads, **_feeder, _info);
++	}
++
++	_left->fetch_sub(1);
++
++	while(_reps == _resets->load());
++	++_reps;
++    }
++}
++} //namespace
++
++struct SpinWaitCPPScheduler::Impl final
++{
++    explicit Impl(unsigned int thread_hint)
++        : _num_threads(thread_hint), _threads(_num_threads - 1)
++    {
++    }
++
++    Impl(const SpinWaitCPPScheduler::Impl& other) = delete;
++    SpinWaitCPPScheduler::Impl& operator=(const SpinWaitCPPScheduler::Impl& other) = delete;
++
++    void set_num_threads(unsigned int num_threads, unsigned int thread_hint)
++    {
++        _num_threads = num_threads == 0 ? thread_hint : num_threads;
++	_threads.resize(_num_threads-1);
++	auto thread_it = _threads.begin();
++	unsigned int t = 0;
++	for(; thread_it != _threads.end(); ++t, ++thread_it)
++	{
++	    thread_it->set_thread_info(t, &CPUInfo::get());
++	    thread_it->set_sched(&_go, &_finished, &_left, &_resets);
++	    thread_it->set_workload(&_workloads, &_feeder);
++	    thread_it->start(&_num_threads_to_use);
++	}
++
++    }
++
++    unsigned int num_threads() const
++    {
++        return _num_threads;
++    }
++
++
++    void run_workloads(std::vector<IScheduler::Workload> &workloads);
++    void set_workloads(std::vector<IScheduler::Workload> *workloads, ThreadFeeder *feeder)
++    {
++      _workloads = workloads;
++      _feeder = feeder;
++    }
++
++    unsigned int       _num_threads;
++    std::list<Thread>  _threads;
++    arm_compute::Mutex _run_workloads_mutex{};
++    std::atomic_bool   _go{false};
++    std::atomic_bool   _finished{false};
++    std::atomic_int    _left{0};
++    std::atomic_uint   _resets{0};
++    std::atomic_uint   _num_threads_to_use{0};
++
++    std::vector<IScheduler::Workload> *_workloads{nullptr};
++    ThreadFeeder                      *_feeder{nullptr};
++};
++
++SpinWaitCPPScheduler::SpinWaitCPPScheduler()
++    : _impl(std::make_unique<Impl>(num_threads_hint()))
++{
++}
++
++SpinWaitCPPScheduler::~SpinWaitCPPScheduler()
++{
++    _impl->_finished.store(true);
++    _impl->_go.store(true);
++}
++
++void SpinWaitCPPScheduler::set_num_threads(unsigned int num_threads)
++{
++    // No changes in the number of threads while current workloads are running
++    arm_compute::lock_guard<std::mutex> lock(_impl->_run_workloads_mutex);
++    _impl->set_num_threads(num_threads, num_threads_hint());
++}
++
++unsigned int SpinWaitCPPScheduler::num_threads() const
++{
++    return _impl->num_threads();
++}
++
++#ifndef DOXYGEN_SKIP_THIS
++void SpinWaitCPPScheduler::run_workloads(std::vector<IScheduler::Workload> &workloads)
++{
++    // Mutex to ensure other threads won't interfere with the setup of the current thread's workloads
++    // Other thread's workloads will be scheduled after the current thread's workloads have finished
++    // This is not great because different threads workloads won't run in parallel but at least they
++    // won't interfere each other and deadlock.
++    arm_compute::lock_guard<std::mutex> lock(_impl->_run_workloads_mutex);
++    const unsigned int                  num_threads_to_use = std::min(_impl->num_threads(), static_cast<unsigned int>(workloads.size()));
++    if(num_threads_to_use < 1)
++    {
++        return;
++    }
++    // Re-adjust the mode if the actual number of threads to use is different from the number of threads created
++    _impl->_num_threads_to_use.store(num_threads_to_use);
++    _impl->_left = _impl->num_threads() - 1;
++
++
++    ThreadFeeder feeder(num_threads_to_use, workloads.size());
++    ThreadInfo   info;
++    info.cpu_info          = &cpu_info();
++    info.num_threads       = num_threads_to_use;
++
++    info.thread_id = num_threads_to_use - 1;                         // Set main thread's thread_id
++
++    _impl->set_workloads(&workloads, &feeder);
++
++    _impl->_go.store(true);
++
++    process_workloads(workloads, feeder, info); // Main thread processes workloads
++    while(_impl->_left.load());
++
++    _impl->_go.store(false);
++    _impl->_resets.fetch_add(1);
++}
++#endif /* DOXYGEN_SKIP_THIS */
++
++void SpinWaitCPPScheduler::schedule_op(ICPPKernel *kernel, const Hints &hints, const Window &window, ITensorPack &tensors)
++{
++    schedule_common(kernel, hints, window, tensors);
++}
++
++void SpinWaitCPPScheduler::schedule(ICPPKernel *kernel, const Hints &hints)
++{
++    ITensorPack tensors;
++    schedule_common(kernel, hints, kernel->window(), tensors);
++}
++} // namespace arm_compute
+diff --git a/src/runtime/Scheduler.cpp b/src/runtime/Scheduler.cpp
+index 0713b9a2a..42049021d 100644
+--- a/src/runtime/Scheduler.cpp
++++ b/src/runtime/Scheduler.cpp
+@@ -27,6 +27,7 @@
+ 
+ #if ARM_COMPUTE_CPP_SCHEDULER
+ #include "arm_compute/runtime/CPP/CPPScheduler.h"
++#include "arm_compute/runtime/CPP/SpinWaitCPPScheduler.h"
+ #endif /* ARM_COMPUTE_CPP_SCHEDULER */
+ 
+ #include "arm_compute/runtime/SingleThreadScheduler.h"
+@@ -56,7 +57,15 @@ std::map<Scheduler::Type, std::unique_ptr<IScheduler>> init()
+     std::map<Scheduler::Type, std::unique_ptr<IScheduler>> m;
+     m[Scheduler::Type::ST] = std::make_unique<SingleThreadScheduler>();
+ #if defined(ARM_COMPUTE_CPP_SCHEDULER)
+-    m[Scheduler::Type::CPP] = std::make_unique<CPPScheduler>();
++    /* check whether we want to use spin scheduler */
++    const char* value = std::getenv("ARM_COMPUTE_SPIN_WAIT_CPP_SCHEDULER");
++    int use_spin_wait = value == nullptr ? 0 : atoi(value);
++    if(use_spin_wait) {
++      m[Scheduler::Type::CPP] = std::make_unique<SpinWaitCPPScheduler>();
++    }
++    else {
++      m[Scheduler::Type::CPP] = std::make_unique<CPPScheduler>();
++    }
+ #endif // defined(ARM_COMPUTE_CPP_SCHEDULER)
+ #if defined(ARM_COMPUTE_OPENMP_SCHEDULER)
+     m[Scheduler::Type::OMP] = std::make_unique<OMPScheduler>();

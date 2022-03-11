@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # *******************************************************************************
-# Copyright 2021 Arm Limited and affiliates.
+# Copyright 2021-2022 Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,9 +23,10 @@ cd $PACKAGE_DIR
 
 git clone https://review.mlplatform.org/ml/ComputeLibrary
 cd ComputeLibrary/
-git checkout ee301b384f4aeb697a5c249b8bb848d784146582
+git checkout tags/v22.02 -b v22.02
 
+# This patch adds support for spin wait scheduler to ACL
 patch -p1 < ../acl.patch
 
 readonly num_cpus=$(grep -c ^processor /proc/cpuinfo)
-scons -j ${num_cpus} arch=arm64-v8.2-a build=native os=linux neon=1 extra_cxx_flags="-fPIC" benchmark_tests=0 validation_tests=0
+scons -j ${num_cpus} arch=armv8.2-a build=native os=linux neon=1 extra_cxx_flags="-fPIC" benchmark_tests=0 validation_tests=0 multi_isa=1

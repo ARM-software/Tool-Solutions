@@ -15,7 +15,7 @@
  limitations under the License.
  *******************************************************************************
 diff --git a/tensorflow/workspace2.bzl b/tensorflow/workspace2.bzl
-index 60deadb1962..ad36923363c 100644
+index 60deadb1962..1c6db042a64 100644
 --- a/tensorflow/workspace2.bzl
 +++ b/tensorflow/workspace2.bzl
 @@ -183,6 +183,7 @@ def _tf_repositories():
@@ -26,10 +26,41 @@ index 60deadb1962..ad36923363c 100644
          sha256 = "d7a47caeb28d2c67dc8fa0d0f338b11fbf25b473a608f04cfed913aea88815a9",
          strip_prefix = "oneDNN-2.5",
          urls = tf_mirror_urls("https://github.com/oneapi-src/oneDNN/archive/v2.5.tar.gz"),
+@@ -190,11 +191,11 @@ def _tf_repositories():
+ 
+     tf_http_archive(
+         name = "compute_library",
+-        sha256 = "8322ed2e135999569082a95e7fbb2fa87786ffb1c67935b3ef71e00b53f2c887",
+-        strip_prefix = "ComputeLibrary-21.11",
++        sha256 = "11244b05259fb1c4af7384d0c3391aeaddec8aac144774207582db4842726540",
++        strip_prefix = "ComputeLibrary-22.02",
+         build_file = "//third_party/compute_library:BUILD",
+         patch_file = ["//third_party/compute_library:compute_library.patch"],
+-        urls = tf_mirror_urls("https://github.com/ARM-software/ComputeLibrary/archive/v21.11.tar.gz"),
++        urls = tf_mirror_urls("https://github.com/ARM-software/ComputeLibrary/archive/v22.02.tar.gz"),
+     )
+ 
+     tf_http_archive(
 diff --git a/third_party/compute_library/BUILD b/third_party/compute_library/BUILD
-index e15c3104c92..7aaa225ab31 100644
+index e15c3104c92..e4f42b46d5c 100644
 --- a/third_party/compute_library/BUILD
 +++ b/third_party/compute_library/BUILD
+@@ -91,6 +91,7 @@ cc_library(
+             "src/cpu/utils/*.cpp",
+             "src/cpu/kernels/internal/*.cpp",
+             "src/cpu/kernels/**/neon/*.cpp",
++            "src/cpu/kernels/**/nchw/*.cpp",
+             "src/core/NEON/kernels/arm_gemm/*.cpp",
+             "**/*.h",
+         ],
+@@ -103,7 +104,6 @@ cc_library(
+             "src/gpu/**",
+         ],
+     ) + [
+-        "src/cpu/kernels/pool2d/neon/nchw/all.cpp",
+         "src/core/CPP/CPPTypes.cpp",
+         "src/c/operators/AclActivation.cpp",
+         "src/core/NEON/kernels/arm_conv/pooling/kernels/cpp_nhwc_1x1_stride_any_depthfirst/generic.cpp",
 @@ -119,7 +119,7 @@ cc_library(
      ]) + [
          "arm_compute_version.embed",
@@ -39,3 +70,645 @@ index e15c3104c92..7aaa225ab31 100644
      defines = _COMPUTE_LIBRARY_DEFINES,
      includes = [
          "arm_compute/runtime",
+diff --git a/tensorflow/core/kernels/mkl/mkl_batch_matmul_op.cc b/tensorflow/core/kernels/mkl/mkl_batch_matmul_op.cc
+index b55de4958ae..4f2657b356a 100644
+--- a/tensorflow/core/kernels/mkl/mkl_batch_matmul_op.cc
++++ b/tensorflow/core/kernels/mkl/mkl_batch_matmul_op.cc
+@@ -143,8 +143,8 @@ class BatchMatMulMkl : public OpKernel {
+     // For matmul, the previous approach (PR #47775) of using Tensor addresses
+     // does not work, as the addresses are re-used in matmul with different data
+     // The counter  ensure we still benefit from caching via SetMklMatmul().
+-    static int counter = 1;
+-    params->aarch64_counter = counter++;
++    params->aarch64_counter =
++      MklMatMulPrimitiveFactory<float, Tlhs, Trhs, Toutput>::IncrementCounter();
+ #endif
+     this->ExtendMklMatMulParams(ctx, *params);
+ 
+diff --git a/tensorflow/core/kernels/mkl/mkl_concat_op.cc b/tensorflow/core/kernels/mkl/mkl_concat_op.cc
+index 0d970e46ace..4d7298b5b18 100644
+--- a/tensorflow/core/kernels/mkl/mkl_concat_op.cc
++++ b/tensorflow/core/kernels/mkl/mkl_concat_op.cc
+@@ -32,6 +32,7 @@ limitations under the License.
+ #include "tensorflow/core/lib/core/status.h"
+ #include "tensorflow/core/platform/types.h"
+ #include "tensorflow/core/util/mkl_util.h"
++#include "tensorflow/core/platform/mutex.h"
+ 
+ using dnnl::concat;
+ using dnnl::stream;
+@@ -279,6 +280,7 @@ class MklConcatFwdPrimitive : public MklPrimitive {
+                const dnnl::memory& dst_data,
+                const MklConcatFwdParams& concat_fwd_dims,
+                std::shared_ptr<stream> fwd_stream) {
++    mutex_lock lock(mu_);
+     DCHECK_EQ(in_data.size(), context_.data_mem.size());
+     for (size_t i = 0; i < concat_fwd_dims.num_inputs; i++) {
+ #ifndef ENABLE_ONEDNN_OPENMP
+@@ -375,6 +377,8 @@ class MklConcatFwdPrimitive : public MklPrimitive {
+   }
+ 
+   struct ConcatFwdContext context_;
++
++  mutex mu_;
+ };
+ 
+ // Class to create/cache the mkl concat primitives based on the
+diff --git a/tensorflow/core/kernels/mkl/mkl_conv_grad_filter_ops.cc b/tensorflow/core/kernels/mkl/mkl_conv_grad_filter_ops.cc
+index 4065143bff0..54fdbe7bc82 100644
+--- a/tensorflow/core/kernels/mkl/mkl_conv_grad_filter_ops.cc
++++ b/tensorflow/core/kernels/mkl/mkl_conv_grad_filter_ops.cc
+@@ -23,6 +23,7 @@ limitations under the License.
+ #include "tensorflow/core/kernels/mkl/mkl_conv_ops.h"
+ #include "tensorflow/core/util/use_cudnn.h"
+ #include "tensorflow/core/util/work_sharder.h"
++#include "tensorflow/core/platform/mutex.h"
+ 
+ using dnnl::convolution_backward_weights;
+ using dnnl::memory;
+@@ -88,6 +89,7 @@ class MklConvBwdFilterPrimitive : public MklPrimitive {
+   void Execute(const T* src_data, const T* diff_filter_data,
+                const T* diff_bias_data, const T* diff_dst_data,
+                std::shared_ptr<stream> bwd_filter_stream) {
++    mutex_lock lock(mu_);
+ #ifndef ENABLE_ONEDNN_OPENMP
+     // TODO(intel-tf): Create a common function and avoid the duplicate code
+     context_.src_mem->set_data_handle(
+@@ -273,6 +275,8 @@ class MklConvBwdFilterPrimitive : public MklPrimitive {
+   }
+ 
+   struct ConvBwdFilterContext context_;
++
++  mutex mu_;
+ };
+ 
+ template <typename T>
+diff --git a/tensorflow/core/kernels/mkl/mkl_conv_grad_input_ops.cc b/tensorflow/core/kernels/mkl/mkl_conv_grad_input_ops.cc
+index 76a314ca700..a2cdf17bb72 100644
+--- a/tensorflow/core/kernels/mkl/mkl_conv_grad_input_ops.cc
++++ b/tensorflow/core/kernels/mkl/mkl_conv_grad_input_ops.cc
+@@ -30,6 +30,7 @@ limitations under the License.
+ #include "tensorflow/core/kernels/mkl/mkl_conv_ops.h"
+ #include "tensorflow/core/util/use_cudnn.h"
+ #include "tensorflow/core/util/work_sharder.h"
++#include "tensorflow/core/platform/mutex.h"
+ 
+ using dnnl::convolution_backward_data;
+ using dnnl::prop_kind;
+@@ -90,6 +91,7 @@ class MklConvBwdInputPrimitive : public MklPrimitive {
+   void Execute(const T* diff_src_data, const T* filter_data,
+                const T* diff_dst_data,
+                std::shared_ptr<stream> bwd_input_stream) {
++    mutex_lock lock(mu_);
+ #ifndef ENABLE_ONEDNN_OPENMP
+     // TODO(intel-tf): Create a common function and avoid the duplicate code
+     context_.diff_src_mem->set_data_handle(
+@@ -219,6 +221,7 @@ class MklConvBwdInputPrimitive : public MklPrimitive {
+   }
+ 
+   struct ConvBwdInputContext context_;
++  mutex mu_;
+ };
+ 
+ template <typename T>
+diff --git a/tensorflow/core/kernels/mkl/mkl_conv_ops.cc b/tensorflow/core/kernels/mkl/mkl_conv_ops.cc
+index bc4fddfb12c..4d44a1417d1 100644
+--- a/tensorflow/core/kernels/mkl/mkl_conv_ops.cc
++++ b/tensorflow/core/kernels/mkl/mkl_conv_ops.cc
+@@ -26,6 +26,7 @@ limitations under the License.
+ #include "absl/strings/str_join.h"
+ #include "tensorflow/core/kernels/mkl/mkl_quantized_conv_ops.h"
+ #include "tensorflow/core/kernels/no_op.h"
++#include "tensorflow/core/platform/mutex.h"
+ 
+ using dnnl::convolution_forward;
+ using dnnl::prop_kind;
+@@ -109,6 +110,10 @@ class MklConvFwdPrimitive : public MklPrimitive {
+                const Tinput* bn_scale_data, const Tinput* bn_mean_data,
+                const Tinput* bn_offset_data, const Tinput* bn_rsqrt_data,
+                std::shared_ptr<stream> fwd_stream) {
++    // when we are using single global cache then in this case
++    // we can have multiple threads running the same primitive
++    // that we created so this should happen under the lock
++    mutex_lock lock(mu_);
+ #ifndef ENABLE_ONEDNN_OPENMP
+     // TODO(intel-tf): Create a common function and avoid the duplicate code
+     context_.src_mem->set_data_handle(
+@@ -399,6 +404,9 @@ class MklConvFwdPrimitive : public MklPrimitive {
+   }
+ 
+   struct ConvFwdContext context_;
++
++  // Guards Execution()
++  mutex mu_;
+ };
+ 
+ // TODO(intel-tf): We should not require passing a type to MklPrimitiveFactory.
+diff --git a/tensorflow/core/kernels/mkl/mkl_eltwise_activation_base_op.h b/tensorflow/core/kernels/mkl/mkl_eltwise_activation_base_op.h
+index ae6f3b0de0c..3bbd7e2f704 100644
+--- a/tensorflow/core/kernels/mkl/mkl_eltwise_activation_base_op.h
++++ b/tensorflow/core/kernels/mkl/mkl_eltwise_activation_base_op.h
+@@ -30,6 +30,7 @@ limitations under the License.
+ #include "tensorflow/core/framework/tensor.h"
+ #include "tensorflow/core/lib/core/errors.h"
+ #include "tensorflow/core/util/mkl_util.h"
++#include "tensorflow/core/platform/mutex.h"
+ 
+ using dnnl::algorithm;
+ using dnnl::eltwise_forward;
+@@ -76,6 +77,7 @@ class MklEltwiseFwdPrimitive : public MklPrimitive {
+   //   src_data:  input data buffer of src
+   //   dst_data:  output data buffer of dst
+   void Execute(const T* src_data, T* dst_data, OpKernelContext* op_context) {
++    mutex_lock lock(mu_);
+     context_.src_mem->set_data_handle(
+         static_cast<void*>(const_cast<T*>(src_data)));
+     context_.dst_mem->set_data_handle(static_cast<void*>(dst_data));
+@@ -159,6 +161,8 @@ class MklEltwiseFwdPrimitive : public MklPrimitive {
+   }
+ 
+   struct EltwiseFwdContext context_;
++
++  mutex mu_;
+ };
+ 
+ template <typename T>
+diff --git a/tensorflow/core/kernels/mkl/mkl_fused_batch_norm_op.cc b/tensorflow/core/kernels/mkl/mkl_fused_batch_norm_op.cc
+index f77421f5e06..ac60597be2e 100644
+--- a/tensorflow/core/kernels/mkl/mkl_fused_batch_norm_op.cc
++++ b/tensorflow/core/kernels/mkl/mkl_fused_batch_norm_op.cc
+@@ -24,6 +24,7 @@ limitations under the License.
+ #include "tensorflow/core/kernels/no_op.h"
+ #include "tensorflow/core/util/mkl_util.h"
+ #include "tensorflow/core/util/tensor_format.h"
++#include "tensorflow/core/platform/mutex.h"
+ 
+ #define GET_FLAG(bn_flag) static_cast<int>(dnnl::normalization_flags::bn_flag)
+ #define IS_SET(cflag) (context_.flags & GET_FLAG(cflag))
+@@ -82,6 +83,7 @@ class MklFusedBatchNormFwdPrimitive : public MklPrimitive {
+   void Execute(const T* src_data, const U* weights_data, T* dst_data,
+                U* mean_data, U* variance_data,
+                std::shared_ptr<stream> fwd_stream, U* workspace_data) {
++    mutex_lock lock(mu_);
+ #ifndef ENABLE_ONEDNN_OPENMP
+     // TODO(intel-tf): Create a common function and avoid the duplicate code
+     context_.src_mem->set_data_handle(
+@@ -323,6 +325,8 @@ class MklFusedBatchNormFwdPrimitive : public MklPrimitive {
+   }
+ 
+   struct BatchNormFwdContext context_;
++
++  mutex mu_;
+ };
+ 
+ template <typename T, typename U>
+@@ -428,6 +432,7 @@ class MklFusedBatchNormBwdPrimitive : public MklPrimitive {
+                const T* diff_dst_data, const U* weights_data, T* diff_src_data,
+                U* diff_weights_data, U* res_space_data,
+                std::shared_ptr<stream> bwd_stream) {
++    mutex_lock lock(mu_);
+ #ifndef ENABLE_ONEDNN_OPENMP
+     // TODO(intel-tf): Create a common function and avoid the duplicate code
+     context_.src_mem->set_data_handle(
+@@ -584,6 +589,8 @@ class MklFusedBatchNormBwdPrimitive : public MklPrimitive {
+   }
+ 
+   struct BatchNormBwdContext context_;
++
++  mutex mu_;
+ };
+ 
+ template <typename T, typename U>
+diff --git a/tensorflow/core/kernels/mkl/mkl_matmul_ops_common.h b/tensorflow/core/kernels/mkl/mkl_matmul_ops_common.h
+index 979c8b9c708..98e613acc17 100644
+--- a/tensorflow/core/kernels/mkl/mkl_matmul_ops_common.h
++++ b/tensorflow/core/kernels/mkl/mkl_matmul_ops_common.h
+@@ -25,6 +25,7 @@ limitations under the License.
+ #include "tensorflow/core/framework/op.h"
+ #include "tensorflow/core/framework/op_kernel.h"
+ #include "tensorflow/core/util/mkl_util.h"
++#include "tensorflow/core/platform/mutex.h"
+ 
+ using dnnl::inner_product_forward;
+ using dnnl::primitive_attr;
+@@ -110,6 +111,10 @@ class MklDnnMatMulFwdPrimitive : public MklPrimitive {
+   void Execute(const Tinput* src_data, const Tweight* weight_data,
+                const Tbias* bias_data, Toutput* dst_data,
+                std::shared_ptr<stream> fwd_stream) {
++    // when we are using single global cache then in this case
++    // we can have multiple threads running the same primitive
++    // that we created so this should happen under the lock
++    mutex_lock lock(mu_);
+ #ifndef ENABLE_ONEDNN_OPENMP
+     context_.src_mem->set_data_handle(
+         static_cast<void*>(const_cast<Tinput*>(src_data)), *fwd_stream);
+@@ -316,6 +321,9 @@ class MklDnnMatMulFwdPrimitive : public MklPrimitive {
+   }
+ 
+   struct MklDnnMatMulFwdContext context_;
++
++  // Guards Execution()
++  mutex mu_;
+ };
+ 
+ template <typename T, typename Tinput, typename Tweight, typename Tbias,
+@@ -589,6 +597,7 @@ class MklMatMulPrimitive : public MklPrimitive {
+   void Execute(const std::shared_ptr<stream>& stream, const Tlhs* a_data,
+                const Trhs* b_data, const Toutput* c_data,
+                void* mul_data = nullptr, void* add_data = nullptr) {
++    mutex_lock lock(mu_);
+ #ifndef ENABLE_ONEDNN_OPENMP
+     context_.a_mem->set_data_handle(
+         static_cast<void*>(const_cast<Tlhs*>(a_data)), *stream);
+@@ -749,6 +758,7 @@ class MklMatMulPrimitive : public MklPrimitive {
+   }
+ 
+   struct MklMatMulContext context_;
++  mutex mu_;
+ };
+ 
+ template <typename T, typename Tlhs, typename Trhs, typename Toutput>
+@@ -776,6 +786,13 @@ class MklMatMulPrimitiveFactory : public MklPrimitiveFactory<T> {
+     return matmul_prim;
+   }
+ 
++#ifdef DNNL_AARCH64_USE_ACL
++  static int IncrementCounter() {
++    static std::atomic_int counter{1};
++    return counter.fetch_add(1);
++  }
++#endif
++
+  private:
+   MklMatMulPrimitiveFactory() {}
+   ~MklMatMulPrimitiveFactory() {}
+diff --git a/tensorflow/core/kernels/mkl/mkl_pooling_ops_common.cc b/tensorflow/core/kernels/mkl/mkl_pooling_ops_common.cc
+index 58a7c0e3be7..807cc36a987 100644
+--- a/tensorflow/core/kernels/mkl/mkl_pooling_ops_common.cc
++++ b/tensorflow/core/kernels/mkl/mkl_pooling_ops_common.cc
+@@ -86,6 +86,7 @@ template <typename T>
+ void MklPoolingFwdPrimitive<T>::Execute(const T* src_data, T* dst_data,
+                                         void* ws_data,
+                                         std::shared_ptr<stream> fwd_stream) {
++  mutex_lock lock(mu_);
+ #ifndef ENABLE_ONEDNN_OPENMP
+   context_.src_mem->set_data_handle(
+       static_cast<void*>(const_cast<T*>(src_data)), *fwd_stream);
+@@ -186,6 +187,7 @@ template <typename T>
+ void MklPoolingBwdPrimitive<T>::Execute(const T* diff_dst_data,
+                                         T* diff_src_data, const void* ws_data,
+                                         std::shared_ptr<stream> bwd_stream) {
++  mutex_lock lock(mu_);
+ #ifndef ENABLE_ONEDNN_OPENMP
+   context_.diff_dst_mem->set_data_handle(
+       static_cast<void*>(const_cast<T*>(diff_dst_data)), *bwd_stream);
+diff --git a/tensorflow/core/kernels/mkl/mkl_pooling_ops_common.h b/tensorflow/core/kernels/mkl/mkl_pooling_ops_common.h
+index 933037dbeb5..227544ed6ea 100644
+--- a/tensorflow/core/kernels/mkl/mkl_pooling_ops_common.h
++++ b/tensorflow/core/kernels/mkl/mkl_pooling_ops_common.h
+@@ -25,6 +25,7 @@ limitations under the License.
+ #include "dnnl.hpp"
+ #include "tensorflow/core/util/mkl_util.h"
+ #include "tensorflow/core/util/padding.h"
++#include "tensorflow/core/platform/mutex.h"
+ 
+ namespace tensorflow {
+ 
+@@ -147,6 +148,8 @@ class MklPoolingFwdPrimitive : public MklPrimitive {
+   };
+ 
+   struct PoolingFwdContext context_;
++
++  mutex mu_;
+ };
+ 
+ template <typename T>
+@@ -292,6 +295,7 @@ class MklPoolingBwdPrimitive : public MklPrimitive {
+   };
+ 
+   struct PoolingBwdContext context_;
++  mutex mu_;
+ };
+ 
+ template <typename T>
+diff --git a/tensorflow/core/kernels/mkl/mkl_quantize_op.cc b/tensorflow/core/kernels/mkl/mkl_quantize_op.cc
+index 78734e81a90..096d57bc750 100644
+--- a/tensorflow/core/kernels/mkl/mkl_quantize_op.cc
++++ b/tensorflow/core/kernels/mkl/mkl_quantize_op.cc
+@@ -25,6 +25,7 @@ limitations under the License.
+ #include "tensorflow/core/graph/mkl_graph_util.h"
+ #include "tensorflow/core/lib/core/errors.h"
+ #include "tensorflow/core/util/mkl_util.h"
++#include "tensorflow/core/platform/mutex.h"
+ 
+ using dnnl::primitive_attr;
+ using dnnl::prop_kind;
+@@ -86,6 +87,7 @@ class MklReorderWithScalePrimitive : public MklPrimitive {
+ 
+   void Execute(void* src_data, void* dst_data,
+                std::shared_ptr<stream> reorder_stream) {
++    mutex_lock lock(mu_);
+ #ifndef ENABLE_ONEDNN_OPENMP
+     context_.src_mem->set_data_handle(src_data, *reorder_stream);
+     context_.dst_mem->set_data_handle(dst_data, *reorder_stream);
+@@ -149,6 +151,8 @@ class MklReorderWithScalePrimitive : public MklPrimitive {
+     context_.prim_args.insert({DNNL_ARG_FROM, *context_.src_mem});
+     context_.prim_args.insert({DNNL_ARG_TO, *context_.dst_mem});
+   }
++
++  mutex mu_;
+ };
+ 
+ template <typename T>
+diff --git a/tensorflow/core/kernels/mkl/mkl_relu_op.cc b/tensorflow/core/kernels/mkl/mkl_relu_op.cc
+index 057d6621138..197d318edc3 100644
+--- a/tensorflow/core/kernels/mkl/mkl_relu_op.cc
++++ b/tensorflow/core/kernels/mkl/mkl_relu_op.cc
+@@ -26,6 +26,7 @@ limitations under the License.
+ #include "tensorflow/core/framework/tensor.h"
+ #include "tensorflow/core/lib/core/errors.h"
+ #include "tensorflow/core/util/mkl_util.h"
++#include "tensorflow/core/platform/mutex.h"
+ 
+ using dnnl::algorithm;
+ using dnnl::eltwise_forward;
+@@ -74,6 +75,7 @@ class MklEltwiseFwdPrimitive : public MklPrimitive {
+   //   dst_data:  output data buffer of dst
+   void Execute(const T* src_data, T* dst_data,
+                std::shared_ptr<stream> fwd_stream) {
++    mutex_lock lock(mu_);
+ #ifndef ENABLE_ONEDNN_OPENMP
+     context_.src_mem->set_data_handle(
+         static_cast<void*>(const_cast<T*>(src_data)), *fwd_stream);
+@@ -153,6 +155,8 @@ class MklEltwiseFwdPrimitive : public MklPrimitive {
+   }
+ 
+   struct EltwiseFwdContext context_;
++
++  mutex mu_;
+ };
+ 
+ template <typename T>
+@@ -249,6 +253,7 @@ class MklEltwiseBwdPrimitive : public MklPrimitive {
+   //   diff_src_data:  output data buffer of diff_src
+   void Execute(const T* src_data, const T* diff_dst_data, T* diff_src_data,
+                std::shared_ptr<stream> bwd_stream) {
++    mutex_lock lock(mu_);
+ #ifndef ENABLE_ONEDNN_OPENMP
+     context_.src_mem->set_data_handle(
+         static_cast<void*>(const_cast<T*>(src_data)), *bwd_stream);
+@@ -354,6 +359,8 @@ class MklEltwiseBwdPrimitive : public MklPrimitive {
+   }
+ 
+   struct EltwiseBwdContext context_;
++
++  mutex mu_;
+ };
+ 
+ template <typename T>
+diff --git a/tensorflow/core/kernels/mkl/mkl_slice_op.cc b/tensorflow/core/kernels/mkl/mkl_slice_op.cc
+index 2db8e4c3be1..01ffb5d543d 100644
+--- a/tensorflow/core/kernels/mkl/mkl_slice_op.cc
++++ b/tensorflow/core/kernels/mkl/mkl_slice_op.cc
+@@ -27,6 +27,7 @@ limitations under the License.
+ #include "tensorflow/core/lib/gtl/array_slice.h"
+ #include "tensorflow/core/platform/prefetch.h"
+ #include "tensorflow/core/util/mkl_util.h"
++#include "tensorflow/core/platform/mutex.h"
+ 
+ using dnnl::stream;
+ 
+@@ -185,6 +186,7 @@ class MklSlicePrimitive : public MklPrimitive {
+ 
+   void Execute(const MklSliceParams& sliceParams,
+                std::shared_ptr<stream> slice_stream) {
++    mutex_lock lock(mu_);
+ #ifndef ENABLE_ONEDNN_OPENMP
+     context_.src_mem->set_data_handle(sliceParams.from->get_data_handle(),
+                                       *slice_stream);
+@@ -243,6 +245,8 @@ class MklSlicePrimitive : public MklPrimitive {
+         {{DNNL_ARG_SRC, *context_.src_mem}, {DNNL_ARG_DST, *context_.dst_mem}});
+     context_.slice_primitives.push_back(*context_.reorder_prim);
+   }
++
++  mutex mu_;
+ };
+ 
+ template <typename T>
+diff --git a/tensorflow/core/kernels/mkl/mkl_softmax_op.cc b/tensorflow/core/kernels/mkl/mkl_softmax_op.cc
+index cd4605a04d0..8cfc5937b45 100644
+--- a/tensorflow/core/kernels/mkl/mkl_softmax_op.cc
++++ b/tensorflow/core/kernels/mkl/mkl_softmax_op.cc
+@@ -26,6 +26,7 @@ limitations under the License.
+ #include "tensorflow/core/lib/core/errors.h"
+ #include "tensorflow/core/util/mkl_util.h"
+ #include "tensorflow/core/util/tensor_format.h"
++#include "tensorflow/core/platform/mutex.h"
+ 
+ using dnnl::prop_kind;
+ using dnnl::softmax_forward;
+@@ -60,6 +61,7 @@ class MklSoftmaxPrimitive : public MklPrimitive {
+   //   dst_data:  output data buffer of dst
+   void Execute(const T* src_data, T* dst_data,
+                std::shared_ptr<stream> fwd_cpu_stream) {
++    mutex_lock lock(mu_);
+ #ifndef ENABLE_ONEDNN_OPENMP
+     context_.src_mem->set_data_handle(
+         static_cast<void*>(const_cast<T*>(src_data)), *fwd_cpu_stream);
+@@ -140,6 +142,8 @@ class MklSoftmaxPrimitive : public MklPrimitive {
+   }
+ 
+   struct SoftmaxFwdContext context_;
++
++  mutex mu_;
+ };
+ 
+ template <typename T>
+@@ -164,6 +168,13 @@ class MklSoftmaxPrimitiveFactory : public MklPrimitiveFactory<T> {
+     return instance_;
+   }
+ 
++#ifdef DNNL_AARCH64_USE_ACL
++  static int IncrementCounter() {
++    static std::atomic_int counter{1};
++    return counter.fetch_add(1);
++  }
++#endif
++
+  private:
+   MklSoftmaxPrimitiveFactory() {}
+   ~MklSoftmaxPrimitiveFactory() {}
+@@ -278,8 +289,8 @@ class MklSoftmaxOp : public OpKernel {
+       // For softmax, the previous approach (PR #47775) of using Tensor addresses
+       // does not work, as the addresses are re-used in matmul with different data
+       // The counter ensures we still benefit from caching via SetSoftmaxFwd().
+-      static int counter = 1;
+-      fwdParams.aarch64_counter = counter++;
++      fwdParams.aarch64_counter =
++	MklSoftmaxPrimitiveFactory<T>::IncrementCounter();
+ #endif
+       MklSoftmaxPrimitive<T>* softmax_fwd =
+           MklSoftmaxPrimitiveFactory<T>::Get(fwdParams);
+diff --git a/tensorflow/core/util/mkl_util.h b/tensorflow/core/util/mkl_util.h
+index 8b351a767c6..b3597988d5f 100644
+--- a/tensorflow/core/util/mkl_util.h
++++ b/tensorflow/core/util/mkl_util.h
+@@ -39,6 +39,7 @@ limitations under the License.
+ #include "tensorflow/core/util/mkl_threadpool.h"
+ #include "tensorflow/core/util/padding.h"
+ #include "tensorflow/core/util/tensor_format.h"
++#include "tensorflow/core/platform/mutex.h"
+ 
+ using dnnl::engine;
+ using dnnl::memory;
+@@ -1728,6 +1729,27 @@ class LRUCache {
+   }
+ 
+   T* GetOp(const string& key) {
++    mutex_lock lock(mu_);
++    return GetOpLocked(key);
++  }
++
++  void SetOp(const string &key, T* op) {
++    mutex_lock lock(mu_);
++    SetOpLocked(key, op);
++  }
++
++  bool IsAllocating(const string& key) {
++    mutex_lock lock(mu_);
++    return in_flight_.find(key) != in_flight_.end();
++  }
++
++  void Allocate(const string& key) {
++    mutex_lock lock(mu_);
++    in_flight_.insert(key);
++  }
++
++ private:
++  T* GetOpLocked(const string& key) {
+     auto it = cache_.find(key);
+     if (it == cache_.end()) {
+       return nullptr;
+@@ -1740,7 +1762,7 @@ class LRUCache {
+     return it->second.op;
+   }
+ 
+-  void SetOp(const string& key, T* op) {
++  void SetOpLocked(const string& key, T* op) {
+     if (lru_list_.size() >= capacity_) {
+       Delete();
+     }
+@@ -1749,6 +1771,7 @@ class LRUCache {
+     lru_list_.push_front(key);
+     Entry entry(op, lru_list_.begin());
+     cache_.emplace(std::make_pair(key, std::move(entry)));
++    in_flight_.erase(key);
+   }
+ 
+   void Clear() {
+@@ -1759,7 +1782,6 @@ class LRUCache {
+     lru_list_.clear();
+   }
+ 
+- private:
+   struct Entry {
+     // The entry's value.
+     T* op;
+@@ -1799,6 +1821,9 @@ class LRUCache {
+   // Cache capacity
+   size_t capacity_;
+ 
++  // Guards access to the cache and LRU list
++  mutex mu_;
++
+   // The cache, a map from string key to a LRU entry.
+   std::unordered_map<string, Entry> cache_;
+ 
+@@ -1806,6 +1831,9 @@ class LRUCache {
+   // The front of the list contains the key of the most recently accessed
+   // entry, while the back of the list is the least recently accessed entry.
+   std::list<string> lru_list_;
++
++  // The keys that are currently under creation
++  std::set<string> in_flight_;
+ };
+ 
+ template <typename T>
+@@ -1816,13 +1844,49 @@ class MklPrimitiveFactory {
+   ~MklPrimitiveFactory() {}
+ 
+   MklPrimitive* GetOp(const string& key) {
+-    auto& lru_cache = MklPrimitiveFactory<T>::GetLRUCache();
+-    return lru_cache.GetOp(key);
++    while(true) {
++      mutex_lock lock(mtx_);
++      auto& lru_cache = MklPrimitiveFactory<T>::GetLRUCache();
++
++      // check to see whether primitive already exists
++      MklPrimitive *primitive = lru_cache.GetOp(key);
++      if(primitive != nullptr) {
++        return primitive;
++      }
++
++      // now check whether some other thread is
++      // creating this primitive
++      if(!lru_cache.IsAllocating(key)) {
++        // this thread is going to pick it up and
++        // and create the primitive
++        lru_cache.Allocate(key);
++        return nullptr;
++        // now we release lock
++        // as primitive creating might take long time
++      }
++
++      // at this point we cannot create primitive
++      // as someone else is creating so we
++      // should wait for primitive to get created and
++      // then return created primitive
++      cv_.wait(lock);
++
++      // now the primitive is in cache so now
++      // when should try to retrieve it again
++      // after getting a lock on it
++    }
+   }
+ 
+   void SetOp(const string& key, MklPrimitive* op) {
+-    auto& lru_cache = MklPrimitiveFactory<T>::GetLRUCache();
+-    lru_cache.SetOp(key, op);
++    {
++      mutex_lock lock(mtx_);
++      auto& lru_cache = MklPrimitiveFactory<T>::GetLRUCache();
++      lru_cache.SetOp(key, op);
++    }
++
++    // now we can inform all waiting threads that
++    // primitive is in cache and that they can get it
++    cv_.notify_all();
+   }
+ 
+   /// Function to decide whether HW has AVX512 or AVX2
+@@ -1849,9 +1913,12 @@ class MklPrimitiveFactory {
+  private:
+   static inline LRUCache<MklPrimitive>& GetLRUCache() {
+     static const int kCapacity = 1024;  // cache capacity
+-    static thread_local LRUCache<MklPrimitive> lru_cache_(kCapacity);
++    static LRUCache<MklPrimitive> lru_cache_(kCapacity);
+     return lru_cache_;
+   }
++
++  mutex mtx_;
++  condition_variable cv_;
+ };
+ 
+ // utility class for creating keys of MKL primitive pool.
+@@ -1982,5 +2049,8 @@ class MklReorderPrimitiveFactory : public MklPrimitiveFactory<T> {
+                                          &to_strides[to_desc.ndims]);
+ 
+     key_creator.AddAsKey(prefix);
++    // Since reorder primitive SetMemory we need to make sure
++    // that we cache memory per thread
++    key_creator.AddAsKey(std::this_thread::get_id());
+     key_creator.AddAsKey(static_cast<int>(from_desc.extra.flags));
+     key_creator.AddAsKey(static_cast<int>(from_inner_nblks));
+     key_creator.AddAsKey(from_inner_blks_1);
