@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # *******************************************************************************
-# Copyright 2021 Arm Limited and affiliates.
+# Copyright 2021-2022 Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -36,8 +36,8 @@ make install
 cd $PACKAGE_DIR
 git clone https://review.mlplatform.org/ml/armnn
 cd armnn
-git checkout 1625efc870f1a8b7c6e6382277ddbb245f91a294
+git checkout tags/v22.02 -b v22.02
 patch -p1 < ../armnn.patch
 mkdir build && cd build
-cmake .. -DARMCOMPUTE_ROOT=$PACKAGE_DIR/ComputeLibrary -DARMCOMPUTE_BUILD_DIR=$PACKAGE_DIR/ComputeLibrary/build -DSHARED_BOOST=ON -DBUILD_TF_LITE_PARSER=1 -DTF_LITE_GENERATED_PATH=$PACKAGE_DIR/tensorflow_src/tensorflow/lite/schema -DFLATBUFFERS_ROOT=$PACKAGE_DIR/flatbuffers -DFLATC_DIR=$PACKAGE_DIR/flatbuffers-1.12.0/build -DARMCOMPUTENEON=1 -DARMNNREF=1 -DBUILD_TESTS=1 -DBUILD_ARMNN_TFLITE_DELEGATE=1 -DTENSORFLOW_ROOT=$PACKAGE_DIR/tensorflow_src -DTFLITE_LIB_ROOT=$PACKAGE_DIR/tflite_build -DFLATBUFFERS_ROOT=$PACKAGE_DIR/flatbuffers
+cmake .. -DARMCOMPUTE_ROOT=$PACKAGE_DIR/ComputeLibrary -DARMCOMPUTE_BUILD_DIR=$PACKAGE_DIR/ComputeLibrary/build -DBUILD_TF_LITE_PARSER=1 -DTF_LITE_GENERATED_PATH=$PACKAGE_DIR/tensorflow_src/tensorflow/lite/schema -DFLATBUFFERS_ROOT=$PACKAGE_DIR/flatbuffers -DFLATC_DIR=$PACKAGE_DIR/flatbuffers-1.12.0/build -DARMCOMPUTENEON=1 -DARMNNREF=1 -DBUILD_TESTS=1 -DBUILD_ARMNN_TFLITE_DELEGATE=1 -DTENSORFLOW_ROOT=$PACKAGE_DIR/tensorflow_src -DTFLITE_LIB_ROOT=$PACKAGE_DIR/tflite_build -DFLATBUFFERS_ROOT=$PACKAGE_DIR/flatbuffers
 make -j ${num_cpus}

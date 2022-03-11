@@ -1,5 +1,5 @@
 # *******************************************************************************
-# Copyright 2021 Arm Limited and affiliates.
+# Copyright 2021-2022 Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -131,7 +131,9 @@ def main():
         "distilbert-base-uncased-distilled-squad"
     )
 
-    encoding = token.encode_plus(question, context)
+    encoding = token.encode_plus(
+        token(question, max_length=512, truncation=True).input_ids,
+        token(context, max_length=512, truncation=True).input_ids)
 
     input_ids, attention_mask = (
         encoding["input_ids"],

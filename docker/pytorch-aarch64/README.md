@@ -51,9 +51,9 @@ where `<image name>` is the name of the image, i.e. `armswdev/pytorch-arm-neover
 
   * OS: Ubuntu 20.04
   * Compiler: GCC 10.3
-  * Maths libraries: [Arm Optimized Routines](https://github.com/ARM-software/optimized-routines) and [OpenBLAS](https://www.openblas.net/) 0.3.19
+  * Maths libraries: [Arm Optimized Routines](https://github.com/ARM-software/optimized-routines) and [OpenBLAS](https://www.openblas.net/) 0.3.20
   * [oneDNN](https://github.com/oneapi-src/oneDNN) 2.5
-    - ACL 21.11, provides optimized implementations on AArch64 for main oneDNN primitives
+    - ACL 22.02, provides optimized implementations on AArch64 for main oneDNN primitives
   * Python 3.8.10 environment containing:
     - NumPy 1.21.5
     - SciPy 1.7.3

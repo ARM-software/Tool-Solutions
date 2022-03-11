@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # *******************************************************************************
-# Copyright 2021 Arm Limited and affiliates.
+# Copyright 2021-2022 Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -31,7 +31,7 @@ git clone ${src_host}/${src_repo}.git ${dst_repo}
 cd ${dst_repo}
 git checkout tags/v${version}
 
-echo 'Using the latest commit for XNNPACK fetch'
+echo 'Enabling benchmark_model to use external delegate'
 patch -p1 < ../tflite.patch
 
 cd ..
@@ -43,3 +43,9 @@ cmake ../${dst_repo}/tensorflow/lite -DTFLITE_ENABLE_RUY=ON
 cmake --build . -j ${num_cpus}
 
 cmake --build . -j ${num_cpus} -t benchmark_model
+
+# We need to build single RUY library to use from ArmNN
+cp ../libruy.mri _deps/ruy-build
+pushd _deps/ruy-build
+ar -M <libruy.mri
+popd

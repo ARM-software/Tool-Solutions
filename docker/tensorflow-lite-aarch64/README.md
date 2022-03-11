@@ -1,4 +1,4 @@
-# Build TensorFlow Lite 2.4.1 and ArmNN for Arm AArch64
+# Build TensorFlow Lite 2.8 and ArmNN 22.02 for Arm AArch64
 
 This folder contains scripts and patches to build a Docker image that contains [TensorFlow Lite](https://www.tensorflow.org/lite) and [ArmNN](https://developer.arm.com/ip-products/processors/machine-learning/arm-nn) for Arm AArch64 execution.
 
