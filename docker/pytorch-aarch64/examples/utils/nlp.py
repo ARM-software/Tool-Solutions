@@ -1,5 +1,5 @@
 # *******************************************************************************
-# Copyright 2021 Arm Limited and affiliates.
+# Copyright 2021-2022 Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,6 +20,13 @@ import os
 import json
 import urllib.request
 import pandas
+
+
+def clean(question):
+    tokens = question.split(" ")
+    tokens = ["".join([char.lower() for char in token if char.isalpha()])
+              for token in tokens]
+    return " ".join(tokens)
 
 
 def import_squad_data():
@@ -89,6 +96,7 @@ def import_squad_data():
                 "subject": title_list,
                 "context": context_list,
                 "question": question_list,
+                "clean_question": [clean(question) for question in question_list],
                 "impossible": impossible_list,
                 "answer_start": answer_start_list,
                 "answer": answer_text_list,
@@ -120,7 +128,7 @@ def print_squad_questions(subject=None):
         )
         return
 
-    for index, row in squad_records.iterrows():
+    for _, row in squad_records.iterrows():
         print("\n=============================")
         print("Id: ", row["id"])
         print("Reading from: ", row["subject"])

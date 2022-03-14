@@ -40,7 +40,7 @@ def main():
     squadid = ""
 
     if args:
-        if "source" in args:
+        if "text" in args:
             if args["text"]:
                 source = args["text"]
         if "subject" in args:
@@ -123,17 +123,20 @@ def main():
         question = squad_records["question"].iloc[i_record]
         answer = squad_records["answer"].iloc[i_record]
 
-    # DilstilBERT question answering using pre-trained model.
+    # DistilBERT question answering using pre-trained model.
     token = DistilBertTokenizer.from_pretrained(
         "distilbert-base-uncased", return_token_type_ids=True
     )
+
     model = TFDistilBertForQuestionAnswering.from_pretrained(
         "distilbert-base-uncased-distilled-squad"
     )
 
     encoding = token.encode_plus(
-        token(question, max_length=512, truncation=True).input_ids,
-        token(context, max_length=512, truncation=True).input_ids)
+        question,
+        context,
+        max_length=512, truncation=True
+    )
 
     input_ids, attention_mask = (
         encoding["input_ids"],

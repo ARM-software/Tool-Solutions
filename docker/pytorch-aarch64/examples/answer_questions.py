@@ -37,22 +37,46 @@ def main():
     context = ""
     question = ""
     answer = ""
+    squadid = ""
+
+    if args:
+        if "text" in args:
+            if args["text"]:
+                source = args["text"]
+        if "subject" in args:
+            if args["subject"]:
+                subject = args["subject"]
+        if "context" in args:
+            if args["context"]:
+                context = args["context"]
+        if "question" in args:
+            if args["question"]:
+                question = args["question"]
+                clean_question = nlp.clean(question)
+        if "answer" in args:
+            if args["answer"]:
+                answer = args["answer"]
+        if "squadid" in args:
+            if args["squadid"]:
+                squadid = args["squadid"]
+    else:
+        sys.exit("Parser didn't return args correctly")
 
     # Setup the question, either from a specified SQuAD record
     # or from cmd line arguments.
     # If no question details are provided, a random
     # SQuAD example will be chosen.
-    if args["question"] is not None:
-        question = args["question"]
-        if args["text"] is not None:
-            source = args["text"]
+
+    if question:
+        if source:
             with open(source, "r") as text_file_handle:
                 context = text_file_handle.read()
-
         else:
             print("No text provided, searching SQuAD dev-2.0 dataset")
             squad_data = nlp.import_squad_data()
-            squad_records = squad_data.loc[squad_data["question"] == question]
+            squad_records = squad_data.loc[
+                squad_data["clean_question"] == clean_question
+            ]
             if squad_records.empty:
                 sys.exit(
                     "Question not found in SQuAD data, please provide context using `--text`."
@@ -61,22 +85,21 @@ def main():
             context = squad_records["context"].iloc[0]
             question = squad_records["question"].iloc[0]
             answer = squad_records["answer"]
-
     else:
         squad_data = nlp.import_squad_data()
 
-        if args["squadid"] is not None:
+        if squadid:
             source = args["squadid"]
             squad_records = squad_data.loc[squad_data["id"] == source]
             i_record = 0
         else:
-            if args["subject"] is not None:
+            if subject:
                 print(
                     "Picking a question at random on the subject: ",
-                    args["subject"],
+                    subject,
                 )
                 squad_records = squad_data.loc[
-                    squad_data["subject"] == args["subject"]
+                    squad_data["subject"] == subject
                 ]
             else:
                 print(
@@ -110,8 +133,10 @@ def main():
     )
 
     encoding = token.encode_plus(
-        token(question, max_length=512, truncation=True).input_ids,
-        token(context, max_length=512, truncation=True).input_ids)
+        question,
+        context,
+        max_length=512, truncation=True
+    )
 
     input_ids, attention_mask = (
         encoding["input_ids"],
