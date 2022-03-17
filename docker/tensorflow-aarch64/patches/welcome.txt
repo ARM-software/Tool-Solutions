@@ -16,8 +16,6 @@ The default user's home (/home/ubuntu) contains:
 -- cpp-api/ - Vision and NLP inference examples using TensorFlow's C++ API;
 -- MLCommons/ - sample inference benchmarks for Vision and NLP,
    see https://github.com/mlcommons/inference;
--- benchmarks/ - TensorFlow benchmarks,
-   see https://github.com/tensorflow/benchmarks.
 
   For more details, and instructions on how to run the benchmarks see:
    examples/README.md (https://git.io/J1pJf)
