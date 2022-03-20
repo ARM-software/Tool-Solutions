@@ -391,11 +391,6 @@ ENV MLCOMMONS_DIR=$EXAMPLE_DIR/MLCommons
 RUN mkdir -p $EXAMPLE_DIR
 RUN mkdir -p $MLCOMMONS_DIR
 
-# Clone TensorFlow benchmarks into EXAMPLE_DIR.
-COPY scripts/build-benchmarks.sh $EXAMPLE_DIR/.
-RUN $EXAMPLE_DIR/build-benchmarks.sh
-RUN rm -f $EXAMPLE_DIR/build-benchmarks.sh
-
 # Clone and install MLCommons (MLPerf)
 COPY patches/optional-mlcommons-changes.patch $MLCOMMONS_DIR/optional-mlcommons-changes.patch
 COPY patches/mlcommons_bert.patch $MLCOMMONS_DIR/mlcommons_bert.patch
@@ -420,5 +415,6 @@ COPY scripts/setup-servermode.sh $MLCOMMONS_DIR/.
 
 # Copy examples
 COPY --chown=$DOCKER_USER:$DOCKER_USER examples $EXAMPLE_DIR
+COPY patches/welcome_verbose.txt /home/$DOCKER_USER/welcome.txt
 
 CMD ["bash", "-l"]
