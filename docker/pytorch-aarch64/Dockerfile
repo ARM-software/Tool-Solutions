@@ -283,8 +283,8 @@ ENV ONEDNN_BUILD="${onednn_opt}" \
 # Key version numbers
 ENV PY_VERSION="${default_py_version}" \
     TORCH_VERSION=1.10.0 \
-    ONEDNN_VERSION="v2.5" \
-    VISION_VERSION="v0.11.3" \
+    ONEDNN_VERSION="v2.6" \
+    VISION_VERSION="v0.11.1" \
     TEXT_VERSION=0.10.0
 
 # Use a PACKAGE_DIR in userspace

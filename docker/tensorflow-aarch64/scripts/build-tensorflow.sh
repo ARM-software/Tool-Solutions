@@ -63,19 +63,30 @@ if [[ $NP_MAKE ]]; then extra_args="$extra_args --jobs=$NP_MAKE"; fi
 
 if [[ $ONEDNN_BUILD ]]; then
     echo "$ONEDNN_BUILD build for $TF_VERSION"
-    extra_args="$extra_args --config=mkl_aarch64 --linkopt=-fopenmp"
+    if [[ $ONEDNN_BUILD == 'acl_threadpool' ]]; then
+      extra_args="$extra_args --config=mkl_aarch64_threadpool"
+    else
+      extra_args="$extra_args --config=mkl_aarch64"
+    fi
+    extra_args="$extra_args --linkopt=-fopenmp"
     if [[ $ONEDNN_BUILD == 'reference' ]]; then
       echo "TensorFlow $TF_VERSION with oneDNN backend - reference build."
       sed -i '/DNNL_AARCH64_USE_ACL/d' ./third_party/mkl_dnn/mkldnn_acl.BUILD
-    elif [[ $ONEDNN_BUILD == 'acl' ]]; then
-      echo "TensorFlow $TF_VERSION with oneDNN backend - Compute Library build."
+    else
+      if [[ $ONEDNN_BUILD == 'acl_threadpool' ]]; then
+          echo "TensorFlow $TF_VERSION with oneDNN backend with threadpool - Compute Library build."
+      else
+          echo "TensorFlow $TF_VERSION with oneDNN backend with OpenMP - Compute Library build."
+      fi
       # Patch Compute Library Bazel build
       patch -p1 < ../tf_acl.patch
       # Patch to add experimental spin-wait scheduler to Compute Library
       # Note: overwrites upstream version
       mv ../compute_library.patch ./third_party/compute_library/.
       # Patch to improve resource allocation for ACL primitives and add binary primitive
-      mv ../onednn_acl.patch ./third_party/mkl_dnn/.
+      mv ../onednn_acl_training.patch ./third_party/mkl_dnn/.
+      # Patch to add support for threadpool for use by ACL
+      mv ../onednn_acl_threadpool.patch ./third_party/mkl_dnn/.
     fi
 else
     echo "TensorFlow $TF_VERSION with Eigen backend."

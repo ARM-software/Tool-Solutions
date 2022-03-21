@@ -1,5 +1,5 @@
 # *******************************************************************************
-# Copyright 2021 Arm Limited and affiliates.
+# Copyright 2021-2022 Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -58,15 +58,31 @@ def preprocess_image_for_classification(image_url, model_file):
 
     model_descriptor = common.parse_model_file(model_file)
 
-    dimensions = model_descriptor["arguments"][0]["input_shape"][1:3]
+    input_shape = model_descriptor["arguments"][0]["input_shape"]
+    transpose = False
+    if  'transpose' in model_descriptor["arguments"][0]:
+        transpose = True
+    if len(input_shape) == 4 and not transpose:
+        dimensions = input_shape[1:3]
+    elif len(input_shape) == 4 and transpose:
+        dimensions = input_shape[2:4]
+    elif len(input_shape) == 3 and not transpose:
+        dimensions = input_shape[0:2]
+    elif len(input_shape) == 3 and transpose:
+        dimensions = input_shape[1:3]
 
     orig_image = tf.keras.preprocessing.image.load_img(
         image_file, target_size=dimensions
     )
     numpy_image = tf.keras.preprocessing.image.img_to_array(orig_image)
-    image_batch = np.expand_dims(numpy_image, axis=0)
+    if transpose:
+    # if transpose is set to true then expected input is CHW, instead of HWC
+        numpy_image = numpy_image.transpose([2, 0, 1])
+
+    if len(input_shape) == 4:
+        numpy_image = np.expand_dims(numpy_image, axis=0)
     processed_image = tf.keras.applications.imagenet_utils.preprocess_input(
-        image_batch, mode="caffe"
+        numpy_image, mode="caffe"
     )
 
     return processed_image
@@ -101,7 +117,7 @@ def preprocess_image_for_detection(image_url, model_file):
     numpy_image = numpy_image / std
 
     if model_descriptor["image_preprocess"][0]["transpose"]:
-        # if transpose is set to true then expected input is CHW, instead of HWC
+    # if transpose is set to true then expected input is CHW, instead of HWC
         numpy_image = numpy_image.transpose([2, 0, 1])
 
     # create batch of 1
