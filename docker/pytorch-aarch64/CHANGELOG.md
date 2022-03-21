@@ -10,6 +10,10 @@ where `YY` is the year, and `MM` the month of the increment.
 ### Added
 - Adds docker/pytorch-aarch64/CHANGELOG.md.
 
+### Changed
+- Updates oneDNN to v2.6.
+- Does not download model in example scripts if was downloaded already
+
 ### Fixed
 - Fixes git submodule init in SciPy build.
 

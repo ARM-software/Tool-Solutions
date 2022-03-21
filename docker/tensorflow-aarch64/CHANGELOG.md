@@ -9,12 +9,18 @@ where `YY` is the year, and `MM` the month of the increment.
 
 ### Added
 - Adds docker/tensorflow-aarch64/CHANGELOG.md.
+- Adds capability to build TensorFlow with Eigen threadpool for oneDNN+ACL build
+
+### Changed
+- Updates oneDNN to v2.6.
+- Does not download model in example scripts if was downloaded already
 
 ### Removed
 - Removes depricated tensorflow/benchmarks from build.
 
 ### Fixed
 - Fixes git submodule init in SciPy build.
+- Fixed updating of weights when training models that have fully connected layers
 
 ## [r22.03] 2022-03-18
 https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--r22.03/docker/tensorflow-aarch64

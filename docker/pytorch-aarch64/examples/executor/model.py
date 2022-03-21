@@ -1,5 +1,5 @@
 # *******************************************************************************
-# Copyright 2021 Arm Limited and affiliates.
+# Copyright 2021-2022 Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -94,15 +94,19 @@ class Model:
         model_url = model_descriptor["model"][0]["source"]
         model_name = model_descriptor["model"][0]["name"]
 
-        try:
-            # Download the model
-            urllib.request.urlretrieve(
-                model_url,
-                model_name,
-                DownloadProgressBar("Downloading: " + model_name + "..."),
-            )
-        except:  # pylint: disable=bare-except
-            return False
+        # check to see whether the model exists in the
+        # current directory and if it exists then we do
+        # not need to download it
+        if not os.path.isfile(model_name):
+            try:
+                # Download the model
+                urllib.request.urlretrieve(
+                    model_url,
+                    model_name,
+                    DownloadProgressBar("Downloading: " + model_name + "..."),
+                )
+            except:  # pylint: disable=bare-except
+                return False
 
         if "class" in model_descriptor["model"][0]:
             model_class = model_descriptor["model"][0]["class"]

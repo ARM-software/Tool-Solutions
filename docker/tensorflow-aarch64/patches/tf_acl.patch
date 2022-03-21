@@ -15,18 +15,21 @@
  limitations under the License.
  *******************************************************************************
 diff --git a/tensorflow/workspace2.bzl b/tensorflow/workspace2.bzl
-index 60deadb1962..1c6db042a64 100644
+index 60deadb1962..82ab4c01098 100644
 --- a/tensorflow/workspace2.bzl
 +++ b/tensorflow/workspace2.bzl
-@@ -183,6 +183,7 @@ def _tf_repositories():
+@@ -183,18 +183,19 @@ def _tf_repositories():
      tf_http_archive(
          name = "mkl_dnn_acl_compatible",
          build_file = "//third_party/mkl_dnn:mkldnn_acl.BUILD",
-+        patch_file = ["//third_party/mkl_dnn:onednn_acl.patch"],
-         sha256 = "d7a47caeb28d2c67dc8fa0d0f338b11fbf25b473a608f04cfed913aea88815a9",
-         strip_prefix = "oneDNN-2.5",
-         urls = tf_mirror_urls("https://github.com/oneapi-src/oneDNN/archive/v2.5.tar.gz"),
-@@ -190,11 +191,11 @@ def _tf_repositories():
+-        sha256 = "d7a47caeb28d2c67dc8fa0d0f338b11fbf25b473a608f04cfed913aea88815a9",
+-        strip_prefix = "oneDNN-2.5",
+-        urls = tf_mirror_urls("https://github.com/oneapi-src/oneDNN/archive/v2.5.tar.gz"),
++        patch_file = ["//third_party/mkl_dnn:onednn_acl_training.patch", "//third_party/mkl_dnn:onednn_acl_threadpool.patch"],
++        sha256 = "9695640f55acd833ddcef4776af15e03446c4655f9296e5074b1b178dd7a4fb2",
++        strip_prefix = "oneDNN-2.6",
++        urls = tf_mirror_urls("https://github.com/oneapi-src/oneDNN/archive/v2.6.tar.gz"),
+     )
  
      tf_http_archive(
          name = "compute_library",
@@ -70,6 +73,95 @@ index e15c3104c92..e4f42b46d5c 100644
      defines = _COMPUTE_LIBRARY_DEFINES,
      includes = [
          "arm_compute/runtime",
+diff --git a/third_party/mkl_dnn/mkldnn_acl.BUILD b/third_party/mkl_dnn/mkldnn_acl.BUILD
+index fc87cffbce1..6fed3021432 100644
+--- a/third_party/mkl_dnn/mkldnn_acl.BUILD
++++ b/third_party/mkl_dnn/mkldnn_acl.BUILD
+@@ -14,6 +14,7 @@ _DNNL_RUNTIME_OMP = {
+     "#cmakedefine DNNL_WITH_LEVEL_ZERO": "#undef DNNL_WITH_LEVEL_ZERO",
+     "#cmakedefine DNNL_SYCL_CUDA": "#undef DNNL_SYCL_CUDA",
+     "#cmakedefine DNNL_ENABLE_STACK_CHECKER": "#undef DNNL_ENABLE_STACK_CHECKER",
++    "#cmakedefine DNNL_EXPERIMENTAL": "#undef DNNL_EXPERIMENTAL",
+     "#cmakedefine01 BUILD_TRAINING": "#define BUILD_TRAINING 1",
+     "#cmakedefine01 BUILD_INFERENCE": "#define BUILD_INFERENCE 0",
+     "#cmakedefine01 BUILD_PRIMITIVE_ALL": "#define BUILD_PRIMITIVE_ALL 1",
+@@ -44,17 +45,66 @@ _DNNL_RUNTIME_OMP = {
+     "#cmakedefine01 BUILD_PRIMITIVE_GPU_ISA_ALL": "#define BUILD_PRIMITIVE_GPU_ISA_ALL 0",
+     "#cmakedefine01 BUILD_GEN9": "#define BUILD_GEN9 0",
+     "#cmakedefine01 BUILD_GEN11": "#define BUILD_GEN11 0",
++    "#cmakedefine01 BUILD_XEHPG": "#define BUILD_XEHPG 0",
++    "#cmakedefine01 BUILD_XEHPC": "#define BUILD_XEHPC 0",
+     "#cmakedefine01 BUILD_XELP": "#define BUILD_XELP 0",
+     "#cmakedefine01 BUILD_XEHP": "#define BUILD_XEHP 0",
++}
++
++_DNNL_RUNTIME_THREADPOOL = {
++    "#cmakedefine DNNL_CPU_THREADING_RUNTIME DNNL_RUNTIME_${DNNL_CPU_THREADING_RUNTIME}": "#define DNNL_CPU_THREADING_RUNTIME DNNL_RUNTIME_THREADPOOL",
++    "#cmakedefine DNNL_CPU_RUNTIME DNNL_RUNTIME_${DNNL_CPU_RUNTIME}": "#define DNNL_CPU_RUNTIME DNNL_RUNTIME_THREADPOOL",
++    "#cmakedefine DNNL_GPU_RUNTIME DNNL_RUNTIME_${DNNL_GPU_RUNTIME}": "#define DNNL_GPU_RUNTIME DNNL_RUNTIME_NONE",
++    "#cmakedefine DNNL_USE_RT_OBJECTS_IN_PRIMITIVE_CACHE": "#undef DNNL_USE_RT_OBJECTS_IN_PRIMITIVE_CACHE",
++    "#cmakedefine DNNL_WITH_SYCL": "#undef DNNL_WITH_SYCL",
++    "#cmakedefine DNNL_WITH_LEVEL_ZERO": "#undef DNNL_WITH_LEVEL_ZERO",
++    "#cmakedefine DNNL_SYCL_CUDA": "#undef DNNL_SYCL_CUDA",
++    "#cmakedefine DNNL_ENABLE_STACK_CHECKER": "#undef DNNL_ENABLE_STACK_CHECKER",
++    "#cmakedefine DNNL_EXPERIMENTAL": "#undef DNNL_EXPERIMENTAL",
++    "#cmakedefine01 BUILD_TRAINING": "#define BUILD_TRAINING 1",
++    "#cmakedefine01 BUILD_INFERENCE": "#define BUILD_INFERENCE 0",
++    "#cmakedefine01 BUILD_PRIMITIVE_ALL": "#define BUILD_PRIMITIVE_ALL 1",
++    "#cmakedefine01 BUILD_BATCH_NORMALIZATION": "#define BUILD_BATCH_NORMALIZATION 0",
++    "#cmakedefine01 BUILD_BINARY": "#define BUILD_BINARY 0",
++    "#cmakedefine01 BUILD_CONCAT": "#define BUILD_CONCAT 0",
++    "#cmakedefine01 BUILD_CONVOLUTION": "#define BUILD_CONVOLUTION 0",
++    "#cmakedefine01 BUILD_DECONVOLUTION": "#define BUILD_DECONVOLUTION 0",
++    "#cmakedefine01 BUILD_ELTWISE": "#define BUILD_ELTWISE 0",
++    "#cmakedefine01 BUILD_INNER_PRODUCT": "#define BUILD_INNER_PRODUCT 0",
++    "#cmakedefine01 BUILD_LAYER_NORMALIZATION": "#define BUILD_LAYER_NORMALIZATION 0",
++    "#cmakedefine01 BUILD_LRN": "#define BUILD_LRN 0",
++    "#cmakedefine01 BUILD_MATMUL": "#define BUILD_MATMUL 0",
++    "#cmakedefine01 BUILD_POOLING": "#define BUILD_POOLING 0",
++    "#cmakedefine01 BUILD_PRELU": "#define BUILD_PRELU 0",
++    "#cmakedefine01 BUILD_REDUCTION": "#define BUILD_REDUCTION 0",
++    "#cmakedefine01 BUILD_REORDER": "#define BUILD_REORDER 0",
++    "#cmakedefine01 BUILD_RESAMPLING": "#define BUILD_RESAMPLING 0",
++    "#cmakedefine01 BUILD_RNN": "#define BUILD_RNN 0",
++    "#cmakedefine01 BUILD_SHUFFLE": "#define BUILD_SHUFFLE 0",
++    "#cmakedefine01 BUILD_SOFTMAX": "#define BUILD_SOFTMAX 0",
++    "#cmakedefine01 BUILD_SUM": "#define BUILD_SUM 0",
++    "#cmakedefine01 BUILD_PRIMITIVE_CPU_ISA_ALL": "#define BUILD_PRIMITIVE_CPU_ISA_ALL 1",
++    "#cmakedefine01 BUILD_SSE41": "#define BUILD_SSE41 0",
++    "#cmakedefine01 BUILD_AVX2": "#define BUILD_AVX2 0",
++    "#cmakedefine01 BUILD_AVX512": "#define BUILD_AVX512 0",
++    "#cmakedefine01 BUILD_AMX": "#define BUILD_AMX 0",
++    "#cmakedefine01 BUILD_PRIMITIVE_GPU_ISA_ALL": "#define BUILD_PRIMITIVE_GPU_ISA_ALL 0",
++    "#cmakedefine01 BUILD_GEN9": "#define BUILD_GEN9 0",
++    "#cmakedefine01 BUILD_GEN11": "#define BUILD_GEN11 0",
+     "#cmakedefine01 BUILD_XEHPG": "#define BUILD_XEHPG 0",
+     "#cmakedefine01 BUILD_XEHPC": "#define BUILD_XEHPC 0",
++    "#cmakedefine01 BUILD_XELP": "#define BUILD_XELP 0",
++    "#cmakedefine01 BUILD_XEHP": "#define BUILD_XEHP 0",
+ }
+ 
+ template_rule(
+     name = "dnnl_config_h",
+     src = "include/oneapi/dnnl/dnnl_config.h.in",
+     out = "include/oneapi/dnnl/dnnl_config.h",
+-    substitutions = _DNNL_RUNTIME_OMP,
++    substitutions = select({
++        "@org_tensorflow//third_party/mkl_dnn:build_with_mkl_aarch64_openmp": _DNNL_RUNTIME_OMP,
++        "//conditions:default": _DNNL_RUNTIME_THREADPOOL,
++    }),
+ )
+ 
+ template_rule(
+@@ -63,7 +113,7 @@ template_rule(
+     out = "include/oneapi/dnnl/dnnl_version.h",
+     substitutions = {
+         "@DNNL_VERSION_MAJOR@": "2",
+-        "@DNNL_VERSION_MINOR@": "5",
++        "@DNNL_VERSION_MINOR@": "6",
+         "@DNNL_VERSION_PATCH@": "0",
+         "@DNNL_VERSION_HASH@": "N/A",
+     },
 diff --git a/tensorflow/core/kernels/mkl/mkl_batch_matmul_op.cc b/tensorflow/core/kernels/mkl/mkl_batch_matmul_op.cc
 index b55de4958ae..4f2657b356a 100644
 --- a/tensorflow/core/kernels/mkl/mkl_batch_matmul_op.cc
@@ -280,7 +372,7 @@ index f77421f5e06..ac60597be2e 100644
  
  template <typename T, typename U>
 diff --git a/tensorflow/core/kernels/mkl/mkl_matmul_ops_common.h b/tensorflow/core/kernels/mkl/mkl_matmul_ops_common.h
-index 979c8b9c708..98e613acc17 100644
+index 979c8b9c708..1199d5c3193 100644
 --- a/tensorflow/core/kernels/mkl/mkl_matmul_ops_common.h
 +++ b/tensorflow/core/kernels/mkl/mkl_matmul_ops_common.h
 @@ -25,6 +25,7 @@ limitations under the License.
@@ -291,7 +383,34 @@ index 979c8b9c708..98e613acc17 100644
  
  using dnnl::inner_product_forward;
  using dnnl::primitive_attr;
-@@ -110,6 +111,10 @@ class MklDnnMatMulFwdPrimitive : public MklPrimitive {
+@@ -57,6 +58,7 @@ struct MklDnnMatMulFwdParams {
+   memory::format_tag weight_format;
+   memory::format_tag dst_format;
+   string dtypes = string("");
++  bool const_weight;
+ #ifdef DNNL_AARCH64_USE_ACL
+   void* weight_address = nullptr;
+ #endif
+@@ -71,14 +73,16 @@ struct MklDnnMatMulFwdParams {
+       memory::dims dst_dims,
+       memory::format_tag src_format = memory::format_tag::any,
+       memory::format_tag weight_format = memory::format_tag::any,
+-      memory::format_tag dst_format = memory::format_tag::any)
++      memory::format_tag dst_format = memory::format_tag::any,
++      bool const_weight = false)
+       : src_dims(src_dims),
+         weight_dims(weight_dims),
+         bias_dims(bias_dims),
+         dst_dims(dst_dims),
+         src_format(src_format),
+         weight_format(weight_format),
+-        dst_format(dst_format) {}
++        dst_format(dst_format),
++        const_weight(const_weight) {}
+ };
+ 
+ // With quantization, input, weight, bias, and output can have different types.
+@@ -110,6 +114,10 @@ class MklDnnMatMulFwdPrimitive : public MklPrimitive {
    void Execute(const Tinput* src_data, const Tweight* weight_data,
                 const Tbias* bias_data, Toutput* dst_data,
                 std::shared_ptr<stream> fwd_stream) {
@@ -302,7 +421,17 @@ index 979c8b9c708..98e613acc17 100644
  #ifndef ENABLE_ONEDNN_OPENMP
      context_.src_mem->set_data_handle(
          static_cast<void*>(const_cast<Tinput*>(src_data)), *fwd_stream);
-@@ -316,6 +321,9 @@ class MklDnnMatMulFwdPrimitive : public MklPrimitive {
+@@ -202,7 +210,8 @@ class MklDnnMatMulFwdPrimitive : public MklPrimitive {
+                                             memory::format_tag::any));
+     // Create an inner-product.
+     context_.fwd_desc.reset(new inner_product_forward::desc(
+-        prop_kind::forward_inference, *context_.src_md, *context_.weight_md,
++        matmul_fwd_params.const_weight ? prop_kind::forward_inference : prop_kind::forward_training,
++        *context_.src_md, *context_.weight_md,
+         *context_.bias_md, *context_.dst_md));
+     context_.fwd_pd.reset(new inner_product_forward::primitive_desc(
+         *context_.fwd_desc, cpu_engine_));
+@@ -316,6 +325,9 @@ class MklDnnMatMulFwdPrimitive : public MklPrimitive {
    }
  
    struct MklDnnMatMulFwdContext context_;
@@ -312,7 +441,7 @@ index 979c8b9c708..98e613acc17 100644
  };
  
  template <typename T, typename Tinput, typename Tweight, typename Tbias,
-@@ -589,6 +597,7 @@ class MklMatMulPrimitive : public MklPrimitive {
+@@ -589,6 +601,7 @@ class MklMatMulPrimitive : public MklPrimitive {
    void Execute(const std::shared_ptr<stream>& stream, const Tlhs* a_data,
                 const Trhs* b_data, const Toutput* c_data,
                 void* mul_data = nullptr, void* add_data = nullptr) {
@@ -320,7 +449,7 @@ index 979c8b9c708..98e613acc17 100644
  #ifndef ENABLE_ONEDNN_OPENMP
      context_.a_mem->set_data_handle(
          static_cast<void*>(const_cast<Tlhs*>(a_data)), *stream);
-@@ -749,6 +758,7 @@ class MklMatMulPrimitive : public MklPrimitive {
+@@ -749,6 +762,7 @@ class MklMatMulPrimitive : public MklPrimitive {
    }
  
    struct MklMatMulContext context_;
@@ -328,7 +457,7 @@ index 979c8b9c708..98e613acc17 100644
  };
  
  template <typename T, typename Tlhs, typename Trhs, typename Toutput>
-@@ -776,6 +786,13 @@ class MklMatMulPrimitiveFactory : public MklPrimitiveFactory<T> {
+@@ -776,6 +790,13 @@ class MklMatMulPrimitiveFactory : public MklPrimitiveFactory<T> {
      return matmul_prim;
    }
  
@@ -702,7 +831,7 @@ index 8b351a767c6..b3597988d5f 100644
  };
  
  // utility class for creating keys of MKL primitive pool.
-@@ -1982,5 +2049,8 @@ class MklReorderPrimitiveFactory : public MklPrimitiveFactory<T> {
+@@ -1982,6 +2049,9 @@ class MklReorderPrimitiveFactory : public MklPrimitiveFactory<T> {
                                           &to_strides[to_desc.ndims]);
  
      key_creator.AddAsKey(prefix);
@@ -712,3 +841,88 @@ index 8b351a767c6..b3597988d5f 100644
      key_creator.AddAsKey(static_cast<int>(from_desc.extra.flags));
      key_creator.AddAsKey(static_cast<int>(from_inner_nblks));
      key_creator.AddAsKey(from_inner_blks_1);
+diff --git a/tensorflow/core/kernels/mkl/mkl_matmul_op_fused.cc b/tensorflow/core/kernels/mkl/mkl_matmul_op_fused.cc
+index c9f028f1967..97409257055 100644
+--- a/tensorflow/core/kernels/mkl/mkl_matmul_op_fused.cc
++++ b/tensorflow/core/kernels/mkl/mkl_matmul_op_fused.cc
+@@ -121,7 +121,7 @@ class MklFusedMatMulOp : public MklDnnMatMulOpBase<T, T> {
+     MklDnnMatMulFwdParams matmul_params(
+         src_dims, weight_dims, bias_dims, dst_dims, src_format,
+         (this->is_weight_const_) ? memory::format_tag::any : weight_format,
+-        memory::format_tag::nc);
++        memory::format_tag::nc, this->is_weight_const_);
+     // Extend the basic parameters for data types and fusions.
+     ExtendMklDnnMatMulFwdParams(ctx, matmul_params);
+ #ifdef DNNL_AARCH64_USE_ACL
+diff --git a/.bazelrc b/.bazelrc
+index b1d4eee905d..45b70e743ae 100644
+--- a/.bazelrc
++++ b/.bazelrc
+@@ -232,6 +232,11 @@ build:mkl_aarch64 --define=tensorflow_mkldnn_contraction_kernel=0
+ build:mkl_aarch64 --define=build_with_openmp=true
+ build:mkl_aarch64 -c opt
+ 
++# This config builds oneDNN with ACL using threadpool
++build:mkl_aarch64_threadpool --define=build_with_mkl_aarch64=true
++build:mkl_aarch64_threadpool --define=tensorflow_mkldnn_contraction_kernel=0
++build:mkl_aarch64_threadpool -c opt
++
+ # This config refers to building CUDA op kernels with nvcc.
+ build:cuda --repo_env TF_NEED_CUDA=1
+ build:cuda --crosstool_top=@local_config_cuda//crosstool:toolchain
+diff --git a/tensorflow/tensorflow.bzl b/tensorflow/tensorflow.bzl
+index 61490437ba4..1804f427858 100644
+--- a/tensorflow/tensorflow.bzl
++++ b/tensorflow/tensorflow.bzl
+@@ -41,6 +41,7 @@ load(
+     "//third_party/mkl_dnn:build_defs.bzl",
+     "if_mkldnn_aarch64_acl",
+     "if_mkldnn_openmp",
++    "if_mkldnn_aarch64_acl_openmp",
+ )
+ load(
+     "//third_party/llvm_openmp:openmp.bzl",
+@@ -389,7 +390,8 @@ def tf_copts(
+         # optimizations for Intel builds using oneDNN if configured
+         if_enable_mkl(["-DENABLE_MKL"]) +
+         if_mkldnn_openmp(["-DENABLE_ONEDNN_OPENMP"]) +
+-        if_mkldnn_aarch64_acl(["-DENABLE_ONEDNN_OPENMP", "-DDNNL_AARCH64_USE_ACL=1"]) +
++        if_mkldnn_aarch64_acl(["-DDNNL_AARCH64_USE_ACL=1"]) +
++        if_mkldnn_aarch64_acl_openmp(["-DENABLE_ONEDNN_OPENMP"]) +
+         if_android_arm(["-mfpu=neon"]) +
+         if_linux_x86_64(["-msse3"]) +
+         if_ios_x86_64(["-msse4.1"]) +
+diff --git a/third_party/mkl_dnn/BUILD b/third_party/mkl_dnn/BUILD
+index d88bb1d88fd..89f20d39477 100644
+--- a/third_party/mkl_dnn/BUILD
++++ b/third_party/mkl_dnn/BUILD
+@@ -27,6 +27,15 @@ config_setting(
+     visibility = ["//visibility:public"],
+ )
+ 
++config_setting(
++    name = "build_with_mkl_aarch64_openmp",
++    define_values = {
++        "build_with_mkl_aarch64": "true",
++        "build_with_openmp": "true",
++    },
++    visibility = ["//visibility:public"],
++)
++
+ config_setting(
+     name = "build_with_mkl_aarch64",
+     define_values = {
+diff --git a/third_party/mkl_dnn/build_defs.bzl b/third_party/mkl_dnn/build_defs.bzl
+index cd22845f0d4..da43c568c69 100644
+--- a/third_party/mkl_dnn/build_defs.bzl
++++ b/third_party/mkl_dnn/build_defs.bzl
+@@ -35,3 +35,9 @@ def if_mkldnn_aarch64_acl(if_true, if_false = []):
+         "@org_tensorflow//third_party/mkl:build_with_mkl_aarch64": if_true,
+         "//conditions:default": if_false,
+     })
++
++def if_mkldnn_aarch64_acl_openmp(if_true, if_false = []):
++    return select({
++        "@org_tensorflow//third_party/mkl_dnn:build_with_mkl_aarch64_openmp": if_true,
++        "//conditions:default": if_false,
++    })
