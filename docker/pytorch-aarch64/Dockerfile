@@ -351,5 +351,6 @@ RUN pip install --no-cache-dir 'librosa==0.8.0'
 # Copy examples
 ENV EXAMPLE_DIR=/home/$DOCKER_USER/examples
 ADD examples $EXAMPLE_DIR
+COPY patches/welcome_verbose.txt /home/$DOCKER_USER/welcome.txt
 
 CMD ["bash", "-l"]

@@ -21,6 +21,8 @@ Instructions for building PyTorch for AArch64 from scratch in a Docker image, us
 
 For more information, see this Arm Developer Community [blog post](https://community.arm.com/developer/tools-software/tools/b/tools-software-ides-blog/posts/aarch64-docker-images-for-pytorch-and-tensorflow).
 
+The contents of [this folder](https://github.com/ARM-software/Tool-Solutions/tree/master/docker/pytorch-aarch64) are updated on a monthly cadence. For more details on the significant changes with each increment, see the [changelog](./CHANGELOG.md).
+
 ### Downloading an image from Docker Hub
 
 Completed images can be pulled from [armswdev/pytorch-arm-neoverse](https://hub.docker.com/r/armswdev/pytorch-arm-neoverse).

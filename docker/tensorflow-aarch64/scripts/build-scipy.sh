@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # *******************************************************************************
-# Copyright 2020-2021 Arm Limited and affiliates.
+# Copyright 2020-2022 Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,8 +28,8 @@ readonly src_repo=scipy
 
 git clone ${src_host}/${src_repo}.git
 cd ${src_repo}
-git submodule update --init
 git checkout v$version -b v$version
+git submodule update --init
 
 # OpenBLAS libraries are used to build SciPy
 export BLAS_LIB='openblas'

@@ -1,0 +1,26 @@
+
+================================================================================
+PyTorch for AArch64
+================================================================================
+
+Built using: https://github.com/ARM-software/Tool-Solutions
+For more details, see: https://git.io/JMESY
+
+--
+
+The default user's home (/home/ubuntu) contains:
+
+- examples/ - a selection of inference examples and benchmarks:
+-- Vision, Natural Language Processing (NLP) and speech recognition
+   inference examples
+-- MLCommons/ - sample inference benchmarks for Vision and NLP,
+   see https://github.com/mlcommons/inference
+
+  For more details, and instructions on how to run the benchmarks see:
+   examples/README.md (https://git.io/JMESs)
+
+- python3-venv/ - the complete python environment including PyTorch.
+
+- CK/ containing Collective Knowledge (https://cknowledge.org) repositories
+  used to manange datasets for the MLCommons benchmarks.
+=================================================================================
