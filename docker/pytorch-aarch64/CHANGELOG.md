@@ -8,14 +8,25 @@ where `YY` is the year, and `MM` the month of the increment.
 ## [Unreleased]
 
 ### Added
-- Adds docker/pytorch-aarch64/CHANGELOG.md.
 
 ### Changed
-- Updates oneDNN to v2.6.
-- Does not download model in example scripts if was downloaded already
+
+### Removed
 
 ### Fixed
-- Fixes git submodule init in SciPy build.
+
+## [r22.04] 2022-04-08
+https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--r22.04/docker/pytorch-aarch64
+
+### Added
+- Adds docker/pytorch-aarch64/CHANGELOG.md
+
+### Changed
+- Updates oneDNN to v2.6
+- Does not download model in example scripts if it was downloaded already
+
+### Fixed
+- Fixes git submodule init in SciPy build
 
 ## [r22.03] 2022-03-18
 https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--r22.03/docker/pytorch-aarch64
