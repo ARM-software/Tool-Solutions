@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Example Windows Performance Recorder Profile to collect L1 cache hardware PMU events.
+     Requires event to have previously been imported to the Windows registry. -->
+<WindowsPerformanceRecorder Version="1.0">
+    <Profiles>
+        <SystemCollector Id="SystemCollector_PMC" Base="" Name="PMC Counter" Realtime="false">
+            <BufferSize Value="1024" />
+            <Buffers Value="128" />
+        </SystemCollector>
+
+        <EventCollector Id="EventCollector_PMC" Name="PMC Event Collector" Realtime="false">
+            <BufferSize Value="1024" />
+            <Buffers Value="128" />
+        </EventCollector>
+
+        <SystemProvider Id="SystemProvider_ProcThread" Base="">
+            <Keywords>
+                <Keyword Value="CSwitch" />
+            </Keywords>
+        </SystemProvider>
+
+        <HardwareCounter Id="HardwareCounter_PMC">
+            <Counters>
+                <!-- Events to collect -->
+                <Counter Value="INST_RETIRED" />
+                <Counter Value="L1I_CACHE_REFILL" />
+                <Counter Value="L1I_CACHE" />
+                <Counter Value="L1D_CACHE_REFILL" />
+                <Counter Value="L1D_CACHE" />
+            </Counters>
+            <Events>
+                <!-- Collect on context switch. -->
+                <Event Value="CSwitch" />
+            </Events>
+        </HardwareCounter>
+
+        <Profile Id="PMC.Light.File" Name="PMC" Description="AAA" Strict="true" LoggingMode="File" DetailLevel="Light">
+            <Collectors Operation="Add">
+                <SystemCollectorId Value="SystemCollector_PMC">
+                    <SystemProviderId Value="SystemProvider_ProcThread" />
+                    <HardwareCounterId Value="HardwareCounter_PMC" />
+                </SystemCollectorId>
+            </Collectors>
+        </Profile>
+
+        <Profile Id="PMC.Light.Memory" Name="PMC" Description="AAA" Strict="true" LoggingMode="Memory" DetailLevel="Light">
+            <Collectors Operation="Add">
+                <SystemCollectorId Value="SystemCollector_PMC">
+                    <SystemProviderId Value="SystemProvider_ProcThread" />
+                    <HardwareCounterId Value="HardwareCounter_PMC" />
+                </SystemCollectorId>
+            </Collectors>
+        </Profile>
+    </Profiles>
+</WindowsPerformanceRecorder>
