@@ -1,5 +1,5 @@
 # *******************************************************************************
-# Copyright 2021 Arm Limited and affiliates.
+# Copyright 2022 Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,7 +20,7 @@ description: >-
   pretrained on the ImageNet dataset. For details on how this model was trained please see
   <https://github.com/mlcommons/training/tree/master/image_classification> for more information
 model:
-  - name: resnet_v1-50.pb
+  - name: resnet50_v1.pb
     source: https://zenodo.org/record/2535873/files/resnet50_v1.pb
     labels: https://s3.amazonaws.com/deep-learning-models/image-models/imagenet_class_index.json
 arguments:

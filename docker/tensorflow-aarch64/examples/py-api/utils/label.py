@@ -1,5 +1,5 @@
 # *******************************************************************************
-# Copyright 2021 Arm Limited and affiliates.
+# Copyright 2021-2022 Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,6 +18,8 @@
 Utility functions to label predictions
 """
 
+import os
+import sys
 import urllib.request
 import json
 
@@ -34,12 +36,21 @@ def classify_predictions(model_file, predictions):
     """
 
     model_descriptor = common.parse_model_file(model_file)
-    labels_url = model_descriptor["model"][0]["labels"]
+    labels_loc = model_descriptor["model"][0]["labels"]
+    labels_file = labels_loc
 
-    # Download labels
-    urllib.request.urlretrieve(labels_url, "labels.json")
+    # Get labels file
+    if labels_loc.startswith('http'):
+        labels_file = labels_loc.split("/")[-1]  # filename
 
-    class_idx = json.load(open("labels.json"))
+        if not os.path.isfile(labels_file):
+            # Download the labels if required
+            urllib.request.urlretrieve(labels_loc, labels_file)
+
+    if not os.path.isfile(labels_file):
+        sys.exit("Labels file %s does not exist!" % labels_file)
+
+    class_idx = json.load(open(labels_file))
     labels = np.asarray([class_idx[str(k)][1] for k in range(len(class_idx))])
 
     idx = np.argmax(predictions)
@@ -61,12 +72,21 @@ def detected_objects(model_file, predictions):
     :param predictions: Results from running inference
     """
     model_descriptor = common.parse_model_file(model_file)
-    labels_url = model_descriptor["model"][0]["labels"]
+    labels_loc = model_descriptor["model"][0]["labels"]
+    labels_file = labels_loc
 
-    # Download labels
-    urllib.request.urlretrieve(labels_url, "detection_labels.txt")
+    # Get labels file
+    if labels_loc.startswith('http'):
+        labels_file = labels_loc.split("/")[-1]  # filename
+        if not os.path.isfile(labels_file):
+            # Download the labels if required
+            urllib.request.urlretrieve(labels_loc, labels_file)
+
+    if not os.path.isfile(labels_file):
+        sys.exit("Labels file %s does not exist!" % labels_file)
+
     labels = []
-    with open("detection_labels.txt") as labels_f:
+    with open(labels_file) as labels_f:
         for line in labels_f.readlines():
             labels.append(line.strip())
 

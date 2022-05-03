@@ -1,5 +1,5 @@
 # *******************************************************************************
-# Copyright 2021 Arm Limited and affiliates.
+# Copyright 2022 Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -42,7 +42,7 @@ def parse_arguments():
         "-i",
         "--image",
         type=str,
-        help="URL to image that will be processed",
+        help="URL or filename of image to process",
         required=True,
     )
     parser.add_argument(
@@ -93,10 +93,16 @@ def parse_arguments():
         args["model"]
     ), "File describing model does not exists"
 
-    # Check whether the URL given for image exists
-    try:
-        requests.get(args["image"])
-    except requests.ConnectionError as _:
-        assert False, "Image URL is not available!"
+    # Check the image exists
+    if args["image"].startswith('http'):
+        try:
+            requests.get(args["image"])
+        except requests.ConnectionError as _:
+            assert False, "Image URL is not available!"
+    else:
+        try:
+            os.path.isfile(args["image"])
+        except:
+            assert False, "Image not found"
 
     return args

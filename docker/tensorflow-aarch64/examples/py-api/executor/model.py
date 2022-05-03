@@ -19,6 +19,7 @@ Class that wraps around TensorFlow session and executes the frozen model
 """
 
 import os
+import sys
 import time
 import urllib.request
 import zipfile
