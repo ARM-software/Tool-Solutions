@@ -68,7 +68,6 @@ if [[ $ONEDNN_BUILD ]]; then
     else
       extra_args="$extra_args --config=mkl_aarch64"
     fi
-    extra_args="$extra_args --linkopt=-fopenmp"
     if [[ $ONEDNN_BUILD == 'reference' ]]; then
       echo "TensorFlow $TF_VERSION with oneDNN backend - reference build."
       sed -i '/DNNL_AARCH64_USE_ACL/d' ./third_party/mkl_dnn/mkldnn_acl.BUILD
@@ -83,10 +82,12 @@ if [[ $ONEDNN_BUILD ]]; then
       # Patch to add experimental spin-wait scheduler to Compute Library
       # Note: overwrites upstream version
       mv ../compute_library.patch ./third_party/compute_library/.
-      # Patch to improve resource allocation for ACL primitives and add binary primitive
+      # Patch for training workloads to ensure that ACL does not use fixes weights for inner product.
       mv ../onednn_acl_training.patch ./third_party/mkl_dnn/.
       # Patch to add support for threadpool for use by ACL
       mv ../onednn_acl_threadpool.patch ./third_party/mkl_dnn/.
+      # Patch to add support for ACL based prelu primitive
+      mv ../onednn_acl_prelu.patch ./third_party/mkl_dnn/.
     fi
 else
     echo "TensorFlow $TF_VERSION with Eigen backend."
@@ -106,12 +107,9 @@ fi
 
 # Build the tensorflow configuration
 bazel build $extra_args \
-        --config=v2 --config=noaws \
         --copt="-mtune=${TUNE}" --copt="-march=${ARCH}" --copt="-O3"  --copt="-fopenmp" \
         --copt="-flax-vector-conversions" \
-        --cxxopt="-mtune=${TUNE}" --cxxopt="-march=${ARCH}" --cxxopt="-O3"  --cxxopt="-fopenmp" \
-        --cxxopt="-flax-vector-conversions" \
-        --linkopt="-lgomp  -lm" \
+        --linkopt="-lgomp" \
         //tensorflow/tools/pip_package:build_pip_package \
         //tensorflow:libtensorflow_cc.so \
         //tensorflow:install_headers

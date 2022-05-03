@@ -106,7 +106,7 @@ class Model:
                     DownloadProgressBar("Downloading: " + model_name + "..."),
                 )
             except:  # pylint: disable=bare-except
-                return False
+                sys.exit("Failed to set up the model: failed to download model from %s", model_url)
 
         if "class" in model_descriptor["model"][0]:
             model_class = model_descriptor["model"][0]["class"]

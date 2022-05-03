@@ -297,6 +297,7 @@ ENV PATH=$PACKAGE_DIR/bazel:$PATH
 COPY patches/tf_acl.patch $PACKAGE_DIR/.
 COPY patches/onednn_acl_training.patch $PACKAGE_DIR/.
 COPY patches/onednn_acl_threadpool.patch $PACKAGE_DIR/.
+COPY patches/onednn_acl_prelu.patch $PACKAGE_DIR/.
 COPY patches/compute_library.patch $PACKAGE_DIR/.
 COPY scripts/build-tensorflow.sh $PACKAGE_DIR/.
 RUN $PACKAGE_DIR/build-tensorflow.sh

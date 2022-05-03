@@ -30,18 +30,23 @@ import tensorflow as tf
 from . import common
 
 
-def _download_image(image_url):
+def _download_image(image_loc):
     """
     Download image to file
-    :param image_url: URL from where to download image
+    :param image_loc: URL or path for the image
     :returns: File name of downloaded image
     """
-    image_file = image_url.split("/")[-1]  # last part of URL
-    # Download the image
-    urllib.request.urlretrieve(image_url, image_file)
+    image_file = image_loc
+
+    if image_loc.startswith('http'):
+        image_file = image_loc.split("/")[-1]  # filename
+
+        if not os.path.isfile(image_file):
+            # Download the image if required
+            urllib.request.urlretrieve(image_loc, image_file)
 
     if not os.path.isfile(image_file):
-        sys.exit("Image %s does not exists!" % image_file)
+        sys.exit("Image %s does not exist!" % image_file)
 
     return image_file
 

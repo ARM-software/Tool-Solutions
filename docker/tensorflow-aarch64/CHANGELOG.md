@@ -15,23 +15,37 @@ where `YY` is the year, and `MM` the month of the increment.
 
 ### Fixed
 
+## [r22.05] 2022-05-06
+https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--r22.05/docker/tensorflow-aarch64
+
+### Added
+- Adds ACL-based PReLU primitive.
+- Python vision examples updated to allow use of a local image file.
+
+### Changed
+
+### Removed
+
+### Fixed
+- Python vision examples will not download labels and images if they are already present.
+
 ## [r22.04] 2022-04-08
 https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--r22.04/docker/tensorflow-aarch64
 
 ### Added
-- Adds docker/tensorflow-aarch64/CHANGELOG.md
-- Adds capability to build TensorFlow with Eigen threadpool for oneDNN+ACL build
+- Adds docker/tensorflow-aarch64/CHANGELOG.md.
+- Adds capability to build TensorFlow with Eigen threadpool for oneDNN+ACL build.
 
 ### Changed
-- Updates oneDNN to v2.6
-- Does not download model in example scripts if it was downloaded already
+- Updates oneDNN to v2.6.
+- Does not download model in example scripts if it was downloaded already.
 
 ### Removed
-- Removes deprecated tensorflow/benchmarks from build
+- Removes deprecated tensorflow/benchmarks from build.
 
 ### Fixed
-- Fixes git submodule init in SciPy build
-- Fixes weight-updating when training models that have fully connected layers
+- Fixes git submodule init in SciPy build.
+- Fixes weight-updating when training models that have fully connected layers.
 
 ## [r22.03] 2022-03-18
 https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--r22.03/docker/tensorflow-aarch64
