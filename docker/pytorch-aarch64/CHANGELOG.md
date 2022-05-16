@@ -12,6 +12,19 @@ where `YY` is the year, and `MM` the month of the increment.
 ### Changed
 
 ### Removed
+
+### Fixed
+
+## [r22.06] 2022-06-17
+https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--r22.06/docker/pytorch-aarch64
+
+### Added
+- Adds torchdata package.
+
+### Changed
+- Updates PyTorch to v1.11.0, torchvision to v0.12.0, and torchtext to v0.12.0.
+
+### Removed
 - Removes dependency on Arm Optimized Routines from PyTorch image.
 - Removes GCC 7 from PyTorch image.
 - Removes GCC 9 from PyTorch image.

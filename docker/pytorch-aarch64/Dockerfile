@@ -202,10 +202,9 @@ ENV PACKAGE_DIR=/home/$DOCKER_USER/$PACKAGE_DIR
 RUN mkdir -p $PACKAGE_DIR
 
 # Setup a Python virtual environment
-ENV VENV_DIR=/home/$DOCKER_USER/python3-venv
-ENV VENV_ACT=$VENV_DIR/bin/activate
-RUN python -m venv $VENV_DIR
-ENV PATH="$VENV_DIR/bin:$PATH"
+ENV VIRTUAL_ENV=/home/$DOCKER_USER/python3-venv
+RUN python -m venv $VIRTUAL_ENV
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 # Install Rust into user-space, needed for transformers dependencies
 RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
@@ -270,10 +269,11 @@ ENV ONEDNN_BUILD="${onednn_opt}" \
 
 # Key version numbers
 ENV PY_VERSION="${default_py_version}" \
-    TORCH_VERSION=1.10.0 \
     ONEDNN_VERSION="v2.6" \
-    VISION_VERSION="v0.11.1" \
-    TEXT_VERSION=0.10.0
+    TORCH_VERSION=1.11.0 \
+    TORCHVISION_VERSION=0.12.0 \
+    TORCHDATA_VERSION=0.3.0 \
+    TORCHTEXT_VERSION=0.12.0
 
 # Use a PACKAGE_DIR in userspace
 WORKDIR /home/$DOCKER_USER
@@ -282,17 +282,17 @@ ENV PACKAGE_DIR=/home/$DOCKER_USER/$PACKAGE_DIR
 RUN mkdir -p $PACKAGE_DIR
 
 # Copy in the Python virtual environment
-ENV VENV_DIR=/home/$DOCKER_USER/python3-venv
-COPY --chown=$DOCKER_USER:$DOCKER_USER --from=pytorch-tools $VENV_DIR /home/$DOCKER_USER/python3-venv
-ENV PATH="$VENV_DIR/bin:$PATH"
+ENV VIRTUAL_ENV=/home/$DOCKER_USER/python3-venv
+COPY --chown=$DOCKER_USER:$DOCKER_USER --from=pytorch-tools $VIRTUAL_ENV /home/$DOCKER_USER/python3-venv
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 # Build PyTorch
 COPY scripts/build-pytorch.sh $PACKAGE_DIR/.
-COPY patches/pytorch.patch $PACKAGE_DIR/.
 COPY patches/onednn.patch $PACKAGE_DIR/.
 RUN $PACKAGE_DIR/build-pytorch.sh
-RUN pip install torchvision==$VISION_VERSION
-# Build torchtext
+# Install torchvision, torchdata and torchtext
+RUN pip install --no-cache-dir torchvision==$TORCHVISION_VERSION \
+    torchdata==$TORCHDATA_VERSION
 ENV VENV_PACKAGE_DIR=$VENV_DIR/lib/python$PY_VERSION/site-packages
 COPY scripts/build-torchtext.sh $PACKAGE_DIR/.
 RUN $PACKAGE_DIR/build-torchtext.sh
@@ -309,9 +309,9 @@ WORKDIR /home/$DOCKER_USER
 USER $DOCKER_USER
 
 # Copy in the Python virtual environment
-ENV VENV_DIR=/home/$DOCKER_USER/python3-venv
-COPY --chown=$DOCKER_USER:$DOCKER_USER --from=pytorch-dev $VENV_DIR /home/$DOCKER_USER/python3-venv
-ENV PATH="$VENV_DIR/bin:$PATH"
+ENV VIRTUAL_ENV=/home/$DOCKER_USER/python3-venv
+COPY --chown=$DOCKER_USER:$DOCKER_USER --from=pytorch-dev $VIRTUAL_ENV /home/$DOCKER_USER/python3-venv
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 # Examples, benchmarks, and associated 'helper' scripts will be installed
 # in $EXAMPLE_DIR.

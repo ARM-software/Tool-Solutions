@@ -12,9 +12,35 @@ where `YY` is the year, and `MM` the month of the increment.
 ### Changed
 
 ### Removed
-- Removes GCC 7 & 9 from Tensorflow image.
 
 ### Fixed
+
+## [r22.06] 2022-06-17
+https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--r22.06/docker/tensorflow-aarch64
+
+### Added
+- Adds ACL-based pooling primitive.
+- Adds support for the use of arbitrary ACL-based post-ops.
+
+### Changed
+- Updates TensorFlow to v2.9.1.
+- Uses Bazelisk to choose correct Bazel version, rather than picking a specific Bazel release.
+
+### Removed
+- Removes GCC 7 & 9 from Tensorflow image.
+- Removes superfluous TensorFlow patches.
+- Removes OpenMP dependency from the `acl_threadpool` build.
+
+### Fixed
+- Applies patches from a number of upstream PRs to fix unit-test failures, see:
+  https://github.com/tensorflow/tensorflow/pull/56150
+  https://github.com/tensorflow/tensorflow/pull/56218
+  https://github.com/tensorflow/tensorflow/pull/56086
+  https://github.com/tensorflow/tensorflow/pull/56219
+  https://github.com/tensorflow/tensorflow/pull/56371
+- Fixes bug in matmul bcast.
+- Fixes threadpool impl. to support ACL+threadpool build in TF.
+- Fixes a number of TensorFlow unit test failures due to oneDNN.
 
 ## [r22.05] 2022-05-06
 https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--r22.05/docker/tensorflow-aarch64

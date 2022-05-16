@@ -201,10 +201,9 @@ ENV PACKAGE_DIR=/home/$DOCKER_USER/$PACKAGE_DIR
 RUN mkdir -p $PACKAGE_DIR
 
 # Setup a Python virtual environment
-ENV VENV_DIR=/home/$DOCKER_USER/python3-venv
-ENV VENV_ACT=$VENV_DIR/bin/activate
-RUN python -m venv $VENV_DIR
-ENV PATH="$VENV_DIR/bin:$PATH"
+ENV VIRTUAL_ENV=/home/$DOCKER_USER/python3-venv
+RUN python -m venv $VIRTUAL_ENV
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 # Install Rust into user-space, needed for transformers dependencies
 RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
@@ -250,7 +249,6 @@ ARG bazel_mem
 ARG enable_onednn
 ARG onednn_opt
 ARG tf_version
-ARG bazel_version
 ARG default_py_version
 ARG tune
 ARG arch
@@ -268,7 +266,6 @@ ENV NP_MAKE="${njobs}" \
     EIGEN_L3_CACHE="${eigen_l3_cache}"
 # Key version numbers
 ENV PY_VERSION="${default_py_version}" \
-    BZL_VERSION="${bazel_version}" \
     TF_VERSION="${tf_version}"
 # Set runtime flag to enable/disable oneDNN backend
 ENV TF_ENABLE_ONEDNN_OPTS="${enable_onednn}"
@@ -280,21 +277,25 @@ ENV PACKAGE_DIR=/home/$DOCKER_USER/$PACKAGE_DIR
 RUN mkdir -p $PACKAGE_DIR
 
 # Copy in the Python virtual environment
-ENV VENV_DIR=/home/$DOCKER_USER/python3-venv
-COPY --chown=$DOCKER_USER:$DOCKER_USER --from=tensorflow-tools $VENV_DIR /home/$DOCKER_USER/python3-venv
-ENV PATH="$VENV_DIR/bin:$PATH"
+ENV VIRTUAL_ENV=/home/$DOCKER_USER/python3-venv
+COPY --chown=$DOCKER_USER:$DOCKER_USER --from=tensorflow-tools $VIRTUAL_ENV /home/$DOCKER_USER/python3-venv
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
-# Get Bazel binary for AArch64
-COPY scripts/get-bazel.sh $PACKAGE_DIR/.
-RUN $PACKAGE_DIR/get-bazel.sh
-ENV PATH=$PACKAGE_DIR/bazel:$PATH
+# Get Bazel binary for AArch64 using the latest Bazelisk release
+RUN mkdir -p $PACKAGE_DIR/bazel
+RUN bazelisk_url=$(curl -L -s https://api.github.com/repos/bazelbuild/bazelisk/releases/latest \
+    | grep -o -E "https://(.*)bazelisk-linux-arm64") && \
+    wget $bazelisk_url -O $PACKAGE_DIR/bazel/bazel
+RUN chmod a+x $PACKAGE_DIR/bazel/bazel
+ENV PATH="$PACKAGE_DIR/bazel:$PATH"
 
 # Build TensorFlow
 COPY patches/tf_acl.patch $PACKAGE_DIR/.
-COPY patches/onednn_acl_training.patch $PACKAGE_DIR/.
-COPY patches/onednn_acl_threadpool.patch $PACKAGE_DIR/.
-COPY patches/onednn_acl_prelu.patch $PACKAGE_DIR/.
 COPY patches/compute_library.patch $PACKAGE_DIR/.
+COPY patches/onednn_acl_threadcap.patch $PACKAGE_DIR/.
+COPY patches/onednn_acl_pooling.patch $PACKAGE_DIR/.
+COPY patches/onednn_acl_postops.patch $PACKAGE_DIR/.
+COPY patches/onednn_acl_matmul_fix.patch $PACKAGE_DIR/.
 COPY scripts/build-tensorflow.sh $PACKAGE_DIR/.
 RUN $PACKAGE_DIR/build-tensorflow.sh
 COPY scripts/build-tensorflow-addons.sh $PACKAGE_DIR/.
@@ -311,7 +312,6 @@ ARG bazel_mem
 ARG enable_onednn
 ARG onednn_opt
 ARG tfserving_version
-ARG bazel_version
 ARG default_py_version
 ARG cpu
 ARG arch
@@ -324,7 +324,6 @@ ENV NP_MAKE="${njobs}" \
 
 # Key version numbers
 ENV PY_VERSION="${default_py_version}" \
-    BZL_VERSION="${bazel_version}" \
     TFSERVING_VERSION="${tfserving_version}"
 # Set runtime flag to enable/disable oneDNN backend
 ENV TF_ENABLE_ONEDNN_OPTS="${enable_onednn}"
@@ -347,14 +346,17 @@ ENV PACKAGE_DIR=/home/$DOCKER_USER/$PACKAGE_DIR
 RUN mkdir -p $PACKAGE_DIR
 
 # Copy in the Python virtual environment
-ENV VENV_DIR=/home/$DOCKER_USER/python3-venv
-COPY --chown=$DOCKER_USER:$DOCKER_USER --from=tensorflow-tools $VENV_DIR /home/$DOCKER_USER/python3-venv
-ENV PATH="$VENV_DIR/bin:$PATH"
+ENV VIRTUAL_ENV=/home/$DOCKER_USER/python3-venv
+COPY --chown=$DOCKER_USER:$DOCKER_USER --from=tensorflow-tools $VIRTUAL_ENV /home/$DOCKER_USER/python3-venv
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
-# Get Bazel binary for AArch64
-COPY scripts/get-bazel.sh $PACKAGE_DIR/.
-RUN $PACKAGE_DIR/get-bazel.sh
-ENV PATH=$PACKAGE_DIR/bazel:$PATH
+# Get Bazel binary for AArch64 using the latest Bazelisk release
+RUN mkdir -p $PACKAGE_DIR/bazel
+RUN bazelisk_url=$(curl -L -s https://api.github.com/repos/bazelbuild/bazelisk/releases/latest \
+    | grep -o -E "https://(.*)bazelisk-linux-arm64") && \
+    wget $bazelisk_url -O $PACKAGE_DIR/bazel/bazel
+RUN chmod a+x $PACKAGE_DIR/bazel/bazel
+ENV PATH="$PACKAGE_DIR/bazel:$PATH"
 
 # Build TensorFlow Serving
 COPY scripts/build-tensorflow-serving.sh $PACKAGE_DIR/.
@@ -377,10 +379,10 @@ WORKDIR /home/$DOCKER_USER
 USER $DOCKER_USER
 
 # Copy in the Python virtual environment
-ENV VENV_DIR=/home/$DOCKER_USER/python3-venv
-COPY --chown=$DOCKER_USER:$DOCKER_USER --from=tensorflow-dev $VENV_DIR /home/$DOCKER_USER/python3-venv
-ENV PATH="$VENV_DIR/bin:$PATH"
-ENV LD_LIBRARY_PATH=$VENV_DIR/tensorflow/lib:$LD_LIBRARY_PATH
+ENV VIRTUAL_ENV=/home/$DOCKER_USER/python3-venv
+COPY --chown=$DOCKER_USER:$DOCKER_USER --from=tensorflow-dev $VIRTUAL_ENV /home/$DOCKER_USER/python3-venv
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+ENV LD_LIBRARY_PATH=$VIRTUAL_ENV/tensorflow/lib:$LD_LIBRARY_PATH
 
 # Examples, benchmarks, and associated 'helper' scripts will be installed
 # in $EXAMPLE_DIR.
