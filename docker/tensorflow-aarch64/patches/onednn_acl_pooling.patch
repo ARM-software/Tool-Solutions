@@ -1,0 +1,618 @@
+ *******************************************************************************
+ Copyright 2022 Arm Limited and affiliates.
+ SPDX-License-Identifier: Apache-2.0
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+ *******************************************************************************
+diff --git a/src/cpu/aarch64/acl_pooling.cpp b/src/cpu/aarch64/acl_pooling.cpp
+new file mode 100644
+index 0000000000..2bd80d7144
+--- /dev/null
++++ b/src/cpu/aarch64/acl_pooling.cpp
+@@ -0,0 +1,53 @@
++/*******************************************************************************
++* Copyright 2022 Arm Ltd. and affiliates
++*
++* Licensed under the Apache License, Version 2.0 (the "License");
++* you may not use this file except in compliance with the License.
++* You may obtain a copy of the License at
++*
++*     http://www.apache.org/licenses/LICENSE-2.0
++*
++* Unless required by applicable law or agreed to in writing, software
++* distributed under the License is distributed on an "AS IS" BASIS,
++* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++* See the License for the specific language governing permissions and
++* limitations under the License.
++*******************************************************************************/
++
++#include "cpu/aarch64/acl_pooling.hpp"
++
++namespace dnnl {
++namespace impl {
++namespace cpu {
++namespace aarch64 {
++
++status_t acl_pooling_fwd_t::execute_forward(const exec_ctx_t &ctx) const {
++    // Lock here is needed because resource_mapper does not support
++    // concurrent access.
++    std::lock_guard<std::mutex> _lock {this->mtx};
++    status_t status = status::success;
++    auto src_base = CTX_IN_MEM(const void *, DNNL_ARG_SRC);
++    auto dst_base = CTX_OUT_MEM(void *, DNNL_ARG_DST);
++
++    // Retrieve primitive resource and configured Compute Library objects
++    auto *acl_resource
++            = ctx.get_resource_mapper()->get<acl_pooling_resource_t>(this);
++    acl_pooling_obj_t &acl_obj = acl_resource->get_acl_obj();
++
++    // import_memory() and free() methods do not allocate/free any additional
++    // memory, only acquire/release pointers.
++    acl_obj.src_tensor.allocator()->import_memory(const_cast<void *>(src_base));
++    acl_obj.dst_tensor.allocator()->import_memory(dst_base);
++
++    acl_obj.pool.run();
++
++    acl_obj.src_tensor.allocator()->free();
++    acl_obj.dst_tensor.allocator()->free();
++
++    return status;
++}
++
++} // namespace aarch64
++} // namespace cpu
++} // namespace impl
++} // namespace dnnl
+diff --git a/src/cpu/aarch64/acl_pooling.hpp b/src/cpu/aarch64/acl_pooling.hpp
+new file mode 100644
+index 0000000000..f80e9f879f
+--- /dev/null
++++ b/src/cpu/aarch64/acl_pooling.hpp
+@@ -0,0 +1,241 @@
++/*******************************************************************************
++* Copyright 2022 Arm Ltd. and affiliates
++*
++* Licensed under the Apache License, Version 2.0 (the "License");
++* you may not use this file except in compliance with the License.
++* You may obtain a copy of the License at
++*
++*     http://www.apache.org/licenses/LICENSE-2.0
++*
++* Unless required by applicable law or agreed to in writing, software
++* distributed under the License is distributed on an "AS IS" BASIS,
++* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++* See the License for the specific language governing permissions and
++* limitations under the License.
++*******************************************************************************/
++
++#ifndef CPU_AARCH64_ACL_POOLING_HPP
++#define CPU_AARCH64_ACL_POOLING_HPP
++
++#include "cpu/aarch64/acl_utils.hpp"
++#include "cpu/cpu_pooling_pd.hpp"
++
++namespace dnnl {
++namespace impl {
++namespace cpu {
++namespace aarch64 {
++
++struct acl_pooling_obj_t {
++    arm_compute::NEPoolingLayer pool;
++    arm_compute::Tensor src_tensor;
++    arm_compute::Tensor dst_tensor;
++};
++
++struct acl_pooling_conf_t {
++    bool is_max_pool;
++    arm_compute::PoolingLayerInfo pool_info;
++    arm_compute::TensorInfo src_info;
++    arm_compute::TensorInfo dst_info;
++};
++
++struct acl_pooling_resource_t : public resource_t {
++    acl_pooling_resource_t()
++        : acl_pooling_obj_(utils::make_unique<acl_pooling_obj_t>()) {}
++
++    status_t configure(const acl_pooling_conf_t &app) {
++        if (!acl_pooling_obj_) return status::out_of_memory;
++
++        // Init Compute Library tensors based on info from descriptor
++        acl_pooling_obj_->src_tensor.allocator()->init(app.src_info);
++        acl_pooling_obj_->dst_tensor.allocator()->init(app.dst_info);
++
++        acl_pooling_obj_->pool.configure(&acl_pooling_obj_->src_tensor,
++                &acl_pooling_obj_->dst_tensor, app.pool_info);
++
++        return status::success;
++    }
++
++    acl_pooling_obj_t &get_acl_obj() const { return *acl_pooling_obj_; }
++
++    DNNL_DISALLOW_COPY_AND_ASSIGN(acl_pooling_resource_t);
++
++private:
++    std::unique_ptr<acl_pooling_obj_t> acl_pooling_obj_;
++}; // acl_pooling_resource_t
++
++struct acl_pooling_fwd_t : public primitive_t {
++    struct pd_t : public cpu_pooling_fwd_pd_t {
++        using cpu_pooling_fwd_pd_t::cpu_pooling_fwd_pd_t;
++        pd_t(const pooling_v2_desc_t *adesc, const primitive_attr_t *attr,
++                const pooling_fwd_pd_t *hint_fwd_pd)
++            : cpu_pooling_fwd_pd_t(adesc, attr, hint_fwd_pd), app() {}
++
++        DECLARE_COMMON_PD_T("acl", acl_pooling_fwd_t);
++
++        status_t init(engine_t *engine) {
++            bool ok = set_default_params() == status::success
++                    && is_fwd() // ACL supports forward propagation only
++                    && utils::everyone_is(data_type::f32, src_md()->data_type,
++                            dst_md()->data_type)
++                    && attr()->has_default_values()
++                    && attr_.set_default_formats(dst_md(0)) == status::success
++                    && !is_dilated() && !has_zero_dim_memory();
++            if (!ok) return status::unimplemented;
++
++            const pooling_v2_desc_t *pod = desc();
++
++            const bool is_training
++                    = pod->prop_kind == prop_kind::forward_training;
++            if (pod->alg_kind == alg_kind::pooling_max && is_training)
++                init_default_ws();
++
++            auto src_tag = memory_desc_matches_one_of_tag(
++                    *src_md(), format_tag::nhwc, format_tag::nchw);
++            auto dst_tag = memory_desc_matches_one_of_tag(
++                    *dst_md(), format_tag::nhwc, format_tag::nchw);
++            ACL_CHECK_SUPPORT(
++                    utils::one_of(format_tag::undef, src_tag, dst_tag),
++                    "src or dst is not format nhwc or nchw");
++            ACL_CHECK_SUPPORT(src_tag != dst_tag,
++                    "src and dst have different memory formats");
++
++            const memory_desc_wrapper src_d(src_md());
++            const memory_desc_wrapper dst_d(dst_md());
++            const int ndims = src_d.ndims();
++            ACL_CHECK_SUPPORT(ndims != 4, "Tensor is not 4d");
++
++            // batch size
++            const int mb = MB();
++
++            // src/input  channels, height, width
++            const int ic = IC();
++            const int ih = IH();
++            const int iw = IW();
++
++            // dst/output channels, height, width
++            const int oc = OC();
++            const int oh = OH();
++            const int ow = OW();
++
++            // weights height and width
++            const int kh = KH();
++            const int kw = KW();
++
++            // height and width strides
++            const int stride_h = KSH();
++            const int stride_w = KSW();
++
++            // Padding
++            // left, right, top, bottom padding
++            const unsigned int l_pad
++                    = static_cast<unsigned int>(pod->padding[0][1]);
++            const unsigned int t_pad
++                    = static_cast<unsigned int>(pod->padding[0][0]);
++            const unsigned int r_pad
++                    = static_cast<unsigned int>(pod->padding[1][1]);
++            const unsigned int b_pad
++                    = static_cast<unsigned int>(pod->padding[1][0]);
++
++            // Choose the pooling type
++            const alg_kind_t alg = pod->alg_kind;
++            app.is_max_pool = (alg == alg_kind::pooling_max);
++            app.pool_info.pool_type = app.is_max_pool
++                    ? arm_compute::PoolingType::MAX
++                    : arm_compute::PoolingType::AVG;
++
++            // Pooling window
++            app.pool_info.pool_size = arm_compute::Size2D(kw, kh);
++            // Choose the data layout
++            bool is_nspc = utils::one_of(src_tag, format_tag::nhwc);
++            const auto acl_layout = is_nspc ? arm_compute::DataLayout::NHWC
++                                            : arm_compute::DataLayout::NCHW;
++            app.pool_info.data_layout = acl_layout;
++            const auto acl_data_t
++                    = acl_utils::get_acl_data_t(src_d.data_type());
++
++            ACL_CHECK_SUPPORT(
++                    !use_acl_heuristic(mb * ic * oh * ow * kh * kw,
++                            dnnl_get_max_threads(), app.is_max_pool, is_nspc),
++                    "ACL is unoptimal in this case");
++
++            app.pool_info.exclude_padding
++                    = (alg == alg_kind::pooling_avg_exclude_padding);
++
++            app.pool_info.pad_stride_info = arm_compute::PadStrideInfo(stride_w,
++                    stride_h, l_pad, r_pad, t_pad, b_pad,
++                    arm_compute::DimensionRoundingType::FLOOR);
++
++            app.src_info = arm_compute::TensorInfo(is_nspc
++                            ? arm_compute::TensorShape(ic, iw, ih, mb)
++                            : arm_compute::TensorShape(iw, ih, ic, mb),
++                    1, acl_data_t, acl_layout);
++            app.dst_info = arm_compute::TensorInfo(is_nspc
++                            ? arm_compute::TensorShape(oc, ow, oh, mb)
++                            : arm_compute::TensorShape(ow, oh, oc, mb),
++                    1, acl_data_t, acl_layout);
++
++            ACL_CHECK_VALID(arm_compute::NEPoolingLayer::validate(
++                    &app.src_info, &app.dst_info, app.pool_info));
++
++            return status::success;
++        }
++
++        bool use_acl_heuristic(
++                int problem_size, int thread_count, bool is_max, bool is_nhwc) {
++            // For nhwc, ACL is faster above a certain problem size 'cutoff'
++            // This cutoff scales linearly with thread count (except 1 thread)
++            // So return true iff problem size is larger than this cutoff.
++            // Note: This rule is approximate, Not all problems follow this rule
++            if (is_nhwc) {
++                if (is_max) {
++                    if (thread_count == 1)
++                        return problem_size > 512;
++                    else
++                        return problem_size > 4096 * thread_count;
++                } else { // pooling_alg == avg_p || pooling_alg == avg_np
++                    if (thread_count == 1)
++                        return problem_size > 1024;
++                    else
++                        return problem_size > 8192 * thread_count;
++                }
++            } else { // memory_format == nchw
++                return false;
++            }
++        }
++
++        acl_pooling_conf_t app;
++    };
++
++    acl_pooling_fwd_t(const pd_t *apd) : primitive_t(apd) {}
++
++    status_t execute(const exec_ctx_t &ctx) const override {
++        return execute_forward(ctx);
++    }
++
++    status_t create_resource(
++            engine_t *engine, resource_mapper_t &mapper) const override {
++        if (mapper.has_resource(this)) return status::success;
++
++        auto r = utils::make_unique<acl_pooling_resource_t>();
++        if (!r) return status::out_of_memory;
++
++        // Configure the resource based on information from primitive descriptor
++        auto st = r->configure(pd()->app);
++        if (st == status::success) { mapper.add(this, std::move(r)); }
++
++        return st;
++    }
++
++private:
++    // execute_forward has to be const thus mutability of mtx
++    mutable std::mutex mtx;
++    status_t execute_forward(const exec_ctx_t &ctx) const;
++    const pd_t *pd() const { return (const pd_t *)primitive_t::pd().get(); }
++}; // acl_pooling_fwd_t
++
++} // namespace aarch64
++} // namespace cpu
++} // namespace impl
++} // namespace dnnl
++
++#endif // CPU_AARCH64_ACL_POOLING_HPP
+diff --git a/src/cpu/cpu_pooling_list.cpp b/src/cpu/cpu_pooling_list.cpp
+index 7cf93dd297..584f685bff 100644
+--- a/src/cpu/cpu_pooling_list.cpp
++++ b/src/cpu/cpu_pooling_list.cpp
+@@ -1,6 +1,7 @@
+ /*******************************************************************************
+ * Copyright 2019-2022 Intel Corporation
+ * Copyright 2020 FUJITSU LIMITED
++* Copyright 2022 Arm Ltd. and affiliates
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+@@ -29,6 +30,9 @@ using namespace dnnl::impl::cpu::x64;
+ #include "cpu/aarch64/jit_uni_i8i8_pooling.hpp"
+ #include "cpu/aarch64/jit_uni_pooling.hpp"
+ using namespace dnnl::impl::cpu::aarch64;
++#if DNNL_AARCH64_USE_ACL
++#include "cpu/aarch64/acl_pooling.hpp"
++#endif // DNNL_AARCH64_USE_ACL
+ #endif
+ 
+ namespace dnnl {
+@@ -50,6 +54,7 @@ const std::map<pk_impl_key_t, std::vector<impl_list_item_t>> &impl_list_map() {
+             CPU_INSTANCE_X64(jit_uni_pooling_fwd_t<avx, f32>)
+             CPU_INSTANCE_X64(jit_uni_pooling_fwd_t<sse41, f32>)
+             CPU_INSTANCE_AARCH64(jit_uni_pooling_fwd_t<sve_512, f32>)
++            CPU_INSTANCE_AARCH64_ACL(acl_pooling_fwd_t)
+             CPU_INSTANCE(nchw_pooling_fwd_t<bf16>)
+             CPU_INSTANCE(nchw_pooling_fwd_t<f32>)
+             CPU_INSTANCE(nhwc_pooling_fwd_t<bf16>)
+diff --git a/tests/benchdnn/pool/pool.cpp b/tests/benchdnn/pool/pool.cpp
+index 734a282259..fc497d7115 100644
+--- a/tests/benchdnn/pool/pool.cpp
++++ b/tests/benchdnn/pool/pool.cpp
+@@ -1,5 +1,6 @@
+ /*******************************************************************************
+ * Copyright 2019-2022 Intel Corporation
++* Copyright 2022 Arm Ltd. and affiliates
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+@@ -150,6 +151,15 @@ void skip_invalid_prb(const prb_t *prb, res_t *res) {
+             return;
+         }
+     }
++
++#if DNNL_AARCH64_USE_ACL
++    // Since ACL supports only forward pass.
++    // Ref: https://github.com/oneapi-src/oneDNN/issues/1205
++    if (prb->dir & FLAG_BWD) {
++        res->state = SKIPPED, res->reason = CASE_NOT_SUPPORTED;
++        return;
++    }
++#endif
+ }
+ 
+ void setup_cmp(compare::compare_t &cmp, const prb_t *prb, data_kind_t kind,
+@@ -282,6 +292,11 @@ int doit(const prb_t *prb, res_t *res) {
+             ref_args.set(DNNL_ARG_DIFF_DST, d_dst_fp);
+             ref_args.set(DNNL_ARG_DIFF_SRC, d_src_fp);
+ 
++#if DNNL_AARCH64_USE_ACL
++            // This is needed for pool::get_initial_min_value()
++            // See https://github.com/oneapi-src/oneDNN/issues/1205
++            const_cast<prb_t *>(prb)->is_acl = (res->impl_name == "acl");
++#endif
+             check_correctness(prb, {SRC}, args, ref_args, setup_cmp, res);
+         }
+     }
+diff --git a/tests/benchdnn/pool/pool.hpp b/tests/benchdnn/pool/pool.hpp
+index b72807fb0d..3a58d9628b 100644
+--- a/tests/benchdnn/pool/pool.hpp
++++ b/tests/benchdnn/pool/pool.hpp
+@@ -1,5 +1,6 @@
+ /*******************************************************************************
+ * Copyright 2019-2022 Intel Corporation
++* Copyright 2022 Arm Ltd. and affiliates
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+@@ -153,6 +154,11 @@ struct prb_t : public desc_t {
+     alg_t alg;
+     attr_t attr;
+     int64_t user_mb;
++#if DNNL_AARCH64_USE_ACL
++    // This is needed for pool::get_initial_min_value()
++    // See https://github.com/oneapi-src/oneDNN/issues/1205
++    bool is_acl = false;
++#endif
+ 
+     int64_t kernel_size() const { return kd * kh * kw; }
+ 
+diff --git a/tests/benchdnn/pool/ref_pool.cpp b/tests/benchdnn/pool/ref_pool.cpp
+index ce4c2b27cb..b69bb90035 100644
+--- a/tests/benchdnn/pool/ref_pool.cpp
++++ b/tests/benchdnn/pool/ref_pool.cpp
+@@ -1,5 +1,6 @@
+ /*******************************************************************************
+ * Copyright 2019-2022 Intel Corporation
++* Copyright 2022 Arm Ltd. and affiliates
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+@@ -20,6 +21,20 @@
+ 
+ namespace pool {
+ 
++float get_initial_min_value(const prb_t *prb) {
++#if DNNL_AARCH64_USE_ACL
++    // Ref: https://github.com/oneapi-src/oneDNN/issues/1205
++    // Changes required to support ACL which use std::numeric_limits<float>::infinity()
++    // for the minimum value of type float.
++    if (prb->cfg[DST].dt == dnnl_f32 && prb->is_acl == true)
++        return -std::numeric_limits<float>::infinity();
++    else
++        return lowest_dt(prb->cfg[DST].dt);
++#else
++    return lowest_dt(prb->cfg[DST].dt);
++#endif
++}
++
+ void compute_ref_fwd(const prb_t *prb, const args_t &args) {
+     const dnn_mem_t &src = args.find(DNNL_ARG_SRC);
+     const dnn_mem_t &dst = args.find(DNNL_ARG_DST);
+@@ -38,7 +53,7 @@ void compute_ref_fwd(const prb_t *prb, const args_t &args) {
+ 
+         // XXX: this is a hack to let tests with padded area to pass for bf16
+         // dt due to the library initialize values with -max_dt, but not -INF.
+-        float max_value = lowest_dt(prb->cfg[DST].dt);
++        float max_value = get_initial_min_value(prb);
+         float avg_value = 0.;
+         // Set initial value based on ws data type
+         int ws_off = prb->kernel_size() <= UINT8_MAX ? UINT8_MAX : INT_MAX;
+diff --git a/tests/gtests/test_pooling_backward.cpp b/tests/gtests/test_pooling_backward.cpp
+index e33ee8683e..b74a50c09f 100644
+--- a/tests/gtests/test_pooling_backward.cpp
++++ b/tests/gtests/test_pooling_backward.cpp
+@@ -1,5 +1,6 @@
+ /*******************************************************************************
+ * Copyright 2016-2021 Intel Corporation
++* Copyright 2022 Arm Ltd. and affiliates
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+@@ -13,6 +14,7 @@
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *******************************************************************************/
++#ifndef DNNL_AARCH64_USE_ACL // Ref: https://github.com/oneapi-src/oneDNN/issues/1205
+ 
+ #include "dnnl_test_common.hpp"
+ #include "gtest/gtest.h"
+@@ -1396,3 +1398,4 @@ GPU_INSTANTIATE_TEST_SUITE_P(TestPooling_ncdhw, pooling_bwd_test_float,
+                                 5, 5, 5, 1, 1, 1, 1, 1, 1)}));
+ 
+ } // namespace dnnl
++#endif // DNNL_AARCH64_USE_ACL
+diff --git a/tests/gtests/test_pooling_forward.cpp b/tests/gtests/test_pooling_forward.cpp
+index 93f81e8149..45bbe35ee9 100644
+--- a/tests/gtests/test_pooling_forward.cpp
++++ b/tests/gtests/test_pooling_forward.cpp
+@@ -1,5 +1,6 @@
+ /*******************************************************************************
+ * Copyright 2016-2021 Intel Corporation
++* Copyright 2022 Arm Ltd. and affiliates
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+@@ -78,7 +79,14 @@ bool cuda_check_format_tags(memory::format_tag format) {
+ 
+ template <typename data_t>
+ void check_pool_fwd(const pool_test_params_t &p, const memory &src,
+-        const memory &dst, const memory &ws) {
++        const memory &dst, const memory &ws
++// Changes required to support ACL which use std::numeric_limits<float>::infinity()
++// for the minimum value of type float. //Ref: https://github.com/oneapi-src/oneDNN/issues/1205
++#if DNNL_AARCH64_USE_ACL
++        ,
++        const bool is_acl
++#endif
++) {
+     auto src_data = map_memory<data_t>(src);
+     auto dst_data = map_memory<data_t>(dst);
+     auto ws_data_ptr = map_memory<unsigned char>(ws);
+@@ -105,6 +113,12 @@ void check_pool_fwd(const pool_test_params_t &p, const memory &src,
+ 
+     const bool is_cudnn_gpu = is_nvidia_gpu(src.get_engine());
+ 
++#if DNNL_AARCH64_USE_ACL
++    // Changes required to support ACL which use std::numeric_limits<float>::infinity()
++    // for the minimum value of type float
++    const bool is_float = (src_d.data_type() == dnnl_f32);
++#endif
++
+     dnnl::impl::parallel_nd(pd.mb, pd.c, pd.od, pd.oh, pd.ow,
+             [&](memory::dim n, memory::dim c, memory::dim od, memory::dim oh,
+                     memory::dim ow) {
+@@ -125,7 +139,13 @@ void check_pool_fwd(const pool_test_params_t &p, const memory &src,
+                 // the padding area entirely
+                 typename acc_t<data_t>::type acc_ref
+                         = (p.aalgorithm == algorithm::pooling_max)
+-                        ? std::numeric_limits<data_t>::lowest()
++                        ?
++#if DNNL_AARCH64_USE_ACL
++                        (is_acl && is_float)
++                                ? -std::numeric_limits<float>::infinity()
++                                :
++#endif
++                                std::numeric_limits<data_t>::lowest()
+                         : data_t(0);
+                 int out_ref_index = 0;
+                 bool is_initialized = false;
+@@ -185,9 +205,22 @@ void check_pool_fwd(const pool_test_params_t &p, const memory &src,
+                 }
+ 
+                 const data_t out_ref = (data_t)acc_ref;
++
++#if DNNL_AARCH64_USE_ACL
++                // ACL returns out -Inf when data type is float and in cases where kh==ph
++                if (out == -std::numeric_limits<float>::infinity()) {
++                    // when data type is float. Compare out and out_ref when both are -Inf
++                    ASSERT_EQ(out, out_ref);
++                } else {
++                    // For ACL builds that fallback to reference oneDNN kernels
++                    ASSERT_NEAR(out, out_ref, 1e-6);
++                }
++#else
+                 ASSERT_NEAR(out, out_ref, 1e-6);
++#endif
+                 // The workspace layout is different when the cuDNN backend is used
+                 // and therefore this check must be skipped
++
+                 if ((p.aalgorithm == algorithm::pooling_max
+                             && p.aprop_kind == prop_kind::forward_training)
+                         && !is_cudnn_gpu) {
+@@ -278,6 +311,9 @@ class pooling_test_t : public ::testing::TestWithParam<pool_test_params_t> {
+         }
+ 
+         memory p_src, p_dst;
++#if DNNL_AARCH64_USE_ACL
++        std::string impl {};
++#endif
+         if (pd.dd == 0 && pd.dh == 0 && pd.dw == 0) {
+             auto pool_desc = pooling_forward::desc(p.aprop_kind, p.aalgorithm,
+                     p_src_desc, p_dst_desc, strides, ker, pad_l, pad_r);
+@@ -286,7 +322,9 @@ class pooling_test_t : public ::testing::TestWithParam<pool_test_params_t> {
+             // test construction from a C pd
+             pool_prim_desc
+                     = pooling_forward::primitive_desc(pool_prim_desc.get());
+-
++#if DNNL_AARCH64_USE_ACL
++            impl = query_impl_info(pool_prim_desc.get());
++#endif
+             check_prim_desc<pooling_forward::primitive_desc>(pool_prim_desc);
+             if (p.src_format != memory::format_tag::any) {
+                 ASSERT_TRUE(p_src_desc == pool_prim_desc.src_desc());
+@@ -318,6 +356,9 @@ class pooling_test_t : public ::testing::TestWithParam<pool_test_params_t> {
+             // test construction from a C pd
+             pool_prim_desc
+                     = pooling_v2_forward::primitive_desc(pool_prim_desc.get());
++#if DNNL_AARCH64_USE_ACL
++            impl = query_impl_info(pool_prim_desc.get());
++#endif
+ 
+             check_prim_desc<pooling_v2_forward::primitive_desc>(pool_prim_desc);
+             if (p.src_format != memory::format_tag::any) {
+@@ -343,8 +384,15 @@ class pooling_test_t : public ::testing::TestWithParam<pool_test_params_t> {
+                                     {DNNL_ARG_WORKSPACE, workspace}});
+         }
+         strm.wait();
+-
+-        check_pool_fwd<data_t>(p, p_src, p_dst, workspace);
++#if DNNL_AARCH64_USE_ACL
++        const bool is_acl = (impl == "acl");
++#endif
++        check_pool_fwd<data_t>(p, p_src, p_dst, workspace
++#if DNNL_AARCH64_USE_ACL
++                ,
++                is_acl
++#endif
++        );
+         check_zero_tail<data_t>(0, p_dst);
+     }
+ };
+@@ -355,6 +403,11 @@ using pooling_test_u8 = pooling_test_t<uint8_t>;
+ using pooling_test_s32 = pooling_test_t<int32_t>;
+ using pool_test_params_float = pool_test_params_t;
+ 
++// Since ACL supports only forward, to avoid triggering workspace check which is not available.
++#if DNNL_AARCH64_USE_ACL
++#define forward_training forward_inference
++#endif
++
+ // sizes with explicit opposite side paddings
+ #define EXPAND_SIZES_3D_XPADD(...) \
+     5, { __VA_ARGS__ }

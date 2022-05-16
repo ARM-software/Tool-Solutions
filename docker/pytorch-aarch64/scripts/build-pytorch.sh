@@ -44,11 +44,8 @@ if [[ $ONEDNN_BUILD ]]; then
   esac
 fi
 
-# Updating pytorch to use dnnl naming from oneDNN instead of mkldnn
-patch -p1 < $PACKAGE_DIR/pytorch.patch
-
 # Update the oneDNN tag in third_party/ideep
-cd third_party/ideep/mkl-dnn
+cd third_party/ideep/mkl-dnn/third_party/oneDNN
 git checkout $ONEDNN_VERSION
 # Do not add C++11 CMake CXX flag when building ACL and
 # rename test_api to test_api_dnnl so it does not clash with PyTorch test_api
@@ -65,8 +62,8 @@ MAX_JOBS=${NP_MAKE:-$((num_cpus / 2))} PYTORCH_BUILD_VERSION=$TORCH_VERSION \
 pip install $(ls -tr dist/*.whl | tail)
 
 # Move the whl into venv for easy extraction from container
-mkdir -p $VENV_DIR/$package/wheel
-mv $(ls -tr dist/*.whl | tail) $VENV_DIR/$package/wheel
+mkdir -p $VIRTUAL_ENV/$package/wheel
+mv $(ls -tr dist/*.whl | tail) $VIRTUAL_ENV/$package/wheel
 
 # Check the installation was sucessfull
 cd $HOME

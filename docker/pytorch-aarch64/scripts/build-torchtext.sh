@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # *******************************************************************************
-# Copyright 2021 Arm Limited and affiliates.
+# Copyright 2021-2022 Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,7 +22,7 @@ set -euo pipefail
 source python3-venv/bin/activate
 cd $PACKAGE_DIR
 readonly package=torchtext
-readonly version=$TEXT_VERSION
+readonly version=$TORCHTEXT_VERSION
 readonly src_host=https://github.com/pytorch
 readonly src_repo=text
 readonly cppflags="-I$VENV_PACKAGE_DIR/pybind11/include"

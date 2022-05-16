@@ -245,18 +245,13 @@ if [[ $clean_build ]]; then
   extra_args="--pull --no-cache $extra_args"
 fi
 
-# Set Bazel, TensorFlow and TensorFlow serving versions
-bazel_version="4.2.2"
-tf_version="v2.8.0"
+# Set TensorFlow and TensorFlow serving versions
+tf_version="v2.9.1"
 # Note: TF serving release tags do not have a `v` prefix
-# No 2.8.0 tag is available for TF Serving at present so this build will use the
-# 2.7.0 release. Once the 2.8.0 release is out, setting `tfserving_version=${tf_version:1}`
-# will link the TF and TF Serving version numbers.
 tfserving_version="2.7.0"
 
 # Add build-args to pass version numbers,
 extra_args="$extra_args \
-    --build-arg bazel_version=$bazel_version \
     --build-arg tf_version=$tf_version \
     --build-arg tfserving_version=$tfserving_version"
 
