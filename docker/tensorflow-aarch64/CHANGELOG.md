@@ -12,6 +12,7 @@ where `YY` is the year, and `MM` the month of the increment.
 ### Changed
 
 ### Removed
+- Removes GCC 7 & 9 from Tensorflow image.
 
 ### Fixed
 
