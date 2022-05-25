@@ -45,13 +45,9 @@ RUN apt-get -y update && \
       cpufrequtils \
       curl \
       ethtool \
-      g++-9 \
-      gcc-7 \
-      gcc-9 \
       gcc-10 \
       g++-10 \
       gettext-base \
-      gfortran-9 \
       gfortran-10 \
       git \
       iproute2 \

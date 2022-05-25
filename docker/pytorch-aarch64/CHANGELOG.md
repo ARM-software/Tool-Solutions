@@ -12,6 +12,9 @@ where `YY` is the year, and `MM` the month of the increment.
 ### Changed
 
 ### Removed
+- Removes dependency on Arm Optimized Routines from PyTorch image.
+- Removes GCC 7 from PyTorch image.
+- Removes GCC 9 from PyTorch image.
 
 ### Fixed
 

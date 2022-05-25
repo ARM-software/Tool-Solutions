@@ -42,13 +42,9 @@ RUN apt-get -y update && \
       cpufrequtils \
       curl \
       ethtool \
-      g++-9 \
       g++-10 \
-      gcc-7 \
-      gcc-9 \
       gcc-10 \
       gettext-base \
-      gfortran-9 \
       gfortran-10 \
       git \
       iproute2 \
@@ -158,20 +154,12 @@ ENV PROD_DIR=/opt \
 RUN mkdir -p $PACKAGE_DIR && \
     mkdir -p $PROD_DIR
 
-# Build Arm Optimized Routines from source
-# provides optimised maths library fucntions for Aarch64
-# see https://github.com/ARM-software/optimized-routines
-COPY scripts/build-arm_opt_routines.sh $PACKAGE_DIR/.
-COPY patches/config.mk $PACKAGE_DIR/.
-RUN $PACKAGE_DIR/build-arm_opt_routines.sh
-
-# Common compiler settings for remaining builds
-# this ads arm_opt_routined into the LDFLAGS by default.
+# Common compiler settings
 ENV CC=gcc \
     CXX=g++ \
     BASE_CFLAGS="-mcpu=${CPU} -march=${ARCH} -O3" \
-    BASE_LDFLAGS="-L$PROD_DIR/arm_opt_routines/lib -lmathlib -lm" \
-    LD_LIBRARY_PATH="$PROD_DIR/arm_opt_routines/lib"
+    BASE_LDFLAGS="" \
+    LD_LIBRARY_PATH=""
 
 # Build OpenBLAS from source
 COPY scripts/build-openblas.sh $PACKAGE_DIR/.
