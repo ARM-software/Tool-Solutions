@@ -1,0 +1,26 @@
+#!/bin/bash
+
+#
+# Copyright (c) 2018 Arm Limited. All rights reserved.
+#
+
+lib_dir=/usr/lib/aarch64-linux-gnu/
+
+if [ -e "$lib_dir"/mali ] && [ ! -L "$lib_dir"/mali ]; then
+	exit 0
+fi
+
+rm -rf "$lib_dir"/mali
+
+gpuinfo=$(cat /sys/class/misc/mali0/device/gpuinfo | grep -Po 'T[0-9][0-9]x' | tr '[:upper:]' '[:lower:]')
+# If it is not Midgard, it still could be Bifrost
+[ -z "$gpuinfo" ] && gpuinfo=$(cat /sys/class/misc/mali0/device/gpuinfo | grep -Po 'G[0-9][0-9]')
+version=$(cat /sys/module/mali_kbase/version | grep -o "r.\?.p.")
+link_target=$(ls "$lib_dir" | grep "$gpuinfo" | grep "$version")
+
+if [ -z "$gpuinfo" ] || [ -z "$version" ] || [ -z "$link_target" ]; then
+	echo "Cannot find usable drivers for MALI GPU"
+	exit 1
+fi
+
+ln -s $link_target "$lib_dir"/mali
