@@ -28,11 +28,14 @@ Demonstration of ETAS ASCET-DEVELOPER model based design and code generation wit
 #### mathworks-support-packages
 Support packages to enable Arm Fast Models and Arm Compiler usage with MathWorks software such as Embedded Coder, Simulink, and MATLAB.
 
-#### Windows pmu-to-reg
+#### windows-pmu-to-reg
 Script to expose Arm Performance Monitoring Unit (PMU) events to the Windows Management Instrumentation (WMI) system, allowing collection via tools such as Windows Performance Recorder.
 
 #### perf-derived-metrics
 Demonstration calculating derived metrics from data collected via Linux `perf stat` and formulate stored in per-CPU YAML files.
+
+#### boards
+Information about running Linux on Arm development boards.
 
 ## Contact Us
 Have questions, comments, and/or suggestions? Contact [arm-tool-solutions@arm.com](mailto:arm-tool-solutions@arm.com).
