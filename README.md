@@ -31,5 +31,8 @@ Support packages to enable Arm Fast Models and Arm Compiler usage with MathWorks
 #### Windows pmu-to-reg
 Script to expose Arm Performance Monitoring Unit (PMU) events to the Windows Management Instrumentation (WMI) system, allowing collection via tools such as Windows Performance Recorder.
 
+#### perf-derived-metrics
+Demonstration calculating derived metrics from data collected via Linux `perf stat` and formulate stored in per-CPU YAML files.
+
 ## Contact Us
 Have questions, comments, and/or suggestions? Contact [arm-tool-solutions@arm.com](mailto:arm-tool-solutions@arm.com).
