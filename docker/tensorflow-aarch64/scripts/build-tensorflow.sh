@@ -57,78 +57,113 @@ export TF_NEED_TENSORRT=0
 
 ./configure
 
-extra_args="--verbose_failures -s"
-if [[ $BZL_RAM ]]; then extra_args="$extra_args --local_ram_resources=$BZL_RAM"; fi
-if [[ $NP_MAKE ]]; then extra_args="$extra_args --jobs=$NP_MAKE"; fi
+# Bazel build options
+config_flags=""
+compile_flags="--copt=-mtune=${TUNE} --copt=-march=${ARCH} --copt=-O3 --copt=-flax-vector-conversions"
+link_flags="--linkopt=-lgomp"
+extra_flags="--verbose_failures -s"
+
+if [[ $BZL_RAM ]]; then extra_flags="$extra_flags --local_ram_resources=$BZL_RAM"; fi
+if [[ $NP_MAKE ]]; then extra_flags="$extra_flags --jobs=$NP_MAKE"; fi
 
 if [[ $ONEDNN_BUILD ]]; then
     echo "$ONEDNN_BUILD build for $TF_VERSION"
     if [[ $ONEDNN_BUILD == 'acl_threadpool' ]]; then
-      extra_args="$extra_args --config=mkl_aarch64_threadpool"
+        config_flags="$config_flags --config=mkl_aarch64_threadpool"
     else
-      extra_args="$extra_args --config=mkl_aarch64"
+        config_flags="$config_flags --config=mkl_aarch64"
+        compile_flags="$compile_flags --copt=-fopenmp"
     fi
     if [[ $ONEDNN_BUILD == 'reference' ]]; then
-      echo "TensorFlow $TF_VERSION with oneDNN backend - reference build."
-      sed -i '/DNNL_AARCH64_USE_ACL/d' ./third_party/mkl_dnn/mkldnn_acl.BUILD
+        tf_backend_desc="oneDNN - reference."
+        sed -i '/DNNL_AARCH64_USE_ACL/d' ./third_party/mkl_dnn/mkldnn_acl.BUILD
     else
-      if [[ $ONEDNN_BUILD == 'acl_threadpool' ]]; then
-          echo "TensorFlow $TF_VERSION with oneDNN backend with threadpool - Compute Library build."
-      else
-          echo "TensorFlow $TF_VERSION with oneDNN backend with OpenMP - Compute Library build."
-      fi
-      # Patch Compute Library Bazel build
-      patch -p1 < ../tf_acl.patch
-      # Patch to add experimental spin-wait scheduler to Compute Library
-      # Note: overwrites upstream version
-      mv ../compute_library.patch ./third_party/compute_library/.
-      # Patch for training workloads to ensure that ACL does not use fixes weights for inner product.
-      mv ../onednn_acl_training.patch ./third_party/mkl_dnn/.
-      # Patch to add support for threadpool for use by ACL
-      mv ../onednn_acl_threadpool.patch ./third_party/mkl_dnn/.
-      # Patch to add support for ACL based prelu primitive
-      mv ../onednn_acl_prelu.patch ./third_party/mkl_dnn/.
+        if [[ $ONEDNN_BUILD == 'acl_threadpool' ]]; then
+            tf_backend_desc="oneDNN + Compute Library (threadpool runtime)."
+        else
+            tf_backend_desc="oneDNN + Compute Library (OpenMP runtime)."
+        fi
+
+        ## Apply patches to the TensorFlow, Compute Library and oneDNN builds
+        # Patches from upstream PRs to address a number of issues exposed by TF unit tests.
+        # tf_test_fix_prs lists the upstream PRs from which to take patches.
+        readonly tf_test_fix_prs="56150 56218 56219 56086 56371"
+        for pr in ${tf_test_fix_prs}; do
+            echo "Patching from upstream PR https://github.com/tensorflow/tensorflow/pull/${pr}."
+            wget https://github.com/tensorflow/tensorflow/pull/${pr}.patch -O ../tf_test_fix-${pr}.patch
+            patch -p1 < ../tf_test_fix-${pr}.patch
+        done
+
+        # Patch Compute Library Bazel build
+        patch -p1 < ../tf_acl.patch
+
+        # Patch to add experimental spin-wait scheduler to Compute Library
+        # Note: overwrites upstream version
+        mv ../compute_library.patch ./third_party/compute_library/.
+
+        # Patch for oneDNN to cap the number of ACL threads to less than the number of available cores.
+        # This reduces the impact of resource contention.
+        mv ../onednn_acl_threadcap.patch ./third_party/mkl_dnn/.
+
+        # Patch for oneDNN to add ACL-based pooling primitive
+        # Based on: https://github.com/oneapi-src/oneDNN/pull/1387
+        mv ../onednn_acl_pooling.patch ./third_party/mkl_dnn/.
+
+        # Patch for oneDNN to allow use of arbitrary ACL-based post ops
+        # Based on: https://github.com/oneapi-src/oneDNN/pull/1330
+        mv ../onednn_acl_postops.patch ./third_party/mkl_dnn/.
+
+        # Patch for oneDNN to fix matmul broadcast bug
+        # Based on: https://github.com/oneapi-src/oneDNN/pull/1380
+        mv ../onednn_acl_matmul_fix.patch ./third_party/mkl_dnn/.
     fi
 else
-    echo "TensorFlow $TF_VERSION with Eigen backend."
-    extra_args="$extra_args --define tensorflow_mkldnn_contraction_kernel=0"
+    tf_backend_desc="Eigen."
+    config_flags="$config_flags --define tensorflow_mkldnn_contraction_kernel=0"
 
     # Manually set L1,2,3 caches sizes for the GEBP kernel in Eigen.
-    [[ $EIGEN_L1_CACHE ]] && extra_args="$extra_args \
-      --cxxopt=-DEIGEN_DEFAULT_L1_CACHE_SIZE=${EIGEN_L1_CACHE} \
-      --copt=-DEIGEN_DEFAULT_L1_CACHE_SIZE=${EIGEN_L1_CACHE}"
-    [[ $EIGEN_L2_CACHE ]] && extra_args="$extra_args \
-      --cxxopt=-DEIGEN_DEFAULT_L2_CACHE_SIZE=${EIGEN_L2_CACHE} \
-      --copt=-DEIGEN_DEFAULT_L2_CACHE_SIZE=${EIGEN_L2_CACHE}"
-    [[ $EIGEN_L3_CACHE ]] && extra_args="$extra_args \
-      --cxxopt=-DEIGEN_DEFAULT_L3_CACHE_SIZE=${EIGEN_L3_CACHE} \
-      --copt=-DEIGEN_DEFAULT_L3_CACHE_SIZE=${EIGEN_L3_CACHE}"
+    [[ $EIGEN_L1_CACHE ]] && compile_flags="$compile_flags \
+        --copt=-DEIGEN_DEFAULT_L1_CACHE_SIZE=${EIGEN_L1_CACHE}"
+    [[ $EIGEN_L2_CACHE ]] && compile_flags="$compile_flags \
+        --copt=-DEIGEN_DEFAULT_L2_CACHE_SIZE=${EIGEN_L2_CACHE}"
+    [[ $EIGEN_L3_CACHE ]] && compile_flags="$compile_flags \
+        --copt=-DEIGEN_DEFAULT_L3_CACHE_SIZE=${EIGEN_L3_CACHE}"
 fi
 
+echo "========================================================================"
+echo " TensorFlow $TF_VERSION with backend: $tf_backend_desc"
+echo "------------------------------------------------------------------------"
+echo " build options:"
+echo " - config_flags= $config_flags"
+echo " - compile_flags= $compile_flags"
+echo " - link_flags= $link_flags"
+echo " - extra_flags= $extra_flags"
+echo "========================================================================"
+
 # Build the tensorflow configuration
-bazel build $extra_args \
-        --copt="-mtune=${TUNE}" --copt="-march=${ARCH}" --copt="-O3"  --copt="-fopenmp" \
-        --copt="-flax-vector-conversions" \
-        --linkopt="-lgomp" \
-        //tensorflow/tools/pip_package:build_pip_package \
-        //tensorflow:libtensorflow_cc.so \
-        //tensorflow:install_headers
+bazel build $config_flags \
+    $compile_flags \
+    $link_flags \
+    $extra_flags \
+    //tensorflow/tools/pip_package:build_pip_package \
+    //tensorflow:libtensorflow_cc.so \
+    //tensorflow:install_headers
 
 # Install Tensorflow python package via pip
 ./bazel-bin/tensorflow/tools/pip_package/build_pip_package ./wheel-TF$TF_VERSION-py$PY_VERSION-$CC
 pip install $(ls -tr wheel-TF$TF_VERSION-py$PY_VERSION-$CC/*.whl | tail)
 
 # Install Tensorflow C++ interface
-mkdir -p $VENV_DIR/$package/lib
-mkdir -p $VENV_DIR/$package/include
-cp ./bazel-bin/tensorflow/libtensorflow* $VENV_DIR/$package/lib
-cp -r ./bazel-bin/tensorflow/include $VENV_DIR/$package/
-cp -r $VENV_DIR/lib/python$PY_VERSION/site-packages/tensorflow/include/google \
-      $VENV_DIR/$package/include
+mkdir -p $VIRTUAL_ENV/$package/lib
+mkdir -p $VIRTUAL_ENV/$package/include
+cp ./bazel-bin/tensorflow/libtensorflow* $VIRTUAL_ENV/$package/lib
+cp -r ./bazel-bin/tensorflow/include $VIRTUAL_ENV/$package/
+cp -r $VIRTUAL_ENV/lib/python$PY_VERSION/site-packages/tensorflow/include/google \
+      $VIRTUAL_ENV/$package/include
 
 # Move whl into venv for easy extraction from container
-mkdir -p $VENV_DIR/$package/wheel
-mv $(ls -tr wheel-TF$TF_VERSION-py$PY_VERSION-$CC/*.whl | tail) $VENV_DIR/$package/wheel
+mkdir -p $VIRTUAL_ENV/$package/wheel
+mv $(ls -tr wheel-TF$TF_VERSION-py$PY_VERSION-$CC/*.whl | tail) $VIRTUAL_ENV/$package/wheel
 
 # Check the Python installation was sucessfull
 cd $HOME
