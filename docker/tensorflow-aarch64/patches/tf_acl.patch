@@ -64,7 +64,7 @@ index 77c76aa6e20..95d2c30b86d 100644
 -        sha256 = "9695640f55acd833ddcef4776af15e03446c4655f9296e5074b1b178dd7a4fb2",
 -        strip_prefix = "oneDNN-2.6",
 -        urls = tf_mirror_urls("https://github.com/oneapi-src/oneDNN/archive/v2.6.tar.gz"),
-+        patch_file = ["//third_party/mkl_dnn:onednn_acl_threadcap.patch", "//third_party/mkl_dnn:onednn_acl_pooling.patch", "//third_party/mkl_dnn:onednn_acl_postops.patch", "//third_party/mkl_dnn:onednn_acl_matmul_fix.patch"],
++        patch_file = ["//third_party/mkl_dnn:onednn_acl_threadcap.patch", "//third_party/mkl_dnn:onednn_acl_pooling.patch", "//third_party/mkl_dnn:onednn_acl_matmul_fix.patch"],
 +        sha256 = "9dac563bfd72016b5bd63e48972174e6766f0178d19fdb52937560ff942a349a",
 +        strip_prefix = "oneDNN-96ac81552014f2c77d6409d2d5e466b78722cdb5",
 +        urls = tf_mirror_urls("https://github.com/oneapi-src/oneDNN/archive/96ac81552014f2c77d6409d2d5e466b78722cdb5.tar.gz"),

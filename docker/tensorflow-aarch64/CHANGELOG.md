@@ -20,7 +20,6 @@ https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--
 
 ### Added
 - Adds ACL-based pooling primitive.
-- Adds support for the use of arbitrary ACL-based post-ops.
 
 ### Changed
 - Updates TensorFlow to v2.9.1.

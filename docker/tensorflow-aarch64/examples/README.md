@@ -129,7 +129,7 @@ From `$HOME/examples/MLCommons/inference/vision/classification_and_detection` us
 ./run_local.sh tf resnet50 cpu
 ```
 
-_Note: you can use `DNNL_VERBOSE=1` to verify the build uses oneDNN when running the benchmarks._
+_Note: you can use `ONEDNN_VERBOSE=1` to verify the build uses oneDNN when running the benchmarks._
 
 ##### Running with (optional) `run_cnn.py` wrapper script provided
 
@@ -177,7 +177,7 @@ From `$HOME/examples/MLCommons/inference/vision/classification_and_detection` us
 ./run_local.sh tf ssd-resnet34 cpu --count 10 --data-format NHWC
 ```
 
-_Note: you can use `DNNL_VERBOSE=1` to verify the build uses oneDNN when running the benchmarks._
+_Note: you can use `ONEDNN_VERBOSE=1` to verify the build uses oneDNN when running the benchmarks._
 
 Please refer to [MLCommons, Inference](https://github.com/mlcommons/inference/tree/master/vision/classification_and_detection) for further details.
 
