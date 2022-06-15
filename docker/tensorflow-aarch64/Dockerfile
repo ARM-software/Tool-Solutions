@@ -294,7 +294,6 @@ COPY patches/tf_acl.patch $PACKAGE_DIR/.
 COPY patches/compute_library.patch $PACKAGE_DIR/.
 COPY patches/onednn_acl_threadcap.patch $PACKAGE_DIR/.
 COPY patches/onednn_acl_pooling.patch $PACKAGE_DIR/.
-COPY patches/onednn_acl_postops.patch $PACKAGE_DIR/.
 COPY patches/onednn_acl_matmul_fix.patch $PACKAGE_DIR/.
 COPY scripts/build-tensorflow.sh $PACKAGE_DIR/.
 RUN $PACKAGE_DIR/build-tensorflow.sh

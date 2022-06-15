@@ -109,10 +109,6 @@ if [[ $ONEDNN_BUILD ]]; then
         # Based on: https://github.com/oneapi-src/oneDNN/pull/1387
         mv ../onednn_acl_pooling.patch ./third_party/mkl_dnn/.
 
-        # Patch for oneDNN to allow use of arbitrary ACL-based post ops
-        # Based on: https://github.com/oneapi-src/oneDNN/pull/1330
-        mv ../onednn_acl_postops.patch ./third_party/mkl_dnn/.
-
         # Patch for oneDNN to fix matmul broadcast bug
         # Based on: https://github.com/oneapi-src/oneDNN/pull/1380
         mv ../onednn_acl_matmul_fix.patch ./third_party/mkl_dnn/.

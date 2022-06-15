@@ -149,7 +149,7 @@ From `$HOME/examples/MLCommons/inference/vision/classification_and_detection` us
 ./run_local.sh pytorch ssd-resnet34 cpu
 ```
 
-_Note: you can use `DNNL_VERBOSE=1` to verify the build uses oneDNN when running the benchmarks._
+_Note: you can use `ONEDNN_VERBOSE=1` to verify the build uses oneDNN when running the benchmarks._
 
 Please refer to [MLCommons, Inference](https://github.com/mlcommons/inference/tree/master/vision/classification_and_detection) for further details.
 
