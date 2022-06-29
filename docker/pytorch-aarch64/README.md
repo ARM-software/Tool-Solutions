@@ -39,7 +39,7 @@ Where `<image tag>` identifies the image version, as well as the PyTorch version
 - `<torch version>` = PyTorch version, see [image contents](#image-contents).
 - `<backend>` = `openblas` or `onednn-acl`, see [optimized backend for AArch64](#optimized-backend-for-aarch64).
 
-For example: `r22.02-torch-1.10.0-onednn-acl`.
+For example: `r22.06-torch-1.11.0-onednn-acl`.
 
 ### Running the Docker image
 To run the downloaded image:
@@ -54,12 +54,12 @@ where `<image name>` is the name of the image, i.e. `armswdev/pytorch-arm-neover
   * OS: Ubuntu 20.04
   * Compiler: GCC 10.3
   * Maths libraries: [OpenBLAS](https://www.openblas.net/) 0.3.20
-  * [oneDNN](https://github.com/oneapi-src/oneDNN) 2.5
-    - ACL 22.02, provides optimized implementations on AArch64 for main oneDNN primitives
+  * [oneDNN](https://github.com/oneapi-src/oneDNN) 2.6
+    - ACL 22.05, provides optimized implementations on AArch64 for main oneDNN primitives
   * Python 3.8.10 environment containing:
     - NumPy 1.21.5
     - SciPy 1.7.3
-    - PyTorch 1.10.0
+    - PyTorch 1.11.0
   * [Examples](./examples/README.md) that demonstrate how to run ML models
     - [MLCommons :tm:](https://mlcommons.org/en/) benchmarks
     - Python API examples
@@ -152,7 +152,7 @@ For example:
 
 PyTorch can optionally be built with oneDNN, using the `--onednn` flag. By default this will use AArch64 optimized primitives from ACL where available. Specifying `--onednn reference` will disable ACL primitives and use oneDNN's reference C++ kernels throughout.
 
-For builds where ACL is enabled, setting the environment variable `DNNL_DEFAULT_FPMATH_MODE` to `BF16` or `ANY` will instruct ACL to dispatch fp32 workloads to bfloat16 kernels where hardware support permits. Note: this may introduce a drop in accuracy.
+For builds where ACL is enabled, setting the environment variable `ONEDNN_DEFAULT_FPMATH_MODE` to `BF16` or `ANY` will instruct ACL to dispatch fp32 workloads to bfloat16 kernels where hardware support permits. Note: this may introduce a drop in accuracy.
 
 By default, all packages will be built with optimizations for the host machine, equivalent to setting `-mcpu=native` at compile time for each component build.
 It is possible to choose a specific build target using the `--build-target` flag:

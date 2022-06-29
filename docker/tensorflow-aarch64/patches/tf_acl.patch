@@ -15,10 +15,10 @@
  limitations under the License.
  *******************************************************************************
 diff --git a/.bazelrc b/.bazelrc
-index b6a72c1e5d3..a4b4a9c8ddb 100644
+index f95e4347537..554f750a22f 100644
 --- a/.bazelrc
 +++ b/.bazelrc
-@@ -227,6 +227,11 @@ build:mkl_aarch64 --define=build_with_mkl_aarch64=true
+@@ -229,6 +229,11 @@ build:mkl_aarch64 --define=build_with_mkl_aarch64=true
  build:mkl_aarch64 --define=build_with_openmp=true
  build:mkl_aarch64 -c opt
  
@@ -31,7 +31,7 @@ index b6a72c1e5d3..a4b4a9c8ddb 100644
  build:cuda --repo_env TF_NEED_CUDA=1
  build:cuda --crosstool_top=@local_config_cuda//crosstool:toolchain
 diff --git a/tensorflow/tensorflow.bzl b/tensorflow/tensorflow.bzl
-index 143bc0294da..1053336f92e 100644
+index ffe445dad95..67043cb12dc 100644
 --- a/tensorflow/tensorflow.bzl
 +++ b/tensorflow/tensorflow.bzl
 @@ -40,6 +40,7 @@ load(
@@ -53,10 +53,10 @@ index 143bc0294da..1053336f92e 100644
          if_linux_x86_64(["-msse3"]) +
          if_ios_x86_64(["-msse4.1"]) +
 diff --git a/tensorflow/workspace2.bzl b/tensorflow/workspace2.bzl
-index 77c76aa6e20..95d2c30b86d 100644
+index 77c76aa6e20..ef630894acc 100644
 --- a/tensorflow/workspace2.bzl
 +++ b/tensorflow/workspace2.bzl
-@@ -183,10 +183,10 @@ def _tf_repositories():
+@@ -183,19 +183,19 @@ def _tf_repositories():
      tf_http_archive(
          name = "mkl_dnn_acl_compatible",
          build_file = "//third_party/mkl_dnn:mkldnn_acl.BUILD",
@@ -69,8 +69,53 @@ index 77c76aa6e20..95d2c30b86d 100644
 +        strip_prefix = "oneDNN-96ac81552014f2c77d6409d2d5e466b78722cdb5",
 +        urls = tf_mirror_urls("https://github.com/oneapi-src/oneDNN/archive/96ac81552014f2c77d6409d2d5e466b78722cdb5.tar.gz"),
      )
-
+ 
      tf_http_archive(
+         name = "compute_library",
+-        sha256 = "11244b05259fb1c4af7384d0c3391aeaddec8aac144774207582db4842726540",
+-        strip_prefix = "ComputeLibrary-22.02",
++        sha256 = "94e2e9ff87c261a9c9987bc9024c449c48014f7fe707311bdfa76b87f3dda5c5",
++        strip_prefix = "ComputeLibrary-22.05",
+         build_file = "//third_party/compute_library:BUILD",
+         patch_file = ["//third_party/compute_library:compute_library.patch", "//third_party/compute_library:activation_func_correct_args.patch"],
+-        urls = tf_mirror_urls("https://github.com/ARM-software/ComputeLibrary/archive/v22.02.tar.gz"),
++        urls = tf_mirror_urls("https://github.com/ARM-software/ComputeLibrary/archive/v22.05.tar.gz"),
+     )
+ 
+     tf_http_archive(
+diff --git a/third_party/compute_library/BUILD b/third_party/compute_library/BUILD
+index e4f42b46d5c..ae36a8f16ea 100644
+--- a/third_party/compute_library/BUILD
++++ b/third_party/compute_library/BUILD
+@@ -38,6 +38,7 @@ cc_library(
+             "src/core/NEON/kernels/arm_conv/depthwise/interleaves/sve_*.cpp",
+             "src/core/NEON/kernels/batchnormalization/impl/SVE/*.cpp",
+             "src/cpu/kernels/**/sve/*.cpp",
++            "src/cpu/kernels/*/sve2/.cpp",
+             "src/cpu/kernels/**/impl/sve/*.cpp",
+             "**/*.h",
+         ],
+@@ -84,9 +85,11 @@ cc_library(
+             "src/core/NEON/kernels/arm_conv/**/kernels/a64_*/*.cpp",
+             "src/core/NEON/kernels/arm_conv/depthwise/*.cpp",
+             "src/core/NEON/kernels/arm_conv/depthwise/interleaves/a64_*.cpp",
+-            "src/core/NEON/kernels/batchnormalization/impl/NEON/*.cpp",
++            "src/core/NEON/kernels/arm_conv/depthwise/interleaves/generic*.cpp",
++           "src/core/NEON/kernels/batchnormalization/impl/NEON/*.cpp",
+             "src/cpu/*.cpp",
+             "src/cpu/kernels/*.cpp",
++           "src/cpu/kernels/*/generic/*.cpp",
+             "src/cpu/operators/**/*.cpp",
+             "src/cpu/utils/*.cpp",
+             "src/cpu/kernels/internal/*.cpp",
+@@ -108,6 +111,7 @@ cc_library(
+         "src/c/operators/AclActivation.cpp",
+         "src/core/NEON/kernels/arm_conv/pooling/kernels/cpp_nhwc_1x1_stride_any_depthfirst/generic.cpp",
+         "src/core/NEON/kernels/arm_conv/depthwise/interleaves/8b_mla.cpp",
++       "src/core/NEON/kernels/arm_conv/addressing.cpp",
+     ],
+     hdrs = glob([
+         "src/core/NEON/kernels/**/*.h",
 diff --git a/third_party/mkl_dnn/BUILD b/third_party/mkl_dnn/BUILD
 index d88bb1d88fd..89f20d39477 100644
 --- a/third_party/mkl_dnn/BUILD

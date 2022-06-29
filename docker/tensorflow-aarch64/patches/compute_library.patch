@@ -20,7 +20,7 @@ index 000000000..c986ad52a
 --- /dev/null
 +++ b/arm_compute_version.embed
 @@ -0,0 +1,1 @@
-+"arm_compute_version=v22.02 Build options: {} Git hash=b'N/A'"
++"arm_compute_version=v22.05 Build options: {} Git hash=b'N/A'"
 \ No newline at end of file
 diff --git a/arm_compute/runtime/CPP/SpinWaitCPPScheduler.h b/arm_compute/runtime/CPP/SpinWaitCPPScheduler.h
 new file mode 100644

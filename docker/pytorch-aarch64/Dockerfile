@@ -141,7 +141,7 @@ ENV NP_MAKE="${njobs}" \
     ACL_ARCH="${acl_arch}"
 
 # Key version numbers
-ENV ACL_VERSION="v22.02" \
+ENV ACL_VERSION="v22.05" \
     OPENBLAS_VERSION=0.3.20 \
     NINJA_VERSION=1.9.0
 

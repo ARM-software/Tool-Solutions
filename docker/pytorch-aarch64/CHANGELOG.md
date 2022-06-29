@@ -10,6 +10,7 @@ where `YY` is the year, and `MM` the month of the increment.
 ### Added
 
 ### Changed
+- Updates the Compute Library version used for PyTorch builds from 22.02 to 22.05.
 
 ### Removed
 
