@@ -38,9 +38,9 @@ Where `<image tag>` identifies the image version, as well as the TensorFlow vers
 
 - `r<yy>.<mm>` = this identifies the monthly update to the images on Docker Hub; `yy` = year (e.g. 22 for 2022) and `mm` = month (e.g. 01 for January).
 - `<TF version>` = TensorFlow version, see [image contents](#image-contents).
-- `<backend>` = `eigen` or `onednn-acl`, see [optimized backend for AArch64](#optimized-backend-for-aarch64).
+- `<backend>` = `eigen`, `onednn-acl`, or `onednn-acl_threadpool` see [optimized backend for AArch64](#optimized-backend-for-aarch64).
 
-For example: `r22.02-tf-2.8.0-onednn-acl`.
+For example: `r22.06-tf-2.9.1-onednn-acl`.
 
 ### Running the Docker image
 To run the downloaded image:
@@ -54,12 +54,12 @@ where `<image name> `is the name of the image, i.e. `armswdev/tensorflow-arm-neo
   * OS: Ubuntu 20.04
   * Compiler: GCC 10.3
   * Maths libraries: [OpenBLAS](https://www.openblas.net/) 0.3.20, used for NumPy's BLAS functionality
-  * [oneDNN](https://github.com/oneapi-src/oneDNN) 2.5
-    - ACL 22.02, provides optimized implementations on AArch64 for main oneDNN primitives
+  * [oneDNN](https://github.com/oneapi-src/oneDNN) 2.6
+    - ACL 22.05, provides optimized implementations on AArch64 for main oneDNN primitives
   * Python 3.8.10 environment containing:
     - NumPy 1.21.5
     - SciPy 1.7.3
-    - TensorFlow 2.8.0
+    - TensorFlow 2.9.1
   * [Examples](./examples/README.md) that demonstrate how to run ML models
     - [MLCommons :tm:](https://mlcommons.org/en/) benchmarks with an optional patch to support benchmarking for TF oneDNN builds
     - TensorFlow Benchmarks
@@ -73,11 +73,11 @@ The default user account has sudo privileges (username `ubuntu`, password `Portl
 Separate images are provided with Eigen and oneDNN backends (as given in the image tag). The scripts in this repository can be used to build either.
 
  * **Eigen:** this is the default backend for a TensorFlow build on AArch64, suitable for both training and inference workloads.
- * **oneDNN:** this uses oneDNN with ACL, providing optimized implementations on AArch64 for key oneDNN primitives. It is intended for inference workloads on infrastructure-scale platforms. oneDNN optimizations can be disabled at runtime by setting the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+ * **oneDNN:** this uses oneDNN with ACL, providing optimized implementations on AArch64 for key oneDNN primitives. There is the option to use either an OpenMP build of oneDNN, with ACL primitives leveraging ACl's CPP scheduler, or to use TensorFlow's Eigen threadpool throughout. Use the `--onednn acl` and `--onednn acl_threadpool` respectively to select between these options. The oneDNN backend is intended for inference workloads on infrastructure-scale platforms. oneDNN optimizations can be disabled at runtime by setting the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
 
 #### oneDNN runtime flags
 
-- `DNNL_DEFAULT_FPMATH_MODE`: For builds where ACL is enabled, setting the environment variable `DNNL_DEFAULT_FPMATH_MODE` to `BF16` or `ANY` will instruct ACL to dispatch fp32 workloads to bfloat16 kernels where hardware support permits. _Note: this may introduce a drop in accuracy._
+- `ONEDNN_DEFAULT_FPMATH_MODE`: For builds where ACL is enabled, setting the environment variable `ONEDNN_DEFAULT_FPMATH_MODE` to `BF16` or `ANY` will instruct ACL to dispatch fp32 workloads to bfloat16 kernels where hardware support permits. _Note: this may introduce a drop in accuracy._
 - `ARM_COMPUTE_SPIN_WAIT_CPP_SCHEDULER`: When running models with a high core count that have layers operating on small to medium inputs, the scheduling overhead for ACL can be reduced by setting the environment variable `ARM_COMPUTE_SPIN_WAIT_CPP_SCHEDULER` to `1`. _Note: this will increase CPU utilisation as worker threads in ACL will busy wait for new work and might create contention with other threads._
 - `TF_ENABLE_ONEDNN_OPTS`: enables the oneDNN backend and is set to 1 (i.e. enabled) by default. To disable the oneDNN+ACL backend, set to `0`. _Note: this flag is only available for imaged built with the oneDNN+ACL backend._
 
@@ -155,7 +155,7 @@ For example:
 
 For the base build: This will generate an image named 'tensorflow-base-v2', hyphenated with the version of TensorFlow chosen.
 
-TensorFlow can optionally be built with oneDNN, using the `--onednn` flag; in this case the oneDNN backend will be enabled by default, but can be disabled at runtime by setting the environment variable `TF_ENABLE_ONEDNN_OPTS=0`. 
+TensorFlow can optionally be built with oneDNN, using the `--onednn` flag; in this case the oneDNN backend will be enabled by default, but can be disabled at runtime by setting the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
 The backend for oneDNN can also be selected using the `--onednn` flag:
 This defaults to using ACL, but `--onednn reference` can also be selected to use the reference C++ kernels.
 Without the `--onednn` flag, the default Eigen backend of Tensorflow is chosen. For the final TensorFlow image with oneDNN: This will generate an image `tensorflow-v2$onednn` with the type of oneDNN backend chosen.
