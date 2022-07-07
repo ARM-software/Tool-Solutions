@@ -1,5 +1,6 @@
 # *******************************************************************************
 # Copyright 2020-2022 Arm Limited and affiliates.
+# Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,11 +28,21 @@ ENV PY_VERSION="${default_py_version}"
 
 RUN if ! [ "$(arch)" = "aarch64" ] ; then exit 1; fi
 
-#Install core OS packages
 RUN apt-get -y update && \
-    apt-get -y install software-properties-common && \
-    add-apt-repository ppa:ubuntu-toolchain-r/test && \
     apt-get -y install \
+      software-properties-common \
+      wget
+
+# Add additional repositories
+RUN wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null \
+      | gpg --dearmor - \
+      | tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null
+
+RUN add-apt-repository ppa:ubuntu-toolchain-r/test && \
+    add-apt-repository 'deb https://apt.kitware.com/ubuntu/ focal main'
+
+# Install core OS packages
+RUN apt-get -y install \
       accountsservice \
       apport \
       at \
@@ -96,7 +107,6 @@ RUN apt-get -y update && \
       ufw \
       uuid-runtime \
       vim \
-      wget \
       xz-utils \
       zip \
       zlib1g-dev
@@ -270,10 +280,10 @@ ENV ONEDNN_BUILD="${onednn_opt}" \
 # Key version numbers
 ENV PY_VERSION="${default_py_version}" \
     ONEDNN_VERSION="v2.6" \
-    TORCH_VERSION=1.11.0 \
-    TORCHVISION_VERSION=0.12.0 \
-    TORCHDATA_VERSION=0.3.0 \
-    TORCHTEXT_VERSION=0.12.0
+    TORCH_VERSION=1.12.0 \
+    TORCHVISION_VERSION=0.13.0 \
+    TORCHDATA_VERSION=0.4.0 \
+    TORCHTEXT_VERSION=0.13.0
 
 # Use a PACKAGE_DIR in userspace
 WORKDIR /home/$DOCKER_USER
@@ -289,13 +299,18 @@ ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 # Build PyTorch
 COPY scripts/build-pytorch.sh $PACKAGE_DIR/.
 COPY patches/onednn.patch $PACKAGE_DIR/.
+COPY scripts/build-torchtext.sh $PACKAGE_DIR/.
+COPY scripts/build-torchdata.sh $PACKAGE_DIR/.
+
 RUN $PACKAGE_DIR/build-pytorch.sh
 # Install torchvision, torchdata and torchtext
-RUN pip install --no-cache-dir torchvision==$TORCHVISION_VERSION \
-    torchdata==$TORCHDATA_VERSION
+RUN pip install --no-cache-dir torchvision==$TORCHVISION_VERSION
+
 ENV VENV_PACKAGE_DIR=$VENV_DIR/lib/python$PY_VERSION/site-packages
-COPY scripts/build-torchtext.sh $PACKAGE_DIR/.
+# Build torchtext from source to workaround the undefined symbol issue with the wheel
 RUN $PACKAGE_DIR/build-torchtext.sh
+# Build torchdata from source because there is no wheel for v0.4.0
+RUN $PACKAGE_DIR/build-torchdata.sh
 
 CMD ["bash", "-l"]
 

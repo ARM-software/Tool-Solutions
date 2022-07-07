@@ -8,9 +8,12 @@ where `YY` is the year, and `MM` the month of the increment.
 ## [Unreleased]
 
 ### Added
+- Adds torchdata build script
 
 ### Changed
 - Updates the Compute Library version used for PyTorch builds from 22.02 to 22.05.
+- Updates PyTorch to v1.12.0, torchvision to v0.13.0, torchtext to v0.13.0 and torchdata to 0.4.0
+- Updates cmake version to 3.23.2
 
 ### Removed
 
