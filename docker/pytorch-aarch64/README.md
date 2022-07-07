@@ -59,7 +59,7 @@ where `<image name>` is the name of the image, i.e. `armswdev/pytorch-arm-neover
   * Python 3.8.10 environment containing:
     - NumPy 1.21.5
     - SciPy 1.7.3
-    - PyTorch 1.11.0
+    - PyTorch 1.12.0
   * [Examples](./examples/README.md) that demonstrate how to run ML models
     - [MLCommons :tm:](https://mlcommons.org/en/) benchmarks
     - Python API examples
