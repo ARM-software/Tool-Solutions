@@ -1,0 +1,2135 @@
+ *******************************************************************************
+ Copyright 2022 Arm Limited and affiliates.
+ SPDX-License-Identifier: Apache-2.0
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+ *******************************************************************************
+diff --git a/src/common/c_types_map.hpp b/src/common/c_types_map.hpp
+index b339a1428..118f297a0 100644
+--- a/src/common/c_types_map.hpp
++++ b/src/common/c_types_map.hpp
+@@ -1,5 +1,6 @@
+ /*******************************************************************************
+ * Copyright 2016-2022 Intel Corporation
++* Copyright 2022 Arm Ltd. and affiliates
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+@@ -1269,6 +1270,7 @@ const primitive_kind_t softmax_v2 = dnnl_softmax_v2;
+ // Internal only primitive kinds.
+ const primitive_kind_t internal_only_start = (primitive_kind_t)(1 << 12);
+ const primitive_kind_t zero_pad = internal_only_start;
++const primitive_kind_t post_ops = (primitive_kind_t)((int)zero_pad + 1);
+ } // namespace primitive_kind
+ 
+ using query_t = dnnl_query_t;
+@@ -1334,6 +1336,7 @@ const query_t scratchpad_md = dnnl_query_scratchpad_md;
+ // Internal only query kinds.
+ const query_t internal_only_start = (query_t)(1 << 12);
+ const query_t zero_pad_d = internal_only_start;
++const query_t post_ops_d = (query_t)((int)zero_pad_d + 1);
+ } // namespace query
+ 
+ using blocking_desc_t = dnnl_blocking_desc_t;
+@@ -1371,6 +1374,7 @@ using concat_desc_t = dnnl_concat_desc_t;
+ using reorder_desc_t = dnnl_reorder_desc_t;
+ using sum_desc_t = dnnl_sum_desc_t;
+ using zero_pad_desc_t = dnnl_zero_pad_desc_t;
++using post_ops_desc_t = dnnl_post_ops_desc_t;
+ 
+ /* C op_desc_t, which eventually are just (void*) */
+ using c_op_desc_t = dnnl_op_desc_t;
+@@ -1399,6 +1403,7 @@ struct op_desc_t {
+         matmul_desc_t matmul;
+         resampling_desc_t resampling;
+         zero_pad_desc_t zero_pad;
++        post_ops_desc_t post_ops;
+         reduction_desc_t reduction;
+     };
+ 
+@@ -1430,6 +1435,7 @@ struct op_desc_t {
+     DECL_CTOR_AND_CONVERTERS(matmul_desc_t);
+     DECL_CTOR_AND_CONVERTERS(resampling_desc_t);
+     DECL_CTOR_AND_CONVERTERS(zero_pad_desc_t);
++    DECL_CTOR_AND_CONVERTERS(post_ops_desc_t);
+     DECL_CTOR_AND_CONVERTERS(reduction_desc_t);
+ 
+     // concat_desc_t and sum_desc_t have data members which have non-trivial
+diff --git a/src/common/dnnl_traits.hpp b/src/common/dnnl_traits.hpp
+index 4638fd5f0..408f12c5f 100644
+--- a/src/common/dnnl_traits.hpp
++++ b/src/common/dnnl_traits.hpp
+@@ -1,5 +1,6 @@
+ /*******************************************************************************
+ * Copyright 2016-2022 Intel Corporation
++* Copyright 2022 Arm Ltd. and affiliates
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+@@ -130,6 +131,7 @@ PKIND_TRAITS_INST(inner_product);
+ PKIND_TRAITS_INST(rnn);
+ PKIND_TRAITS_INST(gemm);
+ PKIND_TRAITS_INST(zero_pad);
++PKIND_TRAITS_INST(post_ops);
+ PKIND_TRAITS_INST(binary);
+ PKIND_TRAITS_INST(logsoftmax);
+ PKIND_TRAITS_INST(matmul);
+diff --git a/src/common/internal_desc_types.hpp b/src/common/internal_desc_types.hpp
+index bd866f063..aa24ce76c 100644
+--- a/src/common/internal_desc_types.hpp
++++ b/src/common/internal_desc_types.hpp
+@@ -1,5 +1,6 @@
+ /*******************************************************************************
+ * Copyright 2019-2021 Intel Corporation
++* Copyright 2022 Arm Ltd. and affiliates
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+@@ -53,6 +54,10 @@ struct dnnl_zero_pad_desc_t {
+     dnnl_primitive_kind_t primitive_kind;
+ };
+ 
++struct dnnl_post_ops_desc_t {
++    dnnl_primitive_kind_t primitive_kind;
++};
++
+ } // namespace impl
+ } // namespace dnnl
+ 
+diff --git a/src/common/primitive_hashing.cpp b/src/common/primitive_hashing.cpp
+index 6c7ba22b8..bafe4e127 100644
+--- a/src/common/primitive_hashing.cpp
++++ b/src/common/primitive_hashing.cpp
+@@ -1,5 +1,6 @@
+ /*******************************************************************************
+ * Copyright 2019-2022 Intel Corporation
++* Copyright 2022 Arm Ltd. and affiliates
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+@@ -107,6 +108,7 @@ bool key_t::operator==(const key_t &rhs) const {
+             CASE(softmax_v2)
+             CASE(sum)
+             CASE(zero_pad)
++            CASE(post_ops)
+             default: assert(!"unknown primitive kind");
+         }
+ #undef CASE
+@@ -682,6 +684,13 @@ size_t get_desc_hash(const zero_pad_desc_t &desc) {
+     return seed;
+ }
+ 
++size_t get_desc_hash(const post_ops_desc_t &desc) {
++    size_t seed = 0;
++    // Kinds
++    seed = hash_combine(seed, static_cast<size_t>(desc.primitive_kind));
++    return seed;
++}
++
+ } // namespace primitive_hashing
+ } // namespace impl
+ } // namespace dnnl
+diff --git a/src/common/type_helpers.hpp b/src/common/type_helpers.hpp
+index 6a16ded49..642f7ffcb 100644
+--- a/src/common/type_helpers.hpp
++++ b/src/common/type_helpers.hpp
+@@ -1,5 +1,6 @@
+ /*******************************************************************************
+ * Copyright 2016-2022 Intel Corporation
++* Copyright 2022 Arm Ltd. and affiliates
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+@@ -603,6 +604,11 @@ inline bool operator==(const zero_pad_desc_t &lhs, const zero_pad_desc_t &rhs) {
+     bool ret = COMPARE_DESC_MEMBERS(primitive_kind);
+     return ret;
+ }
++
++inline bool operator==(const post_ops_desc_t &lhs, const post_ops_desc_t &rhs) {
++    bool ret = COMPARE_DESC_MEMBERS(primitive_kind);
++    return ret;
++}
+ // clang-format on
+ 
+ #undef COMPARE_DESC_MEMBERS
+diff --git a/src/common/verbose.cpp b/src/common/verbose.cpp
+index e31082a66..2b53e3a46 100644
+--- a/src/common/verbose.cpp
++++ b/src/common/verbose.cpp
+@@ -1,5 +1,6 @@
+ /*******************************************************************************
+ * Copyright 2018-2022 Intel Corporation
++* Copyright 2022 Arm Ltd. and affiliates
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+@@ -172,6 +173,7 @@ std::ostream &operator<<(std::ostream &ss, const engine_t *engine) {
+ const char *prim_kind2str(primitive_kind_t prim_kind) {
+     switch ((int)prim_kind) {
+         case primitive_kind::zero_pad: return "zero_pad";
++        case primitive_kind::post_ops: return "post_ops";
+         default: return dnnl_prim_kind2str(prim_kind);
+     }
+ }
+@@ -1025,6 +1027,7 @@ void pd_info_t::init(engine_t *engine, const primitive_desc_t *pd) {
+             CASE(softmax);
+             CASE(sum);
+             case primitive_kind::zero_pad: break;
++            case primitive_kind::post_ops: break;
+             default: assert(!"unknown primitive kind");
+         }
+ #undef CASE
+diff --git a/src/cpu/aarch64/acl_binary.cpp b/src/cpu/aarch64/acl_binary.cpp
+index d82e07521..9c8387a55 100644
+--- a/src/cpu/aarch64/acl_binary.cpp
++++ b/src/cpu/aarch64/acl_binary.cpp
+@@ -21,11 +21,8 @@ namespace impl {
+ namespace cpu {
+ namespace aarch64 {
+ 
+-status_t acl_binary_t::execute_forward(const exec_ctx_t &ctx) const {
+-
+-    auto src0 = CTX_IN_MEM(const void *, DNNL_ARG_SRC_0);
+-    auto src1 = CTX_IN_MEM(const void *, DNNL_ARG_SRC_1);
+-    auto dst = CTX_OUT_MEM(void *, DNNL_ARG_DST);
++status_t acl_binary_t::execute_forward(const exec_ctx_t &ctx, const void *src0,
++        const void *src1, void *dst) const {
+ 
+     // Lock here is needed because resource_mapper does not support
+     // concurrent multithreaded access.
+@@ -49,6 +46,15 @@ status_t acl_binary_t::execute_forward(const exec_ctx_t &ctx) const {
+     return status::success;
+ }
+ 
++status_t acl_binary_t::execute_forward(const exec_ctx_t &ctx) const {
++
++    auto src0 = CTX_IN_MEM(const void *, DNNL_ARG_SRC_0);
++    auto src1 = CTX_IN_MEM(const void *, DNNL_ARG_SRC_1);
++    auto dst = CTX_OUT_MEM(void *, DNNL_ARG_DST);
++
++    return execute_forward(ctx, src0, src1, dst);
++}
++
+ } // namespace aarch64
+ } // namespace cpu
+ } // namespace impl
+diff --git a/src/cpu/aarch64/acl_binary.hpp b/src/cpu/aarch64/acl_binary.hpp
+index 4a276b02a..fc00a0a45 100644
+--- a/src/cpu/aarch64/acl_binary.hpp
++++ b/src/cpu/aarch64/acl_binary.hpp
+@@ -123,6 +123,10 @@ struct acl_binary_t : public primitive_t {
+ 
+         DECLARE_COMMON_PD_T("acl", acl_binary_t);
+ 
++        pd_t(const binary_desc_t *adesc, const primitive_attr_t *attr,
++                const binary_pd_t *hint_fwd_pd)
++            : cpu_binary_pd_t(adesc, attr, hint_fwd_pd) {}
++
+         status_t init(engine_t *engine) {
+ 
+             using namespace acl_utils;
+@@ -245,9 +249,16 @@ struct acl_binary_t : public primitive_t {
+ private:
+     // To guard the const execute_forward, the mutex must be 'mutable'
+     mutable std::mutex mtx;
++
+     status_t execute_forward(const exec_ctx_t &ctx) const;
++    // Execute forward with arbitrary src0, src1 and dst, used by acl_post_ops_t
++    status_t execute_forward(const exec_ctx_t &ctx, const void *src0,
++            const void *src1, void *dst) const;
++
+     const pd_t *pd() const { return (const pd_t *)primitive_t::pd().get(); }
+ 
++    friend struct acl_post_ops_t;
++
+ }; // acl_binary_t
+ 
+ } // namespace aarch64
+diff --git a/src/cpu/aarch64/acl_convolution_utils.cpp b/src/cpu/aarch64/acl_convolution_utils.cpp
+index e072dc549..2260e7beb 100644
+--- a/src/cpu/aarch64/acl_convolution_utils.cpp
++++ b/src/cpu/aarch64/acl_convolution_utils.cpp
+@@ -156,10 +156,18 @@ status_t acl_init_conf(acl_conv_conf_t &acp, memory_desc_t &src_md,
+     const auto acl_layout = is_nspc ? arm_compute::DataLayout::NHWC
+                                     : arm_compute::DataLayout::NCHW;
+ 
+-    auto acl_src_data_t = acl_utils::get_acl_data_t(src_d.data_type());
+-    auto acl_wei_data_t = acl_utils::get_acl_data_t(wei_d.data_type());
+-    auto acl_dst_data_t = acl_utils::get_acl_data_t(dst_d.data_type());
+-    auto acl_bia_data_t = acl_utils::get_acl_data_t(bia_d.data_type());
++    // For convolutions, int8 datatypes imply quantized types in ACL
++    acp.is_int8 = utils::one_of(src_d.data_type(), s8, u8)
++            && wei_d.data_type() == s8;
++
++    auto acl_src_data_t
++            = acl_utils::get_acl_data_t(src_d.data_type(), acp.is_int8);
++    auto acl_wei_data_t
++            = acl_utils::get_acl_data_t(wei_d.data_type(), acp.is_int8);
++    auto acl_dst_data_t
++            = acl_utils::get_acl_data_t(dst_d.data_type(), acp.is_int8);
++    auto acl_bia_data_t
++            = acl_utils::get_acl_data_t(bia_d.data_type(), acp.is_int8);
+ 
+     if (acl_bia_data_t == arm_compute::DataType::UNKNOWN)
+         acl_bia_data_t = arm_compute::DataType::F32;
+@@ -195,9 +203,6 @@ status_t acl_init_conf(acl_conv_conf_t &acp, memory_desc_t &src_md,
+     // clang-format on
+ 
+     // Add quantization info to tensors
+-    acp.is_int8 = utils::one_of(src_d.data_type(), s8, u8)
+-            && wei_d.data_type() == s8;
+-
+     if (acp.is_int8) {
+         const float *scales = attr.output_scales_.scales_;
+         acp.src_info.set_quantization_info(arm_compute::QuantizationInfo(1, 0));
+@@ -207,21 +212,6 @@ status_t acl_init_conf(acl_conv_conf_t &acp, memory_desc_t &src_md,
+                 arm_compute::QuantizationInfo(1.0f / scales[0], 0));
+     }
+ 
+-    // Post-convolutional operations (post-ops)
+-    const auto &post_ops = attr.post_ops_;
+-    // is_eltwise(true) here stands for eltwise.scale == 1.f check
+-    acp.sum_with_eltwise = (post_ops.len() == 2) && post_ops.entry_[0].is_sum()
+-            && post_ops.entry_[1].is_eltwise(true);
+-    acp.act_info = acl_utils::get_acl_act(attr);
+-
+-    if (acp.sum_with_eltwise) {
+-        ACL_CHECK_VALID(arm_compute::NEActivationLayer::validate( // eltwise
+-                &acp.dst_info, &acp.dst_info, acp.act_info));
+-        ACL_CHECK_VALID(arm_compute::NEArithmeticAddition::validate( // sum
+-                &acp.dst_info, &acp.dst_info, &acp.dst_info,
+-                arm_compute::ConvertPolicy::SATURATE));
+-    }
+-
+     return status::success;
+ }
+ 
+diff --git a/src/cpu/aarch64/acl_convolution_utils.hpp b/src/cpu/aarch64/acl_convolution_utils.hpp
+index 2a38c4746..aff8de4f2 100644
+--- a/src/cpu/aarch64/acl_convolution_utils.hpp
++++ b/src/cpu/aarch64/acl_convolution_utils.hpp
+@@ -1,5 +1,5 @@
+ /*******************************************************************************
+-* Copyright 2020-2021 Arm Ltd. and affiliates
++* Copyright 2020-2022 Arm Ltd. and affiliates
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+@@ -19,6 +19,7 @@
+ 
+ #include "cpu/cpu_convolution_pd.hpp"
+ 
++#include "cpu/aarch64/acl_post_ops.hpp"
+ #include "cpu/aarch64/acl_utils.hpp"
+ 
+ namespace dnnl {
+@@ -29,20 +30,19 @@ namespace aarch64 {
+ template <typename NEConv>
+ struct acl_obj_t {
+     NEConv conv;
+-    arm_compute::NEArithmeticAddition add;
+-    arm_compute::NEActivationLayer act;
+     arm_compute::Tensor src_tensor;
+     arm_compute::Tensor wei_tensor;
+     arm_compute::Tensor bia_tensor;
+     arm_compute::Tensor dst_tensor;
+-    arm_compute::Tensor dst_acc_tensor;
+ };
+ 
+ struct acl_conv_conf_t {
+     bool with_bias;
+     bool is_int8;
+-    bool sum_with_eltwise;
+     bool fast_math;
++    // If this is true, the result of the convolution goes into a temporarily
++    // allocated ACL tensor to be accumulated into the oneDNN dst during postops
++    bool use_dst_acc;
+     arm_compute::TensorInfo src_info;
+     arm_compute::TensorInfo wei_info;
+     arm_compute::TensorInfo bia_info;
+@@ -50,6 +50,7 @@ struct acl_conv_conf_t {
+     arm_compute::PadStrideInfo padstride_info;
+     arm_compute::Size2D dilation_info;
+     arm_compute::WeightsInfo weights_info;
++    // Note: this will default to not enabled, and will do nothing
+     arm_compute::ActivationLayerInfo act_info;
+ };
+ 
+@@ -75,14 +76,14 @@ status_t init_conf_wino(acl_conv_conf_t &acp, memory_desc_t &src_md,
+ template <typename conv_obj_t, typename conv_pd_t, typename src_data_t,
+         typename wei_data_t = src_data_t, typename dst_data_t = src_data_t,
+         typename bia_data_t = src_data_t>
+-status_t execute_forward_conv_acl(
+-        const exec_ctx_t &ctx, conv_obj_t &acl_conv_obj, const conv_pd_t *pd) {
++status_t execute_forward_conv_acl(const exec_ctx_t &ctx,
++        conv_obj_t &acl_conv_obj, const conv_pd_t *pd,
++        const acl_post_ops_t &post_ops) {
+     bool with_bias = pd->acp_.with_bias;
+-    bool sum_with_eltwise = pd->acp_.sum_with_eltwise;
++    bool use_dst_acc = pd->acp_.use_dst_acc;
+ 
+     auto src_base = CTX_IN_MEM(const src_data_t *, DNNL_ARG_SRC);
+     auto wei_base = CTX_IN_MEM(const wei_data_t *, DNNL_ARG_WEIGHTS);
+-    auto dst_base = CTX_OUT_MEM(dst_data_t *, DNNL_ARG_DST);
+ 
+     // import_memory() and free() methods do not allocate/free any additional
+     // memory, only acquire/release pointers.
+@@ -90,7 +91,15 @@ status_t execute_forward_conv_acl(
+             const_cast<src_data_t *>(src_base));
+     acl_conv_obj.wei_tensor.allocator()->import_memory(
+             const_cast<wei_data_t *>(wei_base));
+-    acl_conv_obj.dst_tensor.allocator()->import_memory(dst_base);
++
++    if (use_dst_acc) {
++        // Put the result in a new tensor, it will be accumalated to the dst
++        // during the post ops
++        acl_conv_obj.dst_tensor.allocator()->allocate();
++    } else {
++        auto dst_base = CTX_OUT_MEM(dst_data_t *, DNNL_ARG_DST);
++        acl_conv_obj.dst_tensor.allocator()->import_memory(dst_base);
++    }
+ 
+     if (with_bias) {
+         auto bia_base = CTX_IN_MEM(const bia_data_t *, DNNL_ARG_BIAS);
+@@ -100,16 +109,15 @@ status_t execute_forward_conv_acl(
+ 
+     acl_conv_obj.conv.run();
+ 
+-    if (sum_with_eltwise) {
+-        acl_conv_obj.add.run();
+-        acl_conv_obj.act.run();
+-    }
+-
+     acl_conv_obj.src_tensor.allocator()->free();
+     acl_conv_obj.wei_tensor.allocator()->free();
+-    acl_conv_obj.dst_tensor.allocator()->free();
+     if (with_bias) { acl_conv_obj.bia_tensor.allocator()->free(); }
+ 
++    void *dst = acl_conv_obj.dst_tensor.buffer();
++    post_ops.execute(ctx, dst);
++
++    acl_conv_obj.dst_tensor.allocator()->free();
++
+     return status::success;
+ }
+ 
+diff --git a/src/cpu/aarch64/acl_eltwise.cpp b/src/cpu/aarch64/acl_eltwise.cpp
+index 6027078ba..2065a2863 100644
+--- a/src/cpu/aarch64/acl_eltwise.cpp
++++ b/src/cpu/aarch64/acl_eltwise.cpp
+@@ -21,14 +21,12 @@ namespace impl {
+ namespace cpu {
+ namespace aarch64 {
+ 
+-status_t acl_eltwise_fwd_t::execute_forward(const exec_ctx_t &ctx) const {
++status_t acl_eltwise_fwd_t::execute_forward(
++        const exec_ctx_t &ctx, const void *src, void *dst) const {
+     // Lock here is needed because resource_mapper does not support
+     // concurrent access.
+     std::lock_guard<std::mutex> _lock {this->mtx};
+ 
+-    auto src_base = CTX_IN_MEM(const void *, DNNL_ARG_SRC);
+-    auto dst_base = CTX_OUT_MEM(void *, DNNL_ARG_DST);
+-
+     // Retrieve primitive resource and configured Compute Library objects
+     auto *acl_resource
+             = ctx.get_resource_mapper()->get<acl_eltwise_resource_t>(this);
+@@ -36,8 +34,8 @@ status_t acl_eltwise_fwd_t::execute_forward(const exec_ctx_t &ctx) const {
+ 
+     // import_memory() and free() methods do not allocate/free any additional
+     // memory, only acquire/release pointers.
+-    acl_obj.src_tensor.allocator()->import_memory(const_cast<void *>(src_base));
+-    acl_obj.dst_tensor.allocator()->import_memory(dst_base);
++    acl_obj.src_tensor.allocator()->import_memory(const_cast<void *>(src));
++    acl_obj.dst_tensor.allocator()->import_memory(dst);
+ 
+     acl_obj.act.run();
+ 
+@@ -47,6 +45,14 @@ status_t acl_eltwise_fwd_t::execute_forward(const exec_ctx_t &ctx) const {
+     return status::success;
+ }
+ 
++status_t acl_eltwise_fwd_t::execute_forward(const exec_ctx_t &ctx) const {
++
++    const void *src = CTX_IN_MEM(const void *, DNNL_ARG_SRC);
++    void *dst = CTX_OUT_MEM(void *, DNNL_ARG_DST);
++
++    return execute_forward(ctx, src, dst);
++}
++
+ } // namespace aarch64
+ } // namespace cpu
+ } // namespace impl
+diff --git a/src/cpu/aarch64/acl_eltwise.hpp b/src/cpu/aarch64/acl_eltwise.hpp
+index 0862f5690..624187553 100644
+--- a/src/cpu/aarch64/acl_eltwise.hpp
++++ b/src/cpu/aarch64/acl_eltwise.hpp
+@@ -96,16 +96,7 @@ struct acl_eltwise_fwd_t : public primitive_t {
+                     data_d.nelems() / thread_dim, thread_dim);
+             aep.data_info = arm_compute::TensorInfo(shape, 1, acl_data_t);
+ 
+-            const bool is_int8 = one_of(data_d.data_type(), s8, u8);
+-            if (is_int8) {
+-                aep.data_info.set_quantization_info(
+-                        arm_compute::QuantizationInfo(1, 0));
+-            }
+-
+-            if (!acl_utils::acl_act_ok(desc()->alg_kind))
+-                return status::unimplemented;
+-
+-            aep.act_info = acl_utils::get_acl_act(*desc());
++            CHECK(acl_utils::convert_to_acl_act(desc_, aep.act_info));
+ 
+             ACL_CHECK_VALID(arm_compute::NEActivationLayer::validate(
+                     &aep.data_info, &aep.data_info, aep.act_info));
+@@ -139,8 +130,16 @@ struct acl_eltwise_fwd_t : public primitive_t {
+ private:
+     // execute_forward has to be const thus mutability of mtx
+     mutable std::mutex mtx;
++
+     status_t execute_forward(const exec_ctx_t &ctx) const;
++
++    // Execute forward with arbitrary src and dst, used by acl_post_ops_t
++    status_t execute_forward(
++            const exec_ctx_t &ctx, const void *src, void *dst) const;
++
+     const pd_t *pd() const { return (const pd_t *)primitive_t::pd().get(); }
++
++    friend struct acl_post_ops_t;
+ }; // acl_eltwise_fwd_t
+ 
+ } // namespace aarch64
+diff --git a/src/cpu/aarch64/acl_gemm_convolution.cpp b/src/cpu/aarch64/acl_gemm_convolution.cpp
+index e4b92a126..00a050cc3 100644
+--- a/src/cpu/aarch64/acl_gemm_convolution.cpp
++++ b/src/cpu/aarch64/acl_gemm_convolution.cpp
+@@ -1,5 +1,5 @@
+ /*******************************************************************************
+-* Copyright 2020-2021 Arm Ltd. and affiliates
++* Copyright 2020-2022 Arm Ltd. and affiliates
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+@@ -37,7 +37,7 @@ status_t acl_gemm_convolution_fwd_t<src_type, wei_type, dst_type,
+ 
+     return execute_forward_conv_acl<
+             acl_obj_t<arm_compute::NEGEMMConvolutionLayer>, pd_t, src_data_t,
+-            wei_data_t, dst_data_t, bia_data_t>(ctx, acl_obj, pd());
++            wei_data_t, dst_data_t, bia_data_t>(ctx, acl_obj, pd(), post_ops);
+ }
+ 
+ using namespace data_type;
+diff --git a/src/cpu/aarch64/acl_gemm_convolution.hpp b/src/cpu/aarch64/acl_gemm_convolution.hpp
+index 02b122c6a..f35d2e78a 100644
+--- a/src/cpu/aarch64/acl_gemm_convolution.hpp
++++ b/src/cpu/aarch64/acl_gemm_convolution.hpp
+@@ -20,6 +20,7 @@
+ #include "cpu/cpu_convolution_pd.hpp"
+ 
+ #include "cpu/aarch64/acl_convolution_utils.hpp"
++#include "cpu/aarch64/acl_post_ops.hpp"
+ 
+ namespace dnnl {
+ namespace impl {
+@@ -39,30 +40,11 @@ struct acl_resource_t : public resource_t {
+         acl_obj_->wei_tensor.allocator()->init(acp.wei_info);
+         acl_obj_->dst_tensor.allocator()->init(acp.dst_info);
+         acl_obj_->bia_tensor.allocator()->init(acp.bia_info);
+-        if (acp.sum_with_eltwise) {
+-            acl_obj_->dst_acc_tensor.allocator()->init(acp.dst_info);
+-        }
+-        // clang-format off
+-        acl_obj_->conv.configure(
+-            &acl_obj_->src_tensor,
+-            &acl_obj_->wei_tensor,
+-            acp.with_bias ? &acl_obj_->bia_tensor : nullptr,
+-            acp.sum_with_eltwise ? &acl_obj_->dst_acc_tensor : &acl_obj_->dst_tensor,
+-            acp.padstride_info,
+-            acp.weights_info,
+-            acp.dilation_info,
+-            acp.sum_with_eltwise ? arm_compute::ActivationLayerInfo() : acp.act_info,
+-            acp.fast_math);
+-        // clang-format on
+-        if (acp.sum_with_eltwise) {
+-            acl_obj_->add.configure(&acl_obj_->dst_tensor,
+-                    &acl_obj_->dst_acc_tensor, &acl_obj_->dst_acc_tensor,
+-                    arm_compute::ConvertPolicy::SATURATE);
+-            acl_obj_->act.configure(&acl_obj_->dst_acc_tensor,
+-                    &acl_obj_->dst_tensor, acp.act_info);
+-            acl_obj_->dst_acc_tensor.allocator()->allocate();
+-        }
+ 
++        acl_obj_->conv.configure(&acl_obj_->src_tensor, &acl_obj_->wei_tensor,
++                acp.with_bias ? &acl_obj_->bia_tensor : nullptr,
++                &acl_obj_->dst_tensor, acp.padstride_info, acp.weights_info,
++                acp.dilation_info, acp.act_info, acp.fast_math);
+         return status::success;
+     }
+ 
+@@ -83,7 +65,9 @@ struct acl_gemm_convolution_fwd_t : public primitive_t {
+     struct pd_t : public cpu_convolution_fwd_pd_t {
+         pd_t(const convolution_desc_t *adesc, const primitive_attr_t *attr,
+                 const typename pd_t::base_class *hint_fwd_pd)
+-            : cpu_convolution_fwd_pd_t(adesc, attr, hint_fwd_pd), acp_() {}
++            : cpu_convolution_fwd_pd_t(adesc, attr, hint_fwd_pd)
++            , acp_()
++            , post_ops_pd() {}
+ 
+         DECLARE_COMMON_PD_T(
+                 "gemm:acl", acl_gemm_convolution_fwd_t, USE_GLOBAL_SCRATCHPAD);
+@@ -100,19 +84,23 @@ struct acl_gemm_convolution_fwd_t : public primitive_t {
+                     && attr()->has_default_values(smask_t::oscale
+                                     | smask_t::zero_points | smask_t::post_ops,
+                             dst_type)
+-                    && output_scales_mask_ok() && zero_points_ok()
+-                    && post_ops_ok();
++                    && output_scales_mask_ok() && zero_points_ok();
+             if (!ok) return status::unimplemented;
+ 
+-            auto conf_status = acl_convolution_utils::init_conf_gemm(acp_,
+-                    src_md_, weights_md_, dst_md_, bias_md_, *desc(), *attr());
+-            if (conf_status != status::success) return status::unimplemented;
++            CHECK(acl_convolution_utils::init_conf_gemm(acp_, src_md_,
++                    weights_md_, dst_md_, bias_md_, *desc(), *attr()));
++
++            CHECK(post_ops_pd.init(
++                    engine, dst_md_, attr_.post_ops_, acp_.act_info));
++            acp_.use_dst_acc = post_ops_pd.has_sum();
+ 
+             return status::success;
+         }
+ 
+         acl_conv_conf_t acp_;
+ 
++        typename acl_post_ops_t::pd_t post_ops_pd;
++
+     protected:
+         bool output_scales_mask_ok() const {
+             using namespace data_type;
+@@ -128,30 +116,12 @@ struct acl_gemm_convolution_fwd_t : public primitive_t {
+             // TODO: add support for asymmetric quantization
+             return attr()->zero_points_.has_default_values();
+         }
+-
+-        bool post_ops_ok() const {
+-            auto const &po = attr()->post_ops_;
+-            // "true" here stands for eltwise.scale == 1.f check
+-            auto is_eltwise
+-                    = [&](int idx) { return po.entry_[idx].is_eltwise(true); };
+-            auto is_sum = [&](int idx) { return po.entry_[idx].is_sum(); };
+-
+-            bool sum_with_eltwise
+-                    = (po.len() == 2) && is_sum(0) && is_eltwise(1);
+-            bool eltwise_only = (po.len() == 1) ? is_eltwise(0) : false;
+-            bool eltwise_ok = false;
+-            // Compute Library supports either one eltwise post-op or
+-            // sum+eltwise post-ops
+-            if (eltwise_only || sum_with_eltwise) {
+-                const auto act_type = po.entry_[sum_with_eltwise].eltwise.alg;
+-                eltwise_ok = acl_utils::acl_act_ok(act_type);
+-            }
+-
+-            return eltwise_ok || (po.len() == 0);
+-        }
+     };
+ 
+-    acl_gemm_convolution_fwd_t(const pd_t *apd) : primitive_t(apd) {}
++    acl_gemm_convolution_fwd_t(const pd_t *apd)
++        : primitive_t(apd), post_ops(&apd->post_ops_pd) {}
++
++    status_t init(engine_t *engine) override { return post_ops.init(engine); }
+ 
+     status_t create_resource(
+             engine_t *engine, resource_mapper_t &mapper) const override {
+@@ -161,10 +131,12 @@ struct acl_gemm_convolution_fwd_t : public primitive_t {
+         if (!r) return status::out_of_memory;
+ 
+         // Configure the resource based on information from primitive descriptor
+-        auto st = r->configure(pd()->acp_);
+-        if (st == status::success) { mapper.add(this, std::move(r)); }
++        CHECK(r->configure(pd()->acp_));
++        mapper.add(this, std::move(r));
+ 
+-        return st;
++        CHECK(post_ops.create_resource(engine, mapper));
++
++        return status::success;
+     }
+ 
+     typedef typename prec_traits<src_type>::type src_data_t;
+@@ -182,6 +154,7 @@ private:
+     status_t execute_forward(const exec_ctx_t &ctx) const;
+     const pd_t *pd() const { return (const pd_t *)primitive_t::pd().get(); }
+ 
++    acl_post_ops_t post_ops;
+ }; // acl_gemm_convolution_fwd_t
+ 
+ } // namespace aarch64
+diff --git a/src/cpu/aarch64/acl_indirect_gemm_convolution.cpp b/src/cpu/aarch64/acl_indirect_gemm_convolution.cpp
+index 204192c45..d78228eee 100644
+--- a/src/cpu/aarch64/acl_indirect_gemm_convolution.cpp
++++ b/src/cpu/aarch64/acl_indirect_gemm_convolution.cpp
+@@ -1,5 +1,5 @@
+ /*******************************************************************************
+-* Copyright 2021 Arm Ltd. and affiliates
++* Copyright 2021-2022 Arm Ltd. and affiliates
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+@@ -34,7 +34,7 @@ status_t acl_indirect_gemm_convolution_fwd_t::execute_forward(
+             = acl_resource->get_acl_obj();
+ 
+     return execute_forward_conv_acl<acl_obj_t<arm_compute::NEGEMMConv2d>, pd_t,
+-            data_t>(ctx, acl_indirect_gemm_obj, pd());
++            data_t>(ctx, acl_indirect_gemm_obj, pd(), post_ops);
+ }
+ 
+ } // namespace aarch64
+diff --git a/src/cpu/aarch64/acl_indirect_gemm_convolution.hpp b/src/cpu/aarch64/acl_indirect_gemm_convolution.hpp
+index 06b6c75d3..4e4f14a61 100644
+--- a/src/cpu/aarch64/acl_indirect_gemm_convolution.hpp
++++ b/src/cpu/aarch64/acl_indirect_gemm_convolution.hpp
+@@ -39,32 +39,19 @@ struct acl_indirect_gemm_resource_t : public resource_t {
+         acl_obj_->wei_tensor.allocator()->init(acp.wei_info);
+         acl_obj_->dst_tensor.allocator()->init(acp.dst_info);
+         acl_obj_->bia_tensor.allocator()->init(acp.bia_info);
+-        if (acp.sum_with_eltwise) {
+-            acl_obj_->dst_acc_tensor.allocator()->init(acp.dst_info);
+-        }
++
+         // clang-format off
+         acl_obj_->conv.configure(
+             &acl_obj_->src_tensor,
+             &acl_obj_->wei_tensor,
+             acp.with_bias ? &acl_obj_->bia_tensor : nullptr,
+-            acp.sum_with_eltwise ? &acl_obj_->dst_acc_tensor
+-                                 : &acl_obj_->dst_tensor,
++            &acl_obj_->dst_tensor,
+             arm_compute::Conv2dInfo(acp.padstride_info,
+                                     acp.dilation_info,
+-                                    acp.sum_with_eltwise
+-                                        ? arm_compute::ActivationLayerInfo()
+-                                        : acp.act_info,
++                                    acp.act_info,
+                                     acp.fast_math,
+                                     1));
+         // clang-format on
+-        if (acp.sum_with_eltwise) {
+-            acl_obj_->add.configure(&acl_obj_->dst_tensor,
+-                    &acl_obj_->dst_acc_tensor, &acl_obj_->dst_acc_tensor,
+-                    arm_compute::ConvertPolicy::SATURATE);
+-            acl_obj_->act.configure(&acl_obj_->dst_acc_tensor,
+-                    &acl_obj_->dst_tensor, acp.act_info);
+-            acl_obj_->dst_acc_tensor.allocator()->allocate();
+-        }
+ 
+         return status::success;
+     }
+@@ -85,7 +72,9 @@ struct acl_indirect_gemm_convolution_fwd_t : public primitive_t {
+     struct pd_t : public cpu_convolution_fwd_pd_t {
+         pd_t(const convolution_desc_t *adesc, const primitive_attr_t *attr,
+                 const typename pd_t::base_class *hint_fwd_pd)
+-            : cpu_convolution_fwd_pd_t(adesc, attr, hint_fwd_pd), acp_() {}
++            : cpu_convolution_fwd_pd_t(adesc, attr, hint_fwd_pd)
++            , acp_()
++            , post_ops_pd() {}
+ 
+         DECLARE_COMMON_PD_T("indirect_gemm:acl",
+                 acl_indirect_gemm_convolution_fwd_t, USE_GLOBAL_SCRATCHPAD);
+@@ -100,46 +89,28 @@ struct acl_indirect_gemm_convolution_fwd_t : public primitive_t {
+                             data_type::f32, data_type::f32, undef)
+                     && !has_zero_dim_memory()
+                     && attr()->has_default_values(
+-                            smask_t::post_ops, data_type::f32)
+-                    && post_ops_ok();
++                            smask_t::post_ops, data_type::f32);
+             if (!ok) return status::unimplemented;
+ 
+-            auto conf_status = acl_convolution_utils::init_conf_indirect_gemm(
+-                    acp_, src_md_, weights_md_, dst_md_, bias_md_, *desc(),
+-                    *attr());
+-            if (conf_status != status::success) return status::unimplemented;
++            CHECK(acl_convolution_utils::init_conf_indirect_gemm(acp_, src_md_,
++                    weights_md_, dst_md_, bias_md_, *desc(), *attr()));
++
++            CHECK(post_ops_pd.init(
++                    engine, dst_md_, attr_.post_ops_, acp_.act_info));
++            acp_.use_dst_acc = post_ops_pd.has_sum();
+ 
+             return status::success;
+         }
+ 
+         acl_conv_conf_t acp_;
+ 
+-    protected:
+-        bool post_ops_ok() const {
+-            using namespace data_type;
+-            using namespace alg_kind;
+-            auto const &po = attr()->post_ops_;
+-            // "true" here stands for eltwise.scale == 1.f check
+-            auto is_eltwise
+-                    = [&](int idx) { return po.entry_[idx].is_eltwise(true); };
+-            auto is_sum = [&](int idx) { return po.entry_[idx].is_sum(); };
+-
+-            bool sum_with_eltwise
+-                    = (po.len() == 2) && is_sum(0) && is_eltwise(1);
+-            bool eltwise_only = (po.len() == 1) ? is_eltwise(0) : false;
+-            bool eltwise_ok = false;
+-            // Compute Library supports only one eltwise post-op or
+-            // sum+eltwise post-ops
+-            if (eltwise_only || sum_with_eltwise) {
+-                const auto act_type = po.entry_[sum_with_eltwise].eltwise.alg;
+-                eltwise_ok = acl_utils::acl_act_ok(act_type);
+-            }
+-
+-            return eltwise_ok || (po.len() == 0);
+-        }
++        typename acl_post_ops_t::pd_t post_ops_pd;
+     };
+ 
+-    acl_indirect_gemm_convolution_fwd_t(const pd_t *apd) : primitive_t(apd) {}
++    acl_indirect_gemm_convolution_fwd_t(const pd_t *apd)
++        : primitive_t(apd), post_ops(&apd->post_ops_pd) {}
++
++    status_t init(engine_t *engine) override { return post_ops.init(engine); }
+ 
+     status_t create_resource(
+             engine_t *engine, resource_mapper_t &mapper) const override {
+@@ -149,10 +120,12 @@ struct acl_indirect_gemm_convolution_fwd_t : public primitive_t {
+         if (!r) return status::out_of_memory;
+ 
+         // Configure the resource based on information from primitive descriptor
+-        auto st = r->configure(pd()->acp_);
+-        if (st == status::success) { mapper.add(this, std::move(r)); }
++        CHECK(r->configure(pd()->acp_));
++        mapper.add(this, std::move(r));
++
++        CHECK(post_ops.create_resource(engine, mapper));
+ 
+-        return st;
++        return status::success;
+     }
+ 
+     typedef typename prec_traits<data_type::f32>::type data_t;
+@@ -166,6 +139,8 @@ private:
+     mutable std::mutex mtx;
+     status_t execute_forward(const exec_ctx_t &ctx) const;
+     const pd_t *pd() const { return (const pd_t *)primitive_t::pd().get(); }
++
++    acl_post_ops_t post_ops;
+ };
+ 
+ } // namespace aarch64
+diff --git a/src/cpu/aarch64/acl_inner_product.cpp b/src/cpu/aarch64/acl_inner_product.cpp
+index f355a657c..dcfd63f71 100644
+--- a/src/cpu/aarch64/acl_inner_product.cpp
++++ b/src/cpu/aarch64/acl_inner_product.cpp
+@@ -22,43 +22,53 @@ namespace cpu {
+ namespace aarch64 {
+ 
+ status_t acl_inner_product_fwd_t::execute_forward(const exec_ctx_t &ctx) const {
++
+     // Lock here is needed because resource_mapper does not support
+     // concurrent multithreaded access.
+     std::lock_guard<std::mutex> _lock {this->mtx};
+ 
+-    auto src_base = CTX_IN_MEM(const data_t *, DNNL_ARG_SRC);
+-    auto wei_base = CTX_IN_MEM(const data_t *, DNNL_ARG_WEIGHTS);
+-    auto bia_base = CTX_IN_MEM(const data_t *, DNNL_ARG_BIAS);
+-    auto dst_base = CTX_OUT_MEM(data_t *, DNNL_ARG_DST);
+-
+     bool with_bias = pd()->aip.with_bias;
+-    bool with_sum = pd()->aip.with_sum;
++    bool use_dst_acc = pd()->aip.use_dst_acc;
+ 
+     // Retrieve primitive resource and configured Compute Library objects
+-    auto *acl_resource
+-            = ctx.get_resource_mapper()->get<acl_ip_resource_t>(this);
+-    acl_ip_obj_t &acl_obj = acl_resource->get_acl_obj();
++    acl_ip_obj_t &acl_obj = ctx.get_resource_mapper()
++                                    ->get<acl_ip_resource_t>(this)
++                                    ->get_acl_obj();
+ 
+-    // import_memory() and free() methods do not allocate/free any additional
+-    // memory, only acquire/release pointers.
++    auto src_base = CTX_IN_MEM(const data_t *, DNNL_ARG_SRC);
+     acl_obj.src_tensor.allocator()->import_memory(
+             const_cast<data_t *>(src_base));
++
++    auto wei_base = CTX_IN_MEM(const data_t *, DNNL_ARG_WEIGHTS);
+     acl_obj.wei_tensor.allocator()->import_memory(
+             const_cast<data_t *>(wei_base));
+-    acl_obj.dst_tensor.allocator()->import_memory(dst_base);
++
++    if (use_dst_acc) {
++        // Put the result in a new tensor, it will be accumalated to the dst
++        // during the post ops
++        acl_obj.dst_tensor.allocator()->allocate();
++    } else {
++        auto dst_base = CTX_OUT_MEM(data_t *, DNNL_ARG_DST);
++        acl_obj.dst_tensor.allocator()->import_memory(dst_base);
++    }
++
+     if (with_bias) {
++        auto bia_base = CTX_IN_MEM(const data_t *, DNNL_ARG_BIAS);
+         acl_obj.bia_tensor.allocator()->import_memory(
+                 const_cast<data_t *>(bia_base));
+     }
+ 
+     acl_obj.fc.run();
+-    if (with_sum) { acl_obj.add.run(); }
+ 
+     acl_obj.src_tensor.allocator()->free();
+     acl_obj.wei_tensor.allocator()->free();
+-    acl_obj.dst_tensor.allocator()->free();
+     if (with_bias) { acl_obj.bia_tensor.allocator()->free(); }
+ 
++    void *dst = acl_obj.dst_tensor.buffer();
++    post_ops.execute(ctx, dst);
++
++    acl_obj.dst_tensor.allocator()->free();
++
+     return status::success;
+ }
+ 
+diff --git a/src/cpu/aarch64/acl_inner_product.hpp b/src/cpu/aarch64/acl_inner_product.hpp
+index 47ce8bb82..fb9be692b 100644
+--- a/src/cpu/aarch64/acl_inner_product.hpp
++++ b/src/cpu/aarch64/acl_inner_product.hpp
+@@ -20,6 +20,8 @@
+ #include "cpu/aarch64/acl_utils.hpp"
+ #include "cpu/cpu_inner_product_pd.hpp"
+ 
++#include "cpu/aarch64/acl_post_ops.hpp"
++
+ namespace dnnl {
+ namespace impl {
+ namespace cpu {
+@@ -27,24 +29,23 @@ namespace aarch64 {
+ 
+ struct acl_ip_obj_t {
+     arm_compute::NEFullyConnectedLayer fc;
+-    arm_compute::NEArithmeticAddition add;
+     arm_compute::Tensor src_tensor;
+     arm_compute::Tensor wei_tensor;
+     arm_compute::Tensor bia_tensor;
+     arm_compute::Tensor dst_tensor;
+-    arm_compute::Tensor dst_acc_tensor;
+ };
+ 
+ struct acl_ip_conf_t {
+     bool with_bias;
+-    bool with_sum;
++    // If this is true, the result of the inner product goes into a temporarily
++    // allocated ACL tensor to be accumulated into the oneDNN dst during postops
++    bool use_dst_acc;
+     arm_compute::TensorInfo src_info;
+     arm_compute::TensorInfo wei_info;
+     arm_compute::TensorInfo bia_info;
+     arm_compute::TensorInfo dst_info;
+     arm_compute::FullyConnectedLayerInfo fc_info;
+ };
+-
+ struct acl_ip_resource_t : public resource_t {
+     acl_ip_resource_t() : acl_ip_obj_(utils::make_unique<acl_ip_obj_t>()) {}
+ 
+@@ -56,24 +57,15 @@ struct acl_ip_resource_t : public resource_t {
+         acl_ip_obj_->wei_tensor.allocator()->init(aip.wei_info);
+         acl_ip_obj_->dst_tensor.allocator()->init(aip.dst_info);
+         acl_ip_obj_->bia_tensor.allocator()->init(aip.bia_info);
+-        if (aip.with_sum) {
+-            acl_ip_obj_->dst_acc_tensor.allocator()->init(aip.dst_info);
+-        }
+ 
+         // clang-format off
+         acl_ip_obj_->fc.configure(
+             &acl_ip_obj_->src_tensor,
+             &acl_ip_obj_->wei_tensor,
+             aip.with_bias ? &acl_ip_obj_->bia_tensor : nullptr,
+-            aip.with_sum ? &acl_ip_obj_->dst_acc_tensor : &acl_ip_obj_->dst_tensor,
++            &acl_ip_obj_->dst_tensor,
+             aip.fc_info);
+         // clang-format on
+-        if (aip.with_sum) {
+-            acl_ip_obj_->add.configure(&acl_ip_obj_->dst_tensor,
+-                    &acl_ip_obj_->dst_acc_tensor, &acl_ip_obj_->dst_tensor,
+-                    arm_compute::ConvertPolicy::SATURATE);
+-            acl_ip_obj_->dst_acc_tensor.allocator()->allocate();
+-        }
+ 
+         return status::success;
+     }
+@@ -90,6 +82,12 @@ struct acl_inner_product_fwd_t : public primitive_t {
+     struct pd_t : public cpu_inner_product_fwd_pd_t {
+         using cpu_inner_product_fwd_pd_t::cpu_inner_product_fwd_pd_t;
+ 
++        pd_t(const inner_product_desc_t *adesc, const primitive_attr_t *attr,
++                const typename pd_t::base_class *hint_fwd_pd)
++            : cpu_inner_product_fwd_pd_t(adesc, attr, hint_fwd_pd)
++            , aip()
++            , post_ops_pd() {}
++
+         DECLARE_COMMON_PD_T("acl", acl_inner_product_fwd_t);
+ 
+         status_t init(engine_t *engine) {
+@@ -99,46 +97,25 @@ struct acl_inner_product_fwd_t : public primitive_t {
+                     && attr()->has_default_values(
+                             primitive_attr_t::skip_mask_t::post_ops,
+                             data_type::f32)
+-                    && set_default_params() == status::success && post_ops_ok();
++                    && set_default_params() == status::success;
+ 
+             if (!ok) return status::unimplemented;
+ 
+-            CHECK(init_conf_ip(aip, src_md_, weights_md_, dst_md_, bias_md_,
+-                    *desc(), *attr()));
++            CHECK(init_conf_ip(engine));
+ 
+             return status::success;
+         }
+ 
+         acl_ip_conf_t aip;
+ 
+-    protected:
+-        bool post_ops_ok() const {
+-            auto const &po = attr()->post_ops_;
+-            // "true" here stands for eltwise.scale == 1.f check
+-            auto is_eltwise
+-                    = [&](int idx) { return po.entry_[idx].is_eltwise(true); };
+-            auto is_sum = [&](int idx) { return po.entry_[idx].is_sum(); };
+-
+-            bool eltwise_ok = false;
+-            // Compute Library supports here only one eltwise post-op or sum
+-            if (po.len() == 1 && is_eltwise(0)) {
+-                const auto act_type = po.entry_[0].eltwise.alg;
+-                eltwise_ok = acl_utils::acl_act_ok(act_type);
+-            }
+-
+-            return eltwise_ok || (po.len() == 1 && is_sum(0))
+-                    || (po.len() == 0);
+-        }
++        typename acl_post_ops_t::pd_t post_ops_pd;
+ 
+-        status_t init_conf_ip(acl_ip_conf_t &aip, memory_desc_t &src_md,
+-                memory_desc_t &wei_md, memory_desc_t &dst_md,
+-                memory_desc_t &bias_md, const inner_product_desc_t &ipd,
+-                const primitive_attr_t &attr) {
++        status_t init_conf_ip(engine_t *engine) {
+ 
+-            ACL_CHECK_SUPPORT(src_md.ndims != wei_md.ndims,
++            ACL_CHECK_SUPPORT(src_md_.ndims != weights_md_.ndims,
+                     "source and weights dimensions must match");
+ 
+-            const int ndims = src_md.ndims;
++            const int ndims = src_md_.ndims;
+ 
+             const bool is_2d = (ndims == 2);
+             const bool is_4d = (ndims == 4);
+@@ -147,27 +124,27 @@ struct acl_inner_product_fwd_t : public primitive_t {
+                     !(is_2d || is_4d), "ACL supports only 2d or 4d cases");
+ 
+             // batch size
+-            const int n = src_md.dims[0];
++            const int n = src_md_.dims[0];
+ 
+             // input and output channels
+-            const int ic = src_md.dims[1];
+-            const int oc = dst_md.dims[1];
++            const int ic = src_md_.dims[1];
++            const int oc = dst_md_.dims[1];
+ 
+             // source spatial dimensions
+-            const int ih = is_4d ? src_md.dims[ndims - 2] : 0;
+-            const int iw = is_4d ? src_md.dims[ndims - 1] : 0;
++            const int ih = is_4d ? src_md_.dims[ndims - 2] : 0;
++            const int iw = is_4d ? src_md_.dims[ndims - 1] : 0;
+ 
+             // weights spatial dimensions
+-            const int kh = is_4d ? wei_md.dims[ndims - 2] : 0;
+-            const int kw = is_4d ? wei_md.dims[ndims - 1] : 0;
++            const int kh = is_4d ? weights_md_.dims[ndims - 2] : 0;
++            const int kw = is_4d ? weights_md_.dims[ndims - 1] : 0;
+ 
+             // Only NCHW or NHWC derivatives supported by ACL kernels
+             using namespace format_tag;
+             auto src_tag = memory_desc_matches_one_of_tag(
+-                    src_md, nhwc, nchw, nc, cn);
++                    src_md_, nhwc, nchw, nc, cn);
+             auto wei_tag = memory_desc_matches_one_of_tag(
+-                    wei_md, ohwi, oihw, oi, io);
+-            auto dst_tag = memory_desc_matches_one_of_tag(dst_md, nc, cn);
++                    weights_md_, ohwi, oihw, oi, io);
++            auto dst_tag = memory_desc_matches_one_of_tag(dst_md_, nc, cn);
+ 
+             ACL_CHECK_SUPPORT(
+                     utils::one_of(format_tag::undef, src_tag, wei_tag, dst_tag),
+@@ -212,7 +189,7 @@ struct acl_inner_product_fwd_t : public primitive_t {
+                     = arm_compute::TensorInfo(arm_compute::TensorShape(oc, n),
+                             1, arm_compute::DataType::F32);
+ 
+-            aip.with_bias = ipd.bias_desc.format_kind != format_kind::undef;
++            aip.with_bias = desc()->bias_desc.format_kind != format_kind::undef;
+             aip.bia_info = arm_compute::TensorInfo(aip.with_bias
+                             ? arm_compute::TensorShape(oc)
+                             : arm_compute::TensorShape(),
+@@ -223,23 +200,22 @@ struct acl_inner_product_fwd_t : public primitive_t {
+                 // weights are already transposed
+                 aip.fc_info.transpose_weights = false;
+ 
+-                if (ipd.prop_kind == dnnl_forward_training) {
++                if (desc()->prop_kind == dnnl_forward_training) {
+                     aip.wei_info.set_are_values_constant(false);
+                     aip.fc_info.are_weights_reshaped = true;
+                 }
+             }
+ 
+-            // Either activation or sum is supported as post-op at the moment
+-            aip.fc_info.activation_info = acl_utils::get_acl_act(attr);
+-            const auto &post_ops = attr.post_ops_;
+-            aip.with_sum = (post_ops.len() == 1) && post_ops.entry_[0].is_sum();
+-
+             // Fast math mode
+             auto math_mode = get_fpmath_mode();
+             bool is_fastmath_enabled = utils::one_of(
+                     math_mode, fpmath_mode::bf16, fpmath_mode::any);
+             aip.fc_info.enable_fast_math = is_fastmath_enabled;
+ 
++            CHECK(post_ops_pd.init(engine, dst_md_, attr_.post_ops_,
++                    aip.fc_info.activation_info));
++            aip.use_dst_acc = post_ops_pd.has_sum();
++
+             // clang-format off
+             // Validate fully connected layer manually to check for return status
+             ACL_CHECK_VALID(arm_compute::NEFullyConnectedLayer::validate(
+@@ -248,22 +224,15 @@ struct acl_inner_product_fwd_t : public primitive_t {
+                 aip.with_bias ? &aip.bia_info : nullptr,
+                 &aip.dst_info,
+                 aip.fc_info));
+-
+-            if (aip.with_sum) {
+-                // Validate arithmetic addition manually to check for return status
+-                ACL_CHECK_VALID(arm_compute::NEArithmeticAddition::validate(
+-                    &aip.dst_info,
+-                    &aip.dst_info,
+-                    &aip.dst_info,
+-                    arm_compute::ConvertPolicy::SATURATE));
+-                // clang-format on
+-            }
+-
++            // clang-format on
+             return status::success;
+         }
+     }; // pd_t
+ 
+-    acl_inner_product_fwd_t(const pd_t *apd) : primitive_t(apd) {}
++    acl_inner_product_fwd_t(const pd_t *apd)
++        : primitive_t(apd), post_ops(&apd->post_ops_pd) {}
++
++    status_t init(engine_t *engine) override { return post_ops.init(engine); }
+ 
+     status_t create_resource(
+             engine_t *engine, resource_mapper_t &mapper) const override {
+@@ -273,10 +242,12 @@ struct acl_inner_product_fwd_t : public primitive_t {
+         if (!r) return status::out_of_memory;
+ 
+         // Configure the resource based on information from primitive descriptor
+-        auto st = r->configure(pd()->aip);
+-        if (st == status::success) { mapper.add(this, std::move(r)); }
++        CHECK(r->configure(pd()->aip));
++        mapper.add(this, std::move(r));
++
++        CHECK(post_ops.create_resource(engine, mapper));
+ 
+-        return st;
++        return status::success;
+     }
+ 
+     using data_t = typename prec_traits<data_type::f32>::type;
+@@ -290,6 +261,8 @@ private:
+     mutable std::mutex mtx;
+     status_t execute_forward(const exec_ctx_t &ctx) const;
+     const pd_t *pd() const { return (const pd_t *)primitive_t::pd().get(); }
++
++    acl_post_ops_t post_ops;
+ }; // acl_inner_product_fwd_t
+ 
+ } // namespace aarch64
+diff --git a/src/cpu/aarch64/acl_post_ops.cpp b/src/cpu/aarch64/acl_post_ops.cpp
+new file mode 100644
+index 000000000..8f60f731c
+--- /dev/null
++++ b/src/cpu/aarch64/acl_post_ops.cpp
+@@ -0,0 +1,77 @@
++/*******************************************************************************
++* Copyright 2022 Arm Ltd. and affiliates
++*
++* Licensed under the Apache License, Version 2.0 (the "License");
++* you may not use this file except in compliance with the License.
++* You may obtain a copy of the License at
++*
++*     http://www.apache.org/licenses/LICENSE-2.0
++*
++* Unless required by applicable law or agreed to in writing, software
++* distributed under the License is distributed on an "AS IS" BASIS,
++* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++* See the License for the specific language governing permissions and
++* limitations under the License.
++*******************************************************************************/
++
++#include "cpu/aarch64/acl_gemm_convolution.hpp"
++
++namespace dnnl {
++namespace impl {
++namespace cpu {
++namespace aarch64 {
++
++status_t acl_post_ops_t::execute(const exec_ctx_t &ctx, void *src_orig) const {
++
++    int post_op_index = 0;
++    int sum_index = pd()->acp.sum_index;
++
++    // As these are post ops, this src will also be our dst. If we have a sum
++    // post op, the src/dst will start off in a temporary, then change to
++    // DNNL_ARG_DST after the sum.
++    void *src = src_orig;
++
++    // Post ops must operate in place on dst, unless when we have a sum op
++    if (!has_sum() && src != CTX_OUT_MEM(void *, DNNL_ARG_DST)) {
++        return status::runtime_error;
++    }
++
++    for (auto &post_op : post_op_primitives) {
++        if (post_op->kind() == primitive_kind::binary) {
++            auto binary_post_op = dynamic_cast<acl_binary_t *>(post_op.get());
++            if (binary_post_op == nullptr) return status::runtime_error;
++
++            // Sum post op accumulates to dst and changes future dst
++            if (post_op_index == sum_index) {
++                // Change src to final dst, then add orig source to it
++                src = CTX_OUT_MEM(void *, DNNL_ARG_DST);
++                CHECK(binary_post_op->execute_forward(ctx, src_orig, src, src));
++            } else {
++                const void *src1 = CTX_IN_MEM(const void *,
++                        (DNNL_ARG_ATTR_MULTIPLE_POST_OP(post_op_index)
++                                | DNNL_ARG_SRC_1));
++                CHECK(binary_post_op->execute_forward(ctx, src, src1, src));
++            }
++        } else if (post_op->kind() == primitive_kind::eltwise) {
++            // The post op at the sum index must be binary
++            if (post_op_index == sum_index) return status::runtime_error;
++
++            auto eltwise_post_op
++                    = dynamic_cast<acl_eltwise_fwd_t *>(post_op.get());
++            if (eltwise_post_op == nullptr) return status::runtime_error;
++
++            CHECK(eltwise_post_op->execute_forward(ctx, src, src));
++        } else {
++            return status::runtime_error;
++        }
++
++        ++post_op_index;
++    }
++
++    return status::success;
++}
++
++} // namespace aarch64
++} // namespace cpu
++} // namespace impl
++} // namespace dnnl
+diff --git a/src/cpu/aarch64/acl_post_ops.hpp b/src/cpu/aarch64/acl_post_ops.hpp
+new file mode 100644
+index 000000000..cd901c382
+--- /dev/null
++++ b/src/cpu/aarch64/acl_post_ops.hpp
+@@ -0,0 +1,231 @@
++/*******************************************************************************
++* Copyright 2022 Arm Ltd. and affiliates
++*
++* Licensed under the Apache License, Version 2.0 (the "License");
++* you may not use this file except in compliance with the License.
++* You may obtain a copy of the License at
++*
++*     http://www.apache.org/licenses/LICENSE-2.0
++*
++* Unless required by applicable law or agreed to in writing, software
++* distributed under the License is distributed on an "AS IS" BASIS,
++* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++* See the License for the specific language governing permissions and
++* limitations under the License.
++*******************************************************************************/
++
++#ifndef CPU_AARCH64_ACL_POST_OPS_HPP
++#define CPU_AARCH64_ACL_POST_OPS_HPP
++
++#include "cpu/cpu_convolution_pd.hpp"
++
++#include "cpu/aarch64/acl_binary.hpp"
++#include "cpu/aarch64/acl_eltwise.hpp"
++
++namespace dnnl {
++namespace impl {
++namespace cpu {
++namespace aarch64 {
++
++struct acl_post_ops_conf_t {
++    // Index of the sum post op if there is one, < 0 means no sum
++    int sum_index = -1;
++};
++
++struct acl_post_ops_t : public primitive_t {
++    struct pd_t : public primitive_desc_t {
++        // Construct the primitive desc for an acl_post_ops_t from a post_ops_t
++        // and the memory desc for the destination. Note that if a post op is
++        // fused into the base primitive, then it will need to be removed from the
++        // post ops before passing in. This can be done after construction using
++        // the zero argument constructor.
++        pd_t(const post_ops_t &base_post_ops)
++            : primitive_desc_t(primitive_kind::post_ops) {
++            post_ops.copy_from(base_post_ops);
++        }
++
++        pd_t() : primitive_desc_t(primitive_kind::post_ops) {}
++
++        DECLARE_COMMON_PD_T("acl", acl_post_ops_t, USE_GLOBAL_SCRATCHPAD);
++
++        status_t init(engine_t *engine, const memory_desc_t &dst_md) {
++
++            // Reset properties derived from post_ops
++            post_op_pds.clear();
++            acp = acl_post_ops_conf_t();
++
++            for (int i = 0; i < post_ops.len(); i++) {
++                auto &po = post_ops.entry_[i];
++
++                if (po.is_sum()) {
++                    // We only support a single sum post op, >= 0 means we had one already
++                    if (acp.sum_index >= 0) return status::unimplemented;
++                    acp.sum_index = i;
++
++                    // Sum is an add primitive where dst = temp_dst + dst
++                    binary_desc_t po_desc;
++                    po_desc.primitive_kind = primitive_kind::binary;
++                    po_desc.alg_kind = alg_kind::binary_add;
++                    po_desc.src_desc[0] = dst_md;
++                    po_desc.src_desc[1] = dst_md;
++                    po_desc.dst_desc = dst_md;
++                    auto empty_attr = dnnl_primitive_attr();
++                    auto acl_binary_pd
++                            = std::make_shared<typename acl_binary_t::pd_t>(
++                                    &po_desc, &empty_attr, nullptr);
++                    CHECK(acl_binary_pd->init(engine));
++                    post_op_pds.push_back(acl_binary_pd);
++
++                } else if (po.is_binary()) {
++
++                    binary_desc_t po_desc;
++                    po_desc.primitive_kind = primitive_kind::binary;
++                    po_desc.alg_kind = po.binary.alg;
++                    po_desc.src_desc[0] = dst_md;
++                    po_desc.src_desc[1] = po.binary.src1_desc;
++                    po_desc.dst_desc = dst_md;
++                    auto empty_attr = dnnl_primitive_attr();
++                    auto acl_binary_pd
++                            = std::make_shared<typename acl_binary_t::pd_t>(
++                                    &po_desc, &empty_attr, nullptr);
++                    CHECK(acl_binary_pd->init(engine));
++                    post_op_pds.push_back(acl_binary_pd);
++                } else if (po.is_eltwise()) {
++                    eltwise_desc_t eltwise_desc;
++                    eltwise_desc.primitive_kind = primitive_kind::eltwise;
++                    eltwise_desc.alg_kind = po.eltwise.alg;
++                    eltwise_desc.alpha = po.eltwise.alpha;
++                    eltwise_desc.beta = po.eltwise.beta;
++                    eltwise_desc.data_desc = dst_md;
++                    eltwise_desc.prop_kind = prop_kind_t::dnnl_forward;
++                    auto empty_attr = dnnl_primitive_attr();
++                    auto acl_eltwise_pd = std::make_shared<
++                            typename acl_eltwise_fwd_t::pd_t>(
++                            &eltwise_desc, &empty_attr, nullptr);
++                    CHECK(acl_eltwise_pd->init(engine));
++                    post_op_pds.push_back(acl_eltwise_pd);
++                } else {
++                    // Unsupported catchall
++                    return status::unimplemented;
++                }
++            }
++            return status::success;
++        }
++
++        // init by copying post ops, note that this function modifies the passed
++        // in post ops by setting the preferred memory formats
++        status_t init(engine_t *engine, const memory_desc_t &dst_md,
++                post_ops_t &base_post_ops) {
++            CHECK(base_post_ops.set_default_formats(&dst_md));
++            CHECK(post_ops.copy_from(base_post_ops));
++            return init(engine, dst_md);
++        }
++
++        // init by popping off the first post op if it is eltwise (to be fused
++        // into the base primitive) and then copying the rest. Note that this
++        // function modifies the passed in post ops by setting the preferred
++        // memory formats
++        status_t init(engine_t *engine, const memory_desc_t &dst_md,
++                post_ops_t &base_post_ops,
++                arm_compute::ActivationLayerInfo &act_info_to_fuse) {
++
++            CHECK(base_post_ops.set_default_formats(&dst_md));
++
++            // If the first entry is eltwise, we fuse it
++            if (base_post_ops.len() >= 1
++                    && base_post_ops.entry_[0].is_eltwise()) {
++
++                CHECK(acl_utils::convert_to_acl_act(
++                        base_post_ops.entry_[0].eltwise, act_info_to_fuse));
++
++                // Copy all but the first, because it has been fused
++                post_ops.entry_.clear();
++                for (int idx = 1; idx < base_post_ops.len(); ++idx) {
++                    // Construct empty entry then copy, so that we can check for failure
++                    post_ops.entry_.emplace_back();
++                    CHECK(post_ops.entry_.back().copy_from(
++                            base_post_ops.entry_[idx]));
++                }
++            } else {
++                // Nothing to fuse, just copy all post ops
++                CHECK(post_ops.copy_from(base_post_ops));
++            }
++
++            return init(engine, dst_md);
++        }
++
++        bool has_sum() const { return acp.sum_index >= 0; }
++
++        acl_post_ops_conf_t acp;
++
++        // Vector of acl_binary_t::pd_t or acl_eltwise_fwd_t::pd_t to construct
++        // primitives for later
++        std::vector<std::shared_ptr<primitive_desc_t>> post_op_pds;
++
++    private:
++        post_ops_t post_ops;
++    };
++
++    acl_post_ops_t(const pd_t *pd) : primitive_t(pd) {}
++
++    status_t init(engine_t *engine) override {
++
++        for (auto &post_op_pd : pd()->post_op_pds) {
++            if (post_op_pd->kind() == primitive_kind::binary) {
++                auto acl_binary_pd
++                        = std::dynamic_pointer_cast<acl_binary_t::pd_t>(
++                                post_op_pd);
++                if (!acl_binary_pd) return status::runtime_error;
++                auto acl_binary
++                        = std::make_unique<acl_binary_t>(acl_binary_pd.get());
++                post_op_primitives.push_back(std::move(acl_binary));
++            } else if (post_op_pd->kind() == primitive_kind::eltwise) {
++                auto acl_eltwise_pd
++                        = std::dynamic_pointer_cast<acl_eltwise_fwd_t::pd_t>(
++                                post_op_pd);
++                if (!acl_eltwise_pd) return status::runtime_error;
++                auto acl_eltwise = std::make_unique<acl_eltwise_fwd_t>(
++                        acl_eltwise_pd.get());
++                post_op_primitives.push_back(std::move(acl_eltwise));
++            } else {
++                // acl_post_ops_t::pd_t should only have binary or eltwise
++                // pd_ts, see pd_t::init for more details
++                return status::runtime_error;
++            }
++        }
++        return status::success;
++    }
++
++    status_t create_resource(
++            engine_t *engine, resource_mapper_t &mapper) const override {
++        for (const auto &post_op : post_op_primitives) {
++            CHECK(post_op->create_resource(engine, mapper));
++        }
++        return status::success;
++    }
++
++    bool has_sum() const { return pd()->has_sum(); }
++
++    status_t execute(const exec_ctx_t &ctx) const override {
++        // src is not const because post ops may modify in place
++        void *src = CTX_OUT_MEM(void *, DNNL_ARG_SRC);
++        return execute(ctx, src);
++    }
++
++    status_t execute(const exec_ctx_t &ctx, void *src) const;
++
++private:
++    const pd_t *pd() const { return (const pd_t *)primitive_t::pd().get(); }
++
++    // Vector of primitives used to execute the post ops. They are constructed
++    // in init to be either acl_binary_t (for sum, add, sub, div, mul, min and
++    // max) or acl_eltwise_fwd_t (for relu, elu, tanh, square, abs etc)
++    std::vector<std::unique_ptr<primitive_t>> post_op_primitives;
++};
++
++} // namespace aarch64
++} // namespace cpu
++} // namespace impl
++} // namespace dnnl
++
++#endif
+diff --git a/src/cpu/aarch64/acl_utils.cpp b/src/cpu/aarch64/acl_utils.cpp
+index e367d248b..79ea775d6 100644
+--- a/src/cpu/aarch64/acl_utils.cpp
++++ b/src/cpu/aarch64/acl_utils.cpp
+@@ -26,22 +26,32 @@ namespace acl_utils {
+ using namespace dnnl::impl::alg_kind;
+ using namespace data_type;
+ 
+-arm_compute::DataType get_acl_data_t(const dnnl_data_type_t dt) {
++arm_compute::DataType get_acl_data_t(
++        const dnnl_data_type_t dt, const bool is_quantized) {
+     switch (dt) {
+-        case bf16: return arm_compute::DataType::BFLOAT16; break;
+-        case f32: return arm_compute::DataType::F32; break;
+-        case s32: return arm_compute::DataType::S32; break;
+-        case f16: return arm_compute::DataType::F16; break;
+-        case s8: return arm_compute::DataType::QASYMM8_SIGNED; break;
+-        case u8: return arm_compute::DataType::QASYMM8; break;
++        case bf16: return arm_compute::DataType::BFLOAT16;
++        case f32: return arm_compute::DataType::F32;
++        case s32: return arm_compute::DataType::S32;
++        case f16: return arm_compute::DataType::F16;
++        case s8:
++            if (is_quantized)
++                return arm_compute::DataType::QASYMM8_SIGNED;
++            else
++                return arm_compute::DataType::S8;
++        case u8:
++            if (is_quantized)
++                return arm_compute::DataType::QASYMM8;
++            else
++                return arm_compute::DataType::U8;
+         default: return arm_compute::DataType::UNKNOWN;
+     }
+ }
+ 
+-arm_compute::ActivationLayerInfo convert_to_acl_act(
+-        const alg_kind_t eltwise_alg, const float alpha, const float beta) {
+-    using acl_act_t = arm_compute::ActivationLayerInfo::ActivationFunction;
+-    acl_act_t acl_act_alg;
++status_t convert_to_acl_act(alg_kind_t eltwise_alg, float alpha, float beta,
++        arm_compute::ActivationLayerInfo &act_info) {
++
++    using namespace arm_compute;
++    using act_func = ActivationLayerInfo::ActivationFunction;
+ 
+     switch (eltwise_alg) {
+         case eltwise_relu:
+@@ -49,56 +59,56 @@ arm_compute::ActivationLayerInfo convert_to_acl_act(
+             // Compute Library defines LEAKY_RELU: f(x) = (x > 0) ? x : a*x
+             // whilst Compute Library RELU is defined as: f(x) = max(0,x)
+             if (alpha == 0) {
+-                acl_act_alg = acl_act_t::RELU;
++                act_info = ActivationLayerInfo(act_func::RELU, alpha, beta);
+             } else {
+-                acl_act_alg = acl_act_t::LEAKY_RELU;
++                act_info = ActivationLayerInfo(
++                        act_func::LEAKY_RELU, alpha, beta);
+             }
+             break;
+         case eltwise_tanh:
+             // oneDNN defines TANH activation as:          f(x) = tanh(x)
+             // Compute Library defines TANH activation as: f(x) = a*tanh(b*x)
+             // Setting a=b=1 makes the two equivalent
+-            return arm_compute::ActivationLayerInfo(acl_act_t::TANH, 1.f, 1.f);
++            act_info = ActivationLayerInfo(act_func::TANH, 1.f, 1.f);
++            break;
++        case eltwise_elu:
++            act_info = ActivationLayerInfo(act_func::ELU, alpha, beta);
++            break;
++        case eltwise_square:
++            act_info = ActivationLayerInfo(act_func::SQUARE, alpha, beta);
++            break;
++        case eltwise_abs:
++            act_info = ActivationLayerInfo(act_func::ABS, alpha, beta);
++            break;
++        case eltwise_sqrt:
++            act_info = ActivationLayerInfo(act_func::SQRT, alpha, beta);
++            break;
++        case eltwise_linear:
++            act_info = ActivationLayerInfo(act_func::LINEAR, alpha, beta);
++            break;
++        case eltwise_bounded_relu:
++            act_info = ActivationLayerInfo(act_func::BOUNDED_RELU, alpha, beta);
++            break;
++        case eltwise_soft_relu:
++            act_info = ActivationLayerInfo(act_func::SOFT_RELU, alpha, beta);
++            break;
++        case eltwise_logistic:
++            act_info = ActivationLayerInfo(act_func::LOGISTIC, alpha, beta);
+             break;
+-        case eltwise_elu: acl_act_alg = acl_act_t::ELU; break;
+-        case eltwise_square: acl_act_alg = acl_act_t::SQUARE; break;
+-        case eltwise_abs: acl_act_alg = acl_act_t::ABS; break;
+-        case eltwise_sqrt: acl_act_alg = acl_act_t::SQRT; break;
+-        case eltwise_linear: acl_act_alg = acl_act_t::LINEAR; break;
+-        case eltwise_bounded_relu: acl_act_alg = acl_act_t::BOUNDED_RELU; break;
+-        case eltwise_soft_relu: acl_act_alg = acl_act_t::SOFT_RELU; break;
+-        case eltwise_logistic: acl_act_alg = acl_act_t::LOGISTIC; break;
+-        default: return arm_compute::ActivationLayerInfo();
++        default: act_info = ActivationLayerInfo(); return status::unimplemented;
+     }
+ 
+-    return arm_compute::ActivationLayerInfo(acl_act_alg, alpha, beta);
++    return status::success;
+ }
+ 
+-arm_compute::ActivationLayerInfo get_acl_act(const primitive_attr_t &attr) {
+-    const auto &post_ops = attr.post_ops_;
+-    const int entry_idx = post_ops.find(primitive_kind::eltwise);
+-    if (entry_idx == -1) { return arm_compute::ActivationLayerInfo(); }
+-
+-    const auto eltwise_alg = post_ops.entry_[entry_idx].eltwise.alg;
+-    float alpha = post_ops.entry_[entry_idx].eltwise.alpha;
+-    float beta = post_ops.entry_[entry_idx].eltwise.beta;
+-
+-    return convert_to_acl_act(eltwise_alg, alpha, beta);
++status_t convert_to_acl_act(
++        const eltwise_desc_t &ed, arm_compute::ActivationLayerInfo &act_info) {
++    return convert_to_acl_act(ed.alg_kind, ed.alpha, ed.beta, act_info);
+ }
+ 
+-arm_compute::ActivationLayerInfo get_acl_act(const eltwise_desc_t &ed) {
+-    const alg_kind_t eltwise_alg = ed.alg_kind;
+-    float alpha = ed.alpha;
+-    float beta = ed.beta;
+-
+-    return convert_to_acl_act(eltwise_alg, alpha, beta);
+-}
+-
+-bool acl_act_ok(alg_kind_t eltwise_activation) {
+-    return utils::one_of(eltwise_activation, eltwise_relu, eltwise_tanh,
+-            eltwise_elu, eltwise_square, eltwise_abs, eltwise_sqrt,
+-            eltwise_linear, eltwise_bounded_relu, eltwise_soft_relu,
+-            eltwise_logistic);
++status_t convert_to_acl_act(const post_ops_t::entry_t::eltwise_t &elt,
++        arm_compute::ActivationLayerInfo &act_info) {
++    return convert_to_acl_act(elt.alg, elt.alpha, elt.beta, act_info);
+ }
+ 
+ status_t tensor_info(arm_compute::TensorInfo &info, const memory_desc_t &md) {
+@@ -193,9 +203,6 @@ int reorder_dimensions_by_stride(std::vector<memory_desc_t *> permuted_mds,
+         // Number of dimensions must match and must be blocked
+         if (md->ndims != ndims || md->format_kind != format_kind::blocked)
+             return 0;
+-
+-        // Check all the dimensions are the same size
+-        if (!utils::array_cmp(md->dims, mds[0]->dims, (size_t)ndims)) return 0;
+     }
+ 
+     int reordered_dims = 0;
+@@ -204,29 +211,40 @@ int reorder_dimensions_by_stride(std::vector<memory_desc_t *> permuted_mds,
+     std::vector<int> perm(ndims);
+     std::iota(perm.begin(), perm.end(), 0);
+ 
+-    // For each dimension d1, look for a dimension (d2) in which every md has
+-    // the target stride. Target stride is initially 1 (i.e. dense) but will
+-    // increase each time we find a dimension which matches.
+-    dim_t target_stride = 1;
++    // For each dimension d1, find a dimension (d2) in which every md has the
++    // next smallest stride, then swap d2 into d1. Stride is initially 1 (i.e.
++    // dense) but will increase each time we find a dimension. The target
++    // strides may be different across dimensions if they are broadcasted.
++    std::vector<dim_t> next_smallest_stride(mds.size(), 1);
+     for (dim_t d1 = ndims - 1; d1 >= 0; --d1) {
+-        bool found_target = false;
++        bool found_swap = false;
+         for (dim_t d2 = d1; d2 >= 0; --d2) {
+-            found_target = std::all_of(
+-                    mds.begin(), mds.end(), [=](const memory_desc_t *m) {
+-                        return m->format_desc.blocking.strides[perm[d2]]
+-                                == target_stride;
+-                    });
+-            if (found_target) {
+-                // Multiply target stride by dimension
+-                target_stride *= mds[0]->dims[perm[d2]];
+-                // Swap the found dimension (d2) into d1
++            // Check that all mds have the right stride
++            found_swap = true;
++            for (size_t i = 0; i < mds.size(); i++) {
++                auto &md_strides = mds[i]->format_desc.blocking.strides;
++                // Either it is the next smallest stride, or the dimensions is 1
++                // so we can ignore it
++                bool can_swap = md_strides[perm[d2]] == next_smallest_stride[i]
++                        || mds[i]->dims[perm[d2]] == 1;
++                if (!can_swap) {
++                    found_swap = false;
++                    break;
++                }
++            }
++            if (found_swap) {
++                // Multiply next smallest strides by dimension we just found
++                for (size_t i = 0; i < mds.size(); i++)
++                    next_smallest_stride[i] *= mds[i]->dims[perm[d2]];
++
++                // Swap the found dimension (perm[d2]) into d1
+                 nstl::swap(perm[d2], perm[d1]);
+                 ++reordered_dims;
+                 break;
+             }
+         }
+-        // If we didn't find the target, we can't move onto the next dimension
+-        if (!found_target) break;
++        // We didn't find a swap for this dimension, we can't continue
++        if (!found_swap) break;
+     }
+ 
+     // dnnl_memory_desc_permute_axes applies the inverse of the permutation
+diff --git a/src/cpu/aarch64/acl_utils.hpp b/src/cpu/aarch64/acl_utils.hpp
+index c7a8c7d4e..9edadc619 100644
+--- a/src/cpu/aarch64/acl_utils.hpp
++++ b/src/cpu/aarch64/acl_utils.hpp
+@@ -36,10 +36,24 @@ namespace aarch64 {
+ 
+ namespace acl_utils {
+ 
+-arm_compute::DataType get_acl_data_t(const dnnl_data_type_t dt);
+-arm_compute::ActivationLayerInfo get_acl_act(const primitive_attr_t &attr);
+-arm_compute::ActivationLayerInfo get_acl_act(const eltwise_desc_t &ed);
+-bool acl_act_ok(alg_kind_t eltwise_activation);
++arm_compute::DataType get_acl_data_t(
++        const dnnl_data_type_t dt, const bool is_quantized = false);
++
++// Convert alg_kind_t, alpha and beta into an ACL ActivationLayerInfo. Will
++// return unimplemented and a disabled ActivationLayerInfo if the conversion
++// fails
++status_t convert_to_acl_act(alg_kind_t eltwise_alg, float alpha, float beta,
++        arm_compute::ActivationLayerInfo &act_info);
++
++// Convert an eltwise_desc_t into an ACL ActivationLayerInfo. Will return
++// unimplemented and a disabled ActivationLayerInfo if the conversion fails
++status_t convert_to_acl_act(
++        const eltwise_desc_t &ed, arm_compute::ActivationLayerInfo &act_info);
++
++// Convert an eltwise post op into an ACL ActivationLayerInfo. Will return
++// unimplemented and a disabled ActivationLayerInfo if the conversion fails
++status_t convert_to_acl_act(const post_ops_t::entry_t::eltwise_t &elt,
++        arm_compute::ActivationLayerInfo &act_info);
+ 
+ // Convert a memory desc to an arm_compute::TensorInfo. Note that memory desc
+ // must be blocking format, plain, dense and have no zero dimensions.
+diff --git a/src/cpu/aarch64/acl_winograd_convolution.cpp b/src/cpu/aarch64/acl_winograd_convolution.cpp
+index 1494a3f24..1e2ac089b 100644
+--- a/src/cpu/aarch64/acl_winograd_convolution.cpp
++++ b/src/cpu/aarch64/acl_winograd_convolution.cpp
+@@ -1,5 +1,5 @@
+ /*******************************************************************************
+-* Copyright 2020-2021 Arm Ltd. and affiliates
++* Copyright 2020-2022 Arm Ltd. and affiliates
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+@@ -34,7 +34,7 @@ status_t acl_wino_convolution_fwd_t::execute_forward(
+ 
+     return execute_forward_conv_acl<
+             acl_obj_t<arm_compute::NEWinogradConvolutionLayer>, pd_t, data_t>(
+-            ctx, acl_wino_obj, pd());
++            ctx, acl_wino_obj, pd(), post_ops);
+ }
+ 
+ } // namespace aarch64
+diff --git a/src/cpu/aarch64/acl_winograd_convolution.hpp b/src/cpu/aarch64/acl_winograd_convolution.hpp
+index 17fbe73cc..31646a7b3 100644
+--- a/src/cpu/aarch64/acl_winograd_convolution.hpp
++++ b/src/cpu/aarch64/acl_winograd_convolution.hpp
+@@ -40,30 +40,16 @@ struct acl_wino_resource_t : public resource_t {
+         acl_wino_obj_->dst_tensor.allocator()->init(acp.dst_info);
+         acl_wino_obj_->bia_tensor.allocator()->init(acp.bia_info);
+ 
+-        if (acp.sum_with_eltwise) {
+-            acl_wino_obj_->dst_acc_tensor.allocator()->init(acp.dst_info);
+-        }
+         // clang-format off
+         acl_wino_obj_->conv.configure(
+             &acl_wino_obj_->src_tensor,
+             &acl_wino_obj_->wei_tensor,
+             acp.with_bias ? &acl_wino_obj_->bia_tensor : nullptr,
+-            acp.sum_with_eltwise ? &acl_wino_obj_->dst_acc_tensor
+-                                 : &acl_wino_obj_->dst_tensor,
++            &acl_wino_obj_->dst_tensor,
+             acp.padstride_info,
+-            acp.sum_with_eltwise ? arm_compute::ActivationLayerInfo()
+-                                 : acp.act_info,
++            acp.act_info,
+             true); // to support 5x5, 7x7 filter shapes in addition to 3x3
+         // clang-format on
+-        if (acp.sum_with_eltwise) {
+-            acl_wino_obj_->add.configure(&acl_wino_obj_->dst_tensor,
+-                    &acl_wino_obj_->dst_acc_tensor,
+-                    &acl_wino_obj_->dst_acc_tensor,
+-                    arm_compute::ConvertPolicy::SATURATE);
+-            acl_wino_obj_->act.configure(&acl_wino_obj_->dst_acc_tensor,
+-                    &acl_wino_obj_->dst_tensor, acp.act_info);
+-            acl_wino_obj_->dst_acc_tensor.allocator()->allocate();
+-        }
+ 
+         return status::success;
+     }
+@@ -83,7 +69,9 @@ struct acl_wino_convolution_fwd_t : public primitive_t {
+     struct pd_t : public cpu_convolution_fwd_pd_t {
+         pd_t(const convolution_desc_t *adesc, const primitive_attr_t *attr,
+                 const typename pd_t::base_class *hint_fwd_pd)
+-            : cpu_convolution_fwd_pd_t(adesc, attr, hint_fwd_pd), acp_() {}
++            : cpu_convolution_fwd_pd_t(adesc, attr, hint_fwd_pd)
++            , acp_()
++            , post_ops_pd() {}
+ 
+         DECLARE_COMMON_PD_T(
+                 "wino:acl", acl_wino_convolution_fwd_t, USE_GLOBAL_SCRATCHPAD);
+@@ -98,44 +86,30 @@ struct acl_wino_convolution_fwd_t : public primitive_t {
+                     && attr()->has_default_values(
+                             primitive_attr_t::skip_mask_t::post_ops,
+                             data_type::f32)
+-                    && !has_zero_dim_memory() && post_ops_ok();
++                    && !has_zero_dim_memory();
+             if (!ok) return status::unimplemented;
+ 
+-            auto conf_status = acl_convolution_utils::init_conf_wino(acp_,
+-                    src_md_, weights_md_, dst_md_, bias_md_, *desc(), *attr());
+-            if (conf_status != status::success) return status::unimplemented;
++            CHECK(acl_convolution_utils::init_conf_wino(acp_, src_md_,
++                    weights_md_, dst_md_, bias_md_, *desc(), *attr()));
+ 
+             set_default_alg_kind(alg_kind::convolution_winograd);
+ 
++            CHECK(post_ops_pd.init(
++                    engine, dst_md_, attr_.post_ops_, acp_.act_info));
++            acp_.use_dst_acc = post_ops_pd.has_sum();
++
+             return status::success;
+         }
+ 
+         acl_conv_conf_t acp_;
+ 
+-    protected:
+-        bool post_ops_ok() const {
+-            auto const &po = attr()->post_ops_;
+-            // "true" here stands for eltwise.scale == 1.f check
+-            auto is_eltwise
+-                    = [&](int idx) { return po.entry_[idx].is_eltwise(true); };
+-            auto is_sum = [&](int idx) { return po.entry_[idx].is_sum(); };
+-
+-            bool sum_with_eltwise
+-                    = (po.len() == 2) && is_sum(0) && is_eltwise(1);
+-            bool eltwise_only = (po.len() == 1) ? is_eltwise(0) : false;
+-            bool eltwise_ok = false;
+-            // Compute Library supports only one eltwise post-op or
+-            // sum+eltwise post-ops
+-            if (eltwise_only || sum_with_eltwise) {
+-                const auto act_type = po.entry_[sum_with_eltwise].eltwise.alg;
+-                eltwise_ok = acl_utils::acl_act_ok(act_type);
+-            }
+-
+-            return eltwise_ok || (po.len() == 0);
+-        }
++        typename acl_post_ops_t::pd_t post_ops_pd;
+     };
+ 
+-    acl_wino_convolution_fwd_t(const pd_t *apd) : primitive_t(apd) {}
++    acl_wino_convolution_fwd_t(const pd_t *apd)
++        : primitive_t(apd), post_ops(&apd->post_ops_pd) {}
++
++    status_t init(engine_t *engine) override { return post_ops.init(engine); }
+ 
+     status_t create_resource(
+             engine_t *engine, resource_mapper_t &mapper) const override {
+@@ -145,10 +119,12 @@ struct acl_wino_convolution_fwd_t : public primitive_t {
+         if (!r) return status::out_of_memory;
+ 
+         // Configure the resource based on information from primitive descriptor
+-        auto st = r->configure(pd()->acp_);
+-        if (st == status::success) { mapper.add(this, std::move(r)); }
++        CHECK(r->configure(pd()->acp_));
++        mapper.add(this, std::move(r));
++
++        CHECK(post_ops.create_resource(engine, mapper));
+ 
+-        return st;
++        return status::success;
+     }
+ 
+     ~acl_wino_convolution_fwd_t() {}
+@@ -165,6 +141,7 @@ private:
+     status_t execute_forward(const exec_ctx_t &ctx) const;
+     const pd_t *pd() const { return (const pd_t *)primitive_t::pd().get(); }
+ 
++    acl_post_ops_t post_ops;
+ }; // acl_wino_convolution_fwd_t
+ 
+ } // namespace aarch64
+diff --git a/src/cpu/aarch64/matmul/acl_matmul.cpp b/src/cpu/aarch64/matmul/acl_matmul.cpp
+index 6f9bb9b9a..86fec91c0 100644
+--- a/src/cpu/aarch64/matmul/acl_matmul.cpp
++++ b/src/cpu/aarch64/matmul/acl_matmul.cpp
+@@ -29,10 +29,10 @@ status_t acl_matmul_t::execute_forward(const exec_ctx_t &ctx) const {
+     status_t status = status::success;
+     auto src_base = CTX_IN_MEM(const data_t *, DNNL_ARG_SRC);
+     auto wei_base = CTX_IN_MEM(const data_t *, DNNL_ARG_WEIGHTS);
+-    auto dst_base = CTX_OUT_MEM(data_t *, DNNL_ARG_DST);
+ 
+     bool is_transA = pd()->amp_.is_transA;
+     bool is_transB = pd()->amp_.is_transB;
++    bool use_dst_acc = pd()->amp_.use_dst_acc;
+ 
+     std::lock_guard<std::mutex> _lock {this->mtx};
+     auto *acl_resource = ctx.get_resource_mapper()->get<acl_resource_t>(this);
+@@ -68,15 +68,27 @@ status_t acl_matmul_t::execute_forward(const exec_ctx_t &ctx) const {
+                 const_cast<data_t *>(wei_base));
+     }
+ 
+-    acl_obj.dst_tensor.allocator()->import_memory(dst_base);
++    if (use_dst_acc) {
++        // Put the result in a new tensor, it will be accumalated to the dst
++        // during the post ops
++        acl_obj.dst_tensor.allocator()->allocate();
++    } else {
++        auto dst_base = CTX_OUT_MEM(data_t *, DNNL_ARG_DST);
++        acl_obj.dst_tensor.allocator()->import_memory(dst_base);
++    }
+ 
+     acl_obj.gemm.run();
+ 
+     acl_obj.src_tensor.allocator()->free();
+     acl_obj.wei_tensor.allocator()->free();
+-    acl_obj.dst_tensor.allocator()->free();
+     if (is_transA) acl_obj.src_acc_tensor.allocator()->free();
+     if (is_transB) acl_obj.wei_acc_tensor.allocator()->free();
++
++    void *dst = acl_obj.dst_tensor.buffer();
++    post_ops.execute(ctx, dst);
++
++    acl_obj.dst_tensor.allocator()->free();
++
+     return status;
+ }
+ 
+diff --git a/src/cpu/aarch64/matmul/acl_matmul.hpp b/src/cpu/aarch64/matmul/acl_matmul.hpp
+index abedcb1e8..f77987a42 100644
+--- a/src/cpu/aarch64/matmul/acl_matmul.hpp
++++ b/src/cpu/aarch64/matmul/acl_matmul.hpp
+@@ -19,6 +19,8 @@
+ 
+ #include "cpu/aarch64/matmul/acl_matmul_utils.hpp"
+ 
++#include "cpu/aarch64/acl_post_ops.hpp"
++
+ namespace dnnl {
+ namespace impl {
+ namespace cpu {
+@@ -62,7 +64,9 @@ struct acl_matmul_t : public primitive_t {
+ 
+         pd_t(const matmul_desc_t *adesc, const primitive_attr_t *attr,
+                 const cpu_matmul_pd_t *hint_fwd_pd)
+-            : cpu_matmul_pd_t(adesc, attr, hint_fwd_pd), amp_() {}
++            : cpu_matmul_pd_t(adesc, attr, hint_fwd_pd)
++            , amp_()
++            , post_ops_pd() {}
+ 
+         using cpu_matmul_pd_t::cpu_matmul_pd_t;
+ 
+@@ -77,43 +81,40 @@ struct acl_matmul_t : public primitive_t {
+                     && platform::has_data_type_support(data_type::f32)
+                     && attr()->has_default_values(
+                             smask_t::oscale | smask_t::post_ops)
+-                    && post_ops_ok() && attr_oscale_ok()
+-                    && !has_runtime_dims_or_strides();
++                    && attr_oscale_ok() && !has_runtime_dims_or_strides();
+             if (!ok) return status::unimplemented;
+ 
+-            auto conf_status = acl_matmul_utils::init_conf_matmul(
+-                    amp_, src_md_, weights_md_, dst_md_, *desc(), *attr());
++            CHECK(acl_matmul_utils::init_conf_matmul(
++                    amp_, src_md_, weights_md_, dst_md_, *desc(), *attr()));
++
++            arm_compute::ActivationLayerInfo act_info;
++            CHECK(post_ops_pd.init(engine, dst_md_, attr_.post_ops_, act_info));
++            amp_.gemm_info.set_activation_info(act_info);
++            amp_.use_dst_acc = post_ops_pd.has_sum();
+ 
+-            if (conf_status != status::success) return status::unimplemented;
++            // Validate ACL GEMM
++            ACL_CHECK_VALID(arm_compute::NEGEMM::validate(&amp_.src_info,
++                    &amp_.wei_info, nullptr, &amp_.dst_info, amp_.alpha, 0.0f,
++                    amp_.gemm_info));
+ 
+             return status::success;
+         }
+ 
+         acl_matmul_conf_t amp_;
+ 
+-    protected:
+-        bool post_ops_ok() const {
+-            using namespace data_type;
+-            using namespace alg_kind;
+-            auto const &po = attr()->post_ops_;
+-            auto is_eltwise
+-                    = [&](int idx) { return po.entry_[idx].is_eltwise(); };
+-            bool eltwise_only = (po.len() == 1) ? is_eltwise(0) : false;
+-            bool eltwise_ok = false;
+-            if (eltwise_only) {
+-                const auto act_type = po.entry_[0].eltwise.alg;
+-                eltwise_ok = acl_matmul_utils::acl_act_ok(act_type);
+-            }
+-            return eltwise_ok || (po.len() == 0);
+-        }
++        typename acl_post_ops_t::pd_t post_ops_pd;
+ 
++    protected:
+         bool attr_oscale_ok() const {
+             const auto &oscale = attr()->output_scales_;
+             return oscale.mask_ == 0;
+         }
+     };
+ 
+-    acl_matmul_t(const pd_t *apd) : primitive_t(apd) {}
++    acl_matmul_t(const pd_t *apd)
++        : primitive_t(apd), post_ops(&apd->post_ops_pd) {}
++
++    status_t init(engine_t *engine) override { return post_ops.init(engine); }
+ 
+     status_t create_resource(
+             engine_t *engine, resource_mapper_t &mapper) const override {
+@@ -122,10 +123,12 @@ struct acl_matmul_t : public primitive_t {
+         if (!r) return status::out_of_memory;
+ 
+         // Configure the resource based on information from primitive descriptor
+-        auto st = r->configure(pd()->amp_);
+-        if (st == status::success) { mapper.add(this, std::move(r)); }
++        CHECK(r->configure(pd()->amp_));
++        mapper.add(this, std::move(r));
++
++        CHECK(post_ops.create_resource(engine, mapper));
+ 
+-        return st;
++        return status::success;
+     }
+ 
+     typedef typename prec_traits<data_type::f32>::type data_t;
+@@ -140,6 +143,8 @@ private:
+     status_t execute_forward(const exec_ctx_t &ctx) const;
+ 
+     const pd_t *pd() const { return (const pd_t *)primitive_t::pd().get(); }
++
++    acl_post_ops_t post_ops;
+ }; // acl_matmul_t
+ 
+ } // namespace matmul
+diff --git a/src/cpu/aarch64/matmul/acl_matmul_utils.cpp b/src/cpu/aarch64/matmul/acl_matmul_utils.cpp
+index bcc72db7a..e33932b7a 100644
+--- a/src/cpu/aarch64/matmul/acl_matmul_utils.cpp
++++ b/src/cpu/aarch64/matmul/acl_matmul_utils.cpp
+@@ -94,9 +94,6 @@ status_t init_conf_matmul(acl_matmul_conf_t &amp, memory_desc_t &src_md,
+             = utils::one_of(math_mode, fpmath_mode::bf16, fpmath_mode::any);
+     amp.gemm_info.set_fast_math(is_fastmath_enabled);
+ 
+-    // Fused ReLU activation
+-    amp.gemm_info.set_activation_info(get_acl_act(attr));
+-
+     // Set alpha (output scaling)
+     amp.alpha = attr.output_scales_.scales_[0];
+ 
+@@ -107,64 +104,10 @@ status_t init_conf_matmul(acl_matmul_conf_t &amp, memory_desc_t &src_md,
+     if (amp.is_transB)
+         ACL_CHECK_VALID(arm_compute::NETranspose::validate(
+                 &amp.wei_acc_info, &amp.wei_info));
+-    // Validate ACL GEMM
+-    ACL_CHECK_VALID(arm_compute::NEGEMM::validate(&amp.src_info, &amp.wei_info,
+-            nullptr, &amp.dst_info, amp.alpha, 0.0f, amp.gemm_info));
+ 
+     return status::success;
+ }
+ 
+-arm_compute::ActivationLayerInfo get_acl_act(const primitive_attr_t &attr) {
+-    const auto &post_ops = attr.post_ops_;
+-    const int entry_idx = post_ops.find(primitive_kind::eltwise);
+-    if (entry_idx == -1) { return arm_compute::ActivationLayerInfo(); }
+-
+-    const auto eltwise_alg = post_ops.entry_[entry_idx].eltwise.alg;
+-    float alpha = post_ops.entry_[entry_idx].eltwise.alpha;
+-    float beta = post_ops.entry_[entry_idx].eltwise.beta;
+-
+-    using acl_act_t = arm_compute::ActivationLayerInfo::ActivationFunction;
+-    acl_act_t acl_act_alg;
+-    switch (eltwise_alg) {
+-        case eltwise_relu:
+-            // oneDNN defines RELU: f(x) = (x > 0) ? x : a*x
+-            // Compute Library defines LEAKY_RELU: f(x) = (x > 0) ? x : a*x
+-            // whilst Compute Library RELU is defined as: f(x) = max(0,x)
+-            if (alpha == 0) {
+-                acl_act_alg = acl_act_t::RELU;
+-            } else {
+-                acl_act_alg = acl_act_t::LEAKY_RELU;
+-            }
+-            break;
+-        case eltwise_tanh:
+-            // oneDNN defines TANH activation as:          f(x) = tanh(x)
+-            // Compute Library defines TANH activation as: f(x) = a*tanh(b*x)
+-            // Setting a=b=1 makes the two equivalent
+-            alpha = 1.f;
+-            beta = 1.f;
+-            acl_act_alg = acl_act_t::TANH;
+-            break;
+-        case eltwise_elu: acl_act_alg = acl_act_t::ELU; break;
+-        case eltwise_square: acl_act_alg = acl_act_t::SQUARE; break;
+-        case eltwise_abs: acl_act_alg = acl_act_t::ABS; break;
+-        case eltwise_sqrt: acl_act_alg = acl_act_t::SQRT; break;
+-        case eltwise_linear: acl_act_alg = acl_act_t::LINEAR; break;
+-        case eltwise_bounded_relu: acl_act_alg = acl_act_t::BOUNDED_RELU; break;
+-        case eltwise_soft_relu: acl_act_alg = acl_act_t::SOFT_RELU; break;
+-        case eltwise_logistic: acl_act_alg = acl_act_t::LOGISTIC; break;
+-        default: return arm_compute::ActivationLayerInfo();
+-    }
+-
+-    return arm_compute::ActivationLayerInfo(acl_act_alg, alpha, beta);
+-}
+-
+-bool acl_act_ok(alg_kind_t eltwise_activation) {
+-    return utils::one_of(eltwise_activation, eltwise_relu, eltwise_tanh,
+-            eltwise_elu, eltwise_square, eltwise_abs, eltwise_sqrt,
+-            eltwise_linear, eltwise_bounded_relu, eltwise_soft_relu,
+-            eltwise_logistic);
+-}
+-
+ } // namespace acl_matmul_utils
+ 
+ } // namespace aarch64
+diff --git a/src/cpu/aarch64/matmul/acl_matmul_utils.hpp b/src/cpu/aarch64/matmul/acl_matmul_utils.hpp
+index 1d357d3ef..0a5ee6a98 100644
+--- a/src/cpu/aarch64/matmul/acl_matmul_utils.hpp
++++ b/src/cpu/aarch64/matmul/acl_matmul_utils.hpp
+@@ -40,6 +40,9 @@ struct acl_matmul_obj_t {
+ struct acl_matmul_conf_t {
+     bool is_transA;
+     bool is_transB;
++    // If this is true, the result of the matmul goes into a temporarily
++    // allocated ACL tensor to be accumulated into the oneDNN dst during postops
++    bool use_dst_acc;
+     arm_compute::TensorInfo src_info;
+     arm_compute::TensorInfo src_acc_info;
+     arm_compute::TensorInfo wei_info;
+@@ -55,8 +58,6 @@ status_t init_conf_matmul(acl_matmul_conf_t &amp, memory_desc_t &src_md,
+         memory_desc_t &wei_md, memory_desc_t &dst_md, const matmul_desc_t &md,
+         const primitive_attr_t &attr);
+ 
+-arm_compute::ActivationLayerInfo get_acl_act(const primitive_attr_t &attr);
+-bool acl_act_ok(alg_kind_t eltwise_activation);
+ } // namespace acl_matmul_utils
+ 
+ } // namespace aarch64
