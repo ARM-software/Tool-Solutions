@@ -272,18 +272,23 @@ ARG njobs
 ARG onednn_opt
 ARG default_py_version
 ARG cpu
+ARG bazel_version
+ARG build_xla
 
 ENV ONEDNN_BUILD="${onednn_opt}" \
     NP_MAKE="${njobs}" \
-    CPU="${cpu}"
+    CPU="${cpu}" \
+    XLA_BUILD="${build_xla}"
 
 # Key version numbers
 ENV PY_VERSION="${default_py_version}" \
     ONEDNN_VERSION="v2.6" \
     TORCH_VERSION=1.12.0 \
+    TORCHXLA_VERSION=1.12.0 \
     TORCHVISION_VERSION=0.13.0 \
     TORCHDATA_VERSION=0.4.0 \
-    TORCHTEXT_VERSION=0.13.0
+    TORCHTEXT_VERSION=0.13.0 \
+    BZL_VERSION="${bazel_version}"
 
 # Use a PACKAGE_DIR in userspace
 WORKDIR /home/$DOCKER_USER
@@ -301,6 +306,15 @@ COPY scripts/build-pytorch.sh $PACKAGE_DIR/.
 COPY patches/onednn.patch $PACKAGE_DIR/.
 COPY scripts/build-torchtext.sh $PACKAGE_DIR/.
 COPY scripts/build-torchdata.sh $PACKAGE_DIR/.
+
+COPY patches/torch_xla.patch $PACKAGE_DIR/.
+COPY patches/xla_cpu_enhancements.patch $PACKAGE_DIR/.
+
+# TODO: Switch to bazelisk for bazel installation
+# Get Bazel binary for AArch64
+COPY scripts/get-bazel.sh $PACKAGE_DIR/.
+RUN $PACKAGE_DIR/get-bazel.sh
+ENV PATH=$PACKAGE_DIR/bazel:$PATH
 
 RUN $PACKAGE_DIR/build-pytorch.sh
 # Install torchvision, torchdata and torchtext
