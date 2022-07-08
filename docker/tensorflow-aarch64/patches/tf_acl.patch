@@ -53,7 +53,7 @@ index ffe445dad95..67043cb12dc 100644
          if_linux_x86_64(["-msse3"]) +
          if_ios_x86_64(["-msse4.1"]) +
 diff --git a/tensorflow/workspace2.bzl b/tensorflow/workspace2.bzl
-index 77c76aa6e20..ef630894acc 100644
+index 2c539e5ab55..b72f86d7871 100644
 --- a/tensorflow/workspace2.bzl
 +++ b/tensorflow/workspace2.bzl
 @@ -183,19 +183,19 @@ def _tf_repositories():
@@ -64,10 +64,10 @@ index 77c76aa6e20..ef630894acc 100644
 -        sha256 = "9695640f55acd833ddcef4776af15e03446c4655f9296e5074b1b178dd7a4fb2",
 -        strip_prefix = "oneDNN-2.6",
 -        urls = tf_mirror_urls("https://github.com/oneapi-src/oneDNN/archive/v2.6.tar.gz"),
-+        patch_file = ["//third_party/mkl_dnn:onednn_acl_threadcap.patch", "//third_party/mkl_dnn:onednn_acl_pooling.patch", "//third_party/mkl_dnn:onednn_acl_matmul_fix.patch"],
-+        sha256 = "9dac563bfd72016b5bd63e48972174e6766f0178d19fdb52937560ff942a349a",
-+        strip_prefix = "oneDNN-96ac81552014f2c77d6409d2d5e466b78722cdb5",
-+        urls = tf_mirror_urls("https://github.com/oneapi-src/oneDNN/archive/96ac81552014f2c77d6409d2d5e466b78722cdb5.tar.gz"),
++        patch_file = ["//third_party/mkl_dnn:onednn_acl_postops.patch", "//third_party/mkl_dnn:onednn_acl_pooling.patch", "//third_party/mkl_dnn:onednn_acl_threadcap.patch"],
++        sha256 = "990fdce84197d68064e615d91c182c5bc6baa446348c3c1fe71b7e9a345badc2",
++        strip_prefix = "oneDNN-70d1198de554e61081147c199d661df049233279",
++        urls = tf_mirror_urls("https://github.com/oneapi-src/oneDNN/archive/70d1198de554e61081147c199d661df049233279.tar.gz"),
      )
  
      tf_http_archive(
@@ -232,13 +232,27 @@ index cd22845f0d4..da43c568c69 100644
 +        "//conditions:default": if_false,
 +    })
 diff --git a/third_party/mkl_dnn/mkldnn_acl.BUILD b/third_party/mkl_dnn/mkldnn_acl.BUILD
-index 9d4180bc5c4..ef104e965c4 100644
+index 9d4180bc5c4..e23cba21970 100644
 --- a/third_party/mkl_dnn/mkldnn_acl.BUILD
 +++ b/third_party/mkl_dnn/mkldnn_acl.BUILD
-@@ -5,6 +5,52 @@ load(
+@@ -5,6 +5,67 @@ load(
      "template_rule",
  )
  
++_DNNL_COPTS_THREADPOOL = [
++    "-fopenmp-simd",
++    "-fexceptions",
++    "-UUSE_MKL",
++    "-UUSE_CBLAS",
++]
++
++_DNNL_COPTS_OMP = [
++    "-fopenmp",
++    "-fexceptions",
++    "-UUSE_MKL",
++    "-UUSE_CBLAS",
++]
++
 +_DNNL_RUNTIME_THREADPOOL = {
 +    "#cmakedefine DNNL_CPU_THREADING_RUNTIME DNNL_RUNTIME_${DNNL_CPU_THREADING_RUNTIME}": "#define DNNL_CPU_THREADING_RUNTIME DNNL_RUNTIME_THREADPOOL",
 +    "#cmakedefine DNNL_CPU_RUNTIME DNNL_RUNTIME_${DNNL_CPU_RUNTIME}": "#define DNNL_CPU_RUNTIME DNNL_RUNTIME_THREADPOOL",
@@ -247,6 +261,7 @@ index 9d4180bc5c4..ef104e965c4 100644
 +    "#cmakedefine DNNL_WITH_SYCL": "#undef DNNL_WITH_SYCL",
 +    "#cmakedefine DNNL_WITH_LEVEL_ZERO": "#undef DNNL_WITH_LEVEL_ZERO",
 +    "#cmakedefine DNNL_SYCL_CUDA": "#undef DNNL_SYCL_CUDA",
++    "#cmakedefine DNNL_SYCL_HIP": "#undef DNNL_SYCL_HIP",
 +    "#cmakedefine DNNL_ENABLE_STACK_CHECKER": "#undef DNNL_ENABLE_STACK_CHECKER",
 +    "#cmakedefine DNNL_EXPERIMENTAL": "#undef DNNL_EXPERIMENTAL",
 +    "#cmakedefine01 BUILD_TRAINING": "#define BUILD_TRAINING 1",
@@ -288,7 +303,15 @@ index 9d4180bc5c4..ef104e965c4 100644
  _DNNL_RUNTIME_OMP = {
      "#cmakedefine DNNL_CPU_THREADING_RUNTIME DNNL_RUNTIME_${DNNL_CPU_THREADING_RUNTIME}": "#define DNNL_CPU_THREADING_RUNTIME DNNL_RUNTIME_OMP",
      "#cmakedefine DNNL_CPU_RUNTIME DNNL_RUNTIME_${DNNL_CPU_RUNTIME}": "#define DNNL_CPU_RUNTIME DNNL_RUNTIME_OMP",
-@@ -55,7 +101,10 @@ template_rule(
+@@ -13,6 +74,7 @@ _DNNL_RUNTIME_OMP = {
+     "#cmakedefine DNNL_WITH_SYCL": "#undef DNNL_WITH_SYCL",
+     "#cmakedefine DNNL_WITH_LEVEL_ZERO": "#undef DNNL_WITH_LEVEL_ZERO",
+     "#cmakedefine DNNL_SYCL_CUDA": "#undef DNNL_SYCL_CUDA",
++    "#cmakedefine DNNL_SYCL_HIP": "#undef DNNL_SYCL_HIP",
+     "#cmakedefine DNNL_ENABLE_STACK_CHECKER": "#undef DNNL_ENABLE_STACK_CHECKER",
+     "#cmakedefine DNNL_EXPERIMENTAL": "#undef DNNL_EXPERIMENTAL",
+     "#cmakedefine01 BUILD_TRAINING": "#define BUILD_TRAINING 1",
+@@ -55,7 +117,10 @@ template_rule(
      name = "dnnl_config_h",
      src = "include/oneapi/dnnl/dnnl_config.h.in",
      out = "include/oneapi/dnnl/dnnl_config.h",
@@ -300,3 +323,19 @@ index 9d4180bc5c4..ef104e965c4 100644
  )
  
  template_rule(
+@@ -82,11 +147,10 @@ cc_library(
+             "src/cpu/x64/**",
+         ],
+     ),
+-    copts = [
+-        "-fexceptions",
+-        "-UUSE_MKL",
+-        "-UUSE_CBLAS",
+-    ],
++    copts = select({
++        "@org_tensorflow//third_party/mkl_dnn:build_with_mkl_aarch64_openmp": _DNNL_COPTS_OMP,
++        "//conditions:default": _DNNL_COPTS_THREADPOOL,
++    }),
+     defines = ["DNNL_AARCH64_USE_ACL=1"],
+     includes = [
+         "include",

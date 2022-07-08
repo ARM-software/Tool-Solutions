@@ -8,9 +8,12 @@ where `YY` is the year, and `MM` the month of the increment.
 ## [Unreleased]
 
 ### Added
+- Adds improved support for ACL-based postops
 
 ### Changed
 - Updates the Compute Library version used for TensorFlow builds from 22.02 to 22.05.
+- Updates oneDNN to 70d1198de554e61081147c199d661df049233279
+  This commit includes a number of recent PRs for AArch64
 
 ### Removed
 

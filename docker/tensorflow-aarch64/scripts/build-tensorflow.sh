@@ -72,7 +72,6 @@ if [[ $ONEDNN_BUILD ]]; then
         config_flags="$config_flags --config=mkl_aarch64_threadpool"
     else
         config_flags="$config_flags --config=mkl_aarch64"
-        compile_flags="$compile_flags --copt=-fopenmp"
     fi
     if [[ $ONEDNN_BUILD == 'reference' ]]; then
         tf_backend_desc="oneDNN - reference."
@@ -109,9 +108,9 @@ if [[ $ONEDNN_BUILD ]]; then
         # Based on: https://github.com/oneapi-src/oneDNN/pull/1387
         mv ../onednn_acl_pooling.patch ./third_party/mkl_dnn/.
 
-        # Patch for oneDNN to fix matmul broadcast bug
-        # Based on: https://github.com/oneapi-src/oneDNN/pull/1380
-        mv ../onednn_acl_matmul_fix.patch ./third_party/mkl_dnn/.
+        # Patch to add improved support for ACL based postops
+        # Based on: https://github.com/oneapi-src/oneDNN/pull/1389
+        mv ../onednn_acl_postops.patch ./third_party/mkl_dnn/.
     fi
 else
     tf_backend_desc="Eigen."
