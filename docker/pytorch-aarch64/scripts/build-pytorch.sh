@@ -2,6 +2,7 @@
 
 # *******************************************************************************
 # Copyright 2020-2022 Arm Limited and affiliates.
+# Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -53,6 +54,28 @@ patch -p1 < $PACKAGE_DIR/onednn.patch
 
 cd $PACKAGE_DIR/$src_repo
 
+if [[ $XLA_BUILD ]]; then
+  readonly xla_version=$TORCHXLA_VERSION
+  readonly xla_repo=xla
+
+  # Clone torch xla
+  git clone ${src_host}/${xla_repo}.git
+  cd ${xla_repo}
+  git checkout v$xla_version -b v$xla_version
+  git submodule sync
+  git submodule update --init --recursive
+
+  # Apply the downstream patches
+  patch -p1 < $PACKAGE_DIR/torch_xla.patch
+
+  cd third_party/tensorflow
+  patch -p1 < $PACKAGE_DIR/xla_cpu_enhancements.patch
+
+  cd $PACKAGE_DIR/$src_repo
+  # Patch up the torch with the xla support. This is the patch list from upstream pytorch/xla repo
+  xla/scripts/apply_patches.sh
+fi
+
 MAX_JOBS=${NP_MAKE:-$((num_cpus / 2))} PYTORCH_BUILD_VERSION=$TORCH_VERSION \
   PYTORCH_BUILD_NUMBER=1 OpenBLAS_HOME=$OPENBLAS_DIR BLAS="OpenBLAS" \
   CXX_FLAGS="$BASE_CFLAGS -O3 -mcpu=$CPU" LDFLAGS=$BASE_LDFLAGS USE_OPENMP=1 \
@@ -77,4 +100,34 @@ if [[ "$check_version" == "$required_version" ]]; then
 else
   echo "PyTorch package installation failed."
   exit 1
+fi
+
+if [[ $XLA_BUILD ]]; then
+  # Now build the torch-xla wheel
+  cd $PACKAGE_DIR/$src_repo/$xla_repo
+
+  MAX_JOBS=${NP_MAKE:-$((num_cpus / 2))} TORCH_XLA_VERSION=$TORCHXLA_VERSION \
+     VERSIONED_XLA_BUILD=1 BUILD_CPP_TESTS=0 XLA_CPU_USE_ACL=1 \
+  CXX_FLAGS="$BASE_CFLAGS -O3 -mcpu=$CPU" LDFLAGS=$BASE_LDFLAGS python setup.py bdist_wheel
+
+  # Install the PyTorch XLA python wheel via pip
+  pip install $(ls -tr dist/*.whl | tail)
+
+  # Move the whl into venv for easy extraction from container
+  mkdir -p $VIRTUAL_ENV/$package/wheel
+  mv $(ls -tr dist/*.whl | tail) $VIRTUAL_ENV/$package/wheel
+
+  # Check the installation was sucessfull
+  cd $HOME
+
+  # Check the wheel has installed correctly.
+  # Note: only checks the major.minor version numbers, and not the point release
+  check_xla_version=$(python -c 'import torch_xla; print(torch_xla.__version__)' | cut -f1,2 -d'.')
+  required_xla_version=$(echo $xla_version | cut -f1,2 -d'.')
+  if [[ "$check_xla_version" == "$required_xla_version" ]]; then
+    echo "PyTorch XLA $required_xla_version package installed."
+  else
+    echo "PyTorch XLA package installation failed."
+    exit 1
+  fi
 fi

@@ -2,6 +2,7 @@
 
 # *******************************************************************************
 # Copyright 2020-2021 Arm Limited and affiliates.
+# Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -30,12 +31,13 @@ function print_usage_and_exit {
   echo "      --onednn / --dnnl        Build and link to oneDNN / DNNL:"
   echo "                                 * reference    - use the C++ reference kernels throughout."
   echo "                                 * acl          - use Compute Library (default)."
+  echo "      --xla                    Build and install torch-xla wheel".
   echo "      --build-type             Type of build to perform:"
   echo "                                 * base       - build the basic portion of the image, OS and essential packages"
   echo "                                 * libs       - build image including maths libraries and Python3."
   echo "                                 * tools      - build image including Python3 venv, with numpy."
-  echo "                                 * dev        - build image including Bazel and PyTorch, with sources."
-  echo "                                 * pytorch    - build image including PyTorch build and benchmarks installed"
+  echo "                                 * dev        - build image including Bazel, PyTorch, PyTorch XLA (if selected) with sources."
+  echo "                                 * pytorch    - build image including PyTorch, PyTorch XLA (if selected) build and benchmarks installed"
   echo "                                 * full       - build all images."
   echo "      --build-target           AArch64 CPU target:"
   echo "                                 * native       - optimize for the current host machine (default)."
@@ -87,6 +89,7 @@ nproc_build=
 onednn=
 target="native"
 clean_build=
+xla=
 
 while [ $# -gt 0 ]
 do
@@ -175,6 +178,10 @@ do
       fi
       ;;
 
+    --xla )
+      xla="xla"
+      ;;
+
     --clean | --no-cache )
       clean_build=1
       ;;
@@ -209,6 +216,18 @@ if [[ $onednn ]]; then
   # Use oneDNN backend
   extra_args="--build-arg onednn_opt=$onednn $extra_args"
 fi
+
+if [[ $xla ]]; then
+  # Build xla backend
+  extra_args="--build-arg build_xla=$xla $extra_args"
+fi
+
+# Set Bazel version
+bazel_version="5.1.1"
+
+# Add build-args to pass version numbers
+extra_args="$extra_args \
+    --build-arg bazel_version=$bazel_version"
 
 # Set CPU target props
 set_target $target
