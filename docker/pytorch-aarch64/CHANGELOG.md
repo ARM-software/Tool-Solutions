@@ -9,7 +9,7 @@ where `YY` is the year, and `MM` the month of the increment.
 
 ### Added
 - Adds torchdata build script
-- Adds --xla build option to include torch-xla wheel in pytorch dev image onwards
+- Adds --xla build option to include torch-xla wheel in pytorch image (experimental)
 
 ### Changed
 - Updates the Compute Library version used for PyTorch builds from 22.02 to 22.05.
