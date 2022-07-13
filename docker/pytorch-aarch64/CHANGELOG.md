@@ -8,17 +8,24 @@ where `YY` is the year, and `MM` the month of the increment.
 ## [Unreleased]
 
 ### Added
-- Adds torchdata build script
-- Adds --xla build option to include torch-xla wheel in pytorch image (experimental)
 
 ### Changed
-- Updates the Compute Library version used for PyTorch builds from 22.02 to 22.05.
-- Updates PyTorch to v1.12.0, torchvision to v0.13.0, torchtext to v0.13.0 and torchdata to 0.4.0
-- Updates cmake version to 3.23.2
 
 ### Removed
 
 ### Fixed
+
+## [r22.07] 2022-07-15]
+https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--r22.07/docker/pytorch-aarch64
+
+### Added
+- Adds torchdata build script.
+- Adds --xla build option to include torch-xla wheel in pytorch image (experimental).
+
+### Changed
+- Updates the Compute Library version used for PyTorch builds from 22.02 to 22.05.
+- Updates PyTorch to v1.12.0, torchvision to v0.13.0, torchtext to v0.13.0 and torchdata to 0.4.0.
+- Updates cmake version to 3.23.2.
 
 ## [r22.06] 2022-06-17
 https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--r22.06/docker/pytorch-aarch64
