@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # *******************************************************************************
-# Copyright 2021 Arm Limited and affiliates.
+# Copyright 2021-2022 Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,7 +25,7 @@ mkdir -p $PACKAGE_DIR
 cd $PACKAGE_DIR
 readonly package=boost
 readonly boost_src=https://boostorg.jfrog.io/artifactory/main/release/1.70.0/source/boost_1_70_0.tar.bz2
-readonly num_cpus=$(grep -c ^processor /proc/cpuinfo)
+readonly num_cpus=$(nproc)
 wget $boost_src
 tar --bzip2 -xf boost_1_70_0.tar.bz2
 cd boost_1_70_0

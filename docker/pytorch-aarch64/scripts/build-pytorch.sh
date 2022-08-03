@@ -25,7 +25,7 @@ readonly package=pytorch
 readonly version=$TORCH_VERSION
 readonly src_host=https://github.com/pytorch
 readonly src_repo=pytorch
-readonly num_cpus=$(grep -c ^processor /proc/cpuinfo)
+readonly num_cpus=$(nproc)
 
 # Clone PyTorch
 git clone ${src_host}/${src_repo}.git

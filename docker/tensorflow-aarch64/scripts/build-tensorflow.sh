@@ -86,7 +86,7 @@ if [[ $ONEDNN_BUILD ]]; then
         ## Apply patches to the TensorFlow, Compute Library and oneDNN builds
         # Patches from upstream PRs to address a number of issues exposed by TF unit tests.
         # tf_test_fix_prs lists the upstream PRs from which to take patches.
-        readonly tf_test_fix_prs="56150 56218 56219 56086 56371"
+        readonly tf_test_fix_prs="56218 56219 56086 56371"
         for pr in ${tf_test_fix_prs}; do
             echo "Patching from upstream PR https://github.com/tensorflow/tensorflow/pull/${pr}."
             wget https://github.com/tensorflow/tensorflow/pull/${pr}.patch -O ../tf_test_fix-${pr}.patch
