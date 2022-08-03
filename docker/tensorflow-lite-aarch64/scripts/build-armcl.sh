@@ -28,5 +28,5 @@ git checkout tags/v22.02 -b v22.02
 # This patch adds support for spin wait scheduler to ACL
 patch -p1 < ../acl.patch
 
-readonly num_cpus=$(grep -c ^processor /proc/cpuinfo)
+readonly num_cpus=$(nproc)
 scons -j ${num_cpus} arch=armv8.2-a build=native os=linux neon=1 extra_cxx_flags="-fPIC" benchmark_tests=0 validation_tests=0 multi_isa=1

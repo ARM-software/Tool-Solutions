@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright 2020 ARM Limited.
+# Copyright 2020-2022 ARM Limited.
 # All rights reserved.
 #
 
@@ -66,7 +66,7 @@ else
     echo "Unknown Data Type: $DATATYPE"
     exit 1
 fi
-     
+
 
 # move into the test directory
 pushd $TESTDIR
@@ -88,7 +88,7 @@ cp -r cmake_"$CPU".sh build_"$CPU"_"$DATATYPE"
 cd build_"$CPU"_"$DATATYPE"
 ./cmake_"$CPU".sh
 
-NPROC=`grep -c ^processor /proc/cpuinfo`
+NPROC=`nproc`
 make -j $NPROC
 
 # all done

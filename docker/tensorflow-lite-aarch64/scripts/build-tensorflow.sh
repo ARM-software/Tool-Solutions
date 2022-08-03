@@ -24,7 +24,7 @@ readonly version=$TF_VERSION
 readonly src_host=https://github.com/tensorflow
 readonly src_repo=tensorflow
 readonly dst_repo=tensorflow_src
-readonly num_cpus=$(grep -c ^processor /proc/cpuinfo)
+readonly num_cpus=$(nproc)
 
 # Clone tensorflow, build it and build benchmark_model binary
 git clone ${src_host}/${src_repo}.git ${dst_repo}

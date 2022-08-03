@@ -19,7 +19,7 @@
 
 set -euo pipefail
 
-readonly num_cpus=$(grep -c ^processor /proc/cpuinfo)
+readonly num_cpus=$(nproc)
 
 cd $PACKAGE_DIR
 

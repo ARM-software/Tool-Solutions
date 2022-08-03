@@ -5,7 +5,7 @@ wget https://zenodo.org/record/2269307/files/mobilenet_v1_1.0_224.tgz
 tar -xzf mobilenet_v1_1.0_224.tgz ./mobilenet_v1_1.0_224.tflite
 rm -f mobilenet_v1_1.0_224.tgz
 
-num_cpus=`grep -c ^processor /proc/cpuinfo`
+num_cpus=`nproc`
 if [ ${num_cpus} > 8 ];
 then
     num_cpus=8;

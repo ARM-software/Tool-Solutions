@@ -219,7 +219,7 @@ class Model:
         if self._frozen:
             self._load_frozen_model(model_name, model_descriptor["arguments"][0])
         else:
-            self._load_saved_model(model, name, model_descriptor["arguments"][0])
+            self._load_saved_model(model_name, model_descriptor["arguments"][0])
 
         return True
 

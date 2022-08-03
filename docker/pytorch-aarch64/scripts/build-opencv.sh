@@ -23,7 +23,7 @@ cd $PACKAGE_DIR
 readonly package=opencv
 readonly src_host=https://github.com/opencv
 readonly src_repo=opencv
-readonly num_cpus=$(grep -c ^processor /proc/cpuinfo)
+readonly num_cpus=$(nproc)
 
 git clone ${src_host}/${src_repo}.git
 
