@@ -15,6 +15,9 @@ where `YY` is the year, and `MM` the month of the increment.
 
 ### Fixed
 
+## [r22.08] 2022-08-12
+https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--r22.08/docker/pytorch-aarch64
+
 ## [r22.07] 2022-07-15
 https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--r22.07/docker/pytorch-aarch64
 
