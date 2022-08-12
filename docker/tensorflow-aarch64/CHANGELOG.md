@@ -15,6 +15,20 @@ where `YY` is the year, and `MM` the month of the increment.
 
 ### Fixed
 
+## [r22.08] 2022-08-12
+https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--r22.08/docker/tensorflow-aarch64
+
+### Added
+
+### Changed
+- Updates pooling patch in TF build with latest changes to https://github.com/oneapi-src/oneDNN/pull/1387.
+
+### Removed
+- Removes PR56150 from TF build since this has been abandoned upstream due to a regression.
+
+### Fixed
+- Fixes typo in Python examples.
+
 ## [r22.07] 2022-07-15
 https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--r22.07/docker/tensorflow-aarch64
 
