@@ -3,7 +3,7 @@ This repository is home to various examples and tutorials made to improve your e
 
 **⚠ Important**
 The default branch for this repository has been renamed to `main` in an effort to switch to branch names that are meaningful and inclusive.
-Users may need to update any local repositories to use the new default branch (see [updating a local clone after a branch name changes](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-branches-in-your-repository/renaming-a-branch#updating-a-local-clone-after-a-branch-name-changes)
+Users may need to update any local repositories to use the new default branch (see [updating a local clone after a branch name changes](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-branches-in-your-repository/renaming-a-branch#updating-a-local-clone-after-a-branch-name-changes)).
 
 For more details on how this was done see https://github.com/github/renaming.
 
