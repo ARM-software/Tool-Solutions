@@ -1,6 +1,11 @@
 # Tool Solutions
 This repository is home to various examples and tutorials made to improve your efficiency working with development tools. From system design to software development, we provide material to better utilize tools from Arm and the Arm ecosystem. 
 
+**⚠ Important**
+The default branch for this repository has been renamed to `main` in an effort to switch to branch names that are meaningful and inclusive.
+Users may need to update any local repositories to use the new default branch (see [updating a local clone after a branch name changes](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-branches-in-your-repository/renaming-a-branch#updating-a-local-clone-after-a-branch-name-changes)
+
+For more details on how this was done see https://github.com/github/renaming.
 
 ### Downloading Content
 There are multiple ways to obtain content from this repository to use locally. Two ways are:
