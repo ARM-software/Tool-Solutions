@@ -1,0 +1,403 @@
+ *******************************************************************************
+ Copyright 2022 Arm Limited and affiliates.
+ SPDX-License-Identifier: Apache-2.0
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+ *******************************************************************************
+
+diff --git a/src/cpu/aarch64/acl_convolution_utils.cpp b/src/cpu/aarch64/acl_convolution_utils.cpp
+index 2260e7beb..452d761b4 100644
+--- a/src/cpu/aarch64/acl_convolution_utils.cpp
++++ b/src/cpu/aarch64/acl_convolution_utils.cpp
+@@ -212,6 +212,69 @@ status_t acl_init_conf(acl_conv_conf_t &acp, memory_desc_t &src_md,
+                 arm_compute::QuantizationInfo(1.0f / scales[0], 0));
+     }
+ 
++    acp.weights_info = arm_compute::WeightsInfo(
++        false,
++        kw,
++        kh,
++        oc,
++        false,
++        arm_compute::WeightFormat::ANY);
++    arm_compute::WeightFormat expected_weight_format;
++    auto acl_st = arm_compute::NEGEMMConvolutionLayer::has_opt_impl(
++        expected_weight_format,
++        &acp.src_info,
++        &acp.wei_info,
++        acp.with_bias ? &acp.bia_info : nullptr,
++        &acp.dst_info,
++        acp.padstride_info,
++        acp.weights_info,
++        acp.dilation_info,
++        acp.act_info,
++        acp.fast_math);
++    if(acl_st.error_code() != arm_compute::ErrorCode::OK) {
++        return status::unimplemented;
++    }
++    acp.weights_info.set_weight_format(expected_weight_format);
++
++    int interleaved_by = arm_compute::interleave_by(expected_weight_format);
++    int block_by = arm_compute::block_by(expected_weight_format);
++
++    memory_desc_t want_wei_md = weights_md;
++
++    int ic_multiply = ic;
++    if(ic % block_by != 0) {
++        ic_multiply = utils::div_up(ic, block_by) * block_by;
++        // Also we need to set padded dimensions as well
++        want_wei_md.padded_dims[1] = ic_multiply;
++    }
++    if(oc % interleaved_by != 0) {
++        int padded_dim = utils::div_up(oc, interleaved_by) * interleaved_by;
++        want_wei_md.padded_dims[0] = padded_dim;
++    }
++
++    // Set strides based on blocking information
++    want_wei_md.format_desc.blocking.strides[0] = interleaved_by*ic_multiply*kw*kh;
++    want_wei_md.format_desc.blocking.strides[1] = interleaved_by*block_by;
++    want_wei_md.format_desc.blocking.strides[2] = interleaved_by*ic_multiply*kw;
++    want_wei_md.format_desc.blocking.strides[3] = interleaved_by*ic_multiply;
++
++    // Set blocking
++    want_wei_md.format_desc.blocking.inner_nblks = (block_by > 1) + 1;
++    want_wei_md.format_desc.blocking.inner_idxs[0] = 0; // second to last dimension in abcd format
++    want_wei_md.format_desc.blocking.inner_blks[0] = interleaved_by;
++
++    if(block_by > 1) {
++        want_wei_md.format_desc.blocking.inner_idxs[1] = 1; // second to last dimension in abcd format
++        want_wei_md.format_desc.blocking.inner_blks[1] = block_by;
++    }
++
++    if(acp.fast_math) {
++        // If it is fast math mode we need weights in BFloat16
++        want_wei_md.data_type = dnnl_bf16;
++    }
++
++    weights_md = want_wei_md;
++
+     return status::success;
+ }
+ 
+diff --git a/src/cpu/aarch64/acl_indirect_gemm_convolution.hpp b/src/cpu/aarch64/acl_indirect_gemm_convolution.hpp
+index 4e4f14a61..793b167e4 100644
+--- a/src/cpu/aarch64/acl_indirect_gemm_convolution.hpp
++++ b/src/cpu/aarch64/acl_indirect_gemm_convolution.hpp
+@@ -41,6 +41,7 @@ struct acl_indirect_gemm_resource_t : public resource_t {
+         acl_obj_->bia_tensor.allocator()->init(acp.bia_info);
+ 
+         // clang-format off
++        arm_compute::experimental::PostOpList<arm_compute::ITensorInfo *> empty_post_ops = arm_compute::experimental::PostOpList<arm_compute::ITensorInfo *> {};
+         acl_obj_->conv.configure(
+             &acl_obj_->src_tensor,
+             &acl_obj_->wei_tensor,
+@@ -50,7 +51,9 @@ struct acl_indirect_gemm_resource_t : public resource_t {
+                                     acp.dilation_info,
+                                     acp.act_info,
+                                     acp.fast_math,
+-                                    1));
++                                    1,
++                                    empty_post_ops,
++                                    acp.weights_info));
+         // clang-format on
+ 
+         return status::success;
+diff --git a/src/cpu/aarch64/acl_inner_product.hpp b/src/cpu/aarch64/acl_inner_product.hpp
+index fb9be692b..ead12c4b5 100644
+--- a/src/cpu/aarch64/acl_inner_product.hpp
++++ b/src/cpu/aarch64/acl_inner_product.hpp
+@@ -45,6 +45,7 @@ struct acl_ip_conf_t {
+     arm_compute::TensorInfo bia_info;
+     arm_compute::TensorInfo dst_info;
+     arm_compute::FullyConnectedLayerInfo fc_info;
++    arm_compute::WeightsInfo weights_info;
+ };
+ struct acl_ip_resource_t : public resource_t {
+     acl_ip_resource_t() : acl_ip_obj_(utils::make_unique<acl_ip_obj_t>()) {}
+@@ -64,7 +65,8 @@ struct acl_ip_resource_t : public resource_t {
+             &acl_ip_obj_->wei_tensor,
+             aip.with_bias ? &acl_ip_obj_->bia_tensor : nullptr,
+             &acl_ip_obj_->dst_tensor,
+-            aip.fc_info);
++            aip.fc_info,
++            aip.weights_info);
+         // clang-format on
+ 
+         return status::success;
+@@ -158,8 +160,8 @@ struct acl_inner_product_fwd_t : public primitive_t {
+                 src_shape = (src_tag == nc) ? arm_compute::TensorShape(ic, n)
+                                             : arm_compute::TensorShape(n, ic);
+ 
+-                wei_shape = (wei_tag == io) ? arm_compute::TensorShape(oc, ic)
+-                                            : arm_compute::TensorShape(ic, oc);
++                // For fixed format kernels weight shape is always io
++                wei_shape = arm_compute::TensorShape(oc, ic);
+             }
+             if (is_4d) {
+                 src_shape = (src_tag == nhwc)
+@@ -168,7 +170,8 @@ struct acl_inner_product_fwd_t : public primitive_t {
+ 
+                 // ACL requires the weights to be in 2D flattened shape
+                 const int flattened_ic = is_4d ? ic * kh * kw : ic;
+-                wei_shape = arm_compute::TensorShape(flattened_ic, oc);
++                // For fixed format kernels weights shape is always io
++                wei_shape = arm_compute::TensorShape(oc, flattened_ic);
+             }
+ 
+             arm_compute::DataLayout src_layout = (src_tag == nhwc)
+@@ -185,6 +188,9 @@ struct acl_inner_product_fwd_t : public primitive_t {
+             aip.wei_info = arm_compute::TensorInfo(
+                     wei_shape, 1, arm_compute::DataType::F32, wei_layout);
+ 
++            aip.weights_info = arm_compute::WeightsInfo(
++                    false, 1, 1, is_4d ? ic * kh *kw : ic, false, arm_compute::WeightFormat::ANY);
++
+             aip.dst_info
+                     = arm_compute::TensorInfo(arm_compute::TensorShape(oc, n),
+                             1, arm_compute::DataType::F32);
+@@ -196,15 +202,7 @@ struct acl_inner_product_fwd_t : public primitive_t {
+                     1, arm_compute::DataType::F32);
+ 
+             aip.fc_info.weights_trained_layout = wei_layout;
+-            if (is_2d && wei_tag != src_tag) {
+-                // weights are already transposed
+-                aip.fc_info.transpose_weights = false;
+-
+-                if (desc()->prop_kind == dnnl_forward_training) {
+-                    aip.wei_info.set_are_values_constant(false);
+-                    aip.fc_info.are_weights_reshaped = true;
+-                }
+-            }
++            aip.fc_info.transpose_weights = false;
+ 
+             // Fast math mode
+             auto math_mode = get_fpmath_mode();
+@@ -216,6 +214,74 @@ struct acl_inner_product_fwd_t : public primitive_t {
+                     aip.fc_info.activation_info));
+             aip.use_dst_acc = post_ops_pd.has_sum();
+ 
++            arm_compute::WeightFormat expected_weight_format;
++            auto acl_st = arm_compute::NEFullyConnectedLayer::has_opt_impl(
++                expected_weight_format,
++                &aip.src_info,
++                &aip.wei_info,
++                aip.with_bias ? &aip.bia_info : nullptr,
++                &aip.dst_info,
++                aip.fc_info,
++                aip.weights_info);
++            if(acl_st.error_code() != arm_compute::ErrorCode::OK) {
++                return status::unimplemented;
++            }
++
++            aip.weights_info.set_weight_format(expected_weight_format);
++
++            int interleaved_by = arm_compute::interleave_by(expected_weight_format);
++            int block_by = arm_compute::block_by(expected_weight_format);
++            bool is_fast_math_kernel = arm_compute::is_fixed_format_fast_math(expected_weight_format);
++
++            if(!is_fast_math_kernel) {
++                // FP32 kernel might be faster for some cases then BF16
++                aip.fc_info.enable_fast_math = false;
++            }
++
++            memory_desc_t want_wei_md = weights_md_;
++
++            int ic_multiply = ic;
++            if(is_4d) {
++                ic_multiply = ic * kh * kw;
++
++                // Since we are flattening dimensions the memory descriptor
++                // should also be for 2D
++                want_wei_md.ndims = 2;
++
++                want_wei_md.dims[1] = ic_multiply;
++                want_wei_md.padded_dims[1] = ic_multiply;
++                want_wei_md.format_desc.blocking.strides[1] = 1;
++
++                want_wei_md.dims[0] = oc;
++                want_wei_md.padded_dims[0] = want_wei_md.padded_dims[1];
++                want_wei_md.padded_dims[0] = oc;
++            }
++
++            want_wei_md.format_desc.blocking.strides[1] = interleaved_by * block_by;
++            if(want_wei_md.dims[1] % block_by != 0) {
++                want_wei_md.padded_dims[1] = utils::div_up(want_wei_md.dims[1], block_by) * block_by;
++            }
++            want_wei_md.format_desc.blocking.strides[0] = interleaved_by * want_wei_md.padded_dims[1];
++
++            if(oc % interleaved_by != 0) {
++                int padded_dim = utils::div_up(oc, interleaved_by) * interleaved_by;
++                want_wei_md.padded_dims[0] = padded_dim;
++            }
++
++            want_wei_md.format_desc.blocking.inner_nblks = (block_by > 1) + 1;
++            want_wei_md.format_desc.blocking.inner_idxs[0] = 0;
++            want_wei_md.format_desc.blocking.inner_blks[0] = interleaved_by;
++            if(block_by > 1) {
++                want_wei_md.format_desc.blocking.inner_idxs[1] = 1;
++                want_wei_md.format_desc.blocking.inner_blks[1] = block_by;
++	        }
++
++            if(is_fast_math_kernel) {
++                want_wei_md.data_type = dnnl_bf16;
++            }
++
++            weights_md_ = want_wei_md;
++
+             // clang-format off
+             // Validate fully connected layer manually to check for return status
+             ACL_CHECK_VALID(arm_compute::NEFullyConnectedLayer::validate(
+diff --git a/src/cpu/aarch64/matmul/acl_matmul_utils.cpp b/src/cpu/aarch64/matmul/acl_matmul_utils.cpp
+index e33932b7a..c0fe5fd92 100644
+--- a/src/cpu/aarch64/matmul/acl_matmul_utils.cpp
++++ b/src/cpu/aarch64/matmul/acl_matmul_utils.cpp
+@@ -68,15 +68,12 @@ status_t init_conf_matmul(acl_matmul_conf_t &amp, memory_desc_t &src_md,
+ 
+     // Transpose A (src) or B (wei)
+     amp.is_transA = helper.transA() == 'T';
+-    amp.is_transB = helper.transB() == 'T';
++    amp.is_transB = false;
++
+     if (amp.is_transA)
+         amp.src_acc_info = arm_compute::TensorInfo(
+                 arm_compute::TensorShape(M, K, 1, src_batch), 1,
+                 arm_compute::DataType::F32);
+-    if (amp.is_transB)
+-        amp.wei_acc_info = arm_compute::TensorInfo(
+-                arm_compute::TensorShape(K, N, wei_batch), 1,
+-                arm_compute::DataType::F32);
+ 
+     amp.src_info = arm_compute::TensorInfo(
+             arm_compute::TensorShape(K, M, 1, src_batch), 1,
+@@ -105,6 +102,121 @@ status_t init_conf_matmul(acl_matmul_conf_t &amp, memory_desc_t &src_md,
+         ACL_CHECK_VALID(arm_compute::NETranspose::validate(
+                 &amp.wei_acc_info, &amp.wei_info));
+ 
++    arm_compute::WeightFormat expected_weight_format;
++
++    amp.gemm_info.set_fixed_format(true);
++    amp.gemm_info.set_weight_format(arm_compute::WeightFormat::ANY);
++
++    auto acl_st = arm_compute::NEGEMM::has_opt_impl(
++        expected_weight_format,
++        &amp.src_info,
++        &amp.wei_info,
++        nullptr,
++        &amp.dst_info,
++        amp.alpha,
++        0.0f,
++        amp.gemm_info);
++
++    if(acl_st.error_code() != arm_compute::ErrorCode::OK) {
++        return status::unimplemented;
++    }
++
++    amp.gemm_info.set_weight_format(expected_weight_format);
++
++    memory_desc_t want_wei_md = wei_md;
++
++    // We need to transpose second to last dimension and use blocking
++    // as returned by interleave by from expecting strides
++    int interleaved_by = arm_compute::interleave_by(expected_weight_format);
++    int block_by = arm_compute::block_by(expected_weight_format);
++
++    int blocked_first_dimension = -1;
++    int blocked_second_dimension = -1;
++
++    // Assume that interleaved by is X and blocked by is Y
++    switch(want_wei_md.ndims) {
++        case 2: {
++           // For 2D case the format that we need to pass is BaXb and
++           // when doing fast mode BAXbYa
++           want_wei_md.format_desc.blocking.strides[0] = interleaved_by * block_by;
++            // check to see whether we need to pad
++            if(want_wei_md.dims[0] % block_by != 0) {
++                want_wei_md.padded_dims[0] = utils::div_up(want_wei_md.dims[0], block_by) * block_by;
++            }
++            want_wei_md.format_desc.blocking.strides[1] = interleaved_by * want_wei_md.padded_dims[0];
++            if(want_wei_md.dims[1] % interleaved_by != 0) {
++                want_wei_md.padded_dims[1] = utils::div_up(want_wei_md.dims[1], interleaved_by) * interleaved_by;
++            }
++
++            blocked_first_dimension = 1;
++            blocked_second_dimension = 0;
++
++            break;
++        }
++
++        case 3: {
++           // For 3D case the format we need to pass is aCbXc and
++           // when doing fast mode is aCBXcYb
++           want_wei_md.format_desc.blocking.strides[1] = interleaved_by*block_by;
++           if(want_wei_md.dims[1] % block_by != 0) {
++               want_wei_md.padded_dims[1] = utils::div_up(want_wei_md.dims[1], block_by) * block_by;
++           }
++           want_wei_md.format_desc.blocking.strides[2] = interleaved_by * want_wei_md.padded_dims[1];
++           if(want_wei_md.dims[2] % interleaved_by != 0) {
++                want_wei_md.padded_dims[2] = utils::div_up(want_wei_md.dims[2], interleaved_by) * interleaved_by;
++           }
++           want_wei_md.format_desc.blocking.strides[0] = want_wei_md.padded_dims[2] * want_wei_md.padded_dims[1];
++
++           blocked_first_dimension = 2;
++           blocked_second_dimension = 1;
++
++           break;
++        }
++
++        case 4: {
++            // For 4D case the format we need to pass is abDcXd and
++            // when doing fast mode is abDCxdYc
++            int D_padded = want_wei_md.dims[3];
++            if(D_padded % interleaved_by != 0) {
++                D_padded = utils::div_up(D_padded, interleaved_by) * interleaved_by;
++                want_wei_md.padded_dims[3] = D_padded;
++            }
++
++            int C_padded = want_wei_md.dims[2];
++            if(C_padded % block_by != 0) {
++                C_padded = utils::div_up(C_padded, block_by) * block_by;
++                want_wei_md.padded_dims[2] = C_padded;
++            }
++
++            want_wei_md.format_desc.blocking.strides[0] = want_wei_md.dims[1]*D_padded*C_padded;
++            want_wei_md.format_desc.blocking.strides[1] = D_padded*C_padded;
++            want_wei_md.format_desc.blocking.strides[2] = interleaved_by*block_by;
++            want_wei_md.format_desc.blocking.strides[3] = interleaved_by*C_padded;
++
++            blocked_first_dimension = 3;
++            blocked_second_dimension = 2;
++
++            break;
++        }
++
++        default:
++            return status::unimplemented;
++    }
++
++    want_wei_md.format_desc.blocking.inner_nblks = (block_by > 1) + 1;
++    want_wei_md.format_desc.blocking.inner_idxs[0] = blocked_first_dimension;
++    want_wei_md.format_desc.blocking.inner_blks[0] = interleaved_by;
++    if(block_by > 1) {
++        want_wei_md.format_desc.blocking.inner_idxs[1] = blocked_second_dimension;
++        want_wei_md.format_desc.blocking.inner_blks[1] = block_by;
++    }
++
++    if(is_fastmath_enabled) {
++        want_wei_md.data_type = dnnl_bf16;
++    }
++
++    wei_md = want_wei_md;
++
+     return status::success;
+ }
+ 

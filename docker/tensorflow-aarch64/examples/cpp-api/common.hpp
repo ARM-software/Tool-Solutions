@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2021 Arm Ltd. and affiliates.
+ * Copyright 2021-2022 Arm Ltd. and affiliates.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -73,10 +73,8 @@ tf::Status read_image_into_tensor(const std::string &filename, tf::int32 img_w,
   auto file_reader =
       tf::ops::ReadFile(root.WithOpName("file_reader"), filename);
 
-  const int wanted_channels = 3;
   tf::Output image_reader =
-      tf::ops::DecodeJpeg(root.WithOpName("file_decoder"), file_reader,
-                          tf::ops::DecodeJpeg::Channels(wanted_channels));
+      tf::ops::DecodeJpeg(root.WithOpName("file_decoder"), file_reader);
 
   auto float_caster = tf::ops::Cast(root.WithOpName("float_caster"),
                                     image_reader, tf::DT_FLOAT);

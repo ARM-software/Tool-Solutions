@@ -8,12 +8,19 @@ where `YY` is the year, and `MM` the month of the increment.
 ## [Unreleased]
 
 ### Added
+- oneDNN uses fixed format kernels from Compute Library for convolutions, inner product and matrix multiplication.
+- Accelerates depthwise convolution by calling equivalent ACL operation.
 
 ### Changed
 
+- Updated the Compute Library to 6ad5d5048286cbb5dcb144d018423ba942583ee8.
+- Updates TensorFlow to r2.10-rc1.
+
 ### Removed
+- AArch64 specific caching of oneDNN primitives in TensorFlow.
 
 ### Fixed
+- Missing reorder when doing batched matrix multiplication in TensorFlow.
 
 ## [r22.08] 2022-08-12
 https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--r22.08/docker/tensorflow-aarch64
