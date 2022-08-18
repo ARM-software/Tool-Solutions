@@ -1,0 +1,310 @@
+ *******************************************************************************
+ Copyright 2022 Arm Limited and affiliates.
+ SPDX-License-Identifier: Apache-2.0
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+ *******************************************************************************
+
+diff --git a/tensorflow/core/kernels/mkl/mkl_batch_matmul_op.cc b/tensorflow/core/kernels/mkl/mkl_batch_matmul_op.cc
+index 6376773abbb..b0ae1f120a8 100644
+--- a/tensorflow/core/kernels/mkl/mkl_batch_matmul_op.cc
++++ b/tensorflow/core/kernels/mkl/mkl_batch_matmul_op.cc
+@@ -139,15 +139,6 @@ class BatchMatMulMkl : public OpKernel {
+     auto params = bmm.CreateMatMulParams(prefix, lhs.shape(), rhs.shape(),
+                                          out_shape, adj_x_, adj_y_);
+ 
+-#ifdef DNNL_AARCH64_USE_ACL
+-    // ACL does not support reuse of primitives with different data.
+-    // For matmul, the previous approach (PR #47775) of using Tensor addresses
+-    // does not work, as the addresses are re-used in matmul with different data
+-    // The counter  ensure we still benefit from caching via SetMklMatmul().
+-    params->aarch64_counter =
+-        MklMatMulPrimitiveFactory<float, Tlhs, Trhs,
+-                                  Toutput>::IncrementCounter();
+-#endif
+     this->ExtendMklMatMulParams(ctx, *params);
+ 
+     // Create or retrieve matmul primitive from cache.
+@@ -155,6 +146,38 @@ class BatchMatMulMkl : public OpKernel {
+         MklMatMulPrimitiveFactory<float, Tlhs, Trhs, Toutput>::Get(
+             *params, false /* value for do_not_cache */);
+ 
++    Trhs* weight_data = const_cast<Trhs*>(rhs.flat<Trhs>().data());
++
++    memory::format_tag weight_format;
++    switch(params->b_dims.size()) {
++      case 2:
++        weight_format = adj_y_ ? memory::format_tag::ba : memory::format_tag::ab;
++        break;
++      case 3:
++        weight_format = adj_y_ ? memory::format_tag::acb : memory::format_tag::abc;
++        break;
++      case 4:
++        weight_format = adj_y_ ? memory::format_tag::abdc : memory::format_tag::abcd;
++        break;
++      case 5:
++        weight_format = adj_y_ ? memory::format_tag::abced : memory::format_tag::abcde;
++        break;
++      default:
++        weight_format = memory::format_tag::undef;
++    }
++    if(weight_format != memory::format_tag::undef) {
++      auto weight_md = memory::desc(params->b_dims, MklDnnType<Trhs>(), weight_format);
++      std::shared_ptr<dnnl::matmul::primitive_desc> matmul_pd = matmul_prim->GetPrimitiveDesc();
++      // Reorder weights if necessary
++      MklDnnData<Trhs> weights_mkl(&(this->cpu_engine_));
++      // Check whether we need to do reorder
++      if (weight_md != matmul_pd->weights_desc()) {
++        weights_mkl.SetUsrMem(weight_md, weight_data);
++        weights_mkl.CheckReorderToOpMem(matmul_pd.get()->weights_desc(),
++                                        this->cpu_engine_, ctx);
++        weight_data = reinterpret_cast<Trhs*>(weights_mkl.GetOpMem().get_data_handle());
++      }
++    }
+     UserScratchPad<unsigned char> scratch_pad;
+     scratch_pad.AllocateSPTensor(matmul_prim, ctx);
+     // Execute matmul primitive.
+@@ -175,15 +198,17 @@ class BatchMatMulMkl : public OpKernel {
+             const_cast<Toutput*>(add_tensor.flat<Toutput>().data()));
+       }
+       matmul_prim->Execute(cpu_stream, lhs.flat<Tlhs>().data(),
+-                           rhs.flat<Trhs>().data(), out->flat<Toutput>().data(),
++                           weight_data, out->flat<Toutput>().data(),
+                            scratch_pad.Get(), mul_data, add_data);
+     } else {
+       matmul_prim->Execute(cpu_stream, lhs.flat<Tlhs>().data(),
+-                           rhs.flat<Trhs>().data(), out->flat<Toutput>().data(),
++                           weight_data, out->flat<Toutput>().data(),
+                            scratch_pad.Get());
+     }
+   }
+ 
++  engine cpu_engine_ = engine(engine::kind::cpu, 0);
++
+  protected:
+   virtual void ExtendMklMatMulParams(OpKernelContext* ctx,
+                                      MklMatMulParams& params) {}
+diff --git a/tensorflow/core/kernels/mkl/mkl_conv_ops.cc b/tensorflow/core/kernels/mkl/mkl_conv_ops.cc
+index 5ef491158b8..5fcc2b60b3d 100644
+--- a/tensorflow/core/kernels/mkl/mkl_conv_ops.cc
++++ b/tensorflow/core/kernels/mkl/mkl_conv_ops.cc
+@@ -27,7 +27,6 @@ limitations under the License.
+ #include "tensorflow/core/kernels/mkl/mkl_quantized_conv_ops.h"
+ #include "tensorflow/core/kernels/no_op.h"
+ #ifdef DNNL_AARCH64_USE_ACL
+-#include "tensorflow/core/platform/hash.h"
+ #include "tensorflow/core/platform/mutex.h"
+ #endif
+ 
+@@ -52,9 +51,6 @@ struct MklConvFwdParams {
+   MklTensorFormat tf_fmt;
+   bool native_format;
+   string dtypes = string("");
+-#ifdef DNNL_AARCH64_USE_ACL
+-  uint64 filter_hash;
+-#endif
+   struct PostOpParam {
+     string name;
+     dnnl::algorithm alg;
+@@ -485,9 +481,6 @@ class MklConvFwdPrimitiveFactory : public MklPrimitiveFactory<float> {
+     key_creator.AddAsKey(prefix);
+     key_creator.AddAsKey(convFwdDims.src_dims);
+     key_creator.AddAsKey(convFwdDims.filter_dims);
+-#ifdef DNNL_AARCH64_USE_ACL
+-    key_creator.AddAsKey(convFwdDims.filter_hash);
+-#endif
+     key_creator.AddAsKey(convFwdDims.bias_dims);
+     key_creator.AddAsKey(convFwdDims.dst_dims);
+     key_creator.AddAsKey(convFwdDims.strides);
+@@ -808,15 +801,6 @@ class MklConvOp : public OpKernel {
+ 
+       // TODO(intel-tf): Extend the basic parameters for data types and fusions
+       this->ExtendConvFwdParams(context, convFwdDims);
+-#ifdef DNNL_AARCH64_USE_ACL
+-      // TODO(milpuz01): Remove once Arm Compute Library provides support for
+-      // in-place updates
+-      convFwdDims.filter_hash = Hash64(
+-          filter_tensor.tensor_data().data(),
+-          std::min(kFilterTensorHashLength,
+-                   static_cast<int>(filter_tensor.tensor_data().size())));
+-#endif
+-
+       conv_fwd =
+           MklConvFwdPrimitiveFactory<Tinput, Tfilter, Tbias, Ttemp_output>::Get(
+               convFwdDims, do_not_cache);
+@@ -1205,9 +1189,6 @@ class MklConvOp : public OpKernel {
+   // Input indices for FusedBatchNorm
+   const int kInputIndex_BN_Scale = 2, kInputIndex_BN_Offset = 3;
+   const int kInputIndex_BN_Mean = 4, kInputIndex_BN_Variance = 5;
+-#ifdef DNNL_AARCH64_USE_ACL
+-  const int kFilterTensorHashLength = 1024;
+-#endif
+ 
+   MklTensorFormat GetFilterTfDataFormat(const MklDnnShape* filter_mkl_shape,
+                                         const ConvFwdPd& conv_prim_desc) const {
+diff --git a/tensorflow/core/kernels/mkl/mkl_matmul_op_fused.cc b/tensorflow/core/kernels/mkl/mkl_matmul_op_fused.cc
+index 8f82555b087..41afef90e78 100644
+--- a/tensorflow/core/kernels/mkl/mkl_matmul_op_fused.cc
++++ b/tensorflow/core/kernels/mkl/mkl_matmul_op_fused.cc
+@@ -124,14 +124,7 @@ class MklFusedMatMulOp : public MklDnnMatMulOpBase<T, T> {
+         memory::format_tag::nc, this->is_weight_const_);
+     // Extend the basic parameters for data types and fusions.
+     ExtendMklDnnMatMulFwdParams(ctx, matmul_params);
+-#ifdef DNNL_AARCH64_USE_ACL
+-    // TODO(milpuz01): Remove once Arm Compute Library provides support for
+-    // in-place updates
+-    matmul_params.weight_hash =
+-        Hash64(weight_tensor.tensor_data().data(),
+-               std::min(kWeightTensorHashLength,
+-                        static_cast<int>(weight_tensor.tensor_data().size())));
+-#endif
++
+     MklDnnMatMulFwdPrimitive<T, T, T, T, T>* matmul_prim =
+         MklDnnMatMulFwdPrimitiveFactory<T, T, T, T, T>::Get(matmul_params, 0);
+ 
+@@ -317,9 +310,6 @@ class MklFusedMatMulOp : public MklDnnMatMulOpBase<T, T> {
+   std::vector<string> fused_ops_;
+   const int kInputIndex_Add = 3;
+   const int kOutputIndex_Dst = 0;
+-#ifdef DNNL_AARCH64_USE_ACL  
+-  const int kWeightTensorHashLength = 1024;
+-#endif  
+ };  // namespace tensorflow
+ 
+ // Register mkl kernels for supported operations and types.
+diff --git a/tensorflow/core/kernels/mkl/mkl_matmul_ops_common.h b/tensorflow/core/kernels/mkl/mkl_matmul_ops_common.h
+index ba87750c1a7..bdabfb61a0b 100644
+--- a/tensorflow/core/kernels/mkl/mkl_matmul_ops_common.h
++++ b/tensorflow/core/kernels/mkl/mkl_matmul_ops_common.h
+@@ -28,7 +28,6 @@ limitations under the License.
+ #include "tensorflow/core/util/mkl_util.h"
+ #include "tensorflow/core/util/onednn_env_vars.h"
+ #ifdef DNNL_AARCH64_USE_ACL
+-#include "tensorflow/core/platform/hash.h"
+ #include "tensorflow/core/platform/mutex.h"
+ #endif
+ 
+@@ -66,9 +65,6 @@ struct MklDnnMatMulFwdParams {
+   memory::format_tag dst_format;
+   string dtypes = string("");
+   bool const_weight;
+-#ifdef DNNL_AARCH64_USE_ACL
+-  uint64 weight_hash;
+-#endif
+   struct PostOpParam {
+     string name;
+     std::vector<float> param;
+@@ -405,9 +401,6 @@ class MklDnnMatMulFwdPrimitiveFactory : public MklPrimitiveFactory<T> {
+     key_creator.AddAsKey(mkldnn_matmul_fwd_dims.dst_dims);
+     key_creator.AddAsKey(mkldnn_matmul_fwd_dims.dtypes);
+     key_creator.AddAsKey(mkldnn_matmul_fwd_dims.weight_format);
+-#ifdef DNNL_AARCH64_USE_ACL
+-    key_creator.AddAsKey(mkldnn_matmul_fwd_dims.weight_hash);
+-#endif
+ 
+     // Generate keys for post-ops
+     for (auto const& post_op_param : mkldnn_matmul_fwd_dims.post_op_params) {
+@@ -588,9 +581,6 @@ struct MklMatMulParams {
+   memory::dims a_strides;
+   memory::dims b_strides;
+   memory::dims c_strides;
+-#ifdef DNNL_AARCH64_USE_ACL
+-  int aarch64_counter;
+-#endif
+   struct PostOpParam {
+     string name;
+     std::vector<float> param;
+@@ -667,6 +657,11 @@ class MklMatMulPrimitive : public MklPrimitive {
+     if (add_data != nullptr) context_.add_mem->set_data_handle(DummyData);
+   }
+ 
++  std::shared_ptr<dnnl::matmul::primitive_desc>
++  GetPrimitiveDesc() const {
++    return context_.prim_desc;
++  }
++
+  private:
+   // Primitive reuse context for MatMul op
+   struct MklMatMulContext {
+@@ -849,9 +844,6 @@ class MklMatMulPrimitiveFactory : public MklPrimitiveFactory<T> {
+     key_creator.AddAsKey(params.b_strides);
+     key_creator.AddAsKey(params.c_strides);
+     key_creator.AddAsKey(typeid(T).name());
+-#ifdef DNNL_AARCH64_USE_ACL
+-    key_creator.AddAsKey(params.aarch64_counter);
+-#endif
+     key_creator.AddAsKey(typeid(Tlhs).name());
+     key_creator.AddAsKey(typeid(Trhs).name());
+     key_creator.AddAsKey(typeid(Toutput).name());
+diff --git a/tensorflow/workspace2.bzl b/tensorflow/workspace2.bzl
+index dfd33e998e2..489a4bea834 100644
+--- a/tensorflow/workspace2.bzl
++++ b/tensorflow/workspace2.bzl
+@@ -192,18 +192,16 @@ def _tf_repositories():
+     tf_http_archive(
+         name = "mkl_dnn_acl_compatible",
+         build_file = "//third_party/mkl_dnn:mkldnn_acl.BUILD",
++        patch_file = ["//third_party/mkl_dnn:onednn_acl_postops.patch", "//third_party/mkl_dnn:onednn_acl_pooling.patch", "//third_party/mkl_dnn:onednn_acl_fixed_format_kernels.patch", "//third_party/mkl_dnn:onednn_acl_depthwise_convolution.patch"],
+         sha256 = "990fdce84197d68064e615d91c182c5bc6baa446348c3c1fe71b7e9a345badc2",
+         strip_prefix = "oneDNN-70d1198de554e61081147c199d661df049233279",
+         urls = tf_mirror_urls("https://github.com/oneapi-src/oneDNN/archive/70d1198de554e61081147c199d661df049233279.tar.gz"),
+     )
+ 
+-    tf_http_archive(
++    native.new_local_repository(
+         name = "compute_library",
+-        sha256 = "94e2e9ff87c261a9c9987bc9024c449c48014f7fe707311bdfa76b87f3dda5c5",
+-        strip_prefix = "ComputeLibrary-22.05",
+         build_file = "//third_party/compute_library:BUILD",
+-        patch_file = ["//third_party/compute_library:compute_library.patch", "//third_party/compute_library:activation_func_correct_args.patch"],
+-        urls = tf_mirror_urls("https://github.com/ARM-software/ComputeLibrary/archive/v22.05.tar.gz"),
++        path='/home/ubuntu/packages/ComputeLibrary'
+     )
+ 
+     tf_http_archive(
+diff --git a/third_party/compute_library/BUILD b/third_party/compute_library/BUILD
+index d668d9afc9a..e7bb531e1dc 100644
+--- a/third_party/compute_library/BUILD
++++ b/third_party/compute_library/BUILD
+@@ -29,6 +29,7 @@ _COMPUTE_LIBRARY_DEFINES = [
+     "ENABLE_INTEGER_KERNELS",
+     "ENABLE_NHWC_KERNELS",
+     "ENABLE_NCHW_KERNELS",
++    "ARM_COMPUTE_ENABLE_FIXED_FORMAT_KERNELS"
+ ]
+ 
+ cc_library(
+@@ -62,6 +63,7 @@ cc_library(
+             "src/core/NEON/kernels/arm_conv/**/kernels/sve_*/*.cpp",
+             "src/core/NEON/kernels/arm_conv/depthwise/interleaves/sve_*.cpp",
+             "src/core/NEON/kernels/batchnormalization/impl/SVE/*.cpp",
++            "src/core/NEON/kernels/convolution/winograd/input_transforms/sve_fp32_6x6.cpp",
+             "src/cpu/kernels/**/sve/*.cpp",
+             "**/*.h",
+             "**/*.hpp",
+@@ -106,6 +108,7 @@ cc_library(
+             "src/core/NEON/kernels/batchnormalization/impl/NEON/*.cpp",
+             "src/cpu/*.cpp",
+             "src/cpu/kernels/*.cpp",
++            "src/cpu/kernels/fuse_batch_normalization/**/*.cpp",
+             "src/cpu/kernels/*/generic/*.cpp",
+             "src/cpu/operators/**/*.cpp",
+             "src/cpu/utils/*.cpp",
+@@ -122,6 +125,7 @@ cc_library(
+             "src/core/TracePoint.cpp",
+             "src/core/NEON/kernels/arm_gemm/mergeresults-sve.cpp",
+             "src/core/NEON/kernels/arm_gemm/transform-sve.cpp",
++            "src/core/NEON/kernels/convolution/winograd/input_transforms/sve_fp32_6x6.cpp",
+             "src/runtime/CL/**",
+             "src/gpu/**",
+         ],

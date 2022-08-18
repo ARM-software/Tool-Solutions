@@ -20,6 +20,21 @@
 set -euo pipefail
 
 cd $PACKAGE_DIR
+
+readonly mlplatform_url="https://review.mlplatform.org/ml"
+readonly acl_version="6ad5d50"
+
+## Clone ACL
+git clone "${mlplatform_url}/ComputeLibrary"
+pushd ComputeLibrary
+git checkout "${acl_version}"
+patch -p1 < ../compute_library.patch
+# apply patch for depthwise convolution that adds
+# capability to update weights
+patch -p1 < ../acl_fixed_format_kernels_striding.patch
+patch -p1 < ../acl_depthwise_updateable_weights.patch
+popd
+
 readonly package=tensorflow
 readonly version=$TF_VERSION
 readonly src_host=https://github.com/tensorflow
@@ -84,25 +99,10 @@ if [[ $ONEDNN_BUILD ]]; then
         fi
 
         ## Apply patches to the TensorFlow, Compute Library and oneDNN builds
-        # Patches from upstream PRs to address a number of issues exposed by TF unit tests.
-        # tf_test_fix_prs lists the upstream PRs from which to take patches.
-        readonly tf_test_fix_prs="56218 56219 56086 56371"
-        for pr in ${tf_test_fix_prs}; do
-            echo "Patching from upstream PR https://github.com/tensorflow/tensorflow/pull/${pr}."
-            wget https://github.com/tensorflow/tensorflow/pull/${pr}.patch -O ../tf_test_fix-${pr}.patch
-            patch -p1 < ../tf_test_fix-${pr}.patch
-        done
-
-        # Patch Compute Library Bazel build
-        patch -p1 < ../tf_acl.patch
-
-        # Patch to add experimental spin-wait scheduler to Compute Library
-        # Note: overwrites upstream version
-        mv ../compute_library.patch ./third_party/compute_library/.
-
-        # Patch for oneDNN to cap the number of ACL threads to less than the number of available cores.
-        # This reduces the impact of resource contention.
-        mv ../onednn_acl_threadcap.patch ./third_party/mkl_dnn/.
+        # Patch TensorFlow to call into fixed format kernels
+        patch -p1 < ../tf_fixed_format_kernels.patch
+        # Patch TensorFlow to build ACL with OpenMP scheduler
+        patch -p1 < ../tf_acl_openmp_scheduler.patch
 
         # Patch for oneDNN to add ACL-based pooling primitive
         # Based on: https://github.com/oneapi-src/oneDNN/pull/1387
@@ -111,6 +111,12 @@ if [[ $ONEDNN_BUILD ]]; then
         # Patch to add improved support for ACL based postops
         # Based on: https://github.com/oneapi-src/oneDNN/pull/1389
         mv ../onednn_acl_postops.patch ./third_party/mkl_dnn/.
+
+        # Patch to call into fixed format kernels
+        mv ../onednn_acl_fixed_format_kernels.patch ./third_party/mkl_dnn/.
+
+        # Patch to call ACL accelerated depthwise convolution
+        mv ../onednn_acl_depthwise_convolution.patch ./third_party/mkl_dnn/.
     fi
 else
     tf_backend_desc="Eigen."
