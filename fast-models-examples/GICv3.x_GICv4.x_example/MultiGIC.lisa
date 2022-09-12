@@ -1,0 +1,2262 @@
+/*
+ * Copyright 2019 ARM Limited. All rights reserved.
+ */
+
+/*
+    This component simulates GIC multichip operation. It contains 16 GIC700_Filter instances. 
+    This is the maximum number of chips allowed. Redistributor ports, spi ports, ppi ports are equally distributed among 16 GICs.
+
+    GICs are placed sequentially in memory (default location is 0x2f00_0000) and the base memory offset of each gic with is successor
+    is set to 0x30_0000.
+
+    See detailed information here: https://confluence.arm.com/display/FastModels/MultiGIC+platform+for+GIC+Multichip+Operation
+*/
+
+component MultiGIC
+{
+    properties
+    {
+        version = "unreleased";
+        component_type = "SystemIP";
+        description = "Multi-GIC component for multichip operation";
+        has_cadi = 1;
+        executes_software = 0;
+    }
+
+    // This platform contains the maximum number of GICs, 16.
+    // Software can initialize as many as needed.
+    composition
+    {
+        slave_mapper : PVBusMapper();
+
+        gic0 : GIC700_Filter(
+                            "enabled" = enabled,
+                            "print-memory-map" = print_mmap,
+                            "reg-base" = reg_base + 0 * gic_offset,
+                            "CPU-affinities" = GIC0_CPU_affinities,
+                            "CPU-affinities-file" = CPU_affinities_file,
+                            "ARE-fixed-to-one" = ARE_fixed_to_one,
+                            "chip-select-affinity-level" = chip_select_affinity_level,
+                            "affinity-width" = affinity_width,
+                            "DS-behaviour" = ds_wi_beh,
+                            "SPI-blocks" = spi_blocks,
+                            "PPI-count" = ppi_count,
+                            "ITS-count" = ITS_count,
+                            "ITS-device-bits" = its_device_bits,
+                            "ITS-ID-bits" = its_id_bits,
+                            "chip-id" = chip_id_base + 0,
+                            "max-pe-on-chip" = max_pe_on_chip,
+                            "multichip-threaded-dgi" = multichip_threaded_dgi,
+                            "ITS-collection-ID-bits" = its_collection_id_bits,
+                            "redistributor-power-managed-by-pwrr" = power_managed_by_pwrr,
+                            "extended-spi-count" = extended_spi_count,
+                            "extended-ppi-count" = extended_ppi_count,
+                            "GICD_TYPER2" = gicd_typer2
+        );
+
+        gic1 : GIC700_Filter(
+                            "enabled" = enabled,
+                            "print-memory-map" = print_mmap,
+                            "reg-base" = reg_base + 1 * gic_offset,
+                            "CPU-affinities" = GIC1_CPU_affinities,
+                            "CPU-affinities-file" = CPU_affinities_file,
+                            "ARE-fixed-to-one" = ARE_fixed_to_one,
+                            "chip-select-affinity-level" = chip_select_affinity_level,
+                            "affinity-width" = affinity_width,
+                            "DS-behaviour" = ds_wi_beh,
+                            "SPI-blocks" = spi_blocks,
+                            "PPI-count" = ppi_count,
+                            "ITS-count" = ITS_count,
+                            "ITS-device-bits" = its_device_bits,
+                            "ITS-ID-bits" = its_id_bits,
+                            "chip-id" = chip_id_base + 1,
+                            "max-pe-on-chip" = max_pe_on_chip,
+                            "multichip-threaded-dgi" = multichip_threaded_dgi,
+                            "ITS-collection-ID-bits" = its_collection_id_bits,
+                            "redistributor-power-managed-by-pwrr" = power_managed_by_pwrr,
+                            "extended-spi-count" = extended_spi_count,
+                            "extended-ppi-count" = extended_ppi_count,
+                            "GICD_TYPER2" = gicd_typer2
+        );
+
+        gic2 : GIC700_Filter(
+                            "enabled" = enabled,
+                            "print-memory-map" = print_mmap,
+                            "reg-base" = reg_base + 2 * gic_offset,
+                            "CPU-affinities" = GIC2_CPU_affinities,
+                            "CPU-affinities-file" = CPU_affinities_file,
+                            "ARE-fixed-to-one" = ARE_fixed_to_one,
+                            "chip-select-affinity-level" = chip_select_affinity_level,
+                            "affinity-width" = affinity_width,
+                            "DS-behaviour" = ds_wi_beh,
+                            "SPI-blocks" = spi_blocks,
+                            "PPI-count" = ppi_count,
+                            "ITS-count" = ITS_count,
+                            "ITS-device-bits" = its_device_bits,
+                            "ITS-ID-bits" = its_id_bits,
+                            "chip-id" = chip_id_base + 2,
+                            "max-pe-on-chip" = max_pe_on_chip,
+                            "multichip-threaded-dgi" = multichip_threaded_dgi,
+                            "ITS-collection-ID-bits" = its_collection_id_bits,
+                            "redistributor-power-managed-by-pwrr" = power_managed_by_pwrr,
+                            "extended-spi-count" = extended_spi_count,
+                            "extended-ppi-count" = extended_ppi_count,
+                            "GICD_TYPER2" = gicd_typer2
+        );
+
+        gic3 : GIC700_Filter(
+                            "enabled" = enabled,
+                            "print-memory-map" = print_mmap,
+                            "reg-base" = reg_base + 3 * gic_offset,
+                            "CPU-affinities" = GIC3_CPU_affinities,
+                            "CPU-affinities-file" = CPU_affinities_file,
+                            "ARE-fixed-to-one" = ARE_fixed_to_one,
+                            "chip-select-affinity-level" = chip_select_affinity_level,
+                            "affinity-width" = affinity_width,
+                            "DS-behaviour" = ds_wi_beh,
+                            "SPI-blocks" = spi_blocks,
+                            "PPI-count" = ppi_count,
+                            "ITS-count" = ITS_count,
+                            "ITS-device-bits" = its_device_bits,
+                            "ITS-ID-bits" = its_id_bits,
+                            "chip-id" = chip_id_base + 3,
+                            "max-pe-on-chip" = max_pe_on_chip,
+                            "multichip-threaded-dgi" = multichip_threaded_dgi,
+                            "ITS-collection-ID-bits" = its_collection_id_bits,
+                            "redistributor-power-managed-by-pwrr" = power_managed_by_pwrr,
+                            "extended-spi-count" = extended_spi_count,
+                            "extended-ppi-count" = extended_ppi_count,
+                            "GICD_TYPER2" = gicd_typer2
+        );
+
+        gic4 : GIC700_Filter(
+                            "enabled" = enabled,
+                            "print-memory-map" = print_mmap,
+                            "reg-base" = reg_base + 4 * gic_offset,
+                            "CPU-affinities" = GIC4_CPU_affinities,
+                            "CPU-affinities-file" = CPU_affinities_file,
+                            "ARE-fixed-to-one" = ARE_fixed_to_one,
+                            "chip-select-affinity-level" = chip_select_affinity_level,
+                            "affinity-width" = affinity_width,
+                            "DS-behaviour" = ds_wi_beh,
+                            "SPI-blocks" = spi_blocks,
+                            "PPI-count" = ppi_count,
+                            "ITS-count" = ITS_count,
+                            "ITS-device-bits" = its_device_bits,
+                            "ITS-ID-bits" = its_id_bits,
+                            "chip-id" = chip_id_base + 4,
+                            "max-pe-on-chip" = max_pe_on_chip,
+                            "multichip-threaded-dgi" = multichip_threaded_dgi,
+                            "ITS-collection-ID-bits" = its_collection_id_bits,
+                            "redistributor-power-managed-by-pwrr" = power_managed_by_pwrr,
+                            "extended-spi-count" = extended_spi_count,
+                            "extended-ppi-count" = extended_ppi_count,
+                            "GICD_TYPER2" = gicd_typer2
+        );
+
+        gic5 : GIC700_Filter(
+                            "enabled" = enabled,
+                            "print-memory-map" = print_mmap,
+                            "reg-base" = reg_base + 5 * gic_offset,
+                            "CPU-affinities" = GIC5_CPU_affinities,
+                            "CPU-affinities-file" = CPU_affinities_file,
+                            "ARE-fixed-to-one" = ARE_fixed_to_one,
+                            "chip-select-affinity-level" = chip_select_affinity_level,
+                            "affinity-width" = affinity_width,
+                            "DS-behaviour" = ds_wi_beh,
+                            "SPI-blocks" = spi_blocks,
+                            "PPI-count" = ppi_count,
+                            "ITS-count" = ITS_count,
+                            "ITS-device-bits" = its_device_bits,
+                            "ITS-ID-bits" = its_id_bits,
+                            "chip-id" = chip_id_base + 5,
+                            "max-pe-on-chip" = max_pe_on_chip,
+                            "multichip-threaded-dgi" = multichip_threaded_dgi,
+                            "ITS-collection-ID-bits" = its_collection_id_bits,
+                            "redistributor-power-managed-by-pwrr" = power_managed_by_pwrr,
+                            "extended-spi-count" = extended_spi_count,
+                            "extended-ppi-count" = extended_ppi_count,
+                            "GICD_TYPER2" = gicd_typer2
+        );
+
+        gic6 : GIC700_Filter(
+                            "enabled" = enabled,
+                            "print-memory-map" = print_mmap,
+                            "reg-base" = reg_base + 6 * gic_offset,
+                            "CPU-affinities" = GIC6_CPU_affinities,
+                            "CPU-affinities-file" = CPU_affinities_file,
+                            "ARE-fixed-to-one" = ARE_fixed_to_one,
+                            "chip-select-affinity-level" = chip_select_affinity_level,
+                            "affinity-width" = affinity_width,
+                            "DS-behaviour" = ds_wi_beh,
+                            "SPI-blocks" = spi_blocks,
+                            "PPI-count" = ppi_count,
+                            "ITS-count" = ITS_count,
+                            "ITS-device-bits" = its_device_bits,
+                            "ITS-ID-bits" = its_id_bits,
+                            "chip-id" = chip_id_base + 6,
+                            "max-pe-on-chip" = max_pe_on_chip,
+                            "multichip-threaded-dgi" = multichip_threaded_dgi,
+                            "ITS-collection-ID-bits" = its_collection_id_bits,
+                            "redistributor-power-managed-by-pwrr" = power_managed_by_pwrr,
+                            "extended-spi-count" = extended_spi_count,
+                            "extended-ppi-count" = extended_ppi_count,
+                            "GICD_TYPER2" = gicd_typer2
+        );
+
+        gic7 : GIC700_Filter(
+                            "enabled" = enabled,
+                            "print-memory-map" = print_mmap,
+                            "reg-base" = reg_base + 7 * gic_offset,
+                            "CPU-affinities" = GIC7_CPU_affinities,
+                            "CPU-affinities-file" = CPU_affinities_file,
+                            "ARE-fixed-to-one" = ARE_fixed_to_one,
+                            "chip-select-affinity-level" = chip_select_affinity_level,
+                            "affinity-width" = affinity_width,
+                            "DS-behaviour" = ds_wi_beh,
+                            "SPI-blocks" = spi_blocks,
+                            "PPI-count" = ppi_count,
+                            "ITS-count" = ITS_count,
+                            "ITS-device-bits" = its_device_bits,
+                            "ITS-ID-bits" = its_id_bits,
+                            "chip-id" = chip_id_base + 7,
+                            "max-pe-on-chip" = max_pe_on_chip,
+                            "multichip-threaded-dgi" = multichip_threaded_dgi,
+                            "ITS-collection-ID-bits" = its_collection_id_bits,
+                            "redistributor-power-managed-by-pwrr" = power_managed_by_pwrr,
+                            "extended-spi-count" = extended_spi_count,
+                            "extended-ppi-count" = extended_ppi_count,
+                            "GICD_TYPER2" = gicd_typer2
+        );
+
+        gic8 : GIC700_Filter(
+                            "enabled" = enabled,
+                            "print-memory-map" = print_mmap,
+                            "reg-base" = reg_base + 8 * gic_offset,
+                            "CPU-affinities" = GIC8_CPU_affinities,
+                            "CPU-affinities-file" = CPU_affinities_file,
+                            "ARE-fixed-to-one" = ARE_fixed_to_one,
+                            "chip-select-affinity-level" = chip_select_affinity_level,
+                            "affinity-width" = affinity_width,
+                            "DS-behaviour" = ds_wi_beh,
+                            "SPI-blocks" = spi_blocks,
+                            "PPI-count" = ppi_count,
+                            "ITS-count" = ITS_count,
+                            "ITS-device-bits" = its_device_bits,
+                            "ITS-ID-bits" = its_id_bits,
+                            "chip-id" = chip_id_base + 8,
+                            "max-pe-on-chip" = max_pe_on_chip,
+                            "multichip-threaded-dgi" = multichip_threaded_dgi,
+                            "ITS-collection-ID-bits" = its_collection_id_bits,
+                            "redistributor-power-managed-by-pwrr" = power_managed_by_pwrr,
+                            "extended-spi-count" = extended_spi_count,
+                            "extended-ppi-count" = extended_ppi_count,
+                            "GICD_TYPER2" = gicd_typer2
+        );
+
+        gic9 : GIC700_Filter(
+                            "enabled" = enabled,
+                            "print-memory-map" = print_mmap,
+                            "reg-base" = reg_base + 9 * gic_offset,
+                            "CPU-affinities" = GIC9_CPU_affinities,
+                            "CPU-affinities-file" = CPU_affinities_file,
+                            "ARE-fixed-to-one" = ARE_fixed_to_one,
+                            "chip-select-affinity-level" = chip_select_affinity_level,
+                            "affinity-width" = affinity_width,
+                            "DS-behaviour" = ds_wi_beh,
+                            "SPI-blocks" = spi_blocks,
+                            "PPI-count" = ppi_count,
+                            "ITS-count" = ITS_count,
+                            "ITS-device-bits" = its_device_bits,
+                            "ITS-ID-bits" = its_id_bits,
+                            "chip-id" = chip_id_base + 9,
+                            "max-pe-on-chip" = max_pe_on_chip,
+                            "multichip-threaded-dgi" = multichip_threaded_dgi,
+                            "ITS-collection-ID-bits" = its_collection_id_bits,
+                            "redistributor-power-managed-by-pwrr" = power_managed_by_pwrr,
+                            "extended-spi-count" = extended_spi_count,
+                            "extended-ppi-count" = extended_ppi_count,
+                            "GICD_TYPER2" = gicd_typer2
+        );
+
+        gic10 : GIC700_Filter(
+                            "enabled" = enabled,
+                            "print-memory-map" = print_mmap,
+                            "reg-base" = reg_base + 10 * gic_offset,
+                            "CPU-affinities" = GIC10_CPU_affinities,
+                            "CPU-affinities-file" = CPU_affinities_file,
+                            "ARE-fixed-to-one" = ARE_fixed_to_one,
+                            "chip-select-affinity-level" = chip_select_affinity_level,
+                            "affinity-width" = affinity_width,
+                            "DS-behaviour" = ds_wi_beh,
+                            "SPI-blocks" = spi_blocks,
+                            "PPI-count" = ppi_count,
+                            "ITS-count" = ITS_count,
+                            "ITS-device-bits" = its_device_bits,
+                            "ITS-ID-bits" = its_id_bits,
+                            "chip-id" = chip_id_base + 10,
+                            "max-pe-on-chip" = max_pe_on_chip,
+                            "multichip-threaded-dgi" = multichip_threaded_dgi,
+                            "ITS-collection-ID-bits" = its_collection_id_bits,
+                            "redistributor-power-managed-by-pwrr" = power_managed_by_pwrr,
+                            "extended-spi-count" = extended_spi_count,
+                            "extended-ppi-count" = extended_ppi_count,
+                            "GICD_TYPER2" = gicd_typer2
+        );
+
+        gic11 : GIC700_Filter(
+                            "enabled" = enabled,
+                            "print-memory-map" = print_mmap,
+                            "reg-base" = reg_base + 11 * gic_offset,
+                            "CPU-affinities" = GIC11_CPU_affinities,
+                            "CPU-affinities-file" = CPU_affinities_file,
+                            "ARE-fixed-to-one" = ARE_fixed_to_one,
+                            "chip-select-affinity-level" = chip_select_affinity_level,
+                            "affinity-width" = affinity_width,
+                            "DS-behaviour" = ds_wi_beh,
+                            "SPI-blocks" = spi_blocks,
+                            "PPI-count" = ppi_count,
+                            "ITS-count" = ITS_count,
+                            "ITS-device-bits" = its_device_bits,
+                            "ITS-ID-bits" = its_id_bits,
+                            "chip-id" = chip_id_base + 11,
+                            "max-pe-on-chip" = max_pe_on_chip,
+                            "multichip-threaded-dgi" = multichip_threaded_dgi,
+                            "ITS-collection-ID-bits" = its_collection_id_bits,
+                            "redistributor-power-managed-by-pwrr" = power_managed_by_pwrr,
+                            "extended-spi-count" = extended_spi_count,
+                            "extended-ppi-count" = extended_ppi_count,
+                            "GICD_TYPER2" = gicd_typer2
+        );
+
+        gic12 : GIC700_Filter(
+                            "enabled" = enabled,
+                            "print-memory-map" = print_mmap,
+                            "reg-base" = reg_base + 12 * gic_offset,
+                            "CPU-affinities" = GIC12_CPU_affinities,
+                            "CPU-affinities-file" = CPU_affinities_file,
+                            "ARE-fixed-to-one" = ARE_fixed_to_one,
+                            "chip-select-affinity-level" = chip_select_affinity_level,
+                            "affinity-width" = affinity_width,
+                            "DS-behaviour" = ds_wi_beh,
+                            "SPI-blocks" = spi_blocks,
+                            "PPI-count" = ppi_count,
+                            "ITS-count" = ITS_count,
+                            "ITS-device-bits" = its_device_bits,
+                            "ITS-ID-bits" = its_id_bits,
+                            "chip-id" = chip_id_base + 12,
+                            "max-pe-on-chip" = max_pe_on_chip,
+                            "multichip-threaded-dgi" = multichip_threaded_dgi,
+                            "ITS-collection-ID-bits" = its_collection_id_bits,
+                            "redistributor-power-managed-by-pwrr" = power_managed_by_pwrr,
+                            "extended-spi-count" = extended_spi_count,
+                            "extended-ppi-count" = extended_ppi_count,
+                            "GICD_TYPER2" = gicd_typer2
+        );
+
+        gic13 : GIC700_Filter(
+                            "enabled" = enabled,
+                            "print-memory-map" = print_mmap,
+                            "reg-base" = reg_base + 13 * gic_offset,
+                            "CPU-affinities" = GIC13_CPU_affinities,
+                            "CPU-affinities-file" = CPU_affinities_file,
+                            "ARE-fixed-to-one" = ARE_fixed_to_one,
+                            "chip-select-affinity-level" = chip_select_affinity_level,
+                            "affinity-width" = affinity_width,
+                            "DS-behaviour" = ds_wi_beh,
+                            "SPI-blocks" = spi_blocks,
+                            "PPI-count" = ppi_count,
+                            "ITS-count" = ITS_count,
+                            "ITS-device-bits" = its_device_bits,
+                            "ITS-ID-bits" = its_id_bits,
+                            "chip-id" = chip_id_base + 13,
+                            "max-pe-on-chip" = max_pe_on_chip,
+                            "multichip-threaded-dgi" = multichip_threaded_dgi,
+                            "ITS-collection-ID-bits" = its_collection_id_bits,
+                            "redistributor-power-managed-by-pwrr" = power_managed_by_pwrr,
+                            "extended-spi-count" = extended_spi_count,
+                            "extended-ppi-count" = extended_ppi_count,
+                            "GICD_TYPER2" = gicd_typer2
+        );
+
+        gic14 : GIC700_Filter(
+                            "enabled" = enabled,
+                            "print-memory-map" = print_mmap,
+                            "reg-base" = reg_base + 14 * gic_offset,
+                            "CPU-affinities" = GIC14_CPU_affinities,
+                            "CPU-affinities-file" = CPU_affinities_file,
+                            "ARE-fixed-to-one" = ARE_fixed_to_one,
+                            "chip-select-affinity-level" = chip_select_affinity_level,
+                            "affinity-width" = affinity_width,
+                            "DS-behaviour" = ds_wi_beh,
+                            "SPI-blocks" = spi_blocks,
+                            "PPI-count" = ppi_count,
+                            "ITS-count" = ITS_count,
+                            "ITS-device-bits" = its_device_bits,
+                            "ITS-ID-bits" = its_id_bits,
+                            "chip-id" = chip_id_base + 14,
+                            "max-pe-on-chip" = max_pe_on_chip,
+                            "multichip-threaded-dgi" = multichip_threaded_dgi,
+                            "ITS-collection-ID-bits" = its_collection_id_bits,
+                            "redistributor-power-managed-by-pwrr" = power_managed_by_pwrr,
+                            "extended-spi-count" = extended_spi_count,
+                            "extended-ppi-count" = extended_ppi_count,
+                            "GICD_TYPER2" = gicd_typer2
+        );
+
+        gic15 : GIC700_Filter(
+                            "enabled" = enabled,
+                            "print-memory-map" = print_mmap,
+                            "reg-base" = reg_base + 15 * gic_offset,
+                            "CPU-affinities" = GIC15_CPU_affinities,
+                            "CPU-affinities-file" = CPU_affinities_file,
+                            "ARE-fixed-to-one" = ARE_fixed_to_one,
+                            "chip-select-affinity-level" = chip_select_affinity_level,
+                            "affinity-width" = affinity_width,
+                            "DS-behaviour" = ds_wi_beh,
+                            "SPI-blocks" = spi_blocks,
+                            "PPI-count" = ppi_count,
+                            "ITS-count" = ITS_count,
+                            "ITS-device-bits" = its_device_bits,
+                            "ITS-ID-bits" = its_id_bits,
+                            "chip-id" = chip_id_base + 15,
+                            "max-pe-on-chip" = max_pe_on_chip,
+                            "multichip-threaded-dgi" = multichip_threaded_dgi,
+                            "ITS-collection-ID-bits" = its_collection_id_bits,
+                            "redistributor-power-managed-by-pwrr" = power_managed_by_pwrr,
+                            "extended-spi-count" = extended_spi_count,
+                            "extended-ppi-count" = extended_ppi_count,
+                            "GICD_TYPER2" = gicd_typer2
+        );
+
+    }
+
+    // Control port behavior for gic.pvbus_s address mapping
+    internal slave port<PVBusMapperControl> map_control
+    {
+        slave behavior remap( pv::RemapRequest& req_ ): unsigned
+        {
+            // Get the original address.
+            const pv::bus_addr_t orig = req_.getOriginalTransactionAddress();
+            // Base address of GICs
+            const pv::bus_addr_t base_addr = reg_base;
+
+            if (orig >= base_addr && orig < ((pv::bus_addr_t) reg_base + gic_offset))
+            {
+                return 0; // Gic 0 address space
+            }
+            else if (orig >= base_addr + gic_offset && orig < ((pv::bus_addr_t) reg_base + 2 * gic_offset))
+            {
+                return 1; // Gic 1 addres space
+            }
+            else if (orig >= base_addr + 2 * gic_offset && orig < ((pv::bus_addr_t) reg_base + 3 * gic_offset))
+            {
+                return 2; // Gic 2 addres space
+            }
+            else if (orig >= base_addr + 3 * gic_offset && orig < ((pv::bus_addr_t) reg_base + 4 * gic_offset))
+            {
+                return 3; // Gic 3 addres space
+            }
+            else if (orig >= base_addr + 4 * gic_offset && orig < ((pv::bus_addr_t) reg_base + 5 * gic_offset))
+            {
+                return 4; // Gic 4 addres space
+            }
+            else if (orig >= base_addr + 5 * gic_offset && orig < ((pv::bus_addr_t) reg_base + 6 * gic_offset))
+            {
+                return 5; // Gic 5 addres space
+            }
+            else if (orig >= base_addr + 6 * gic_offset && orig < ((pv::bus_addr_t) reg_base + 7 * gic_offset))
+            {
+                return 6; // Gic 6 addres space
+            }
+            else if (orig >= base_addr + 7 * gic_offset && orig < ((pv::bus_addr_t) reg_base + 8 * gic_offset))
+            {
+                return 7; // Gic 7 addres space
+            }
+            else if (orig >= base_addr + 8 * gic_offset && orig < ((pv::bus_addr_t) reg_base + 9 * gic_offset))
+            {
+                return 8; // Gic 8 addres space
+            }
+            else if (orig >= base_addr + 9 * gic_offset && orig < ((pv::bus_addr_t) reg_base + 10 * gic_offset))
+            {
+                return 9; // Gic 9 addres space
+            }
+            else if (orig >= base_addr + 10 * gic_offset && orig < ((pv::bus_addr_t) reg_base + 11 * gic_offset))
+            {
+                return 10; // Gic 10 addres space
+            }
+            else if (orig >= base_addr + 11 * gic_offset && orig < ((pv::bus_addr_t) reg_base + 12 * gic_offset))
+            {
+                return 11; // Gic 11 addres space
+            }
+            else if (orig >= base_addr + 12 * gic_offset && orig < ((pv::bus_addr_t) reg_base + 13 * gic_offset))
+            {
+                return 12; // Gic 12 addres space
+            }
+            else if (orig >= base_addr + 13 * gic_offset && orig < ((pv::bus_addr_t) reg_base + 14 * gic_offset))
+            {
+                return 13; // Gic 13 addres space
+            }
+            else if (orig >= base_addr + 14 * gic_offset && orig < ((pv::bus_addr_t) reg_base + 15 * gic_offset))
+            {
+                return 14; // Gic 14 addres space
+            }
+            else if (orig >= base_addr + 15 * gic_offset && orig < ((pv::bus_addr_t) reg_base + 16 * gic_offset))
+            {
+                return 15; // Gic 15 addres space
+            }
+            else {
+                return 0;
+            }
+        }
+    }
+
+    connection
+    {
+        //----------PVBUS---------------//
+        slave_mapper.control => self.map_control;
+
+        // Mapper connections for gic slaves
+        self.pvbus_s => slave_mapper.pvbus_s;
+        slave_mapper.pvbus_m[0] => gic0.pvbus_s;    slave_mapper.pvbus_m[1] => gic1.pvbus_s;
+        slave_mapper.pvbus_m[2] => gic2.pvbus_s;    slave_mapper.pvbus_m[3] => gic3.pvbus_s;
+        slave_mapper.pvbus_m[4] => gic4.pvbus_s;    slave_mapper.pvbus_m[5] => gic5.pvbus_s;
+        slave_mapper.pvbus_m[6] => gic6.pvbus_s;    slave_mapper.pvbus_m[7] => gic7.pvbus_s;
+        slave_mapper.pvbus_m[8] => gic8.pvbus_s;    slave_mapper.pvbus_m[9] => gic9.pvbus_s;
+        slave_mapper.pvbus_m[10] => gic10.pvbus_s;  slave_mapper.pvbus_m[11] => gic11.pvbus_s;
+        slave_mapper.pvbus_m[12] => gic12.pvbus_s;  slave_mapper.pvbus_m[13] => gic13.pvbus_s;
+        slave_mapper.pvbus_m[14] => gic14.pvbus_s;  slave_mapper.pvbus_m[15] => gic15.pvbus_s;
+
+        // gic pvbus masters
+        gic0.pvbus_m => self.pvbus_m;   gic1.pvbus_m => self.pvbus_m;   gic2.pvbus_m => self.pvbus_m;
+        gic3.pvbus_m => self.pvbus_m;   gic4.pvbus_m => self.pvbus_m;   gic5.pvbus_m => self.pvbus_m;
+        gic6.pvbus_m => self.pvbus_m;   gic7.pvbus_m => self.pvbus_m;   gic8.pvbus_m => self.pvbus_m;
+        gic9.pvbus_m => self.pvbus_m;   gic10.pvbus_m => self.pvbus_m;  gic11.pvbus_m => self.pvbus_m;
+        gic12.pvbus_m => self.pvbus_m;  gic13.pvbus_m => self.pvbus_m;  gic14.pvbus_m => self.pvbus_m;
+        gic15.pvbus_m => self.pvbus_m;
+
+        // gic pvbus filtermiss port
+        gic0.pvbus_filtermiss_m => self.pvbus_filtermiss_m;     gic1.pvbus_filtermiss_m => self.pvbus_filtermiss_m;
+        gic2.pvbus_filtermiss_m => self.pvbus_filtermiss_m;     gic3.pvbus_filtermiss_m => self.pvbus_filtermiss_m;
+        gic4.pvbus_filtermiss_m => self.pvbus_filtermiss_m;     gic5.pvbus_filtermiss_m => self.pvbus_filtermiss_m;
+        gic6.pvbus_filtermiss_m => self.pvbus_filtermiss_m;     gic7.pvbus_filtermiss_m => self.pvbus_filtermiss_m;
+        gic8.pvbus_filtermiss_m => self.pvbus_filtermiss_m;     gic9.pvbus_filtermiss_m => self.pvbus_filtermiss_m;
+        gic10.pvbus_filtermiss_m => self.pvbus_filtermiss_m;        gic11.pvbus_filtermiss_m => self.pvbus_filtermiss_m;
+        gic12.pvbus_filtermiss_m => self.pvbus_filtermiss_m;        gic13.pvbus_filtermiss_m => self.pvbus_filtermiss_m;
+        gic14.pvbus_filtermiss_m => self.pvbus_filtermiss_m;        gic15.pvbus_filtermiss_m => self.pvbus_filtermiss_m;
+
+        //----------CPU Interface Connections--------//
+
+        // Redistributor masters of the GICs are exposed to CPUs as follows:
+        //        Only the first 8 redistributors from the GIC0 consecutively,
+        //   then only the first 8 redistributors from the GIC1 consecutively,
+        //   then only the first 8 redistributors from the GIC3 consecutively,
+        //   ...
+        //   then only the first 8 redistributors from the GIC15 consecutively.
+        // Make sure that FVP_Base processors are to redistributor indices that connect to initialized GICs
+        // i.e. make sure processors are not connected to non-initialized GICs
+
+        gic0.redistributor_m[0]  => self.redistributor_m[0];
+        gic0.redistributor_m[1]  => self.redistributor_m[1];
+        gic0.redistributor_m[2]  => self.redistributor_m[2];
+        gic0.redistributor_m[3]  => self.redistributor_m[3];
+        gic0.redistributor_m[4]  => self.redistributor_m[4];
+        gic0.redistributor_m[5]  => self.redistributor_m[5];
+        gic0.redistributor_m[6]  => self.redistributor_m[6];
+        gic0.redistributor_m[7]  => self.redistributor_m[7];
+        gic0.redistributor_m[8]  => self.redistributor_m[8];
+        gic0.redistributor_m[9]  => self.redistributor_m[9];
+        gic0.redistributor_m[10] => self.redistributor_m[10];
+        gic0.redistributor_m[11] => self.redistributor_m[11];
+        gic0.redistributor_m[12] => self.redistributor_m[12];
+        gic0.redistributor_m[13] => self.redistributor_m[13];
+        gic0.redistributor_m[14] => self.redistributor_m[14];
+        gic0.redistributor_m[15] => self.redistributor_m[15];
+        //gic0.redistributor_m[16..255] => Not connected. Unused.
+
+        gic1.redistributor_m[0]  => self.redistributor_m[16];
+        gic1.redistributor_m[1]  => self.redistributor_m[17];
+        gic1.redistributor_m[2]  => self.redistributor_m[18];
+        gic1.redistributor_m[3]  => self.redistributor_m[19];
+        gic1.redistributor_m[4]  => self.redistributor_m[20];
+        gic1.redistributor_m[5]  => self.redistributor_m[21];
+        gic1.redistributor_m[6]  => self.redistributor_m[22];
+        gic1.redistributor_m[7]  => self.redistributor_m[23];
+        gic1.redistributor_m[8]  => self.redistributor_m[24];
+        gic1.redistributor_m[9]  => self.redistributor_m[25];
+        gic1.redistributor_m[10] => self.redistributor_m[26];
+        gic1.redistributor_m[11] => self.redistributor_m[27];
+        gic1.redistributor_m[12] => self.redistributor_m[28];
+        gic1.redistributor_m[13] => self.redistributor_m[29];
+        gic1.redistributor_m[14] => self.redistributor_m[30];
+        gic1.redistributor_m[15] => self.redistributor_m[31];
+        //gic1.redistributor_m[16..255] => Not connected. Unused.
+
+        gic2.redistributor_m[0]  => self.redistributor_m[32];
+        gic2.redistributor_m[1]  => self.redistributor_m[33];
+        gic2.redistributor_m[2]  => self.redistributor_m[34];
+        gic2.redistributor_m[3]  => self.redistributor_m[35];
+        gic2.redistributor_m[4]  => self.redistributor_m[36];
+        gic2.redistributor_m[5]  => self.redistributor_m[37];
+        gic2.redistributor_m[6]  => self.redistributor_m[38];
+        gic2.redistributor_m[7]  => self.redistributor_m[39];
+        gic2.redistributor_m[8]  => self.redistributor_m[40];
+        gic2.redistributor_m[9]  => self.redistributor_m[41];
+        gic2.redistributor_m[10] => self.redistributor_m[42];
+        gic2.redistributor_m[11] => self.redistributor_m[43];
+        gic2.redistributor_m[12] => self.redistributor_m[44];
+        gic2.redistributor_m[13] => self.redistributor_m[45];
+        gic2.redistributor_m[14] => self.redistributor_m[46];
+        gic2.redistributor_m[15] => self.redistributor_m[47];
+        //gic2.redistributor_m[16..255] => Not connected. Unused.
+
+        gic3.redistributor_m[0]  => self.redistributor_m[48];
+        gic3.redistributor_m[1]  => self.redistributor_m[49];
+        gic3.redistributor_m[2]  => self.redistributor_m[50];
+        gic3.redistributor_m[3]  => self.redistributor_m[51];
+        gic3.redistributor_m[4]  => self.redistributor_m[52];
+        gic3.redistributor_m[5]  => self.redistributor_m[53];
+        gic3.redistributor_m[6]  => self.redistributor_m[54];
+        gic3.redistributor_m[7]  => self.redistributor_m[55];
+        gic3.redistributor_m[8]  => self.redistributor_m[56];
+        gic3.redistributor_m[9]  => self.redistributor_m[57];
+        gic3.redistributor_m[10] => self.redistributor_m[58];
+        gic3.redistributor_m[11] => self.redistributor_m[59];
+        gic3.redistributor_m[12] => self.redistributor_m[60];
+        gic3.redistributor_m[13] => self.redistributor_m[61];
+        gic3.redistributor_m[14] => self.redistributor_m[62];
+        gic3.redistributor_m[15] => self.redistributor_m[63];
+        //gic3.redistributor_m[16..255] => Not connected. Unused.
+
+        gic4.redistributor_m[0]  => self.redistributor_m[64];
+        gic4.redistributor_m[1]  => self.redistributor_m[65];
+        gic4.redistributor_m[2]  => self.redistributor_m[66];
+        gic4.redistributor_m[3]  => self.redistributor_m[67];
+        gic4.redistributor_m[4]  => self.redistributor_m[68];
+        gic4.redistributor_m[5]  => self.redistributor_m[69];
+        gic4.redistributor_m[6]  => self.redistributor_m[70];
+        gic4.redistributor_m[7]  => self.redistributor_m[71];
+        gic4.redistributor_m[8]  => self.redistributor_m[72];
+        gic4.redistributor_m[9]  => self.redistributor_m[73];
+        gic4.redistributor_m[10] => self.redistributor_m[74];
+        gic4.redistributor_m[11] => self.redistributor_m[75];
+        gic4.redistributor_m[12] => self.redistributor_m[76];
+        gic4.redistributor_m[13] => self.redistributor_m[77];
+        gic4.redistributor_m[14] => self.redistributor_m[78];
+        gic4.redistributor_m[15] => self.redistributor_m[79];
+        //gic4.redistributor_m[16..255] => Not connected. Unused.
+
+        gic5.redistributor_m[0]  => self.redistributor_m[80];
+        gic5.redistributor_m[1]  => self.redistributor_m[81];
+        gic5.redistributor_m[2]  => self.redistributor_m[82];
+        gic5.redistributor_m[3]  => self.redistributor_m[83];
+        gic5.redistributor_m[4]  => self.redistributor_m[84];
+        gic5.redistributor_m[5]  => self.redistributor_m[85];
+        gic5.redistributor_m[6]  => self.redistributor_m[86];
+        gic5.redistributor_m[7]  => self.redistributor_m[87];
+        gic5.redistributor_m[8]  => self.redistributor_m[88];
+        gic5.redistributor_m[9]  => self.redistributor_m[89];
+        gic5.redistributor_m[10] => self.redistributor_m[90];
+        gic5.redistributor_m[11] => self.redistributor_m[91];
+        gic5.redistributor_m[12] => self.redistributor_m[92];
+        gic5.redistributor_m[13] => self.redistributor_m[93];
+        gic5.redistributor_m[14] => self.redistributor_m[94];
+        gic5.redistributor_m[15] => self.redistributor_m[95];
+        //gic5.redistributor_m[16..255] => Not connected. Unused.
+
+        gic6.redistributor_m[0]  => self.redistributor_m[96];
+        gic6.redistributor_m[1]  => self.redistributor_m[97];
+        gic6.redistributor_m[2]  => self.redistributor_m[98];
+        gic6.redistributor_m[3]  => self.redistributor_m[99];
+        gic6.redistributor_m[4]  => self.redistributor_m[100];
+        gic6.redistributor_m[5]  => self.redistributor_m[101];
+        gic6.redistributor_m[6]  => self.redistributor_m[102];
+        gic6.redistributor_m[7]  => self.redistributor_m[103];
+        gic6.redistributor_m[8]  => self.redistributor_m[104];
+        gic6.redistributor_m[9]  => self.redistributor_m[105];
+        gic6.redistributor_m[10] => self.redistributor_m[106];
+        gic6.redistributor_m[11] => self.redistributor_m[107];
+        gic6.redistributor_m[12] => self.redistributor_m[108];
+        gic6.redistributor_m[13] => self.redistributor_m[109];
+        gic6.redistributor_m[14] => self.redistributor_m[110];
+        gic6.redistributor_m[15] => self.redistributor_m[111];
+        //gic6.redistributor_m[16..255] => Not connected. Unused.
+
+        gic7.redistributor_m[0]  => self.redistributor_m[112];
+        gic7.redistributor_m[1]  => self.redistributor_m[113];
+        gic7.redistributor_m[2]  => self.redistributor_m[114];
+        gic7.redistributor_m[3]  => self.redistributor_m[115];
+        gic7.redistributor_m[4]  => self.redistributor_m[116];
+        gic7.redistributor_m[5]  => self.redistributor_m[117];
+        gic7.redistributor_m[6]  => self.redistributor_m[118];
+        gic7.redistributor_m[7]  => self.redistributor_m[119];
+        gic7.redistributor_m[8]  => self.redistributor_m[120];
+        gic7.redistributor_m[9]  => self.redistributor_m[121];
+        gic7.redistributor_m[10] => self.redistributor_m[122];
+        gic7.redistributor_m[11] => self.redistributor_m[123];
+        gic7.redistributor_m[12] => self.redistributor_m[124];
+        gic7.redistributor_m[13] => self.redistributor_m[125];
+        gic7.redistributor_m[14] => self.redistributor_m[126];
+        gic7.redistributor_m[15] => self.redistributor_m[127];
+        //gic7.redistributor_m[16..255] => Not connected. Unused.
+
+        gic8.redistributor_m[0]  => self.redistributor_m[128];
+        gic8.redistributor_m[1]  => self.redistributor_m[129];
+        gic8.redistributor_m[2]  => self.redistributor_m[130];
+        gic8.redistributor_m[3]  => self.redistributor_m[131];
+        gic8.redistributor_m[4]  => self.redistributor_m[132];
+        gic8.redistributor_m[5]  => self.redistributor_m[133];
+        gic8.redistributor_m[6]  => self.redistributor_m[134];
+        gic8.redistributor_m[7]  => self.redistributor_m[135];
+        gic8.redistributor_m[8]  => self.redistributor_m[136];
+        gic8.redistributor_m[9]  => self.redistributor_m[137];
+        gic8.redistributor_m[10] => self.redistributor_m[138];
+        gic8.redistributor_m[11] => self.redistributor_m[139];
+        gic8.redistributor_m[12] => self.redistributor_m[140];
+        gic8.redistributor_m[13] => self.redistributor_m[141];
+        gic8.redistributor_m[14] => self.redistributor_m[142];
+        gic8.redistributor_m[15] => self.redistributor_m[143];
+        //gic8.redistributor_m[16..255] => Not connected. Unused.
+
+        gic9.redistributor_m[0]  => self.redistributor_m[144];
+        gic9.redistributor_m[1]  => self.redistributor_m[145];
+        gic9.redistributor_m[2]  => self.redistributor_m[146];
+        gic9.redistributor_m[3]  => self.redistributor_m[147];
+        gic9.redistributor_m[4]  => self.redistributor_m[148];
+        gic9.redistributor_m[5]  => self.redistributor_m[149];
+        gic9.redistributor_m[6]  => self.redistributor_m[150];
+        gic9.redistributor_m[7]  => self.redistributor_m[151];
+        gic9.redistributor_m[8]  => self.redistributor_m[152];
+        gic9.redistributor_m[9]  => self.redistributor_m[153];
+        gic9.redistributor_m[10] => self.redistributor_m[154];
+        gic9.redistributor_m[11] => self.redistributor_m[155];
+        gic9.redistributor_m[12] => self.redistributor_m[156];
+        gic9.redistributor_m[13] => self.redistributor_m[157];
+        gic9.redistributor_m[14] => self.redistributor_m[158];
+        gic9.redistributor_m[15] => self.redistributor_m[159];
+        //gic9.redistributor_m[16..255] => Not connected. Unused.
+
+        gic10.redistributor_m[0]  => self.redistributor_m[160];
+        gic10.redistributor_m[1]  => self.redistributor_m[161];
+        gic10.redistributor_m[2]  => self.redistributor_m[162];
+        gic10.redistributor_m[3]  => self.redistributor_m[163];
+        gic10.redistributor_m[4]  => self.redistributor_m[164];
+        gic10.redistributor_m[5]  => self.redistributor_m[165];
+        gic10.redistributor_m[6]  => self.redistributor_m[166];
+        gic10.redistributor_m[7]  => self.redistributor_m[167];
+        gic10.redistributor_m[8]  => self.redistributor_m[168];
+        gic10.redistributor_m[9]  => self.redistributor_m[169];
+        gic10.redistributor_m[10] => self.redistributor_m[170];
+        gic10.redistributor_m[11] => self.redistributor_m[171];
+        gic10.redistributor_m[12] => self.redistributor_m[172];
+        gic10.redistributor_m[13] => self.redistributor_m[173];
+        gic10.redistributor_m[14] => self.redistributor_m[174];
+        gic10.redistributor_m[15] => self.redistributor_m[175];
+        //gic10.redistributor_m[16..255] => Not connected. Unused.
+
+        gic11.redistributor_m[0]  => self.redistributor_m[176];
+        gic11.redistributor_m[1]  => self.redistributor_m[177];
+        gic11.redistributor_m[2]  => self.redistributor_m[178];
+        gic11.redistributor_m[3]  => self.redistributor_m[179];
+        gic11.redistributor_m[4]  => self.redistributor_m[180];
+        gic11.redistributor_m[5]  => self.redistributor_m[181];
+        gic11.redistributor_m[6]  => self.redistributor_m[182];
+        gic11.redistributor_m[7]  => self.redistributor_m[183];
+        gic11.redistributor_m[8]  => self.redistributor_m[184];
+        gic11.redistributor_m[9]  => self.redistributor_m[185];
+        gic11.redistributor_m[10] => self.redistributor_m[186];
+        gic11.redistributor_m[11] => self.redistributor_m[187];
+        gic11.redistributor_m[12] => self.redistributor_m[188];
+        gic11.redistributor_m[13] => self.redistributor_m[189];
+        gic11.redistributor_m[14] => self.redistributor_m[190];
+        gic11.redistributor_m[15] => self.redistributor_m[191];
+        //gic11.redistributor_m[16..255] => Not connected. Unused.
+
+        gic12.redistributor_m[0]  => self.redistributor_m[192];
+        gic12.redistributor_m[1]  => self.redistributor_m[193];
+        gic12.redistributor_m[2]  => self.redistributor_m[194];
+        gic12.redistributor_m[3]  => self.redistributor_m[195];
+        gic12.redistributor_m[4]  => self.redistributor_m[196];
+        gic12.redistributor_m[5]  => self.redistributor_m[197];
+        gic12.redistributor_m[6]  => self.redistributor_m[198];
+        gic12.redistributor_m[7]  => self.redistributor_m[199];
+        gic12.redistributor_m[8]  => self.redistributor_m[200];
+        gic12.redistributor_m[9]  => self.redistributor_m[201];
+        gic12.redistributor_m[10] => self.redistributor_m[202];
+        gic12.redistributor_m[11] => self.redistributor_m[203];
+        gic12.redistributor_m[12] => self.redistributor_m[204];
+        gic12.redistributor_m[13] => self.redistributor_m[205];
+        gic12.redistributor_m[14] => self.redistributor_m[206];
+        gic12.redistributor_m[15] => self.redistributor_m[207];
+        //gic12.redistributor_m[16..255] => Not connected. Unused.
+
+        gic13.redistributor_m[0]  => self.redistributor_m[208];
+        gic13.redistributor_m[1]  => self.redistributor_m[209];
+        gic13.redistributor_m[2]  => self.redistributor_m[210];
+        gic13.redistributor_m[3]  => self.redistributor_m[211];
+        gic13.redistributor_m[4]  => self.redistributor_m[212];
+        gic13.redistributor_m[5]  => self.redistributor_m[213];
+        gic13.redistributor_m[6]  => self.redistributor_m[214];
+        gic13.redistributor_m[7]  => self.redistributor_m[215];
+        gic13.redistributor_m[8]  => self.redistributor_m[216];
+        gic13.redistributor_m[9]  => self.redistributor_m[217];
+        gic13.redistributor_m[10] => self.redistributor_m[218];
+        gic13.redistributor_m[11] => self.redistributor_m[219];
+        gic13.redistributor_m[12] => self.redistributor_m[220];
+        gic13.redistributor_m[13] => self.redistributor_m[221];
+        gic13.redistributor_m[14] => self.redistributor_m[222];
+        gic13.redistributor_m[15] => self.redistributor_m[223];
+        //gic13.redistributor_m[16..255] => Not connected. Unused.
+
+        gic14.redistributor_m[0]  => self.redistributor_m[224];
+        gic14.redistributor_m[1]  => self.redistributor_m[225];
+        gic14.redistributor_m[2]  => self.redistributor_m[226];
+        gic14.redistributor_m[3]  => self.redistributor_m[227];
+        gic14.redistributor_m[4]  => self.redistributor_m[228];
+        gic14.redistributor_m[5]  => self.redistributor_m[229];
+        gic14.redistributor_m[6]  => self.redistributor_m[230];
+        gic14.redistributor_m[7]  => self.redistributor_m[231];
+        gic14.redistributor_m[8]  => self.redistributor_m[232];
+        gic14.redistributor_m[9]  => self.redistributor_m[233];
+        gic14.redistributor_m[10] => self.redistributor_m[234];
+        gic14.redistributor_m[11] => self.redistributor_m[235];
+        gic14.redistributor_m[12] => self.redistributor_m[236];
+        gic14.redistributor_m[13] => self.redistributor_m[237];
+        gic14.redistributor_m[14] => self.redistributor_m[238];
+        gic14.redistributor_m[15] => self.redistributor_m[239];
+        //gic14.redistributor_m[16..255] => Not connected. Unused.
+
+        gic15.redistributor_m[0]  => self.redistributor_m[240];
+        gic15.redistributor_m[1]  => self.redistributor_m[241];
+        gic15.redistributor_m[2]  => self.redistributor_m[242];
+        gic15.redistributor_m[3]  => self.redistributor_m[243];
+        gic15.redistributor_m[4]  => self.redistributor_m[244];
+        gic15.redistributor_m[5]  => self.redistributor_m[245];
+        gic15.redistributor_m[6]  => self.redistributor_m[246];
+        gic15.redistributor_m[7]  => self.redistributor_m[247];
+        gic15.redistributor_m[8]  => self.redistributor_m[248];
+        gic15.redistributor_m[9]  => self.redistributor_m[249];
+        gic15.redistributor_m[10] => self.redistributor_m[250];
+        gic15.redistributor_m[11] => self.redistributor_m[251];
+        gic15.redistributor_m[12] => self.redistributor_m[252];
+        gic15.redistributor_m[13] => self.redistributor_m[253];
+        gic15.redistributor_m[14] => self.redistributor_m[254];
+        gic15.redistributor_m[15] => self.redistributor_m[255];
+        //gic15.redistributor_m[16..255] => Not connected. Unused.
+
+        //---------Interrupt Lines Connections---------//
+
+        self._reset => gic0.reset;              self._reset => gic1.reset;              self._reset => gic2.reset;
+        self._reset => gic3.reset;              self._reset => gic4.reset;              self._reset => gic5.reset;
+        self._reset => gic6.reset;              self._reset => gic7.reset;              self._reset => gic8.reset;
+        self._reset => gic9.reset;              self._reset => gic10.reset;             self._reset => gic11.reset;
+        self._reset => gic12.reset;             self._reset => gic13.reset;             self._reset => gic14.reset;
+        self._reset => gic15.reset;
+
+        self.po_reset => gic0.po_reset;         self.po_reset => gic1.po_reset;         self.po_reset => gic2.po_reset;
+        self.po_reset => gic3.po_reset;         self.po_reset => gic4.po_reset;         self.po_reset => gic5.po_reset;
+        self.po_reset => gic6.po_reset;         self.po_reset => gic7.po_reset;         self.po_reset => gic8.po_reset;
+        self.po_reset => gic9.po_reset;         self.po_reset => gic10.po_reset;        self.po_reset => gic11.po_reset;
+        self.po_reset => gic12.po_reset;        self.po_reset => gic13.po_reset;        self.po_reset => gic14.po_reset;
+        self.po_reset => gic15.po_reset;
+
+        self.wake_request => gic0.wake_request;     self.wake_request => gic1.wake_request;         self.wake_request => gic2.wake_request;
+        self.wake_request => gic3.wake_request;     self.wake_request => gic4.wake_request;         self.wake_request => gic5.wake_request;
+        self.wake_request => gic6.wake_request;     self.wake_request => gic7.wake_request;         self.wake_request => gic8.wake_request;
+        self.wake_request => gic9.wake_request;     self.wake_request => gic10.wake_request;        self.wake_request => gic11.wake_request;
+        self.wake_request => gic12.wake_request;    self.wake_request => gic13.wake_request;        self.wake_request => gic14.wake_request;
+        self.wake_request => gic15.wake_request;
+
+        // Each gic is connected to 10 spi lines
+        self.spi_in[0] => gic0.spi_in[0];                self.spi_in[1] => gic0.spi_in[1];                self.spi_in[2] => gic0.spi_in[2];
+        self.spi_in[3] => gic0.spi_in[3];                self.spi_in[4] => gic0.spi_in[4];                self.spi_in[5] => gic0.spi_in[5];
+        self.spi_in[6] => gic0.spi_in[6];                self.spi_in[7] => gic0.spi_in[7];                self.spi_in[8] => gic0.spi_in[8];
+        self.spi_in[9] => gic0.spi_in[9];                self.spi_in[10] => gic0.spi_in[10];                self.spi_in[11] => gic0.spi_in[11];
+        self.spi_in[12] => gic0.spi_in[12];                self.spi_in[13] => gic0.spi_in[13];                self.spi_in[14] => gic0.spi_in[14];
+        self.spi_in[15] => gic0.spi_in[15];                self.spi_in[16] => gic0.spi_in[16];                self.spi_in[17] => gic0.spi_in[17];
+        self.spi_in[18] => gic0.spi_in[18];                self.spi_in[19] => gic0.spi_in[19];                self.spi_in[20] => gic0.spi_in[20];
+        self.spi_in[21] => gic0.spi_in[21];                self.spi_in[22] => gic0.spi_in[22];                self.spi_in[23] => gic0.spi_in[23];
+        self.spi_in[24] => gic0.spi_in[24];                self.spi_in[25] => gic0.spi_in[25];                self.spi_in[26] => gic0.spi_in[26];
+        self.spi_in[27] => gic0.spi_in[27];                self.spi_in[28] => gic0.spi_in[28];                self.spi_in[29] => gic0.spi_in[29];
+        self.spi_in[30] => gic0.spi_in[30];                self.spi_in[31] => gic0.spi_in[31];                self.spi_in[32] => gic0.spi_in[32];
+        self.spi_in[33] => gic0.spi_in[33];                self.spi_in[34] => gic0.spi_in[34];                self.spi_in[35] => gic0.spi_in[35];
+        self.spi_in[36] => gic0.spi_in[36];                self.spi_in[37] => gic0.spi_in[37];                self.spi_in[38] => gic0.spi_in[38];
+        self.spi_in[39] => gic0.spi_in[39];                self.spi_in[40] => gic0.spi_in[40];                self.spi_in[41] => gic0.spi_in[41];
+        self.spi_in[42] => gic0.spi_in[42];                self.spi_in[43] => gic0.spi_in[43];                self.spi_in[44] => gic0.spi_in[44];
+        self.spi_in[45] => gic0.spi_in[45];                self.spi_in[46] => gic0.spi_in[46];                self.spi_in[47] => gic0.spi_in[47];
+        self.spi_in[48] => gic0.spi_in[48];                self.spi_in[49] => gic0.spi_in[49];                self.spi_in[50] => gic0.spi_in[50];
+        self.spi_in[51] => gic0.spi_in[51];                self.spi_in[52] => gic0.spi_in[52];                self.spi_in[53] => gic0.spi_in[53];
+        self.spi_in[54] => gic0.spi_in[54];                self.spi_in[55] => gic0.spi_in[55];                self.spi_in[56] => gic0.spi_in[56];
+        self.spi_in[57] => gic0.spi_in[57];                self.spi_in[58] => gic0.spi_in[58];                self.spi_in[59] => gic0.spi_in[59];
+        self.spi_in[60] => gic1.spi_in[60];                self.spi_in[61] => gic1.spi_in[61];                self.spi_in[62] => gic1.spi_in[62];
+        self.spi_in[63] => gic1.spi_in[63];                self.spi_in[64] => gic1.spi_in[64];                self.spi_in[65] => gic1.spi_in[65];
+        self.spi_in[66] => gic1.spi_in[66];                self.spi_in[67] => gic1.spi_in[67];                self.spi_in[68] => gic1.spi_in[68];
+        self.spi_in[69] => gic1.spi_in[69];                self.spi_in[70] => gic1.spi_in[70];                self.spi_in[71] => gic1.spi_in[71];
+        self.spi_in[72] => gic1.spi_in[72];                self.spi_in[73] => gic1.spi_in[73];                self.spi_in[74] => gic1.spi_in[74];
+        self.spi_in[75] => gic1.spi_in[75];                self.spi_in[76] => gic1.spi_in[76];                self.spi_in[77] => gic1.spi_in[77];
+        self.spi_in[78] => gic1.spi_in[78];                self.spi_in[79] => gic1.spi_in[79];                self.spi_in[80] => gic1.spi_in[80];
+        self.spi_in[81] => gic1.spi_in[81];                self.spi_in[82] => gic1.spi_in[82];                self.spi_in[83] => gic1.spi_in[83];
+        self.spi_in[84] => gic1.spi_in[84];                self.spi_in[85] => gic1.spi_in[85];                self.spi_in[86] => gic1.spi_in[86];
+        self.spi_in[87] => gic1.spi_in[87];                self.spi_in[88] => gic1.spi_in[88];                self.spi_in[89] => gic1.spi_in[89];
+        self.spi_in[90] => gic1.spi_in[90];                self.spi_in[91] => gic1.spi_in[91];                self.spi_in[92] => gic1.spi_in[92];
+        self.spi_in[93] => gic1.spi_in[93];                self.spi_in[94] => gic1.spi_in[94];                self.spi_in[95] => gic1.spi_in[95];
+        self.spi_in[96] => gic1.spi_in[96];                self.spi_in[97] => gic1.spi_in[97];                self.spi_in[98] => gic1.spi_in[98];
+        self.spi_in[99] => gic1.spi_in[99];                self.spi_in[100] => gic1.spi_in[100];                self.spi_in[101] => gic1.spi_in[101];
+        self.spi_in[102] => gic1.spi_in[102];                self.spi_in[103] => gic1.spi_in[103];                self.spi_in[104] => gic1.spi_in[104];
+        self.spi_in[105] => gic1.spi_in[105];                self.spi_in[106] => gic1.spi_in[106];                self.spi_in[107] => gic1.spi_in[107];
+        self.spi_in[108] => gic1.spi_in[108];                self.spi_in[109] => gic1.spi_in[109];                self.spi_in[110] => gic1.spi_in[110];
+        self.spi_in[111] => gic1.spi_in[111];                self.spi_in[112] => gic1.spi_in[112];                self.spi_in[113] => gic1.spi_in[113];
+        self.spi_in[114] => gic1.spi_in[114];                self.spi_in[115] => gic1.spi_in[115];                self.spi_in[116] => gic1.spi_in[116];
+        self.spi_in[117] => gic1.spi_in[117];                self.spi_in[118] => gic1.spi_in[118];                self.spi_in[119] => gic1.spi_in[119];
+        self.spi_in[120] => gic2.spi_in[120];                self.spi_in[121] => gic2.spi_in[121];                self.spi_in[122] => gic2.spi_in[122];
+        self.spi_in[123] => gic2.spi_in[123];                self.spi_in[124] => gic2.spi_in[124];                self.spi_in[125] => gic2.spi_in[125];
+        self.spi_in[126] => gic2.spi_in[126];                self.spi_in[127] => gic2.spi_in[127];                self.spi_in[128] => gic2.spi_in[128];
+        self.spi_in[129] => gic2.spi_in[129];                self.spi_in[130] => gic2.spi_in[130];                self.spi_in[131] => gic2.spi_in[131];
+        self.spi_in[132] => gic2.spi_in[132];                self.spi_in[133] => gic2.spi_in[133];                self.spi_in[134] => gic2.spi_in[134];
+        self.spi_in[135] => gic2.spi_in[135];                self.spi_in[136] => gic2.spi_in[136];                self.spi_in[137] => gic2.spi_in[137];
+        self.spi_in[138] => gic2.spi_in[138];                self.spi_in[139] => gic2.spi_in[139];                self.spi_in[140] => gic2.spi_in[140];
+        self.spi_in[141] => gic2.spi_in[141];                self.spi_in[142] => gic2.spi_in[142];                self.spi_in[143] => gic2.spi_in[143];
+        self.spi_in[144] => gic2.spi_in[144];                self.spi_in[145] => gic2.spi_in[145];                self.spi_in[146] => gic2.spi_in[146];
+        self.spi_in[147] => gic2.spi_in[147];                self.spi_in[148] => gic2.spi_in[148];                self.spi_in[149] => gic2.spi_in[149];
+        self.spi_in[150] => gic2.spi_in[150];                self.spi_in[151] => gic2.spi_in[151];                self.spi_in[152] => gic2.spi_in[152];
+        self.spi_in[153] => gic2.spi_in[153];                self.spi_in[154] => gic2.spi_in[154];                self.spi_in[155] => gic2.spi_in[155];
+        self.spi_in[156] => gic2.spi_in[156];                self.spi_in[157] => gic2.spi_in[157];                self.spi_in[158] => gic2.spi_in[158];
+        self.spi_in[159] => gic2.spi_in[159];                self.spi_in[160] => gic2.spi_in[160];                self.spi_in[161] => gic2.spi_in[161];
+        self.spi_in[162] => gic2.spi_in[162];                self.spi_in[163] => gic2.spi_in[163];                self.spi_in[164] => gic2.spi_in[164];
+        self.spi_in[165] => gic2.spi_in[165];                self.spi_in[166] => gic2.spi_in[166];                self.spi_in[167] => gic2.spi_in[167];
+        self.spi_in[168] => gic2.spi_in[168];                self.spi_in[169] => gic2.spi_in[169];                self.spi_in[170] => gic2.spi_in[170];
+        self.spi_in[171] => gic2.spi_in[171];                self.spi_in[172] => gic2.spi_in[172];                self.spi_in[173] => gic2.spi_in[173];
+        self.spi_in[174] => gic2.spi_in[174];                self.spi_in[175] => gic2.spi_in[175];                self.spi_in[176] => gic2.spi_in[176];
+        self.spi_in[177] => gic2.spi_in[177];                self.spi_in[178] => gic2.spi_in[178];                self.spi_in[179] => gic2.spi_in[179];
+        self.spi_in[180] => gic3.spi_in[180];                self.spi_in[181] => gic3.spi_in[181];                self.spi_in[182] => gic3.spi_in[182];
+        self.spi_in[183] => gic3.spi_in[183];                self.spi_in[184] => gic3.spi_in[184];                self.spi_in[185] => gic3.spi_in[185];
+        self.spi_in[186] => gic3.spi_in[186];                self.spi_in[187] => gic3.spi_in[187];                self.spi_in[188] => gic3.spi_in[188];
+        self.spi_in[189] => gic3.spi_in[189];                self.spi_in[190] => gic3.spi_in[190];                self.spi_in[191] => gic3.spi_in[191];
+        self.spi_in[192] => gic3.spi_in[192];                self.spi_in[193] => gic3.spi_in[193];                self.spi_in[194] => gic3.spi_in[194];
+        self.spi_in[195] => gic3.spi_in[195];                self.spi_in[196] => gic3.spi_in[196];                self.spi_in[197] => gic3.spi_in[197];
+        self.spi_in[198] => gic3.spi_in[198];                self.spi_in[199] => gic3.spi_in[199];                self.spi_in[200] => gic3.spi_in[200];
+        self.spi_in[201] => gic3.spi_in[201];                self.spi_in[202] => gic3.spi_in[202];                self.spi_in[203] => gic3.spi_in[203];
+        self.spi_in[204] => gic3.spi_in[204];                self.spi_in[205] => gic3.spi_in[205];                self.spi_in[206] => gic3.spi_in[206];
+        self.spi_in[207] => gic3.spi_in[207];                self.spi_in[208] => gic3.spi_in[208];                self.spi_in[209] => gic3.spi_in[209];
+        self.spi_in[210] => gic3.spi_in[210];                self.spi_in[211] => gic3.spi_in[211];                self.spi_in[212] => gic3.spi_in[212];
+        self.spi_in[213] => gic3.spi_in[213];                self.spi_in[214] => gic3.spi_in[214];                self.spi_in[215] => gic3.spi_in[215];
+        self.spi_in[216] => gic3.spi_in[216];                self.spi_in[217] => gic3.spi_in[217];                self.spi_in[218] => gic3.spi_in[218];
+        self.spi_in[219] => gic3.spi_in[219];                self.spi_in[220] => gic3.spi_in[220];                self.spi_in[221] => gic3.spi_in[221];
+        self.spi_in[222] => gic3.spi_in[222];                self.spi_in[223] => gic3.spi_in[223];                self.spi_in[224] => gic3.spi_in[224];
+        self.spi_in[225] => gic3.spi_in[225];                self.spi_in[226] => gic3.spi_in[226];                self.spi_in[227] => gic3.spi_in[227];
+        self.spi_in[228] => gic3.spi_in[228];                self.spi_in[229] => gic3.spi_in[229];                self.spi_in[230] => gic3.spi_in[230];
+        self.spi_in[231] => gic3.spi_in[231];                self.spi_in[232] => gic3.spi_in[232];                self.spi_in[233] => gic3.spi_in[233];
+        self.spi_in[234] => gic3.spi_in[234];                self.spi_in[235] => gic3.spi_in[235];                self.spi_in[236] => gic3.spi_in[236];
+        self.spi_in[237] => gic3.spi_in[237];                self.spi_in[238] => gic3.spi_in[238];                self.spi_in[239] => gic3.spi_in[239];
+        self.spi_in[240] => gic4.spi_in[240];                self.spi_in[241] => gic4.spi_in[241];                self.spi_in[242] => gic4.spi_in[242];
+        self.spi_in[243] => gic4.spi_in[243];                self.spi_in[244] => gic4.spi_in[244];                self.spi_in[245] => gic4.spi_in[245];
+        self.spi_in[246] => gic4.spi_in[246];                self.spi_in[247] => gic4.spi_in[247];                self.spi_in[248] => gic4.spi_in[248];
+        self.spi_in[249] => gic4.spi_in[249];                self.spi_in[250] => gic4.spi_in[250];                self.spi_in[251] => gic4.spi_in[251];
+        self.spi_in[252] => gic4.spi_in[252];                self.spi_in[253] => gic4.spi_in[253];                self.spi_in[254] => gic4.spi_in[254];
+        self.spi_in[255] => gic4.spi_in[255];                self.spi_in[256] => gic4.spi_in[256];                self.spi_in[257] => gic4.spi_in[257];
+        self.spi_in[258] => gic4.spi_in[258];                self.spi_in[259] => gic4.spi_in[259];                self.spi_in[260] => gic4.spi_in[260];
+        self.spi_in[261] => gic4.spi_in[261];                self.spi_in[262] => gic4.spi_in[262];                self.spi_in[263] => gic4.spi_in[263];
+        self.spi_in[264] => gic4.spi_in[264];                self.spi_in[265] => gic4.spi_in[265];                self.spi_in[266] => gic4.spi_in[266];
+        self.spi_in[267] => gic4.spi_in[267];                self.spi_in[268] => gic4.spi_in[268];                self.spi_in[269] => gic4.spi_in[269];
+        self.spi_in[270] => gic4.spi_in[270];                self.spi_in[271] => gic4.spi_in[271];                self.spi_in[272] => gic4.spi_in[272];
+        self.spi_in[273] => gic4.spi_in[273];                self.spi_in[274] => gic4.spi_in[274];                self.spi_in[275] => gic4.spi_in[275];
+        self.spi_in[276] => gic4.spi_in[276];                self.spi_in[277] => gic4.spi_in[277];                self.spi_in[278] => gic4.spi_in[278];
+        self.spi_in[279] => gic4.spi_in[279];                self.spi_in[280] => gic4.spi_in[280];                self.spi_in[281] => gic4.spi_in[281];
+        self.spi_in[282] => gic4.spi_in[282];                self.spi_in[283] => gic4.spi_in[283];                self.spi_in[284] => gic4.spi_in[284];
+        self.spi_in[285] => gic4.spi_in[285];                self.spi_in[286] => gic4.spi_in[286];                self.spi_in[287] => gic4.spi_in[287];
+        self.spi_in[288] => gic4.spi_in[288];                self.spi_in[289] => gic4.spi_in[289];                self.spi_in[290] => gic4.spi_in[290];
+        self.spi_in[291] => gic4.spi_in[291];                self.spi_in[292] => gic4.spi_in[292];                self.spi_in[293] => gic4.spi_in[293];
+        self.spi_in[294] => gic4.spi_in[294];                self.spi_in[295] => gic4.spi_in[295];                self.spi_in[296] => gic4.spi_in[296];
+        self.spi_in[297] => gic4.spi_in[297];                self.spi_in[298] => gic4.spi_in[298];                self.spi_in[299] => gic4.spi_in[299];
+        self.spi_in[300] => gic5.spi_in[300];                self.spi_in[301] => gic5.spi_in[301];                self.spi_in[302] => gic5.spi_in[302];
+        self.spi_in[303] => gic5.spi_in[303];                self.spi_in[304] => gic5.spi_in[304];                self.spi_in[305] => gic5.spi_in[305];
+        self.spi_in[306] => gic5.spi_in[306];                self.spi_in[307] => gic5.spi_in[307];                self.spi_in[308] => gic5.spi_in[308];
+        self.spi_in[309] => gic5.spi_in[309];                self.spi_in[310] => gic5.spi_in[310];                self.spi_in[311] => gic5.spi_in[311];
+        self.spi_in[312] => gic5.spi_in[312];                self.spi_in[313] => gic5.spi_in[313];                self.spi_in[314] => gic5.spi_in[314];
+        self.spi_in[315] => gic5.spi_in[315];                self.spi_in[316] => gic5.spi_in[316];                self.spi_in[317] => gic5.spi_in[317];
+        self.spi_in[318] => gic5.spi_in[318];                self.spi_in[319] => gic5.spi_in[319];                self.spi_in[320] => gic5.spi_in[320];
+        self.spi_in[321] => gic5.spi_in[321];                self.spi_in[322] => gic5.spi_in[322];                self.spi_in[323] => gic5.spi_in[323];
+        self.spi_in[324] => gic5.spi_in[324];                self.spi_in[325] => gic5.spi_in[325];                self.spi_in[326] => gic5.spi_in[326];
+        self.spi_in[327] => gic5.spi_in[327];                self.spi_in[328] => gic5.spi_in[328];                self.spi_in[329] => gic5.spi_in[329];
+        self.spi_in[330] => gic5.spi_in[330];                self.spi_in[331] => gic5.spi_in[331];                self.spi_in[332] => gic5.spi_in[332];
+        self.spi_in[333] => gic5.spi_in[333];                self.spi_in[334] => gic5.spi_in[334];                self.spi_in[335] => gic5.spi_in[335];
+        self.spi_in[336] => gic5.spi_in[336];                self.spi_in[337] => gic5.spi_in[337];                self.spi_in[338] => gic5.spi_in[338];
+        self.spi_in[339] => gic5.spi_in[339];                self.spi_in[340] => gic5.spi_in[340];                self.spi_in[341] => gic5.spi_in[341];
+        self.spi_in[342] => gic5.spi_in[342];                self.spi_in[343] => gic5.spi_in[343];                self.spi_in[344] => gic5.spi_in[344];
+        self.spi_in[345] => gic5.spi_in[345];                self.spi_in[346] => gic5.spi_in[346];                self.spi_in[347] => gic5.spi_in[347];
+        self.spi_in[348] => gic5.spi_in[348];                self.spi_in[349] => gic5.spi_in[349];                self.spi_in[350] => gic5.spi_in[350];
+        self.spi_in[351] => gic5.spi_in[351];                self.spi_in[352] => gic5.spi_in[352];                self.spi_in[353] => gic5.spi_in[353];
+        self.spi_in[354] => gic5.spi_in[354];                self.spi_in[355] => gic5.spi_in[355];                self.spi_in[356] => gic5.spi_in[356];
+        self.spi_in[357] => gic5.spi_in[357];                self.spi_in[358] => gic5.spi_in[358];                self.spi_in[359] => gic5.spi_in[359];
+        self.spi_in[360] => gic6.spi_in[360];                self.spi_in[361] => gic6.spi_in[361];                self.spi_in[362] => gic6.spi_in[362];
+        self.spi_in[363] => gic6.spi_in[363];                self.spi_in[364] => gic6.spi_in[364];                self.spi_in[365] => gic6.spi_in[365];
+        self.spi_in[366] => gic6.spi_in[366];                self.spi_in[367] => gic6.spi_in[367];                self.spi_in[368] => gic6.spi_in[368];
+        self.spi_in[369] => gic6.spi_in[369];                self.spi_in[370] => gic6.spi_in[370];                self.spi_in[371] => gic6.spi_in[371];
+        self.spi_in[372] => gic6.spi_in[372];                self.spi_in[373] => gic6.spi_in[373];                self.spi_in[374] => gic6.spi_in[374];
+        self.spi_in[375] => gic6.spi_in[375];                self.spi_in[376] => gic6.spi_in[376];                self.spi_in[377] => gic6.spi_in[377];
+        self.spi_in[378] => gic6.spi_in[378];                self.spi_in[379] => gic6.spi_in[379];                self.spi_in[380] => gic6.spi_in[380];
+        self.spi_in[381] => gic6.spi_in[381];                self.spi_in[382] => gic6.spi_in[382];                self.spi_in[383] => gic6.spi_in[383];
+        self.spi_in[384] => gic6.spi_in[384];                self.spi_in[385] => gic6.spi_in[385];                self.spi_in[386] => gic6.spi_in[386];
+        self.spi_in[387] => gic6.spi_in[387];                self.spi_in[388] => gic6.spi_in[388];                self.spi_in[389] => gic6.spi_in[389];
+        self.spi_in[390] => gic6.spi_in[390];                self.spi_in[391] => gic6.spi_in[391];                self.spi_in[392] => gic6.spi_in[392];
+        self.spi_in[393] => gic6.spi_in[393];                self.spi_in[394] => gic6.spi_in[394];                self.spi_in[395] => gic6.spi_in[395];
+        self.spi_in[396] => gic6.spi_in[396];                self.spi_in[397] => gic6.spi_in[397];                self.spi_in[398] => gic6.spi_in[398];
+        self.spi_in[399] => gic6.spi_in[399];                self.spi_in[400] => gic6.spi_in[400];                self.spi_in[401] => gic6.spi_in[401];
+        self.spi_in[402] => gic6.spi_in[402];                self.spi_in[403] => gic6.spi_in[403];                self.spi_in[404] => gic6.spi_in[404];
+        self.spi_in[405] => gic6.spi_in[405];                self.spi_in[406] => gic6.spi_in[406];                self.spi_in[407] => gic6.spi_in[407];
+        self.spi_in[408] => gic6.spi_in[408];                self.spi_in[409] => gic6.spi_in[409];                self.spi_in[410] => gic6.spi_in[410];
+        self.spi_in[411] => gic6.spi_in[411];                self.spi_in[412] => gic6.spi_in[412];                self.spi_in[413] => gic6.spi_in[413];
+        self.spi_in[414] => gic6.spi_in[414];                self.spi_in[415] => gic6.spi_in[415];                self.spi_in[416] => gic6.spi_in[416];
+        self.spi_in[417] => gic6.spi_in[417];                self.spi_in[418] => gic6.spi_in[418];                self.spi_in[419] => gic6.spi_in[419];
+        self.spi_in[420] => gic7.spi_in[420];                self.spi_in[421] => gic7.spi_in[421];                self.spi_in[422] => gic7.spi_in[422];
+        self.spi_in[423] => gic7.spi_in[423];                self.spi_in[424] => gic7.spi_in[424];                self.spi_in[425] => gic7.spi_in[425];
+        self.spi_in[426] => gic7.spi_in[426];                self.spi_in[427] => gic7.spi_in[427];                self.spi_in[428] => gic7.spi_in[428];
+        self.spi_in[429] => gic7.spi_in[429];                self.spi_in[430] => gic7.spi_in[430];                self.spi_in[431] => gic7.spi_in[431];
+        self.spi_in[432] => gic7.spi_in[432];                self.spi_in[433] => gic7.spi_in[433];                self.spi_in[434] => gic7.spi_in[434];
+        self.spi_in[435] => gic7.spi_in[435];                self.spi_in[436] => gic7.spi_in[436];                self.spi_in[437] => gic7.spi_in[437];
+        self.spi_in[438] => gic7.spi_in[438];                self.spi_in[439] => gic7.spi_in[439];                self.spi_in[440] => gic7.spi_in[440];
+        self.spi_in[441] => gic7.spi_in[441];                self.spi_in[442] => gic7.spi_in[442];                self.spi_in[443] => gic7.spi_in[443];
+        self.spi_in[444] => gic7.spi_in[444];                self.spi_in[445] => gic7.spi_in[445];                self.spi_in[446] => gic7.spi_in[446];
+        self.spi_in[447] => gic7.spi_in[447];                self.spi_in[448] => gic7.spi_in[448];                self.spi_in[449] => gic7.spi_in[449];
+        self.spi_in[450] => gic7.spi_in[450];                self.spi_in[451] => gic7.spi_in[451];                self.spi_in[452] => gic7.spi_in[452];
+        self.spi_in[453] => gic7.spi_in[453];                self.spi_in[454] => gic7.spi_in[454];                self.spi_in[455] => gic7.spi_in[455];
+        self.spi_in[456] => gic7.spi_in[456];                self.spi_in[457] => gic7.spi_in[457];                self.spi_in[458] => gic7.spi_in[458];
+        self.spi_in[459] => gic7.spi_in[459];                self.spi_in[460] => gic7.spi_in[460];                self.spi_in[461] => gic7.spi_in[461];
+        self.spi_in[462] => gic7.spi_in[462];                self.spi_in[463] => gic7.spi_in[463];                self.spi_in[464] => gic7.spi_in[464];
+        self.spi_in[465] => gic7.spi_in[465];                self.spi_in[466] => gic7.spi_in[466];                self.spi_in[467] => gic7.spi_in[467];
+        self.spi_in[468] => gic7.spi_in[468];                self.spi_in[469] => gic7.spi_in[469];                self.spi_in[470] => gic7.spi_in[470];
+        self.spi_in[471] => gic7.spi_in[471];                self.spi_in[472] => gic7.spi_in[472];                self.spi_in[473] => gic7.spi_in[473];
+        self.spi_in[474] => gic7.spi_in[474];                self.spi_in[475] => gic7.spi_in[475];                self.spi_in[476] => gic7.spi_in[476];
+        self.spi_in[477] => gic7.spi_in[477];                self.spi_in[478] => gic7.spi_in[478];                self.spi_in[479] => gic7.spi_in[479];
+        self.spi_in[480] => gic8.spi_in[480];                self.spi_in[481] => gic8.spi_in[481];                self.spi_in[482] => gic8.spi_in[482];
+        self.spi_in[483] => gic8.spi_in[483];                self.spi_in[484] => gic8.spi_in[484];                self.spi_in[485] => gic8.spi_in[485];
+        self.spi_in[486] => gic8.spi_in[486];                self.spi_in[487] => gic8.spi_in[487];                self.spi_in[488] => gic8.spi_in[488];
+        self.spi_in[489] => gic8.spi_in[489];                self.spi_in[490] => gic8.spi_in[490];                self.spi_in[491] => gic8.spi_in[491];
+        self.spi_in[492] => gic8.spi_in[492];                self.spi_in[493] => gic8.spi_in[493];                self.spi_in[494] => gic8.spi_in[494];
+        self.spi_in[495] => gic8.spi_in[495];                self.spi_in[496] => gic8.spi_in[496];                self.spi_in[497] => gic8.spi_in[497];
+        self.spi_in[498] => gic8.spi_in[498];                self.spi_in[499] => gic8.spi_in[499];                self.spi_in[500] => gic8.spi_in[500];
+        self.spi_in[501] => gic8.spi_in[501];                self.spi_in[502] => gic8.spi_in[502];                self.spi_in[503] => gic8.spi_in[503];
+        self.spi_in[504] => gic8.spi_in[504];                self.spi_in[505] => gic8.spi_in[505];                self.spi_in[506] => gic8.spi_in[506];
+        self.spi_in[507] => gic8.spi_in[507];                self.spi_in[508] => gic8.spi_in[508];                self.spi_in[509] => gic8.spi_in[509];
+        self.spi_in[510] => gic8.spi_in[510];                self.spi_in[511] => gic8.spi_in[511];                self.spi_in[512] => gic8.spi_in[512];
+        self.spi_in[513] => gic8.spi_in[513];                self.spi_in[514] => gic8.spi_in[514];                self.spi_in[515] => gic8.spi_in[515];
+        self.spi_in[516] => gic8.spi_in[516];                self.spi_in[517] => gic8.spi_in[517];                self.spi_in[518] => gic8.spi_in[518];
+        self.spi_in[519] => gic8.spi_in[519];                self.spi_in[520] => gic8.spi_in[520];                self.spi_in[521] => gic8.spi_in[521];
+        self.spi_in[522] => gic8.spi_in[522];                self.spi_in[523] => gic8.spi_in[523];                self.spi_in[524] => gic8.spi_in[524];
+        self.spi_in[525] => gic8.spi_in[525];                self.spi_in[526] => gic8.spi_in[526];                self.spi_in[527] => gic8.spi_in[527];
+        self.spi_in[528] => gic8.spi_in[528];                self.spi_in[529] => gic8.spi_in[529];                self.spi_in[530] => gic8.spi_in[530];
+        self.spi_in[531] => gic8.spi_in[531];                self.spi_in[532] => gic8.spi_in[532];                self.spi_in[533] => gic8.spi_in[533];
+        self.spi_in[534] => gic8.spi_in[534];                self.spi_in[535] => gic8.spi_in[535];                self.spi_in[536] => gic8.spi_in[536];
+        self.spi_in[537] => gic8.spi_in[537];                self.spi_in[538] => gic8.spi_in[538];                self.spi_in[539] => gic8.spi_in[539];
+        self.spi_in[540] => gic9.spi_in[540];                self.spi_in[541] => gic9.spi_in[541];                self.spi_in[542] => gic9.spi_in[542];
+        self.spi_in[543] => gic9.spi_in[543];                self.spi_in[544] => gic9.spi_in[544];                self.spi_in[545] => gic9.spi_in[545];
+        self.spi_in[546] => gic9.spi_in[546];                self.spi_in[547] => gic9.spi_in[547];                self.spi_in[548] => gic9.spi_in[548];
+        self.spi_in[549] => gic9.spi_in[549];                self.spi_in[550] => gic9.spi_in[550];                self.spi_in[551] => gic9.spi_in[551];
+        self.spi_in[552] => gic9.spi_in[552];                self.spi_in[553] => gic9.spi_in[553];                self.spi_in[554] => gic9.spi_in[554];
+        self.spi_in[555] => gic9.spi_in[555];                self.spi_in[556] => gic9.spi_in[556];                self.spi_in[557] => gic9.spi_in[557];
+        self.spi_in[558] => gic9.spi_in[558];                self.spi_in[559] => gic9.spi_in[559];                self.spi_in[560] => gic9.spi_in[560];
+        self.spi_in[561] => gic9.spi_in[561];                self.spi_in[562] => gic9.spi_in[562];                self.spi_in[563] => gic9.spi_in[563];
+        self.spi_in[564] => gic9.spi_in[564];                self.spi_in[565] => gic9.spi_in[565];                self.spi_in[566] => gic9.spi_in[566];
+        self.spi_in[567] => gic9.spi_in[567];                self.spi_in[568] => gic9.spi_in[568];                self.spi_in[569] => gic9.spi_in[569];
+        self.spi_in[570] => gic9.spi_in[570];                self.spi_in[571] => gic9.spi_in[571];                self.spi_in[572] => gic9.spi_in[572];
+        self.spi_in[573] => gic9.spi_in[573];                self.spi_in[574] => gic9.spi_in[574];                self.spi_in[575] => gic9.spi_in[575];
+        self.spi_in[576] => gic9.spi_in[576];                self.spi_in[577] => gic9.spi_in[577];                self.spi_in[578] => gic9.spi_in[578];
+        self.spi_in[579] => gic9.spi_in[579];                self.spi_in[580] => gic9.spi_in[580];                self.spi_in[581] => gic9.spi_in[581];
+        self.spi_in[582] => gic9.spi_in[582];                self.spi_in[583] => gic9.spi_in[583];                self.spi_in[584] => gic9.spi_in[584];
+        self.spi_in[585] => gic9.spi_in[585];                self.spi_in[586] => gic9.spi_in[586];                self.spi_in[587] => gic9.spi_in[587];
+        self.spi_in[588] => gic9.spi_in[588];                self.spi_in[589] => gic9.spi_in[589];                self.spi_in[590] => gic9.spi_in[590];
+        self.spi_in[591] => gic9.spi_in[591];                self.spi_in[592] => gic9.spi_in[592];                self.spi_in[593] => gic9.spi_in[593];
+        self.spi_in[594] => gic9.spi_in[594];                self.spi_in[595] => gic9.spi_in[595];                self.spi_in[596] => gic9.spi_in[596];
+        self.spi_in[597] => gic9.spi_in[597];                self.spi_in[598] => gic9.spi_in[598];                self.spi_in[599] => gic9.spi_in[599];
+        self.spi_in[600] => gic10.spi_in[600];                self.spi_in[601] => gic10.spi_in[601];                self.spi_in[602] => gic10.spi_in[602];
+        self.spi_in[603] => gic10.spi_in[603];                self.spi_in[604] => gic10.spi_in[604];                self.spi_in[605] => gic10.spi_in[605];
+        self.spi_in[606] => gic10.spi_in[606];                self.spi_in[607] => gic10.spi_in[607];                self.spi_in[608] => gic10.spi_in[608];
+        self.spi_in[609] => gic10.spi_in[609];                self.spi_in[610] => gic10.spi_in[610];                self.spi_in[611] => gic10.spi_in[611];
+        self.spi_in[612] => gic10.spi_in[612];                self.spi_in[613] => gic10.spi_in[613];                self.spi_in[614] => gic10.spi_in[614];
+        self.spi_in[615] => gic10.spi_in[615];                self.spi_in[616] => gic10.spi_in[616];                self.spi_in[617] => gic10.spi_in[617];
+        self.spi_in[618] => gic10.spi_in[618];                self.spi_in[619] => gic10.spi_in[619];                self.spi_in[620] => gic10.spi_in[620];
+        self.spi_in[621] => gic10.spi_in[621];                self.spi_in[622] => gic10.spi_in[622];                self.spi_in[623] => gic10.spi_in[623];
+        self.spi_in[624] => gic10.spi_in[624];                self.spi_in[625] => gic10.spi_in[625];                self.spi_in[626] => gic10.spi_in[626];
+        self.spi_in[627] => gic10.spi_in[627];                self.spi_in[628] => gic10.spi_in[628];                self.spi_in[629] => gic10.spi_in[629];
+        self.spi_in[630] => gic10.spi_in[630];                self.spi_in[631] => gic10.spi_in[631];                self.spi_in[632] => gic10.spi_in[632];
+        self.spi_in[633] => gic10.spi_in[633];                self.spi_in[634] => gic10.spi_in[634];                self.spi_in[635] => gic10.spi_in[635];
+        self.spi_in[636] => gic10.spi_in[636];                self.spi_in[637] => gic10.spi_in[637];                self.spi_in[638] => gic10.spi_in[638];
+        self.spi_in[639] => gic10.spi_in[639];                self.spi_in[640] => gic10.spi_in[640];                self.spi_in[641] => gic10.spi_in[641];
+        self.spi_in[642] => gic10.spi_in[642];                self.spi_in[643] => gic10.spi_in[643];                self.spi_in[644] => gic10.spi_in[644];
+        self.spi_in[645] => gic10.spi_in[645];                self.spi_in[646] => gic10.spi_in[646];                self.spi_in[647] => gic10.spi_in[647];
+        self.spi_in[648] => gic10.spi_in[648];                self.spi_in[649] => gic10.spi_in[649];                self.spi_in[650] => gic10.spi_in[650];
+        self.spi_in[651] => gic10.spi_in[651];                self.spi_in[652] => gic10.spi_in[652];                self.spi_in[653] => gic10.spi_in[653];
+        self.spi_in[654] => gic10.spi_in[654];                self.spi_in[655] => gic10.spi_in[655];                self.spi_in[656] => gic10.spi_in[656];
+        self.spi_in[657] => gic10.spi_in[657];                self.spi_in[658] => gic10.spi_in[658];                self.spi_in[659] => gic10.spi_in[659];
+        self.spi_in[660] => gic11.spi_in[660];                self.spi_in[661] => gic11.spi_in[661];                self.spi_in[662] => gic11.spi_in[662];
+        self.spi_in[663] => gic11.spi_in[663];                self.spi_in[664] => gic11.spi_in[664];                self.spi_in[665] => gic11.spi_in[665];
+        self.spi_in[666] => gic11.spi_in[666];                self.spi_in[667] => gic11.spi_in[667];                self.spi_in[668] => gic11.spi_in[668];
+        self.spi_in[669] => gic11.spi_in[669];                self.spi_in[670] => gic11.spi_in[670];                self.spi_in[671] => gic11.spi_in[671];
+        self.spi_in[672] => gic11.spi_in[672];                self.spi_in[673] => gic11.spi_in[673];                self.spi_in[674] => gic11.spi_in[674];
+        self.spi_in[675] => gic11.spi_in[675];                self.spi_in[676] => gic11.spi_in[676];                self.spi_in[677] => gic11.spi_in[677];
+        self.spi_in[678] => gic11.spi_in[678];                self.spi_in[679] => gic11.spi_in[679];                self.spi_in[680] => gic11.spi_in[680];
+        self.spi_in[681] => gic11.spi_in[681];                self.spi_in[682] => gic11.spi_in[682];                self.spi_in[683] => gic11.spi_in[683];
+        self.spi_in[684] => gic11.spi_in[684];                self.spi_in[685] => gic11.spi_in[685];                self.spi_in[686] => gic11.spi_in[686];
+        self.spi_in[687] => gic11.spi_in[687];                self.spi_in[688] => gic11.spi_in[688];                self.spi_in[689] => gic11.spi_in[689];
+        self.spi_in[690] => gic11.spi_in[690];                self.spi_in[691] => gic11.spi_in[691];                self.spi_in[692] => gic11.spi_in[692];
+        self.spi_in[693] => gic11.spi_in[693];                self.spi_in[694] => gic11.spi_in[694];                self.spi_in[695] => gic11.spi_in[695];
+        self.spi_in[696] => gic11.spi_in[696];                self.spi_in[697] => gic11.spi_in[697];                self.spi_in[698] => gic11.spi_in[698];
+        self.spi_in[699] => gic11.spi_in[699];                self.spi_in[700] => gic11.spi_in[700];                self.spi_in[701] => gic11.spi_in[701];
+        self.spi_in[702] => gic11.spi_in[702];                self.spi_in[703] => gic11.spi_in[703];                self.spi_in[704] => gic11.spi_in[704];
+        self.spi_in[705] => gic11.spi_in[705];                self.spi_in[706] => gic11.spi_in[706];                self.spi_in[707] => gic11.spi_in[707];
+        self.spi_in[708] => gic11.spi_in[708];                self.spi_in[709] => gic11.spi_in[709];                self.spi_in[710] => gic11.spi_in[710];
+        self.spi_in[711] => gic11.spi_in[711];                self.spi_in[712] => gic11.spi_in[712];                self.spi_in[713] => gic11.spi_in[713];
+        self.spi_in[714] => gic11.spi_in[714];                self.spi_in[715] => gic11.spi_in[715];                self.spi_in[716] => gic11.spi_in[716];
+        self.spi_in[717] => gic11.spi_in[717];                self.spi_in[718] => gic11.spi_in[718];                self.spi_in[719] => gic11.spi_in[719];
+        self.spi_in[720] => gic12.spi_in[720];                self.spi_in[721] => gic12.spi_in[721];                self.spi_in[722] => gic12.spi_in[722];
+        self.spi_in[723] => gic12.spi_in[723];                self.spi_in[724] => gic12.spi_in[724];                self.spi_in[725] => gic12.spi_in[725];
+        self.spi_in[726] => gic12.spi_in[726];                self.spi_in[727] => gic12.spi_in[727];                self.spi_in[728] => gic12.spi_in[728];
+        self.spi_in[729] => gic12.spi_in[729];                self.spi_in[730] => gic12.spi_in[730];                self.spi_in[731] => gic12.spi_in[731];
+        self.spi_in[732] => gic12.spi_in[732];                self.spi_in[733] => gic12.spi_in[733];                self.spi_in[734] => gic12.spi_in[734];
+        self.spi_in[735] => gic12.spi_in[735];                self.spi_in[736] => gic12.spi_in[736];                self.spi_in[737] => gic12.spi_in[737];
+        self.spi_in[738] => gic12.spi_in[738];                self.spi_in[739] => gic12.spi_in[739];                self.spi_in[740] => gic12.spi_in[740];
+        self.spi_in[741] => gic12.spi_in[741];                self.spi_in[742] => gic12.spi_in[742];                self.spi_in[743] => gic12.spi_in[743];
+        self.spi_in[744] => gic12.spi_in[744];                self.spi_in[745] => gic12.spi_in[745];                self.spi_in[746] => gic12.spi_in[746];
+        self.spi_in[747] => gic12.spi_in[747];                self.spi_in[748] => gic12.spi_in[748];                self.spi_in[749] => gic12.spi_in[749];
+        self.spi_in[750] => gic12.spi_in[750];                self.spi_in[751] => gic12.spi_in[751];                self.spi_in[752] => gic12.spi_in[752];
+        self.spi_in[753] => gic12.spi_in[753];                self.spi_in[754] => gic12.spi_in[754];                self.spi_in[755] => gic12.spi_in[755];
+        self.spi_in[756] => gic12.spi_in[756];                self.spi_in[757] => gic12.spi_in[757];                self.spi_in[758] => gic12.spi_in[758];
+        self.spi_in[759] => gic12.spi_in[759];                self.spi_in[760] => gic12.spi_in[760];                self.spi_in[761] => gic12.spi_in[761];
+        self.spi_in[762] => gic12.spi_in[762];                self.spi_in[763] => gic12.spi_in[763];                self.spi_in[764] => gic12.spi_in[764];
+        self.spi_in[765] => gic12.spi_in[765];                self.spi_in[766] => gic12.spi_in[766];                self.spi_in[767] => gic12.spi_in[767];
+        self.spi_in[768] => gic12.spi_in[768];                self.spi_in[769] => gic12.spi_in[769];                self.spi_in[770] => gic12.spi_in[770];
+        self.spi_in[771] => gic12.spi_in[771];                self.spi_in[772] => gic12.spi_in[772];                self.spi_in[773] => gic12.spi_in[773];
+        self.spi_in[774] => gic12.spi_in[774];                self.spi_in[775] => gic12.spi_in[775];                self.spi_in[776] => gic12.spi_in[776];
+        self.spi_in[777] => gic12.spi_in[777];                self.spi_in[778] => gic12.spi_in[778];                self.spi_in[779] => gic12.spi_in[779];
+        self.spi_in[780] => gic13.spi_in[780];                self.spi_in[781] => gic13.spi_in[781];                self.spi_in[782] => gic13.spi_in[782];
+        self.spi_in[783] => gic13.spi_in[783];                self.spi_in[784] => gic13.spi_in[784];                self.spi_in[785] => gic13.spi_in[785];
+        self.spi_in[786] => gic13.spi_in[786];                self.spi_in[787] => gic13.spi_in[787];                self.spi_in[788] => gic13.spi_in[788];
+        self.spi_in[789] => gic13.spi_in[789];                self.spi_in[790] => gic13.spi_in[790];                self.spi_in[791] => gic13.spi_in[791];
+        self.spi_in[792] => gic13.spi_in[792];                self.spi_in[793] => gic13.spi_in[793];                self.spi_in[794] => gic13.spi_in[794];
+        self.spi_in[795] => gic13.spi_in[795];                self.spi_in[796] => gic13.spi_in[796];                self.spi_in[797] => gic13.spi_in[797];
+        self.spi_in[798] => gic13.spi_in[798];                self.spi_in[799] => gic13.spi_in[799];                self.spi_in[800] => gic13.spi_in[800];
+        self.spi_in[801] => gic13.spi_in[801];                self.spi_in[802] => gic13.spi_in[802];                self.spi_in[803] => gic13.spi_in[803];
+        self.spi_in[804] => gic13.spi_in[804];                self.spi_in[805] => gic13.spi_in[805];                self.spi_in[806] => gic13.spi_in[806];
+        self.spi_in[807] => gic13.spi_in[807];                self.spi_in[808] => gic13.spi_in[808];                self.spi_in[809] => gic13.spi_in[809];
+        self.spi_in[810] => gic13.spi_in[810];                self.spi_in[811] => gic13.spi_in[811];                self.spi_in[812] => gic13.spi_in[812];
+        self.spi_in[813] => gic13.spi_in[813];                self.spi_in[814] => gic13.spi_in[814];                self.spi_in[815] => gic13.spi_in[815];
+        self.spi_in[816] => gic13.spi_in[816];                self.spi_in[817] => gic13.spi_in[817];                self.spi_in[818] => gic13.spi_in[818];
+        self.spi_in[819] => gic13.spi_in[819];                self.spi_in[820] => gic13.spi_in[820];                self.spi_in[821] => gic13.spi_in[821];
+        self.spi_in[822] => gic13.spi_in[822];                self.spi_in[823] => gic13.spi_in[823];                self.spi_in[824] => gic13.spi_in[824];
+        self.spi_in[825] => gic13.spi_in[825];                self.spi_in[826] => gic13.spi_in[826];                self.spi_in[827] => gic13.spi_in[827];
+        self.spi_in[828] => gic13.spi_in[828];                self.spi_in[829] => gic13.spi_in[829];                self.spi_in[830] => gic13.spi_in[830];
+        self.spi_in[831] => gic13.spi_in[831];                self.spi_in[832] => gic13.spi_in[832];                self.spi_in[833] => gic13.spi_in[833];
+        self.spi_in[834] => gic13.spi_in[834];                self.spi_in[835] => gic13.spi_in[835];                self.spi_in[836] => gic13.spi_in[836];
+        self.spi_in[837] => gic13.spi_in[837];                self.spi_in[838] => gic13.spi_in[838];                self.spi_in[839] => gic13.spi_in[839];
+        self.spi_in[840] => gic14.spi_in[840];                self.spi_in[841] => gic14.spi_in[841];                self.spi_in[842] => gic14.spi_in[842];
+        self.spi_in[843] => gic14.spi_in[843];                self.spi_in[844] => gic14.spi_in[844];                self.spi_in[845] => gic14.spi_in[845];
+        self.spi_in[846] => gic14.spi_in[846];                self.spi_in[847] => gic14.spi_in[847];                self.spi_in[848] => gic14.spi_in[848];
+        self.spi_in[849] => gic14.spi_in[849];                self.spi_in[850] => gic14.spi_in[850];                self.spi_in[851] => gic14.spi_in[851];
+        self.spi_in[852] => gic14.spi_in[852];                self.spi_in[853] => gic14.spi_in[853];                self.spi_in[854] => gic14.spi_in[854];
+        self.spi_in[855] => gic14.spi_in[855];                self.spi_in[856] => gic14.spi_in[856];                self.spi_in[857] => gic14.spi_in[857];
+        self.spi_in[858] => gic14.spi_in[858];                self.spi_in[859] => gic14.spi_in[859];                self.spi_in[860] => gic14.spi_in[860];
+        self.spi_in[861] => gic14.spi_in[861];                self.spi_in[862] => gic14.spi_in[862];                self.spi_in[863] => gic14.spi_in[863];
+        self.spi_in[864] => gic14.spi_in[864];                self.spi_in[865] => gic14.spi_in[865];                self.spi_in[866] => gic14.spi_in[866];
+        self.spi_in[867] => gic14.spi_in[867];                self.spi_in[868] => gic14.spi_in[868];                self.spi_in[869] => gic14.spi_in[869];
+        self.spi_in[870] => gic14.spi_in[870];                self.spi_in[871] => gic14.spi_in[871];                self.spi_in[872] => gic14.spi_in[872];
+        self.spi_in[873] => gic14.spi_in[873];                self.spi_in[874] => gic14.spi_in[874];                self.spi_in[875] => gic14.spi_in[875];
+        self.spi_in[876] => gic14.spi_in[876];                self.spi_in[877] => gic14.spi_in[877];                self.spi_in[878] => gic14.spi_in[878];
+        self.spi_in[879] => gic14.spi_in[879];                self.spi_in[880] => gic14.spi_in[880];                self.spi_in[881] => gic14.spi_in[881];
+        self.spi_in[882] => gic14.spi_in[882];                self.spi_in[883] => gic14.spi_in[883];                self.spi_in[884] => gic14.spi_in[884];
+        self.spi_in[885] => gic14.spi_in[885];                self.spi_in[886] => gic14.spi_in[886];                self.spi_in[887] => gic14.spi_in[887];
+        self.spi_in[888] => gic14.spi_in[888];                self.spi_in[889] => gic14.spi_in[889];                self.spi_in[890] => gic14.spi_in[890];
+        self.spi_in[891] => gic14.spi_in[891];                self.spi_in[892] => gic14.spi_in[892];                self.spi_in[893] => gic14.spi_in[893];
+        self.spi_in[894] => gic14.spi_in[894];                self.spi_in[895] => gic14.spi_in[895];                self.spi_in[896] => gic14.spi_in[896];
+        self.spi_in[897] => gic14.spi_in[897];                self.spi_in[898] => gic14.spi_in[898];                self.spi_in[899] => gic14.spi_in[899];
+        self.spi_in[900] => gic15.spi_in[900];                self.spi_in[901] => gic15.spi_in[901];                self.spi_in[902] => gic15.spi_in[902];
+        self.spi_in[903] => gic15.spi_in[903];                self.spi_in[904] => gic15.spi_in[904];                self.spi_in[905] => gic15.spi_in[905];
+        self.spi_in[906] => gic15.spi_in[906];                self.spi_in[907] => gic15.spi_in[907];                self.spi_in[908] => gic15.spi_in[908];
+        self.spi_in[909] => gic15.spi_in[909];                self.spi_in[910] => gic15.spi_in[910];                self.spi_in[911] => gic15.spi_in[911];
+        self.spi_in[912] => gic15.spi_in[912];                self.spi_in[913] => gic15.spi_in[913];                self.spi_in[914] => gic15.spi_in[914];
+        self.spi_in[915] => gic15.spi_in[915];                self.spi_in[916] => gic15.spi_in[916];                self.spi_in[917] => gic15.spi_in[917];
+        self.spi_in[918] => gic15.spi_in[918];                self.spi_in[919] => gic15.spi_in[919];                self.spi_in[920] => gic15.spi_in[920];
+        self.spi_in[921] => gic15.spi_in[921];                self.spi_in[922] => gic15.spi_in[922];                self.spi_in[923] => gic15.spi_in[923];
+        self.spi_in[924] => gic15.spi_in[924];                self.spi_in[925] => gic15.spi_in[925];                self.spi_in[926] => gic15.spi_in[926];
+        self.spi_in[927] => gic15.spi_in[927];                self.spi_in[928] => gic15.spi_in[928];                self.spi_in[929] => gic15.spi_in[929];
+        self.spi_in[930] => gic15.spi_in[930];                self.spi_in[931] => gic15.spi_in[931];                self.spi_in[932] => gic15.spi_in[932];
+        self.spi_in[933] => gic15.spi_in[933];                self.spi_in[934] => gic15.spi_in[934];                self.spi_in[935] => gic15.spi_in[935];
+        self.spi_in[936] => gic15.spi_in[936];                self.spi_in[937] => gic15.spi_in[937];                self.spi_in[938] => gic15.spi_in[938];
+        self.spi_in[939] => gic15.spi_in[939];                self.spi_in[940] => gic15.spi_in[940];                self.spi_in[941] => gic15.spi_in[941];
+        self.spi_in[942] => gic15.spi_in[942];                self.spi_in[943] => gic15.spi_in[943];                self.spi_in[944] => gic15.spi_in[944];
+        self.spi_in[945] => gic15.spi_in[945];                self.spi_in[946] => gic15.spi_in[946];                self.spi_in[947] => gic15.spi_in[947];
+        self.spi_in[948] => gic15.spi_in[948];                self.spi_in[949] => gic15.spi_in[949];                self.spi_in[950] => gic15.spi_in[950];
+        self.spi_in[951] => gic15.spi_in[951];                self.spi_in[952] => gic15.spi_in[952];                self.spi_in[953] => gic15.spi_in[953];
+        self.spi_in[954] => gic15.spi_in[954];                self.spi_in[955] => gic15.spi_in[955];                self.spi_in[956] => gic15.spi_in[956];
+        self.spi_in[957] => gic15.spi_in[957];                self.spi_in[958] => gic15.spi_in[958];                self.spi_in[959] => gic15.spi_in[959];
+
+        // Each gic is connected to 10 extended spi lines
+        self.extended_spi_in[0] => gic0.extended_spi_in[0];            self.extended_spi_in[1] => gic0.extended_spi_in[1];
+        self.extended_spi_in[2] => gic0.extended_spi_in[2];            self.extended_spi_in[3] => gic0.extended_spi_in[3];
+        self.extended_spi_in[4] => gic0.extended_spi_in[4];            self.extended_spi_in[5] => gic0.extended_spi_in[5];
+        self.extended_spi_in[6] => gic0.extended_spi_in[6];            self.extended_spi_in[7] => gic0.extended_spi_in[7];
+        self.extended_spi_in[8] => gic0.extended_spi_in[8];            self.extended_spi_in[9] => gic0.extended_spi_in[9];
+        self.extended_spi_in[10] => gic0.extended_spi_in[10];            self.extended_spi_in[11] => gic0.extended_spi_in[11];
+        self.extended_spi_in[12] => gic0.extended_spi_in[12];            self.extended_spi_in[13] => gic0.extended_spi_in[13];
+        self.extended_spi_in[14] => gic0.extended_spi_in[14];            self.extended_spi_in[15] => gic0.extended_spi_in[15];
+        self.extended_spi_in[16] => gic0.extended_spi_in[16];            self.extended_spi_in[17] => gic0.extended_spi_in[17];
+        self.extended_spi_in[18] => gic0.extended_spi_in[18];            self.extended_spi_in[19] => gic0.extended_spi_in[19];
+        self.extended_spi_in[20] => gic0.extended_spi_in[20];            self.extended_spi_in[21] => gic0.extended_spi_in[21];
+        self.extended_spi_in[22] => gic0.extended_spi_in[22];            self.extended_spi_in[23] => gic0.extended_spi_in[23];
+        self.extended_spi_in[24] => gic0.extended_spi_in[24];            self.extended_spi_in[25] => gic0.extended_spi_in[25];
+        self.extended_spi_in[26] => gic0.extended_spi_in[26];            self.extended_spi_in[27] => gic0.extended_spi_in[27];
+        self.extended_spi_in[28] => gic0.extended_spi_in[28];            self.extended_spi_in[29] => gic0.extended_spi_in[29];
+        self.extended_spi_in[30] => gic0.extended_spi_in[30];            self.extended_spi_in[31] => gic0.extended_spi_in[31];
+        self.extended_spi_in[32] => gic0.extended_spi_in[32];            self.extended_spi_in[33] => gic0.extended_spi_in[33];
+        self.extended_spi_in[34] => gic0.extended_spi_in[34];            self.extended_spi_in[35] => gic0.extended_spi_in[35];
+        self.extended_spi_in[36] => gic0.extended_spi_in[36];            self.extended_spi_in[37] => gic0.extended_spi_in[37];
+        self.extended_spi_in[38] => gic0.extended_spi_in[38];            self.extended_spi_in[39] => gic0.extended_spi_in[39];
+        self.extended_spi_in[40] => gic0.extended_spi_in[40];            self.extended_spi_in[41] => gic0.extended_spi_in[41];
+        self.extended_spi_in[42] => gic0.extended_spi_in[42];            self.extended_spi_in[43] => gic0.extended_spi_in[43];
+        self.extended_spi_in[44] => gic0.extended_spi_in[44];            self.extended_spi_in[45] => gic0.extended_spi_in[45];
+        self.extended_spi_in[46] => gic0.extended_spi_in[46];            self.extended_spi_in[47] => gic0.extended_spi_in[47];
+        self.extended_spi_in[48] => gic0.extended_spi_in[48];            self.extended_spi_in[49] => gic0.extended_spi_in[49];
+        self.extended_spi_in[50] => gic0.extended_spi_in[50];            self.extended_spi_in[51] => gic0.extended_spi_in[51];
+        self.extended_spi_in[52] => gic0.extended_spi_in[52];            self.extended_spi_in[53] => gic0.extended_spi_in[53];
+        self.extended_spi_in[54] => gic0.extended_spi_in[54];            self.extended_spi_in[55] => gic0.extended_spi_in[55];
+        self.extended_spi_in[56] => gic0.extended_spi_in[56];            self.extended_spi_in[57] => gic0.extended_spi_in[57];
+        self.extended_spi_in[58] => gic0.extended_spi_in[58];            self.extended_spi_in[59] => gic0.extended_spi_in[59];
+        self.extended_spi_in[60] => gic0.extended_spi_in[60];            self.extended_spi_in[61] => gic0.extended_spi_in[61];
+        self.extended_spi_in[62] => gic0.extended_spi_in[62];            self.extended_spi_in[63] => gic0.extended_spi_in[63];
+        self.extended_spi_in[64] => gic1.extended_spi_in[64];            self.extended_spi_in[65] => gic1.extended_spi_in[65];
+        self.extended_spi_in[66] => gic1.extended_spi_in[66];            self.extended_spi_in[67] => gic1.extended_spi_in[67];
+        self.extended_spi_in[68] => gic1.extended_spi_in[68];            self.extended_spi_in[69] => gic1.extended_spi_in[69];
+        self.extended_spi_in[70] => gic1.extended_spi_in[70];            self.extended_spi_in[71] => gic1.extended_spi_in[71];
+        self.extended_spi_in[72] => gic1.extended_spi_in[72];            self.extended_spi_in[73] => gic1.extended_spi_in[73];
+        self.extended_spi_in[74] => gic1.extended_spi_in[74];            self.extended_spi_in[75] => gic1.extended_spi_in[75];
+        self.extended_spi_in[76] => gic1.extended_spi_in[76];            self.extended_spi_in[77] => gic1.extended_spi_in[77];
+        self.extended_spi_in[78] => gic1.extended_spi_in[78];            self.extended_spi_in[79] => gic1.extended_spi_in[79];
+        self.extended_spi_in[80] => gic1.extended_spi_in[80];            self.extended_spi_in[81] => gic1.extended_spi_in[81];
+        self.extended_spi_in[82] => gic1.extended_spi_in[82];            self.extended_spi_in[83] => gic1.extended_spi_in[83];
+        self.extended_spi_in[84] => gic1.extended_spi_in[84];            self.extended_spi_in[85] => gic1.extended_spi_in[85];
+        self.extended_spi_in[86] => gic1.extended_spi_in[86];            self.extended_spi_in[87] => gic1.extended_spi_in[87];
+        self.extended_spi_in[88] => gic1.extended_spi_in[88];            self.extended_spi_in[89] => gic1.extended_spi_in[89];
+        self.extended_spi_in[90] => gic1.extended_spi_in[90];            self.extended_spi_in[91] => gic1.extended_spi_in[91];
+        self.extended_spi_in[92] => gic1.extended_spi_in[92];            self.extended_spi_in[93] => gic1.extended_spi_in[93];
+        self.extended_spi_in[94] => gic1.extended_spi_in[94];            self.extended_spi_in[95] => gic1.extended_spi_in[95];
+        self.extended_spi_in[96] => gic1.extended_spi_in[96];            self.extended_spi_in[97] => gic1.extended_spi_in[97];
+        self.extended_spi_in[98] => gic1.extended_spi_in[98];            self.extended_spi_in[99] => gic1.extended_spi_in[99];
+        self.extended_spi_in[100] => gic1.extended_spi_in[100];            self.extended_spi_in[101] => gic1.extended_spi_in[101];
+        self.extended_spi_in[102] => gic1.extended_spi_in[102];            self.extended_spi_in[103] => gic1.extended_spi_in[103];
+        self.extended_spi_in[104] => gic1.extended_spi_in[104];            self.extended_spi_in[105] => gic1.extended_spi_in[105];
+        self.extended_spi_in[106] => gic1.extended_spi_in[106];            self.extended_spi_in[107] => gic1.extended_spi_in[107];
+        self.extended_spi_in[108] => gic1.extended_spi_in[108];            self.extended_spi_in[109] => gic1.extended_spi_in[109];
+        self.extended_spi_in[110] => gic1.extended_spi_in[110];            self.extended_spi_in[111] => gic1.extended_spi_in[111];
+        self.extended_spi_in[112] => gic1.extended_spi_in[112];            self.extended_spi_in[113] => gic1.extended_spi_in[113];
+        self.extended_spi_in[114] => gic1.extended_spi_in[114];            self.extended_spi_in[115] => gic1.extended_spi_in[115];
+        self.extended_spi_in[116] => gic1.extended_spi_in[116];            self.extended_spi_in[117] => gic1.extended_spi_in[117];
+        self.extended_spi_in[118] => gic1.extended_spi_in[118];            self.extended_spi_in[119] => gic1.extended_spi_in[119];
+        self.extended_spi_in[120] => gic1.extended_spi_in[120];            self.extended_spi_in[121] => gic1.extended_spi_in[121];
+        self.extended_spi_in[122] => gic1.extended_spi_in[122];            self.extended_spi_in[123] => gic1.extended_spi_in[123];
+        self.extended_spi_in[124] => gic1.extended_spi_in[124];            self.extended_spi_in[125] => gic1.extended_spi_in[125];
+        self.extended_spi_in[126] => gic1.extended_spi_in[126];            self.extended_spi_in[127] => gic1.extended_spi_in[127];
+        self.extended_spi_in[128] => gic2.extended_spi_in[128];            self.extended_spi_in[129] => gic2.extended_spi_in[129];
+        self.extended_spi_in[130] => gic2.extended_spi_in[130];            self.extended_spi_in[131] => gic2.extended_spi_in[131];
+        self.extended_spi_in[132] => gic2.extended_spi_in[132];            self.extended_spi_in[133] => gic2.extended_spi_in[133];
+        self.extended_spi_in[134] => gic2.extended_spi_in[134];            self.extended_spi_in[135] => gic2.extended_spi_in[135];
+        self.extended_spi_in[136] => gic2.extended_spi_in[136];            self.extended_spi_in[137] => gic2.extended_spi_in[137];
+        self.extended_spi_in[138] => gic2.extended_spi_in[138];            self.extended_spi_in[139] => gic2.extended_spi_in[139];
+        self.extended_spi_in[140] => gic2.extended_spi_in[140];            self.extended_spi_in[141] => gic2.extended_spi_in[141];
+        self.extended_spi_in[142] => gic2.extended_spi_in[142];            self.extended_spi_in[143] => gic2.extended_spi_in[143];
+        self.extended_spi_in[144] => gic2.extended_spi_in[144];            self.extended_spi_in[145] => gic2.extended_spi_in[145];
+        self.extended_spi_in[146] => gic2.extended_spi_in[146];            self.extended_spi_in[147] => gic2.extended_spi_in[147];
+        self.extended_spi_in[148] => gic2.extended_spi_in[148];            self.extended_spi_in[149] => gic2.extended_spi_in[149];
+        self.extended_spi_in[150] => gic2.extended_spi_in[150];            self.extended_spi_in[151] => gic2.extended_spi_in[151];
+        self.extended_spi_in[152] => gic2.extended_spi_in[152];            self.extended_spi_in[153] => gic2.extended_spi_in[153];
+        self.extended_spi_in[154] => gic2.extended_spi_in[154];            self.extended_spi_in[155] => gic2.extended_spi_in[155];
+        self.extended_spi_in[156] => gic2.extended_spi_in[156];            self.extended_spi_in[157] => gic2.extended_spi_in[157];
+        self.extended_spi_in[158] => gic2.extended_spi_in[158];            self.extended_spi_in[159] => gic2.extended_spi_in[159];
+        self.extended_spi_in[160] => gic2.extended_spi_in[160];            self.extended_spi_in[161] => gic2.extended_spi_in[161];
+        self.extended_spi_in[162] => gic2.extended_spi_in[162];            self.extended_spi_in[163] => gic2.extended_spi_in[163];
+        self.extended_spi_in[164] => gic2.extended_spi_in[164];            self.extended_spi_in[165] => gic2.extended_spi_in[165];
+        self.extended_spi_in[166] => gic2.extended_spi_in[166];            self.extended_spi_in[167] => gic2.extended_spi_in[167];
+        self.extended_spi_in[168] => gic2.extended_spi_in[168];            self.extended_spi_in[169] => gic2.extended_spi_in[169];
+        self.extended_spi_in[170] => gic2.extended_spi_in[170];            self.extended_spi_in[171] => gic2.extended_spi_in[171];
+        self.extended_spi_in[172] => gic2.extended_spi_in[172];            self.extended_spi_in[173] => gic2.extended_spi_in[173];
+        self.extended_spi_in[174] => gic2.extended_spi_in[174];            self.extended_spi_in[175] => gic2.extended_spi_in[175];
+        self.extended_spi_in[176] => gic2.extended_spi_in[176];            self.extended_spi_in[177] => gic2.extended_spi_in[177];
+        self.extended_spi_in[178] => gic2.extended_spi_in[178];            self.extended_spi_in[179] => gic2.extended_spi_in[179];
+        self.extended_spi_in[180] => gic2.extended_spi_in[180];            self.extended_spi_in[181] => gic2.extended_spi_in[181];
+        self.extended_spi_in[182] => gic2.extended_spi_in[182];            self.extended_spi_in[183] => gic2.extended_spi_in[183];
+        self.extended_spi_in[184] => gic2.extended_spi_in[184];            self.extended_spi_in[185] => gic2.extended_spi_in[185];
+        self.extended_spi_in[186] => gic2.extended_spi_in[186];            self.extended_spi_in[187] => gic2.extended_spi_in[187];
+        self.extended_spi_in[188] => gic2.extended_spi_in[188];            self.extended_spi_in[189] => gic2.extended_spi_in[189];
+        self.extended_spi_in[190] => gic2.extended_spi_in[190];            self.extended_spi_in[191] => gic2.extended_spi_in[191];
+        self.extended_spi_in[192] => gic3.extended_spi_in[192];            self.extended_spi_in[193] => gic3.extended_spi_in[193];
+        self.extended_spi_in[194] => gic3.extended_spi_in[194];            self.extended_spi_in[195] => gic3.extended_spi_in[195];
+        self.extended_spi_in[196] => gic3.extended_spi_in[196];            self.extended_spi_in[197] => gic3.extended_spi_in[197];
+        self.extended_spi_in[198] => gic3.extended_spi_in[198];            self.extended_spi_in[199] => gic3.extended_spi_in[199];
+        self.extended_spi_in[200] => gic3.extended_spi_in[200];            self.extended_spi_in[201] => gic3.extended_spi_in[201];
+        self.extended_spi_in[202] => gic3.extended_spi_in[202];            self.extended_spi_in[203] => gic3.extended_spi_in[203];
+        self.extended_spi_in[204] => gic3.extended_spi_in[204];            self.extended_spi_in[205] => gic3.extended_spi_in[205];
+        self.extended_spi_in[206] => gic3.extended_spi_in[206];            self.extended_spi_in[207] => gic3.extended_spi_in[207];
+        self.extended_spi_in[208] => gic3.extended_spi_in[208];            self.extended_spi_in[209] => gic3.extended_spi_in[209];
+        self.extended_spi_in[210] => gic3.extended_spi_in[210];            self.extended_spi_in[211] => gic3.extended_spi_in[211];
+        self.extended_spi_in[212] => gic3.extended_spi_in[212];            self.extended_spi_in[213] => gic3.extended_spi_in[213];
+        self.extended_spi_in[214] => gic3.extended_spi_in[214];            self.extended_spi_in[215] => gic3.extended_spi_in[215];
+        self.extended_spi_in[216] => gic3.extended_spi_in[216];            self.extended_spi_in[217] => gic3.extended_spi_in[217];
+        self.extended_spi_in[218] => gic3.extended_spi_in[218];            self.extended_spi_in[219] => gic3.extended_spi_in[219];
+        self.extended_spi_in[220] => gic3.extended_spi_in[220];            self.extended_spi_in[221] => gic3.extended_spi_in[221];
+        self.extended_spi_in[222] => gic3.extended_spi_in[222];            self.extended_spi_in[223] => gic3.extended_spi_in[223];
+        self.extended_spi_in[224] => gic3.extended_spi_in[224];            self.extended_spi_in[225] => gic3.extended_spi_in[225];
+        self.extended_spi_in[226] => gic3.extended_spi_in[226];            self.extended_spi_in[227] => gic3.extended_spi_in[227];
+        self.extended_spi_in[228] => gic3.extended_spi_in[228];            self.extended_spi_in[229] => gic3.extended_spi_in[229];
+        self.extended_spi_in[230] => gic3.extended_spi_in[230];            self.extended_spi_in[231] => gic3.extended_spi_in[231];
+        self.extended_spi_in[232] => gic3.extended_spi_in[232];            self.extended_spi_in[233] => gic3.extended_spi_in[233];
+        self.extended_spi_in[234] => gic3.extended_spi_in[234];            self.extended_spi_in[235] => gic3.extended_spi_in[235];
+        self.extended_spi_in[236] => gic3.extended_spi_in[236];            self.extended_spi_in[237] => gic3.extended_spi_in[237];
+        self.extended_spi_in[238] => gic3.extended_spi_in[238];            self.extended_spi_in[239] => gic3.extended_spi_in[239];
+        self.extended_spi_in[240] => gic3.extended_spi_in[240];            self.extended_spi_in[241] => gic3.extended_spi_in[241];
+        self.extended_spi_in[242] => gic3.extended_spi_in[242];            self.extended_spi_in[243] => gic3.extended_spi_in[243];
+        self.extended_spi_in[244] => gic3.extended_spi_in[244];            self.extended_spi_in[245] => gic3.extended_spi_in[245];
+        self.extended_spi_in[246] => gic3.extended_spi_in[246];            self.extended_spi_in[247] => gic3.extended_spi_in[247];
+        self.extended_spi_in[248] => gic3.extended_spi_in[248];            self.extended_spi_in[249] => gic3.extended_spi_in[249];
+        self.extended_spi_in[250] => gic3.extended_spi_in[250];            self.extended_spi_in[251] => gic3.extended_spi_in[251];
+        self.extended_spi_in[252] => gic3.extended_spi_in[252];            self.extended_spi_in[253] => gic3.extended_spi_in[253];
+        self.extended_spi_in[254] => gic3.extended_spi_in[254];            self.extended_spi_in[255] => gic3.extended_spi_in[255];
+        self.extended_spi_in[256] => gic4.extended_spi_in[256];            self.extended_spi_in[257] => gic4.extended_spi_in[257];
+        self.extended_spi_in[258] => gic4.extended_spi_in[258];            self.extended_spi_in[259] => gic4.extended_spi_in[259];
+        self.extended_spi_in[260] => gic4.extended_spi_in[260];            self.extended_spi_in[261] => gic4.extended_spi_in[261];
+        self.extended_spi_in[262] => gic4.extended_spi_in[262];            self.extended_spi_in[263] => gic4.extended_spi_in[263];
+        self.extended_spi_in[264] => gic4.extended_spi_in[264];            self.extended_spi_in[265] => gic4.extended_spi_in[265];
+        self.extended_spi_in[266] => gic4.extended_spi_in[266];            self.extended_spi_in[267] => gic4.extended_spi_in[267];
+        self.extended_spi_in[268] => gic4.extended_spi_in[268];            self.extended_spi_in[269] => gic4.extended_spi_in[269];
+        self.extended_spi_in[270] => gic4.extended_spi_in[270];            self.extended_spi_in[271] => gic4.extended_spi_in[271];
+        self.extended_spi_in[272] => gic4.extended_spi_in[272];            self.extended_spi_in[273] => gic4.extended_spi_in[273];
+        self.extended_spi_in[274] => gic4.extended_spi_in[274];            self.extended_spi_in[275] => gic4.extended_spi_in[275];
+        self.extended_spi_in[276] => gic4.extended_spi_in[276];            self.extended_spi_in[277] => gic4.extended_spi_in[277];
+        self.extended_spi_in[278] => gic4.extended_spi_in[278];            self.extended_spi_in[279] => gic4.extended_spi_in[279];
+        self.extended_spi_in[280] => gic4.extended_spi_in[280];            self.extended_spi_in[281] => gic4.extended_spi_in[281];
+        self.extended_spi_in[282] => gic4.extended_spi_in[282];            self.extended_spi_in[283] => gic4.extended_spi_in[283];
+        self.extended_spi_in[284] => gic4.extended_spi_in[284];            self.extended_spi_in[285] => gic4.extended_spi_in[285];
+        self.extended_spi_in[286] => gic4.extended_spi_in[286];            self.extended_spi_in[287] => gic4.extended_spi_in[287];
+        self.extended_spi_in[288] => gic4.extended_spi_in[288];            self.extended_spi_in[289] => gic4.extended_spi_in[289];
+        self.extended_spi_in[290] => gic4.extended_spi_in[290];            self.extended_spi_in[291] => gic4.extended_spi_in[291];
+        self.extended_spi_in[292] => gic4.extended_spi_in[292];            self.extended_spi_in[293] => gic4.extended_spi_in[293];
+        self.extended_spi_in[294] => gic4.extended_spi_in[294];            self.extended_spi_in[295] => gic4.extended_spi_in[295];
+        self.extended_spi_in[296] => gic4.extended_spi_in[296];            self.extended_spi_in[297] => gic4.extended_spi_in[297];
+        self.extended_spi_in[298] => gic4.extended_spi_in[298];            self.extended_spi_in[299] => gic4.extended_spi_in[299];
+        self.extended_spi_in[300] => gic4.extended_spi_in[300];            self.extended_spi_in[301] => gic4.extended_spi_in[301];
+        self.extended_spi_in[302] => gic4.extended_spi_in[302];            self.extended_spi_in[303] => gic4.extended_spi_in[303];
+        self.extended_spi_in[304] => gic4.extended_spi_in[304];            self.extended_spi_in[305] => gic4.extended_spi_in[305];
+        self.extended_spi_in[306] => gic4.extended_spi_in[306];            self.extended_spi_in[307] => gic4.extended_spi_in[307];
+        self.extended_spi_in[308] => gic4.extended_spi_in[308];            self.extended_spi_in[309] => gic4.extended_spi_in[309];
+        self.extended_spi_in[310] => gic4.extended_spi_in[310];            self.extended_spi_in[311] => gic4.extended_spi_in[311];
+        self.extended_spi_in[312] => gic4.extended_spi_in[312];            self.extended_spi_in[313] => gic4.extended_spi_in[313];
+        self.extended_spi_in[314] => gic4.extended_spi_in[314];            self.extended_spi_in[315] => gic4.extended_spi_in[315];
+        self.extended_spi_in[316] => gic4.extended_spi_in[316];            self.extended_spi_in[317] => gic4.extended_spi_in[317];
+        self.extended_spi_in[318] => gic4.extended_spi_in[318];            self.extended_spi_in[319] => gic4.extended_spi_in[319];
+        self.extended_spi_in[320] => gic5.extended_spi_in[320];            self.extended_spi_in[321] => gic5.extended_spi_in[321];
+        self.extended_spi_in[322] => gic5.extended_spi_in[322];            self.extended_spi_in[323] => gic5.extended_spi_in[323];
+        self.extended_spi_in[324] => gic5.extended_spi_in[324];            self.extended_spi_in[325] => gic5.extended_spi_in[325];
+        self.extended_spi_in[326] => gic5.extended_spi_in[326];            self.extended_spi_in[327] => gic5.extended_spi_in[327];
+        self.extended_spi_in[328] => gic5.extended_spi_in[328];            self.extended_spi_in[329] => gic5.extended_spi_in[329];
+        self.extended_spi_in[330] => gic5.extended_spi_in[330];            self.extended_spi_in[331] => gic5.extended_spi_in[331];
+        self.extended_spi_in[332] => gic5.extended_spi_in[332];            self.extended_spi_in[333] => gic5.extended_spi_in[333];
+        self.extended_spi_in[334] => gic5.extended_spi_in[334];            self.extended_spi_in[335] => gic5.extended_spi_in[335];
+        self.extended_spi_in[336] => gic5.extended_spi_in[336];            self.extended_spi_in[337] => gic5.extended_spi_in[337];
+        self.extended_spi_in[338] => gic5.extended_spi_in[338];            self.extended_spi_in[339] => gic5.extended_spi_in[339];
+        self.extended_spi_in[340] => gic5.extended_spi_in[340];            self.extended_spi_in[341] => gic5.extended_spi_in[341];
+        self.extended_spi_in[342] => gic5.extended_spi_in[342];            self.extended_spi_in[343] => gic5.extended_spi_in[343];
+        self.extended_spi_in[344] => gic5.extended_spi_in[344];            self.extended_spi_in[345] => gic5.extended_spi_in[345];
+        self.extended_spi_in[346] => gic5.extended_spi_in[346];            self.extended_spi_in[347] => gic5.extended_spi_in[347];
+        self.extended_spi_in[348] => gic5.extended_spi_in[348];            self.extended_spi_in[349] => gic5.extended_spi_in[349];
+        self.extended_spi_in[350] => gic5.extended_spi_in[350];            self.extended_spi_in[351] => gic5.extended_spi_in[351];
+        self.extended_spi_in[352] => gic5.extended_spi_in[352];            self.extended_spi_in[353] => gic5.extended_spi_in[353];
+        self.extended_spi_in[354] => gic5.extended_spi_in[354];            self.extended_spi_in[355] => gic5.extended_spi_in[355];
+        self.extended_spi_in[356] => gic5.extended_spi_in[356];            self.extended_spi_in[357] => gic5.extended_spi_in[357];
+        self.extended_spi_in[358] => gic5.extended_spi_in[358];            self.extended_spi_in[359] => gic5.extended_spi_in[359];
+        self.extended_spi_in[360] => gic5.extended_spi_in[360];            self.extended_spi_in[361] => gic5.extended_spi_in[361];
+        self.extended_spi_in[362] => gic5.extended_spi_in[362];            self.extended_spi_in[363] => gic5.extended_spi_in[363];
+        self.extended_spi_in[364] => gic5.extended_spi_in[364];            self.extended_spi_in[365] => gic5.extended_spi_in[365];
+        self.extended_spi_in[366] => gic5.extended_spi_in[366];            self.extended_spi_in[367] => gic5.extended_spi_in[367];
+        self.extended_spi_in[368] => gic5.extended_spi_in[368];            self.extended_spi_in[369] => gic5.extended_spi_in[369];
+        self.extended_spi_in[370] => gic5.extended_spi_in[370];            self.extended_spi_in[371] => gic5.extended_spi_in[371];
+        self.extended_spi_in[372] => gic5.extended_spi_in[372];            self.extended_spi_in[373] => gic5.extended_spi_in[373];
+        self.extended_spi_in[374] => gic5.extended_spi_in[374];            self.extended_spi_in[375] => gic5.extended_spi_in[375];
+        self.extended_spi_in[376] => gic5.extended_spi_in[376];            self.extended_spi_in[377] => gic5.extended_spi_in[377];
+        self.extended_spi_in[378] => gic5.extended_spi_in[378];            self.extended_spi_in[379] => gic5.extended_spi_in[379];
+        self.extended_spi_in[380] => gic5.extended_spi_in[380];            self.extended_spi_in[381] => gic5.extended_spi_in[381];
+        self.extended_spi_in[382] => gic5.extended_spi_in[382];            self.extended_spi_in[383] => gic5.extended_spi_in[383];
+        self.extended_spi_in[384] => gic6.extended_spi_in[384];            self.extended_spi_in[385] => gic6.extended_spi_in[385];
+        self.extended_spi_in[386] => gic6.extended_spi_in[386];            self.extended_spi_in[387] => gic6.extended_spi_in[387];
+        self.extended_spi_in[388] => gic6.extended_spi_in[388];            self.extended_spi_in[389] => gic6.extended_spi_in[389];
+        self.extended_spi_in[390] => gic6.extended_spi_in[390];            self.extended_spi_in[391] => gic6.extended_spi_in[391];
+        self.extended_spi_in[392] => gic6.extended_spi_in[392];            self.extended_spi_in[393] => gic6.extended_spi_in[393];
+        self.extended_spi_in[394] => gic6.extended_spi_in[394];            self.extended_spi_in[395] => gic6.extended_spi_in[395];
+        self.extended_spi_in[396] => gic6.extended_spi_in[396];            self.extended_spi_in[397] => gic6.extended_spi_in[397];
+        self.extended_spi_in[398] => gic6.extended_spi_in[398];            self.extended_spi_in[399] => gic6.extended_spi_in[399];
+        self.extended_spi_in[400] => gic6.extended_spi_in[400];            self.extended_spi_in[401] => gic6.extended_spi_in[401];
+        self.extended_spi_in[402] => gic6.extended_spi_in[402];            self.extended_spi_in[403] => gic6.extended_spi_in[403];
+        self.extended_spi_in[404] => gic6.extended_spi_in[404];            self.extended_spi_in[405] => gic6.extended_spi_in[405];
+        self.extended_spi_in[406] => gic6.extended_spi_in[406];            self.extended_spi_in[407] => gic6.extended_spi_in[407];
+        self.extended_spi_in[408] => gic6.extended_spi_in[408];            self.extended_spi_in[409] => gic6.extended_spi_in[409];
+        self.extended_spi_in[410] => gic6.extended_spi_in[410];            self.extended_spi_in[411] => gic6.extended_spi_in[411];
+        self.extended_spi_in[412] => gic6.extended_spi_in[412];            self.extended_spi_in[413] => gic6.extended_spi_in[413];
+        self.extended_spi_in[414] => gic6.extended_spi_in[414];            self.extended_spi_in[415] => gic6.extended_spi_in[415];
+        self.extended_spi_in[416] => gic6.extended_spi_in[416];            self.extended_spi_in[417] => gic6.extended_spi_in[417];
+        self.extended_spi_in[418] => gic6.extended_spi_in[418];            self.extended_spi_in[419] => gic6.extended_spi_in[419];
+        self.extended_spi_in[420] => gic6.extended_spi_in[420];            self.extended_spi_in[421] => gic6.extended_spi_in[421];
+        self.extended_spi_in[422] => gic6.extended_spi_in[422];            self.extended_spi_in[423] => gic6.extended_spi_in[423];
+        self.extended_spi_in[424] => gic6.extended_spi_in[424];            self.extended_spi_in[425] => gic6.extended_spi_in[425];
+        self.extended_spi_in[426] => gic6.extended_spi_in[426];            self.extended_spi_in[427] => gic6.extended_spi_in[427];
+        self.extended_spi_in[428] => gic6.extended_spi_in[428];            self.extended_spi_in[429] => gic6.extended_spi_in[429];
+        self.extended_spi_in[430] => gic6.extended_spi_in[430];            self.extended_spi_in[431] => gic6.extended_spi_in[431];
+        self.extended_spi_in[432] => gic6.extended_spi_in[432];            self.extended_spi_in[433] => gic6.extended_spi_in[433];
+        self.extended_spi_in[434] => gic6.extended_spi_in[434];            self.extended_spi_in[435] => gic6.extended_spi_in[435];
+        self.extended_spi_in[436] => gic6.extended_spi_in[436];            self.extended_spi_in[437] => gic6.extended_spi_in[437];
+        self.extended_spi_in[438] => gic6.extended_spi_in[438];            self.extended_spi_in[439] => gic6.extended_spi_in[439];
+        self.extended_spi_in[440] => gic6.extended_spi_in[440];            self.extended_spi_in[441] => gic6.extended_spi_in[441];
+        self.extended_spi_in[442] => gic6.extended_spi_in[442];            self.extended_spi_in[443] => gic6.extended_spi_in[443];
+        self.extended_spi_in[444] => gic6.extended_spi_in[444];            self.extended_spi_in[445] => gic6.extended_spi_in[445];
+        self.extended_spi_in[446] => gic6.extended_spi_in[446];            self.extended_spi_in[447] => gic6.extended_spi_in[447];
+        self.extended_spi_in[448] => gic7.extended_spi_in[448];            self.extended_spi_in[449] => gic7.extended_spi_in[449];
+        self.extended_spi_in[450] => gic7.extended_spi_in[450];            self.extended_spi_in[451] => gic7.extended_spi_in[451];
+        self.extended_spi_in[452] => gic7.extended_spi_in[452];            self.extended_spi_in[453] => gic7.extended_spi_in[453];
+        self.extended_spi_in[454] => gic7.extended_spi_in[454];            self.extended_spi_in[455] => gic7.extended_spi_in[455];
+        self.extended_spi_in[456] => gic7.extended_spi_in[456];            self.extended_spi_in[457] => gic7.extended_spi_in[457];
+        self.extended_spi_in[458] => gic7.extended_spi_in[458];            self.extended_spi_in[459] => gic7.extended_spi_in[459];
+        self.extended_spi_in[460] => gic7.extended_spi_in[460];            self.extended_spi_in[461] => gic7.extended_spi_in[461];
+        self.extended_spi_in[462] => gic7.extended_spi_in[462];            self.extended_spi_in[463] => gic7.extended_spi_in[463];
+        self.extended_spi_in[464] => gic7.extended_spi_in[464];            self.extended_spi_in[465] => gic7.extended_spi_in[465];
+        self.extended_spi_in[466] => gic7.extended_spi_in[466];            self.extended_spi_in[467] => gic7.extended_spi_in[467];
+        self.extended_spi_in[468] => gic7.extended_spi_in[468];            self.extended_spi_in[469] => gic7.extended_spi_in[469];
+        self.extended_spi_in[470] => gic7.extended_spi_in[470];            self.extended_spi_in[471] => gic7.extended_spi_in[471];
+        self.extended_spi_in[472] => gic7.extended_spi_in[472];            self.extended_spi_in[473] => gic7.extended_spi_in[473];
+        self.extended_spi_in[474] => gic7.extended_spi_in[474];            self.extended_spi_in[475] => gic7.extended_spi_in[475];
+        self.extended_spi_in[476] => gic7.extended_spi_in[476];            self.extended_spi_in[477] => gic7.extended_spi_in[477];
+        self.extended_spi_in[478] => gic7.extended_spi_in[478];            self.extended_spi_in[479] => gic7.extended_spi_in[479];
+        self.extended_spi_in[480] => gic7.extended_spi_in[480];            self.extended_spi_in[481] => gic7.extended_spi_in[481];
+        self.extended_spi_in[482] => gic7.extended_spi_in[482];            self.extended_spi_in[483] => gic7.extended_spi_in[483];
+        self.extended_spi_in[484] => gic7.extended_spi_in[484];            self.extended_spi_in[485] => gic7.extended_spi_in[485];
+        self.extended_spi_in[486] => gic7.extended_spi_in[486];            self.extended_spi_in[487] => gic7.extended_spi_in[487];
+        self.extended_spi_in[488] => gic7.extended_spi_in[488];            self.extended_spi_in[489] => gic7.extended_spi_in[489];
+        self.extended_spi_in[490] => gic7.extended_spi_in[490];            self.extended_spi_in[491] => gic7.extended_spi_in[491];
+        self.extended_spi_in[492] => gic7.extended_spi_in[492];            self.extended_spi_in[493] => gic7.extended_spi_in[493];
+        self.extended_spi_in[494] => gic7.extended_spi_in[494];            self.extended_spi_in[495] => gic7.extended_spi_in[495];
+        self.extended_spi_in[496] => gic7.extended_spi_in[496];            self.extended_spi_in[497] => gic7.extended_spi_in[497];
+        self.extended_spi_in[498] => gic7.extended_spi_in[498];            self.extended_spi_in[499] => gic7.extended_spi_in[499];
+        self.extended_spi_in[500] => gic7.extended_spi_in[500];            self.extended_spi_in[501] => gic7.extended_spi_in[501];
+        self.extended_spi_in[502] => gic7.extended_spi_in[502];            self.extended_spi_in[503] => gic7.extended_spi_in[503];
+        self.extended_spi_in[504] => gic7.extended_spi_in[504];            self.extended_spi_in[505] => gic7.extended_spi_in[505];
+        self.extended_spi_in[506] => gic7.extended_spi_in[506];            self.extended_spi_in[507] => gic7.extended_spi_in[507];
+        self.extended_spi_in[508] => gic7.extended_spi_in[508];            self.extended_spi_in[509] => gic7.extended_spi_in[509];
+        self.extended_spi_in[510] => gic7.extended_spi_in[510];            self.extended_spi_in[511] => gic7.extended_spi_in[511];
+        self.extended_spi_in[512] => gic8.extended_spi_in[512];            self.extended_spi_in[513] => gic8.extended_spi_in[513];
+        self.extended_spi_in[514] => gic8.extended_spi_in[514];            self.extended_spi_in[515] => gic8.extended_spi_in[515];
+        self.extended_spi_in[516] => gic8.extended_spi_in[516];            self.extended_spi_in[517] => gic8.extended_spi_in[517];
+        self.extended_spi_in[518] => gic8.extended_spi_in[518];            self.extended_spi_in[519] => gic8.extended_spi_in[519];
+        self.extended_spi_in[520] => gic8.extended_spi_in[520];            self.extended_spi_in[521] => gic8.extended_spi_in[521];
+        self.extended_spi_in[522] => gic8.extended_spi_in[522];            self.extended_spi_in[523] => gic8.extended_spi_in[523];
+        self.extended_spi_in[524] => gic8.extended_spi_in[524];            self.extended_spi_in[525] => gic8.extended_spi_in[525];
+        self.extended_spi_in[526] => gic8.extended_spi_in[526];            self.extended_spi_in[527] => gic8.extended_spi_in[527];
+        self.extended_spi_in[528] => gic8.extended_spi_in[528];            self.extended_spi_in[529] => gic8.extended_spi_in[529];
+        self.extended_spi_in[530] => gic8.extended_spi_in[530];            self.extended_spi_in[531] => gic8.extended_spi_in[531];
+        self.extended_spi_in[532] => gic8.extended_spi_in[532];            self.extended_spi_in[533] => gic8.extended_spi_in[533];
+        self.extended_spi_in[534] => gic8.extended_spi_in[534];            self.extended_spi_in[535] => gic8.extended_spi_in[535];
+        self.extended_spi_in[536] => gic8.extended_spi_in[536];            self.extended_spi_in[537] => gic8.extended_spi_in[537];
+        self.extended_spi_in[538] => gic8.extended_spi_in[538];            self.extended_spi_in[539] => gic8.extended_spi_in[539];
+        self.extended_spi_in[540] => gic8.extended_spi_in[540];            self.extended_spi_in[541] => gic8.extended_spi_in[541];
+        self.extended_spi_in[542] => gic8.extended_spi_in[542];            self.extended_spi_in[543] => gic8.extended_spi_in[543];
+        self.extended_spi_in[544] => gic8.extended_spi_in[544];            self.extended_spi_in[545] => gic8.extended_spi_in[545];
+        self.extended_spi_in[546] => gic8.extended_spi_in[546];            self.extended_spi_in[547] => gic8.extended_spi_in[547];
+        self.extended_spi_in[548] => gic8.extended_spi_in[548];            self.extended_spi_in[549] => gic8.extended_spi_in[549];
+        self.extended_spi_in[550] => gic8.extended_spi_in[550];            self.extended_spi_in[551] => gic8.extended_spi_in[551];
+        self.extended_spi_in[552] => gic8.extended_spi_in[552];            self.extended_spi_in[553] => gic8.extended_spi_in[553];
+        self.extended_spi_in[554] => gic8.extended_spi_in[554];            self.extended_spi_in[555] => gic8.extended_spi_in[555];
+        self.extended_spi_in[556] => gic8.extended_spi_in[556];            self.extended_spi_in[557] => gic8.extended_spi_in[557];
+        self.extended_spi_in[558] => gic8.extended_spi_in[558];            self.extended_spi_in[559] => gic8.extended_spi_in[559];
+        self.extended_spi_in[560] => gic8.extended_spi_in[560];            self.extended_spi_in[561] => gic8.extended_spi_in[561];
+        self.extended_spi_in[562] => gic8.extended_spi_in[562];            self.extended_spi_in[563] => gic8.extended_spi_in[563];
+        self.extended_spi_in[564] => gic8.extended_spi_in[564];            self.extended_spi_in[565] => gic8.extended_spi_in[565];
+        self.extended_spi_in[566] => gic8.extended_spi_in[566];            self.extended_spi_in[567] => gic8.extended_spi_in[567];
+        self.extended_spi_in[568] => gic8.extended_spi_in[568];            self.extended_spi_in[569] => gic8.extended_spi_in[569];
+        self.extended_spi_in[570] => gic8.extended_spi_in[570];            self.extended_spi_in[571] => gic8.extended_spi_in[571];
+        self.extended_spi_in[572] => gic8.extended_spi_in[572];            self.extended_spi_in[573] => gic8.extended_spi_in[573];
+        self.extended_spi_in[574] => gic8.extended_spi_in[574];            self.extended_spi_in[575] => gic8.extended_spi_in[575];
+        self.extended_spi_in[576] => gic9.extended_spi_in[576];            self.extended_spi_in[577] => gic9.extended_spi_in[577];
+        self.extended_spi_in[578] => gic9.extended_spi_in[578];            self.extended_spi_in[579] => gic9.extended_spi_in[579];
+        self.extended_spi_in[580] => gic9.extended_spi_in[580];            self.extended_spi_in[581] => gic9.extended_spi_in[581];
+        self.extended_spi_in[582] => gic9.extended_spi_in[582];            self.extended_spi_in[583] => gic9.extended_spi_in[583];
+        self.extended_spi_in[584] => gic9.extended_spi_in[584];            self.extended_spi_in[585] => gic9.extended_spi_in[585];
+        self.extended_spi_in[586] => gic9.extended_spi_in[586];            self.extended_spi_in[587] => gic9.extended_spi_in[587];
+        self.extended_spi_in[588] => gic9.extended_spi_in[588];            self.extended_spi_in[589] => gic9.extended_spi_in[589];
+        self.extended_spi_in[590] => gic9.extended_spi_in[590];            self.extended_spi_in[591] => gic9.extended_spi_in[591];
+        self.extended_spi_in[592] => gic9.extended_spi_in[592];            self.extended_spi_in[593] => gic9.extended_spi_in[593];
+        self.extended_spi_in[594] => gic9.extended_spi_in[594];            self.extended_spi_in[595] => gic9.extended_spi_in[595];
+        self.extended_spi_in[596] => gic9.extended_spi_in[596];            self.extended_spi_in[597] => gic9.extended_spi_in[597];
+        self.extended_spi_in[598] => gic9.extended_spi_in[598];            self.extended_spi_in[599] => gic9.extended_spi_in[599];
+        self.extended_spi_in[600] => gic9.extended_spi_in[600];            self.extended_spi_in[601] => gic9.extended_spi_in[601];
+        self.extended_spi_in[602] => gic9.extended_spi_in[602];            self.extended_spi_in[603] => gic9.extended_spi_in[603];
+        self.extended_spi_in[604] => gic9.extended_spi_in[604];            self.extended_spi_in[605] => gic9.extended_spi_in[605];
+        self.extended_spi_in[606] => gic9.extended_spi_in[606];            self.extended_spi_in[607] => gic9.extended_spi_in[607];
+        self.extended_spi_in[608] => gic9.extended_spi_in[608];            self.extended_spi_in[609] => gic9.extended_spi_in[609];
+        self.extended_spi_in[610] => gic9.extended_spi_in[610];            self.extended_spi_in[611] => gic9.extended_spi_in[611];
+        self.extended_spi_in[612] => gic9.extended_spi_in[612];            self.extended_spi_in[613] => gic9.extended_spi_in[613];
+        self.extended_spi_in[614] => gic9.extended_spi_in[614];            self.extended_spi_in[615] => gic9.extended_spi_in[615];
+        self.extended_spi_in[616] => gic9.extended_spi_in[616];            self.extended_spi_in[617] => gic9.extended_spi_in[617];
+        self.extended_spi_in[618] => gic9.extended_spi_in[618];            self.extended_spi_in[619] => gic9.extended_spi_in[619];
+        self.extended_spi_in[620] => gic9.extended_spi_in[620];            self.extended_spi_in[621] => gic9.extended_spi_in[621];
+        self.extended_spi_in[622] => gic9.extended_spi_in[622];            self.extended_spi_in[623] => gic9.extended_spi_in[623];
+        self.extended_spi_in[624] => gic9.extended_spi_in[624];            self.extended_spi_in[625] => gic9.extended_spi_in[625];
+        self.extended_spi_in[626] => gic9.extended_spi_in[626];            self.extended_spi_in[627] => gic9.extended_spi_in[627];
+        self.extended_spi_in[628] => gic9.extended_spi_in[628];            self.extended_spi_in[629] => gic9.extended_spi_in[629];
+        self.extended_spi_in[630] => gic9.extended_spi_in[630];            self.extended_spi_in[631] => gic9.extended_spi_in[631];
+        self.extended_spi_in[632] => gic9.extended_spi_in[632];            self.extended_spi_in[633] => gic9.extended_spi_in[633];
+        self.extended_spi_in[634] => gic9.extended_spi_in[634];            self.extended_spi_in[635] => gic9.extended_spi_in[635];
+        self.extended_spi_in[636] => gic9.extended_spi_in[636];            self.extended_spi_in[637] => gic9.extended_spi_in[637];
+        self.extended_spi_in[638] => gic9.extended_spi_in[638];            self.extended_spi_in[639] => gic9.extended_spi_in[639];
+        self.extended_spi_in[640] => gic10.extended_spi_in[640];            self.extended_spi_in[641] => gic10.extended_spi_in[641];
+        self.extended_spi_in[642] => gic10.extended_spi_in[642];            self.extended_spi_in[643] => gic10.extended_spi_in[643];
+        self.extended_spi_in[644] => gic10.extended_spi_in[644];            self.extended_spi_in[645] => gic10.extended_spi_in[645];
+        self.extended_spi_in[646] => gic10.extended_spi_in[646];            self.extended_spi_in[647] => gic10.extended_spi_in[647];
+        self.extended_spi_in[648] => gic10.extended_spi_in[648];            self.extended_spi_in[649] => gic10.extended_spi_in[649];
+        self.extended_spi_in[650] => gic10.extended_spi_in[650];            self.extended_spi_in[651] => gic10.extended_spi_in[651];
+        self.extended_spi_in[652] => gic10.extended_spi_in[652];            self.extended_spi_in[653] => gic10.extended_spi_in[653];
+        self.extended_spi_in[654] => gic10.extended_spi_in[654];            self.extended_spi_in[655] => gic10.extended_spi_in[655];
+        self.extended_spi_in[656] => gic10.extended_spi_in[656];            self.extended_spi_in[657] => gic10.extended_spi_in[657];
+        self.extended_spi_in[658] => gic10.extended_spi_in[658];            self.extended_spi_in[659] => gic10.extended_spi_in[659];
+        self.extended_spi_in[660] => gic10.extended_spi_in[660];            self.extended_spi_in[661] => gic10.extended_spi_in[661];
+        self.extended_spi_in[662] => gic10.extended_spi_in[662];            self.extended_spi_in[663] => gic10.extended_spi_in[663];
+        self.extended_spi_in[664] => gic10.extended_spi_in[664];            self.extended_spi_in[665] => gic10.extended_spi_in[665];
+        self.extended_spi_in[666] => gic10.extended_spi_in[666];            self.extended_spi_in[667] => gic10.extended_spi_in[667];
+        self.extended_spi_in[668] => gic10.extended_spi_in[668];            self.extended_spi_in[669] => gic10.extended_spi_in[669];
+        self.extended_spi_in[670] => gic10.extended_spi_in[670];            self.extended_spi_in[671] => gic10.extended_spi_in[671];
+        self.extended_spi_in[672] => gic10.extended_spi_in[672];            self.extended_spi_in[673] => gic10.extended_spi_in[673];
+        self.extended_spi_in[674] => gic10.extended_spi_in[674];            self.extended_spi_in[675] => gic10.extended_spi_in[675];
+        self.extended_spi_in[676] => gic10.extended_spi_in[676];            self.extended_spi_in[677] => gic10.extended_spi_in[677];
+        self.extended_spi_in[678] => gic10.extended_spi_in[678];            self.extended_spi_in[679] => gic10.extended_spi_in[679];
+        self.extended_spi_in[680] => gic10.extended_spi_in[680];            self.extended_spi_in[681] => gic10.extended_spi_in[681];
+        self.extended_spi_in[682] => gic10.extended_spi_in[682];            self.extended_spi_in[683] => gic10.extended_spi_in[683];
+        self.extended_spi_in[684] => gic10.extended_spi_in[684];            self.extended_spi_in[685] => gic10.extended_spi_in[685];
+        self.extended_spi_in[686] => gic10.extended_spi_in[686];            self.extended_spi_in[687] => gic10.extended_spi_in[687];
+        self.extended_spi_in[688] => gic10.extended_spi_in[688];            self.extended_spi_in[689] => gic10.extended_spi_in[689];
+        self.extended_spi_in[690] => gic10.extended_spi_in[690];            self.extended_spi_in[691] => gic10.extended_spi_in[691];
+        self.extended_spi_in[692] => gic10.extended_spi_in[692];            self.extended_spi_in[693] => gic10.extended_spi_in[693];
+        self.extended_spi_in[694] => gic10.extended_spi_in[694];            self.extended_spi_in[695] => gic10.extended_spi_in[695];
+        self.extended_spi_in[696] => gic10.extended_spi_in[696];            self.extended_spi_in[697] => gic10.extended_spi_in[697];
+        self.extended_spi_in[698] => gic10.extended_spi_in[698];            self.extended_spi_in[699] => gic10.extended_spi_in[699];
+        self.extended_spi_in[700] => gic10.extended_spi_in[700];            self.extended_spi_in[701] => gic10.extended_spi_in[701];
+        self.extended_spi_in[702] => gic10.extended_spi_in[702];            self.extended_spi_in[703] => gic10.extended_spi_in[703];
+        self.extended_spi_in[704] => gic11.extended_spi_in[704];            self.extended_spi_in[705] => gic11.extended_spi_in[705];
+        self.extended_spi_in[706] => gic11.extended_spi_in[706];            self.extended_spi_in[707] => gic11.extended_spi_in[707];
+        self.extended_spi_in[708] => gic11.extended_spi_in[708];            self.extended_spi_in[709] => gic11.extended_spi_in[709];
+        self.extended_spi_in[710] => gic11.extended_spi_in[710];            self.extended_spi_in[711] => gic11.extended_spi_in[711];
+        self.extended_spi_in[712] => gic11.extended_spi_in[712];            self.extended_spi_in[713] => gic11.extended_spi_in[713];
+        self.extended_spi_in[714] => gic11.extended_spi_in[714];            self.extended_spi_in[715] => gic11.extended_spi_in[715];
+        self.extended_spi_in[716] => gic11.extended_spi_in[716];            self.extended_spi_in[717] => gic11.extended_spi_in[717];
+        self.extended_spi_in[718] => gic11.extended_spi_in[718];            self.extended_spi_in[719] => gic11.extended_spi_in[719];
+        self.extended_spi_in[720] => gic11.extended_spi_in[720];            self.extended_spi_in[721] => gic11.extended_spi_in[721];
+        self.extended_spi_in[722] => gic11.extended_spi_in[722];            self.extended_spi_in[723] => gic11.extended_spi_in[723];
+        self.extended_spi_in[724] => gic11.extended_spi_in[724];            self.extended_spi_in[725] => gic11.extended_spi_in[725];
+        self.extended_spi_in[726] => gic11.extended_spi_in[726];            self.extended_spi_in[727] => gic11.extended_spi_in[727];
+        self.extended_spi_in[728] => gic11.extended_spi_in[728];            self.extended_spi_in[729] => gic11.extended_spi_in[729];
+        self.extended_spi_in[730] => gic11.extended_spi_in[730];            self.extended_spi_in[731] => gic11.extended_spi_in[731];
+        self.extended_spi_in[732] => gic11.extended_spi_in[732];            self.extended_spi_in[733] => gic11.extended_spi_in[733];
+        self.extended_spi_in[734] => gic11.extended_spi_in[734];            self.extended_spi_in[735] => gic11.extended_spi_in[735];
+        self.extended_spi_in[736] => gic11.extended_spi_in[736];            self.extended_spi_in[737] => gic11.extended_spi_in[737];
+        self.extended_spi_in[738] => gic11.extended_spi_in[738];            self.extended_spi_in[739] => gic11.extended_spi_in[739];
+        self.extended_spi_in[740] => gic11.extended_spi_in[740];            self.extended_spi_in[741] => gic11.extended_spi_in[741];
+        self.extended_spi_in[742] => gic11.extended_spi_in[742];            self.extended_spi_in[743] => gic11.extended_spi_in[743];
+        self.extended_spi_in[744] => gic11.extended_spi_in[744];            self.extended_spi_in[745] => gic11.extended_spi_in[745];
+        self.extended_spi_in[746] => gic11.extended_spi_in[746];            self.extended_spi_in[747] => gic11.extended_spi_in[747];
+        self.extended_spi_in[748] => gic11.extended_spi_in[748];            self.extended_spi_in[749] => gic11.extended_spi_in[749];
+        self.extended_spi_in[750] => gic11.extended_spi_in[750];            self.extended_spi_in[751] => gic11.extended_spi_in[751];
+        self.extended_spi_in[752] => gic11.extended_spi_in[752];            self.extended_spi_in[753] => gic11.extended_spi_in[753];
+        self.extended_spi_in[754] => gic11.extended_spi_in[754];            self.extended_spi_in[755] => gic11.extended_spi_in[755];
+        self.extended_spi_in[756] => gic11.extended_spi_in[756];            self.extended_spi_in[757] => gic11.extended_spi_in[757];
+        self.extended_spi_in[758] => gic11.extended_spi_in[758];            self.extended_spi_in[759] => gic11.extended_spi_in[759];
+        self.extended_spi_in[760] => gic11.extended_spi_in[760];            self.extended_spi_in[761] => gic11.extended_spi_in[761];
+        self.extended_spi_in[762] => gic11.extended_spi_in[762];            self.extended_spi_in[763] => gic11.extended_spi_in[763];
+        self.extended_spi_in[764] => gic11.extended_spi_in[764];            self.extended_spi_in[765] => gic11.extended_spi_in[765];
+        self.extended_spi_in[766] => gic11.extended_spi_in[766];            self.extended_spi_in[767] => gic11.extended_spi_in[767];
+        self.extended_spi_in[768] => gic12.extended_spi_in[768];            self.extended_spi_in[769] => gic12.extended_spi_in[769];
+        self.extended_spi_in[770] => gic12.extended_spi_in[770];            self.extended_spi_in[771] => gic12.extended_spi_in[771];
+        self.extended_spi_in[772] => gic12.extended_spi_in[772];            self.extended_spi_in[773] => gic12.extended_spi_in[773];
+        self.extended_spi_in[774] => gic12.extended_spi_in[774];            self.extended_spi_in[775] => gic12.extended_spi_in[775];
+        self.extended_spi_in[776] => gic12.extended_spi_in[776];            self.extended_spi_in[777] => gic12.extended_spi_in[777];
+        self.extended_spi_in[778] => gic12.extended_spi_in[778];            self.extended_spi_in[779] => gic12.extended_spi_in[779];
+        self.extended_spi_in[780] => gic12.extended_spi_in[780];            self.extended_spi_in[781] => gic12.extended_spi_in[781];
+        self.extended_spi_in[782] => gic12.extended_spi_in[782];            self.extended_spi_in[783] => gic12.extended_spi_in[783];
+        self.extended_spi_in[784] => gic12.extended_spi_in[784];            self.extended_spi_in[785] => gic12.extended_spi_in[785];
+        self.extended_spi_in[786] => gic12.extended_spi_in[786];            self.extended_spi_in[787] => gic12.extended_spi_in[787];
+        self.extended_spi_in[788] => gic12.extended_spi_in[788];            self.extended_spi_in[789] => gic12.extended_spi_in[789];
+        self.extended_spi_in[790] => gic12.extended_spi_in[790];            self.extended_spi_in[791] => gic12.extended_spi_in[791];
+        self.extended_spi_in[792] => gic12.extended_spi_in[792];            self.extended_spi_in[793] => gic12.extended_spi_in[793];
+        self.extended_spi_in[794] => gic12.extended_spi_in[794];            self.extended_spi_in[795] => gic12.extended_spi_in[795];
+        self.extended_spi_in[796] => gic12.extended_spi_in[796];            self.extended_spi_in[797] => gic12.extended_spi_in[797];
+        self.extended_spi_in[798] => gic12.extended_spi_in[798];            self.extended_spi_in[799] => gic12.extended_spi_in[799];
+        self.extended_spi_in[800] => gic12.extended_spi_in[800];            self.extended_spi_in[801] => gic12.extended_spi_in[801];
+        self.extended_spi_in[802] => gic12.extended_spi_in[802];            self.extended_spi_in[803] => gic12.extended_spi_in[803];
+        self.extended_spi_in[804] => gic12.extended_spi_in[804];            self.extended_spi_in[805] => gic12.extended_spi_in[805];
+        self.extended_spi_in[806] => gic12.extended_spi_in[806];            self.extended_spi_in[807] => gic12.extended_spi_in[807];
+        self.extended_spi_in[808] => gic12.extended_spi_in[808];            self.extended_spi_in[809] => gic12.extended_spi_in[809];
+        self.extended_spi_in[810] => gic12.extended_spi_in[810];            self.extended_spi_in[811] => gic12.extended_spi_in[811];
+        self.extended_spi_in[812] => gic12.extended_spi_in[812];            self.extended_spi_in[813] => gic12.extended_spi_in[813];
+        self.extended_spi_in[814] => gic12.extended_spi_in[814];            self.extended_spi_in[815] => gic12.extended_spi_in[815];
+        self.extended_spi_in[816] => gic12.extended_spi_in[816];            self.extended_spi_in[817] => gic12.extended_spi_in[817];
+        self.extended_spi_in[818] => gic12.extended_spi_in[818];            self.extended_spi_in[819] => gic12.extended_spi_in[819];
+        self.extended_spi_in[820] => gic12.extended_spi_in[820];            self.extended_spi_in[821] => gic12.extended_spi_in[821];
+        self.extended_spi_in[822] => gic12.extended_spi_in[822];            self.extended_spi_in[823] => gic12.extended_spi_in[823];
+        self.extended_spi_in[824] => gic12.extended_spi_in[824];            self.extended_spi_in[825] => gic12.extended_spi_in[825];
+        self.extended_spi_in[826] => gic12.extended_spi_in[826];            self.extended_spi_in[827] => gic12.extended_spi_in[827];
+        self.extended_spi_in[828] => gic12.extended_spi_in[828];            self.extended_spi_in[829] => gic12.extended_spi_in[829];
+        self.extended_spi_in[830] => gic12.extended_spi_in[830];            self.extended_spi_in[831] => gic12.extended_spi_in[831];
+        self.extended_spi_in[832] => gic13.extended_spi_in[832];            self.extended_spi_in[833] => gic13.extended_spi_in[833];
+        self.extended_spi_in[834] => gic13.extended_spi_in[834];            self.extended_spi_in[835] => gic13.extended_spi_in[835];
+        self.extended_spi_in[836] => gic13.extended_spi_in[836];            self.extended_spi_in[837] => gic13.extended_spi_in[837];
+        self.extended_spi_in[838] => gic13.extended_spi_in[838];            self.extended_spi_in[839] => gic13.extended_spi_in[839];
+        self.extended_spi_in[840] => gic13.extended_spi_in[840];            self.extended_spi_in[841] => gic13.extended_spi_in[841];
+        self.extended_spi_in[842] => gic13.extended_spi_in[842];            self.extended_spi_in[843] => gic13.extended_spi_in[843];
+        self.extended_spi_in[844] => gic13.extended_spi_in[844];            self.extended_spi_in[845] => gic13.extended_spi_in[845];
+        self.extended_spi_in[846] => gic13.extended_spi_in[846];            self.extended_spi_in[847] => gic13.extended_spi_in[847];
+        self.extended_spi_in[848] => gic13.extended_spi_in[848];            self.extended_spi_in[849] => gic13.extended_spi_in[849];
+        self.extended_spi_in[850] => gic13.extended_spi_in[850];            self.extended_spi_in[851] => gic13.extended_spi_in[851];
+        self.extended_spi_in[852] => gic13.extended_spi_in[852];            self.extended_spi_in[853] => gic13.extended_spi_in[853];
+        self.extended_spi_in[854] => gic13.extended_spi_in[854];            self.extended_spi_in[855] => gic13.extended_spi_in[855];
+        self.extended_spi_in[856] => gic13.extended_spi_in[856];            self.extended_spi_in[857] => gic13.extended_spi_in[857];
+        self.extended_spi_in[858] => gic13.extended_spi_in[858];            self.extended_spi_in[859] => gic13.extended_spi_in[859];
+        self.extended_spi_in[860] => gic13.extended_spi_in[860];            self.extended_spi_in[861] => gic13.extended_spi_in[861];
+        self.extended_spi_in[862] => gic13.extended_spi_in[862];            self.extended_spi_in[863] => gic13.extended_spi_in[863];
+        self.extended_spi_in[864] => gic13.extended_spi_in[864];            self.extended_spi_in[865] => gic13.extended_spi_in[865];
+        self.extended_spi_in[866] => gic13.extended_spi_in[866];            self.extended_spi_in[867] => gic13.extended_spi_in[867];
+        self.extended_spi_in[868] => gic13.extended_spi_in[868];            self.extended_spi_in[869] => gic13.extended_spi_in[869];
+        self.extended_spi_in[870] => gic13.extended_spi_in[870];            self.extended_spi_in[871] => gic13.extended_spi_in[871];
+        self.extended_spi_in[872] => gic13.extended_spi_in[872];            self.extended_spi_in[873] => gic13.extended_spi_in[873];
+        self.extended_spi_in[874] => gic13.extended_spi_in[874];            self.extended_spi_in[875] => gic13.extended_spi_in[875];
+        self.extended_spi_in[876] => gic13.extended_spi_in[876];            self.extended_spi_in[877] => gic13.extended_spi_in[877];
+        self.extended_spi_in[878] => gic13.extended_spi_in[878];            self.extended_spi_in[879] => gic13.extended_spi_in[879];
+        self.extended_spi_in[880] => gic13.extended_spi_in[880];            self.extended_spi_in[881] => gic13.extended_spi_in[881];
+        self.extended_spi_in[882] => gic13.extended_spi_in[882];            self.extended_spi_in[883] => gic13.extended_spi_in[883];
+        self.extended_spi_in[884] => gic13.extended_spi_in[884];            self.extended_spi_in[885] => gic13.extended_spi_in[885];
+        self.extended_spi_in[886] => gic13.extended_spi_in[886];            self.extended_spi_in[887] => gic13.extended_spi_in[887];
+        self.extended_spi_in[888] => gic13.extended_spi_in[888];            self.extended_spi_in[889] => gic13.extended_spi_in[889];
+        self.extended_spi_in[890] => gic13.extended_spi_in[890];            self.extended_spi_in[891] => gic13.extended_spi_in[891];
+        self.extended_spi_in[892] => gic13.extended_spi_in[892];            self.extended_spi_in[893] => gic13.extended_spi_in[893];
+        self.extended_spi_in[894] => gic13.extended_spi_in[894];            self.extended_spi_in[895] => gic13.extended_spi_in[895];
+        self.extended_spi_in[896] => gic14.extended_spi_in[896];            self.extended_spi_in[897] => gic14.extended_spi_in[897];
+        self.extended_spi_in[898] => gic14.extended_spi_in[898];            self.extended_spi_in[899] => gic14.extended_spi_in[899];
+        self.extended_spi_in[900] => gic14.extended_spi_in[900];            self.extended_spi_in[901] => gic14.extended_spi_in[901];
+        self.extended_spi_in[902] => gic14.extended_spi_in[902];            self.extended_spi_in[903] => gic14.extended_spi_in[903];
+        self.extended_spi_in[904] => gic14.extended_spi_in[904];            self.extended_spi_in[905] => gic14.extended_spi_in[905];
+        self.extended_spi_in[906] => gic14.extended_spi_in[906];            self.extended_spi_in[907] => gic14.extended_spi_in[907];
+        self.extended_spi_in[908] => gic14.extended_spi_in[908];            self.extended_spi_in[909] => gic14.extended_spi_in[909];
+        self.extended_spi_in[910] => gic14.extended_spi_in[910];            self.extended_spi_in[911] => gic14.extended_spi_in[911];
+        self.extended_spi_in[912] => gic14.extended_spi_in[912];            self.extended_spi_in[913] => gic14.extended_spi_in[913];
+        self.extended_spi_in[914] => gic14.extended_spi_in[914];            self.extended_spi_in[915] => gic14.extended_spi_in[915];
+        self.extended_spi_in[916] => gic14.extended_spi_in[916];            self.extended_spi_in[917] => gic14.extended_spi_in[917];
+        self.extended_spi_in[918] => gic14.extended_spi_in[918];            self.extended_spi_in[919] => gic14.extended_spi_in[919];
+        self.extended_spi_in[920] => gic14.extended_spi_in[920];            self.extended_spi_in[921] => gic14.extended_spi_in[921];
+        self.extended_spi_in[922] => gic14.extended_spi_in[922];            self.extended_spi_in[923] => gic14.extended_spi_in[923];
+        self.extended_spi_in[924] => gic14.extended_spi_in[924];            self.extended_spi_in[925] => gic14.extended_spi_in[925];
+        self.extended_spi_in[926] => gic14.extended_spi_in[926];            self.extended_spi_in[927] => gic14.extended_spi_in[927];
+        self.extended_spi_in[928] => gic14.extended_spi_in[928];            self.extended_spi_in[929] => gic14.extended_spi_in[929];
+        self.extended_spi_in[930] => gic14.extended_spi_in[930];            self.extended_spi_in[931] => gic14.extended_spi_in[931];
+        self.extended_spi_in[932] => gic14.extended_spi_in[932];            self.extended_spi_in[933] => gic14.extended_spi_in[933];
+        self.extended_spi_in[934] => gic14.extended_spi_in[934];            self.extended_spi_in[935] => gic14.extended_spi_in[935];
+        self.extended_spi_in[936] => gic14.extended_spi_in[936];            self.extended_spi_in[937] => gic14.extended_spi_in[937];
+        self.extended_spi_in[938] => gic14.extended_spi_in[938];            self.extended_spi_in[939] => gic14.extended_spi_in[939];
+        self.extended_spi_in[940] => gic14.extended_spi_in[940];            self.extended_spi_in[941] => gic14.extended_spi_in[941];
+        self.extended_spi_in[942] => gic14.extended_spi_in[942];            self.extended_spi_in[943] => gic14.extended_spi_in[943];
+        self.extended_spi_in[944] => gic14.extended_spi_in[944];            self.extended_spi_in[945] => gic14.extended_spi_in[945];
+        self.extended_spi_in[946] => gic14.extended_spi_in[946];            self.extended_spi_in[947] => gic14.extended_spi_in[947];
+        self.extended_spi_in[948] => gic14.extended_spi_in[948];            self.extended_spi_in[949] => gic14.extended_spi_in[949];
+        self.extended_spi_in[950] => gic14.extended_spi_in[950];            self.extended_spi_in[951] => gic14.extended_spi_in[951];
+        self.extended_spi_in[952] => gic14.extended_spi_in[952];            self.extended_spi_in[953] => gic14.extended_spi_in[953];
+        self.extended_spi_in[954] => gic14.extended_spi_in[954];            self.extended_spi_in[955] => gic14.extended_spi_in[955];
+        self.extended_spi_in[956] => gic14.extended_spi_in[956];            self.extended_spi_in[957] => gic14.extended_spi_in[957];
+        self.extended_spi_in[958] => gic14.extended_spi_in[958];            self.extended_spi_in[959] => gic14.extended_spi_in[959];
+        self.extended_spi_in[960] => gic15.extended_spi_in[960];            self.extended_spi_in[961] => gic15.extended_spi_in[961];
+        self.extended_spi_in[962] => gic15.extended_spi_in[962];            self.extended_spi_in[963] => gic15.extended_spi_in[963];
+        self.extended_spi_in[964] => gic15.extended_spi_in[964];            self.extended_spi_in[965] => gic15.extended_spi_in[965];
+        self.extended_spi_in[966] => gic15.extended_spi_in[966];            self.extended_spi_in[967] => gic15.extended_spi_in[967];
+        self.extended_spi_in[968] => gic15.extended_spi_in[968];            self.extended_spi_in[969] => gic15.extended_spi_in[969];
+        self.extended_spi_in[970] => gic15.extended_spi_in[970];            self.extended_spi_in[971] => gic15.extended_spi_in[971];
+        self.extended_spi_in[972] => gic15.extended_spi_in[972];            self.extended_spi_in[973] => gic15.extended_spi_in[973];
+        self.extended_spi_in[974] => gic15.extended_spi_in[974];            self.extended_spi_in[975] => gic15.extended_spi_in[975];
+        self.extended_spi_in[976] => gic15.extended_spi_in[976];            self.extended_spi_in[977] => gic15.extended_spi_in[977];
+        self.extended_spi_in[978] => gic15.extended_spi_in[978];            self.extended_spi_in[979] => gic15.extended_spi_in[979];
+        self.extended_spi_in[980] => gic15.extended_spi_in[980];            self.extended_spi_in[981] => gic15.extended_spi_in[981];
+        self.extended_spi_in[982] => gic15.extended_spi_in[982];            self.extended_spi_in[983] => gic15.extended_spi_in[983];
+        self.extended_spi_in[984] => gic15.extended_spi_in[984];            self.extended_spi_in[985] => gic15.extended_spi_in[985];
+        self.extended_spi_in[986] => gic15.extended_spi_in[986];            self.extended_spi_in[987] => gic15.extended_spi_in[987];
+        self.extended_spi_in[988] => gic15.extended_spi_in[988];            self.extended_spi_in[989] => gic15.extended_spi_in[989];
+        self.extended_spi_in[990] => gic15.extended_spi_in[990];            self.extended_spi_in[991] => gic15.extended_spi_in[991];
+        self.extended_spi_in[992] => gic15.extended_spi_in[992];            self.extended_spi_in[993] => gic15.extended_spi_in[993];
+        self.extended_spi_in[994] => gic15.extended_spi_in[994];            self.extended_spi_in[995] => gic15.extended_spi_in[995];
+        self.extended_spi_in[996] => gic15.extended_spi_in[996];            self.extended_spi_in[997] => gic15.extended_spi_in[997];
+        self.extended_spi_in[998] => gic15.extended_spi_in[998];            self.extended_spi_in[999] => gic15.extended_spi_in[999];
+        self.extended_spi_in[1000] => gic15.extended_spi_in[1000];            self.extended_spi_in[1001] => gic15.extended_spi_in[1001];
+        self.extended_spi_in[1002] => gic15.extended_spi_in[1002];            self.extended_spi_in[1003] => gic15.extended_spi_in[1003];
+        self.extended_spi_in[1004] => gic15.extended_spi_in[1004];            self.extended_spi_in[1005] => gic15.extended_spi_in[1005];
+        self.extended_spi_in[1006] => gic15.extended_spi_in[1006];            self.extended_spi_in[1007] => gic15.extended_spi_in[1007];
+        self.extended_spi_in[1008] => gic15.extended_spi_in[1008];            self.extended_spi_in[1009] => gic15.extended_spi_in[1009];
+        self.extended_spi_in[1010] => gic15.extended_spi_in[1010];            self.extended_spi_in[1011] => gic15.extended_spi_in[1011];
+        self.extended_spi_in[1012] => gic15.extended_spi_in[1012];            self.extended_spi_in[1013] => gic15.extended_spi_in[1013];
+        self.extended_spi_in[1014] => gic15.extended_spi_in[1014];            self.extended_spi_in[1015] => gic15.extended_spi_in[1015];
+        self.extended_spi_in[1016] => gic15.extended_spi_in[1016];            self.extended_spi_in[1017] => gic15.extended_spi_in[1017];
+        self.extended_spi_in[1018] => gic15.extended_spi_in[1018];            self.extended_spi_in[1019] => gic15.extended_spi_in[1019];
+        self.extended_spi_in[1020] => gic15.extended_spi_in[1020];            self.extended_spi_in[1021] => gic15.extended_spi_in[1021];
+        self.extended_spi_in[1022] => gic15.extended_spi_in[1022];            self.extended_spi_in[1023] => gic15.extended_spi_in[1023];
+
+        // Connect ppi lines circularly to gics
+        self.ppi_in_0 => gic0.ppi_in_0;         self.ppi_in_1 => gic1.ppi_in_1;
+        self.ppi_in_16 => gic0.ppi_in_16;       self.ppi_in_17 => gic1.ppi_in_17;
+        self.ppi_in_32 => gic0.ppi_in_32;       self.ppi_in_33 => gic1.ppi_in_33;
+        self.ppi_in_48 => gic0.ppi_in_48;       self.ppi_in_49 => gic1.ppi_in_49;
+
+        self.ppi_in_2 => gic2.ppi_in_2;         self.ppi_in_3 => gic3.ppi_in_3;
+        self.ppi_in_18 => gic2.ppi_in_18;       self.ppi_in_19 => gic3.ppi_in_19;
+        self.ppi_in_34 => gic2.ppi_in_34;       self.ppi_in_35 => gic3.ppi_in_35;
+        self.ppi_in_50 => gic2.ppi_in_50;       self.ppi_in_51 => gic3.ppi_in_51;
+
+        self.ppi_in_4 => gic4.ppi_in_4;         self.ppi_in_5 => gic5.ppi_in_5;
+        self.ppi_in_20 => gic4.ppi_in_20;       self.ppi_in_21 => gic5.ppi_in_21;
+        self.ppi_in_36 => gic4.ppi_in_36;       self.ppi_in_37 => gic5.ppi_in_37;
+        self.ppi_in_52 => gic4.ppi_in_52;       self.ppi_in_53 => gic5.ppi_in_53;
+
+        self.ppi_in_6 => gic6.ppi_in_6;         self.ppi_in_7 => gic7.ppi_in_7;
+        self.ppi_in_22 => gic6.ppi_in_22;       self.ppi_in_23 => gic7.ppi_in_23;
+        self.ppi_in_38 => gic6.ppi_in_38;       self.ppi_in_39 => gic7.ppi_in_39;
+        self.ppi_in_54 => gic6.ppi_in_54;       self.ppi_in_55 => gic7.ppi_in_55;
+
+        self.ppi_in_8 => gic8.ppi_in_8;         self.ppi_in_9 => gic9.ppi_in_9;
+        self.ppi_in_24 => gic8.ppi_in_24;       self.ppi_in_25 => gic9.ppi_in_25;
+        self.ppi_in_40 => gic8.ppi_in_40;       self.ppi_in_41 => gic9.ppi_in_41;
+        self.ppi_in_56 => gic8.ppi_in_56;       self.ppi_in_57 => gic9.ppi_in_57;
+
+        self.ppi_in_10 => gic10.ppi_in_10;      self.ppi_in_11 => gic11.ppi_in_11;
+        self.ppi_in_26 => gic10.ppi_in_26;      self.ppi_in_27 => gic11.ppi_in_27;
+        self.ppi_in_42 => gic10.ppi_in_42;      self.ppi_in_43 => gic11.ppi_in_43;
+        self.ppi_in_58 => gic10.ppi_in_58;      self.ppi_in_59 => gic11.ppi_in_59;
+
+        self.ppi_in_12 => gic12.ppi_in_12;      self.ppi_in_13 => gic13.ppi_in_13;
+        self.ppi_in_28 => gic12.ppi_in_28;      self.ppi_in_29 => gic13.ppi_in_29;
+        self.ppi_in_44 => gic12.ppi_in_44;      self.ppi_in_45 => gic13.ppi_in_45;
+        self.ppi_in_60 => gic12.ppi_in_60;      self.ppi_in_61 => gic13.ppi_in_61;
+
+        self.ppi_in_14 => gic14.ppi_in_14;      self.ppi_in_15 => gic15.ppi_in_15;
+        self.ppi_in_30 => gic14.ppi_in_30;      self.ppi_in_31 => gic15.ppi_in_31;
+        self.ppi_in_46 => gic14.ppi_in_46;      self.ppi_in_47 => gic15.ppi_in_47;
+        self.ppi_in_62 => gic14.ppi_in_62;      self.ppi_in_63 => gic15.ppi_in_63;
+
+        // Connect extended ppi lines circularly to gics
+        self.extended_ppi_in_0 => gic0.extended_ppi_in_0;       self.extended_ppi_in_1 => gic1.extended_ppi_in_1;
+        self.extended_ppi_in_16 => gic0.extended_ppi_in_16;     self.extended_ppi_in_17 => gic1.extended_ppi_in_17;
+        self.extended_ppi_in_32 => gic0.extended_ppi_in_32;     self.extended_ppi_in_33 => gic1.extended_ppi_in_33;
+        self.extended_ppi_in_48 => gic0.extended_ppi_in_48;     self.extended_ppi_in_49 => gic1.extended_ppi_in_49;
+
+        self.extended_ppi_in_2 => gic2.extended_ppi_in_2;       self.extended_ppi_in_3 => gic3.extended_ppi_in_3;
+        self.extended_ppi_in_18 => gic2.extended_ppi_in_18;     self.extended_ppi_in_19 => gic3.extended_ppi_in_19;
+        self.extended_ppi_in_34 => gic2.extended_ppi_in_34;     self.extended_ppi_in_35 => gic3.extended_ppi_in_35;
+        self.extended_ppi_in_50 => gic2.extended_ppi_in_50;     self.extended_ppi_in_51 => gic3.extended_ppi_in_51;
+
+        self.extended_ppi_in_4 => gic4.extended_ppi_in_4;       self.extended_ppi_in_5 => gic5.extended_ppi_in_5;
+        self.extended_ppi_in_20 => gic4.extended_ppi_in_20;     self.extended_ppi_in_21 => gic5.extended_ppi_in_21;
+        self.extended_ppi_in_36 => gic4.extended_ppi_in_36;     self.extended_ppi_in_37 => gic5.extended_ppi_in_37;
+        self.extended_ppi_in_52 => gic4.extended_ppi_in_52;     self.extended_ppi_in_53 => gic5.extended_ppi_in_53;
+
+        self.extended_ppi_in_6 => gic6.extended_ppi_in_6;       self.extended_ppi_in_7 => gic7.extended_ppi_in_7;
+        self.extended_ppi_in_22 => gic6.extended_ppi_in_22;     self.extended_ppi_in_23 => gic7.extended_ppi_in_23;
+        self.extended_ppi_in_38 => gic6.extended_ppi_in_38;     self.extended_ppi_in_39 => gic7.extended_ppi_in_39;
+        self.extended_ppi_in_54 => gic6.extended_ppi_in_54;     self.extended_ppi_in_55 => gic7.extended_ppi_in_55;
+
+        self.extended_ppi_in_8 => gic8.extended_ppi_in_8;       self.extended_ppi_in_9 => gic9.extended_ppi_in_9;
+        self.extended_ppi_in_24 => gic8.extended_ppi_in_24;     self.extended_ppi_in_25 => gic9.extended_ppi_in_25;
+        self.extended_ppi_in_40 => gic8.extended_ppi_in_40;     self.extended_ppi_in_41 => gic9.extended_ppi_in_41;
+        self.extended_ppi_in_56 => gic8.extended_ppi_in_56;     self.extended_ppi_in_57 => gic9.extended_ppi_in_57;
+
+        self.extended_ppi_in_10 => gic10.extended_ppi_in_10;    self.extended_ppi_in_11 => gic11.extended_ppi_in_11;
+        self.extended_ppi_in_26 => gic10.extended_ppi_in_26;    self.extended_ppi_in_27 => gic11.extended_ppi_in_27;
+        self.extended_ppi_in_42 => gic10.extended_ppi_in_42;    self.extended_ppi_in_43 => gic11.extended_ppi_in_43;
+        self.extended_ppi_in_58 => gic10.extended_ppi_in_58;    self.extended_ppi_in_59 => gic11.extended_ppi_in_59;
+
+        self.extended_ppi_in_12 => gic12.extended_ppi_in_12;    self.extended_ppi_in_13 => gic13.extended_ppi_in_13;
+        self.extended_ppi_in_28 => gic12.extended_ppi_in_28;    self.extended_ppi_in_29 => gic13.extended_ppi_in_29;
+        self.extended_ppi_in_44 => gic12.extended_ppi_in_44;    self.extended_ppi_in_45 => gic13.extended_ppi_in_45;
+        self.extended_ppi_in_60 => gic12.extended_ppi_in_60;    self.extended_ppi_in_61 => gic13.extended_ppi_in_61;
+
+        self.extended_ppi_in_14 => gic14.extended_ppi_in_14;    self.extended_ppi_in_15 => gic15.extended_ppi_in_15;
+        self.extended_ppi_in_30 => gic14.extended_ppi_in_30;    self.extended_ppi_in_31 => gic15.extended_ppi_in_31;
+        self.extended_ppi_in_46 => gic14.extended_ppi_in_46;    self.extended_ppi_in_47 => gic15.extended_ppi_in_47;
+        self.extended_ppi_in_62 => gic14.extended_ppi_in_62;    self.extended_ppi_in_63 => gic15.extended_ppi_in_63;
+    }
+
+    resources
+    {
+        // Memory offset gic(N) and gic(N+1)
+        uint64_t gic_offset = 0x300000;
+
+        // System integration parameters
+        PARAMETER { name("enabled"), type(bool), default(true), description("Enable GICv3 functionality; when false the component is inactive.") } enabled;
+        PARAMETER { name("print-memory-map"), type(bool), default(false), description("Print memory map to stdout") } print_mmap;
+        PARAMETER { name("reg-base"), type(uint64_t), default(0x2c010000), min(0x0), max(0xffffffffffffffff), description("GIC-700 base address for memory-mapped register") } reg_base;
+
+        // Global
+        PARAMETER { name("gic0-CPU-affinities"), type(string), description("A comma separated list of dotted quads containing the affinities of all PEs connected to GIC0. If CPU-affinities-file is specified, this parameter is ignored.") } GIC0_CPU_affinities;
+        PARAMETER { name("gic1-CPU-affinities"), type(string), description("A comma separated list of dotted quads containing the affinities of all PEs connected to GIC1. If CPU-affinities-file is specified, this parameter is ignored.") } GIC1_CPU_affinities;
+        PARAMETER { name("gic2-CPU-affinities"), type(string), description("A comma separated list of dotted quads containing the affinities of all PEs connected to GIC2. If CPU-affinities-file is specified, this parameter is ignored.") } GIC2_CPU_affinities;
+        PARAMETER { name("gic3-CPU-affinities"), type(string), description("A comma separated list of dotted quads containing the affinities of all PEs connected to GIC3. If CPU-affinities-file is specified, this parameter is ignored.") } GIC3_CPU_affinities;
+        PARAMETER { name("gic4-CPU-affinities"), type(string), description("A comma separated list of dotted quads containing the affinities of all PEs connected to GIC4. If CPU-affinities-file is specified, this parameter is ignored.") } GIC4_CPU_affinities;
+        PARAMETER { name("gic5-CPU-affinities"), type(string), description("A comma separated list of dotted quads containing the affinities of all PEs connected to GIC5. If CPU-affinities-file is specified, this parameter is ignored.") } GIC5_CPU_affinities;
+        PARAMETER { name("gic6-CPU-affinities"), type(string), description("A comma separated list of dotted quads containing the affinities of all PEs connected to GIC6. If CPU-affinities-file is specified, this parameter is ignored.") } GIC6_CPU_affinities;
+        PARAMETER { name("gic7-CPU-affinities"), type(string), description("A comma separated list of dotted quads containing the affinities of all PEs connected to GIC7. If CPU-affinities-file is specified, this parameter is ignored.") } GIC7_CPU_affinities;
+        PARAMETER { name("gic8-CPU-affinities"), type(string), description("A comma separated list of dotted quads containing the affinities of all PEs connected to GIC8. If CPU-affinities-file is specified, this parameter is ignored.") } GIC8_CPU_affinities;
+        PARAMETER { name("gic9-CPU-affinities"), type(string), description("A comma separated list of dotted quads containing the affinities of all PEs connected to GIC9. If CPU-affinities-file is specified, this parameter is ignored.") } GIC9_CPU_affinities;
+        PARAMETER { name("gic10-CPU-affinities"), type(string), description("A comma separated list of dotted quads containing the affinities of all PEs connected to GIC10. If CPU-affinities-file is specified, this parameter is ignored.") } GIC10_CPU_affinities;
+        PARAMETER { name("gic11-CPU-affinities"), type(string), description("A comma separated list of dotted quads containing the affinities of all PEs connected to GIC11. If CPU-affinities-file is specified, this parameter is ignored.") } GIC11_CPU_affinities;
+        PARAMETER { name("gic12-CPU-affinities"), type(string), description("A comma separated list of dotted quads containing the affinities of all PEs connected to GIC12. If CPU-affinities-file is specified, this parameter is ignored.") } GIC12_CPU_affinities;
+        PARAMETER { name("gic13-CPU-affinities"), type(string), description("A comma separated list of dotted quads containing the affinities of all PEs connected to GIC13. If CPU-affinities-file is specified, this parameter is ignored.") } GIC13_CPU_affinities;
+        PARAMETER { name("gic14-CPU-affinities"), type(string), description("A comma separated list of dotted quads containing the affinities of all PEs connected to GIC14. If CPU-affinities-file is specified, this parameter is ignored.") } GIC14_CPU_affinities;
+        PARAMETER { name("gic15-CPU-affinities"), type(string), description("A comma separated list of dotted quads containing the affinities of all PEs connected to GIC15. If CPU-affinities-file is specified, this parameter is ignored.") } GIC15_CPU_affinities;
+        PARAMETER { name("CPU-affinities-file"), type(string), description("A file containing comma separated list of dotted quads containing the affinities of all PEs connected to this IRI.  If this parameter is specified, CPU-affinities parameter will be ignored even when it is given.") } CPU_affinities_file;
+        PARAMETER { name("ARE-fixed-to-one"), type(bool), default(false), description("GICv2 compatibility is not supported and GICD_CTLR.ARE_* is always one")} ARE_fixed_to_one;
+        PARAMETER { name("chip-select-affinity-level"), type(int), default(3), description("Affinity level 2 or 3 can be used for chip select") } chip_select_affinity_level;
+        PARAMETER { name("affinity-width"), type(string), default("0.8.8.8"), description("A dotted quad indicating the bitwidth of fields at each affinity level") } affinity_width;
+        PARAMETER { name("DS-behaviour"), type(int), default(2), min(0), max(2), description("GICD_CTLR.DS field behaviour: 0:RAZ/WI, 1:RAO/WI, 2:RW") } ds_wi_beh;
+        PARAMETER { name("SPI-blocks"), type(int), default(30), min(0), max(30), description("Number of SPI blocks supported by the IRI, each block contains 32 SPIs") } spi_blocks;
+        PARAMETER { name("PPI-count"), type(int), default(16), min(8), max(16), description("Selects the number of PPI available for each PE as 8( id22-27,29,30), 12(id 20-31) or 16(id 16-31)")} ppi_count;
+
+        // ITS/LPI
+        PARAMETER { name("ITS-count"), type(uint8_t), default(1), min(0), max(16), description("Number of Interrupt Translation Services to be instantiated (0=none)") } ITS_count;
+        PARAMETER { name("ITS-device-bits"), type(uint8_t), default(16), min(3), max(20), description("Number of bits supported for ITS device IDs.") } its_device_bits;
+        PARAMETER { name("ITS-ID-bits"), type(uint8_t), default(16), min(1), max(16), description("Number of interrupt bits supported by ITS.") } its_id_bits;
+        PARAMETER { name("ITS-collection-ID-bits"), type(uint8_t), default(8), min(1), max(14), description("Number of collection bits supported by ITS (optional parameter, 0 => 16bits support and GITS_TYPER.CIL=0") } its_collection_id_bits;
+
+        // Redistributor power-managment switch to determine if GICR_PWRR will be involved
+        PARAMETER { name("redistributor-power-managed-by-pwrr"), type(bool), default(true), description("GIC-700 redistributor power management is done by updating GICR_PWRR register") } power_managed_by_pwrr;
+
+        // Chip-ID to be used for multichip operation
+        PARAMETER { name("chip-id"), type(uint8_t), default(0), min(0), max(15), description("Chip ID for multichip operation.") } chip_id_base;
+        PARAMETER { name("max-pe-on-chip"), type(int), default(4), min(1), max(64), description("Maximum number of cores on any single chip. This will be used to identify the target chip and core when multichip operation is enabled.") } max_pe_on_chip;
+        PARAMETER { name("multichip-threaded-dgi"), type(bool), default(true), description("Enable sending of multichip DGI messages in a separate thread, when multichip operation is enabled.") } multichip_threaded_dgi;
+
+        // GICv3.1 extended SPI/PPI support
+        PARAMETER { name("extended-spi-count"), type(unsigned), default(0), min(0), max(1024), description("Number of extended SPI supported") } extended_spi_count;
+        PARAMETER { name("extended-ppi-count"), type(unsigned), default(0), min(0), max(64), description("Number of extended PPI supported") } extended_ppi_count;
+
+        // GICv4.1 features parameters
+        PARAMETER { name("GICD_TYPER2"), type(uint32_t), default(0), min(0), max(0x9f), description("GICD_TYPER2 value containing VID and VIL to define the width of vPEID for GICv4.1.") } gicd_typer2;
+    }
+
+    //! Memory bus in: memory-mapped register accesses are accepted on this interface.
+    slave port<PVBus> pvbus_s;
+
+    //! Memory bus out: transactions generated by the IRI.
+    master port<PVBus> pvbus_m;
+
+    //! Dummy filtermiss port to interface with default connections of FVP BASE
+    master port<PVBus> pvbus_filtermiss_m;
+
+    //! Resets.
+    slave port<Signal> _reset;
+
+    //! Resets.
+    slave port<Signal> po_reset;
+
+    //! Input from and output to CPU interface.
+    master port<GICv3Comms> redistributor_m[256];
+
+    //! CPUActive pins.
+    slave port<Signal> cpu_active_s[64];
+
+    //! Power management outputs.
+    master port<Signal> wake_request[64];
+
+    //! chip_id port for multichip operation
+    slave port<Value> chip_id;
+
+    //! Shared peripheral interrupts.
+    slave port<Signal> spi_in[960];
+
+    //! Extended Shared peripheral interrupts.
+    slave port<Signal> extended_spi_in[1024];
+
+    //! Private peripheral interrupts (ID16-ID31) for cpu 0.
+    slave port<Signal> ppi_in_0[16];
+
+    //! Private peripheral interrupts (ID16-ID31) for cpu 1.
+    slave port<Signal> ppi_in_1[16];
+
+    //! Private peripheral interrupts (ID16-ID31) for cpu 2.
+    slave port<Signal> ppi_in_2[16];
+
+    //! Private peripheral interrupts (ID16-ID31) for cpu 3.
+    slave port<Signal> ppi_in_3[16];
+
+    //! Private peripheral interrupts (ID16-ID31) for cpu 4.
+    slave port<Signal> ppi_in_4[16];
+
+    //! Private peripheral interrupts (ID16-ID31) for cpu 5.
+    slave port<Signal> ppi_in_5[16];
+
+    //! Private peripheral interrupts (ID16-ID31) for cpu 6.
+    slave port<Signal> ppi_in_6[16];
+
+    //! Private peripheral interrupts (ID16-ID31) for cpu 7.
+    slave port<Signal> ppi_in_7[16];
+
+    //! Private peripheral interrupts (ID16-ID31) for cpu 8.
+    slave port<Signal> ppi_in_8[16];
+
+    //! Private peripheral interrupts (ID16-ID31) for cpu 9.
+    slave port<Signal> ppi_in_9[16];
+
+    //! Private peripheral interrupts (ID16-ID31) for cpu 10.
+    slave port<Signal> ppi_in_10[16];
+
+    //! Private peripheral interrupts (ID16-ID31) for cpu 11.
+    slave port<Signal> ppi_in_11[16];
+
+    //! Private peripheral interrupts (ID16-ID31) for cpu 12.
+    slave port<Signal> ppi_in_12[16];
+
+    //! Private peripheral interrupts (ID16-ID31) for cpu 13.
+    slave port<Signal> ppi_in_13[16];
+
+    //! Private peripheral interrupts (ID16-ID31) for cpu 14.
+    slave port<Signal> ppi_in_14[16];
+
+    //! Private peripheral interrupts (ID16-ID31) for cpu 15.
+    slave port<Signal> ppi_in_15[16];
+
+    //! Private peripheral interrupts (ID16-ID31) for cpu 16.
+    slave port<Signal> ppi_in_16[16];
+
+    //! Private peripheral interrupts (ID16-ID31) for cpu 17.
+    slave port<Signal> ppi_in_17[16];
+
+    //! Private peripheral interrupts (ID16-ID31) for cpu 18.
+    slave port<Signal> ppi_in_18[16];
+
+    //! Private peripheral interrupts (ID16-ID31) for cpu 19.
+    slave port<Signal> ppi_in_19[16];
+
+    //! Private peripheral interrupts (ID16-ID31) for cpu 20.
+    slave port<Signal> ppi_in_20[16];
+
+    //! Private peripheral interrupts (ID16-ID31) for cpu 21.
+    slave port<Signal> ppi_in_21[16];
+
+    //! Private peripheral interrupts (ID16-ID31) for cpu 22.
+    slave port<Signal> ppi_in_22[16];
+
+    //! Private peripheral interrupts (ID16-ID31) for cpu 23.
+    slave port<Signal> ppi_in_23[16];
+
+    //! Private peripheral interrupts (ID16-ID31) for cpu 24.
+    slave port<Signal> ppi_in_24[16];
+
+    //! Private peripheral interrupts (ID16-ID31) for cpu 25.
+    slave port<Signal> ppi_in_25[16];
+
+    //! Private peripheral interrupts (ID16-ID31) for cpu 26.
+    slave port<Signal> ppi_in_26[16];
+
+    //! Private peripheral interrupts (ID16-ID31) for cpu 27.
+    slave port<Signal> ppi_in_27[16];
+
+    //! Private peripheral interrupts (ID16-ID31) for cpu 28.
+    slave port<Signal> ppi_in_28[16];
+
+    //! Private peripheral interrupts (ID16-ID31) for cpu 29.
+    slave port<Signal> ppi_in_29[16];
+
+    //! Private peripheral interrupts (ID16-ID31) for cpu 30.
+    slave port<Signal> ppi_in_30[16];
+
+    //! Private peripheral interrupts (ID16-ID31) for cpu 31.
+    slave port<Signal> ppi_in_31[16];
+
+    //! Private peripheral interrupts (ID16-ID31) for cpu 32.
+    slave port<Signal> ppi_in_32[16];
+
+    //! Private peripheral interrupts (ID16-ID31) for cpu 33.
+    slave port<Signal> ppi_in_33[16];
+
+    //! Private peripheral interrupts (ID16-ID31) for cpu 34.
+    slave port<Signal> ppi_in_34[16];
+
+    //! Private peripheral interrupts (ID16-ID31) for cpu 35.
+    slave port<Signal> ppi_in_35[16];
+
+    //! Private peripheral interrupts (ID16-ID31) for cpu 36.
+    slave port<Signal> ppi_in_36[16];
+
+    //! Private peripheral interrupts (ID16-ID31) for cpu 37.
+    slave port<Signal> ppi_in_37[16];
+
+    //! Private peripheral interrupts (ID16-ID31) for cpu 38.
+    slave port<Signal> ppi_in_38[16];
+
+    //! Private peripheral interrupts (ID16-ID31) for cpu 39.
+    slave port<Signal> ppi_in_39[16];
+
+    //! Private peripheral interrupts (ID16-ID31) for cpu 40.
+    slave port<Signal> ppi_in_40[16];
+
+    //! Private peripheral interrupts (ID16-ID31) for cpu 41.
+    slave port<Signal> ppi_in_41[16];
+
+    //! Private peripheral interrupts (ID16-ID31) for cpu 42.
+    slave port<Signal> ppi_in_42[16];
+
+    //! Private peripheral interrupts (ID16-ID31) for cpu 43.
+    slave port<Signal> ppi_in_43[16];
+
+    //! Private peripheral interrupts (ID16-ID31) for cpu 44.
+    slave port<Signal> ppi_in_44[16];
+
+    //! Private peripheral interrupts (ID16-ID31) for cpu 45.
+    slave port<Signal> ppi_in_45[16];
+
+    //! Private peripheral interrupts (ID16-ID31) for cpu 46.
+    slave port<Signal> ppi_in_46[16];
+
+    //! Private peripheral interrupts (ID16-ID31) for cpu 47.
+    slave port<Signal> ppi_in_47[16];
+
+    //! Private peripheral interrupts (ID16-ID31) for cpu 48.
+    slave port<Signal> ppi_in_48[16];
+
+    //! Private peripheral interrupts (ID16-ID31) for cpu 49.
+    slave port<Signal> ppi_in_49[16];
+
+    //! Private peripheral interrupts (ID16-ID31) for cpu 50.
+    slave port<Signal> ppi_in_50[16];
+
+    //! Private peripheral interrupts (ID16-ID31) for cpu 51.
+    slave port<Signal> ppi_in_51[16];
+
+    //! Private peripheral interrupts (ID16-ID31) for cpu 52.
+    slave port<Signal> ppi_in_52[16];
+
+    //! Private peripheral interrupts (ID16-ID31) for cpu 53.
+    slave port<Signal> ppi_in_53[16];
+
+    //! Private peripheral interrupts (ID16-ID31) for cpu 54.
+    slave port<Signal> ppi_in_54[16];
+
+    //! Private peripheral interrupts (ID16-ID31) for cpu 55.
+    slave port<Signal> ppi_in_55[16];
+
+    //! Private peripheral interrupts (ID16-ID31) for cpu 56.
+    slave port<Signal> ppi_in_56[16];
+
+    //! Private peripheral interrupts (ID16-ID31) for cpu 57.
+    slave port<Signal> ppi_in_57[16];
+
+    //! Private peripheral interrupts (ID16-ID31) for cpu 58.
+    slave port<Signal> ppi_in_58[16];
+
+    //! Private peripheral interrupts (ID16-ID31) for cpu 59.
+    slave port<Signal> ppi_in_59[16];
+
+    //! Private peripheral interrupts (ID16-ID31) for cpu 60.
+    slave port<Signal> ppi_in_60[16];
+
+    //! Private peripheral interrupts (ID16-ID31) for cpu 61.
+    slave port<Signal> ppi_in_61[16];
+
+    //! Private peripheral interrupts (ID16-ID31) for cpu 62.
+    slave port<Signal> ppi_in_62[16];
+
+    //! Private peripheral interrupts (ID16-ID31) for cpu 63.
+    slave port<Signal> ppi_in_63[16];
+
+    //! Extended private peripheral interrupts (ID1056-ID1119) for cpu 0.
+    slave port<Signal> extended_ppi_in_0[64];
+
+    //! Extended private peripheral interrupts (ID1056-ID1119) for cpu 1.
+    slave port<Signal> extended_ppi_in_1[64];
+
+    //! Extended private peripheral interrupts (ID1056-ID1119) for cpu 2.
+    slave port<Signal> extended_ppi_in_2[64];
+
+    //! Extended private peripheral interrupts (ID1056-ID1119) for cpu 3.
+    slave port<Signal> extended_ppi_in_3[64];
+
+    //! Extended private peripheral interrupts (ID1056-ID1119) for cpu 4.
+    slave port<Signal> extended_ppi_in_4[64];
+
+    //! Extended private peripheral interrupts (ID1056-ID1119) for cpu 5.
+    slave port<Signal> extended_ppi_in_5[64];
+
+    //! Extended private peripheral interrupts (ID1056-ID1119) for cpu 6.
+    slave port<Signal> extended_ppi_in_6[64];
+
+    //! Extended private peripheral interrupts (ID1056-ID1119) for cpu 7.
+    slave port<Signal> extended_ppi_in_7[64];
+
+    //! Extended private peripheral interrupts (ID1056-ID1119) for cpu 8.
+    slave port<Signal> extended_ppi_in_8[64];
+
+    //! Extended private peripheral interrupts (ID1056-ID1119) for cpu 9.
+    slave port<Signal> extended_ppi_in_9[64];
+
+    //! Extended private peripheral interrupts (ID1056-ID1119) for cpu 10.
+    slave port<Signal> extended_ppi_in_10[64];
+
+    //! Extended private peripheral interrupts (ID1056-ID1119) for cpu 11.
+    slave port<Signal> extended_ppi_in_11[64];
+
+    //! Extended private peripheral interrupts (ID1056-ID1119) for cpu 12.
+    slave port<Signal> extended_ppi_in_12[64];
+
+    //! Extended private peripheral interrupts (ID1056-ID1119) for cpu 13.
+    slave port<Signal> extended_ppi_in_13[64];
+
+    //! Extended private peripheral interrupts (ID1056-ID1119) for cpu 14.
+    slave port<Signal> extended_ppi_in_14[64];
+
+    //! Extended private peripheral interrupts (ID1056-ID1119) for cpu 15.
+    slave port<Signal> extended_ppi_in_15[64];
+
+    //! Extended private peripheral interrupts (ID1056-ID1119) for cpu 16.
+    slave port<Signal> extended_ppi_in_16[64];
+
+    //! Extended private peripheral interrupts (ID1056-ID1119) for cpu 17.
+    slave port<Signal> extended_ppi_in_17[64];
+
+    //! Extended private peripheral interrupts (ID1056-ID1119) for cpu 18.
+    slave port<Signal> extended_ppi_in_18[64];
+
+    //! Extended private peripheral interrupts (ID1056-ID1119) for cpu 19.
+    slave port<Signal> extended_ppi_in_19[64];
+
+    //! Extended private peripheral interrupts (ID1056-ID1119) for cpu 20.
+    slave port<Signal> extended_ppi_in_20[64];
+
+    //! Extended private peripheral interrupts (ID1056-ID1119) for cpu 21.
+    slave port<Signal> extended_ppi_in_21[64];
+
+    //! Extended private peripheral interrupts (ID1056-ID1119) for cpu 22.
+    slave port<Signal> extended_ppi_in_22[64];
+
+    //! Extended private peripheral interrupts (ID1056-ID1119) for cpu 23.
+    slave port<Signal> extended_ppi_in_23[64];
+
+    //! Extended private peripheral interrupts (ID1056-ID1119) for cpu 24.
+    slave port<Signal> extended_ppi_in_24[64];
+
+    //! Extended private peripheral interrupts (ID1056-ID1119) for cpu 25.
+    slave port<Signal> extended_ppi_in_25[64];
+
+    //! Extended private peripheral interrupts (ID1056-ID1119) for cpu 26.
+    slave port<Signal> extended_ppi_in_26[64];
+
+    //! Extended private peripheral interrupts (ID1056-ID1119) for cpu 27.
+    slave port<Signal> extended_ppi_in_27[64];
+
+    //! Extended private peripheral interrupts (ID1056-ID1119) for cpu 28.
+    slave port<Signal> extended_ppi_in_28[64];
+
+    //! Extended private peripheral interrupts (ID1056-ID1119) for cpu 29.
+    slave port<Signal> extended_ppi_in_29[64];
+
+    //! Extended private peripheral interrupts (ID1056-ID1119) for cpu 30.
+    slave port<Signal> extended_ppi_in_30[64];
+
+    //! Extended private peripheral interrupts (ID1056-ID1119) for cpu 31.
+    slave port<Signal> extended_ppi_in_31[64];
+
+    //! Extended private peripheral interrupts (ID1056-ID1119) for cpu 32.
+    slave port<Signal> extended_ppi_in_32[64];
+
+    //! Extended private peripheral interrupts (ID1056-ID1119) for cpu 33.
+    slave port<Signal> extended_ppi_in_33[64];
+
+    //! Extended private peripheral interrupts (ID1056-ID1119) for cpu 34.
+    slave port<Signal> extended_ppi_in_34[64];
+
+    //! Extended private peripheral interrupts (ID1056-ID1119) for cpu 35.
+    slave port<Signal> extended_ppi_in_35[64];
+
+    //! Extended private peripheral interrupts (ID1056-ID1119) for cpu 36.
+    slave port<Signal> extended_ppi_in_36[64];
+
+    //! Extended private peripheral interrupts (ID1056-ID1119) for cpu 37.
+    slave port<Signal> extended_ppi_in_37[64];
+
+    //! Extended private peripheral interrupts (ID1056-ID1119) for cpu 38.
+    slave port<Signal> extended_ppi_in_38[64];
+
+    //! Extended private peripheral interrupts (ID1056-ID1119) for cpu 39.
+    slave port<Signal> extended_ppi_in_39[64];
+
+    //! Extended private peripheral interrupts (ID1056-ID1119) for cpu 40.
+    slave port<Signal> extended_ppi_in_40[64];
+
+    //! Extended private peripheral interrupts (ID1056-ID1119) for cpu 41.
+    slave port<Signal> extended_ppi_in_41[64];
+
+    //! Extended private peripheral interrupts (ID1056-ID1119) for cpu 42.
+    slave port<Signal> extended_ppi_in_42[64];
+
+    //! Extended private peripheral interrupts (ID1056-ID1119) for cpu 43.
+    slave port<Signal> extended_ppi_in_43[64];
+
+    //! Extended private peripheral interrupts (ID1056-ID1119) for cpu 44.
+    slave port<Signal> extended_ppi_in_44[64];
+
+    //! Extended private peripheral interrupts (ID1056-ID1119) for cpu 45.
+    slave port<Signal> extended_ppi_in_45[64];
+
+    //! Extended private peripheral interrupts (ID1056-ID1119) for cpu 46.
+    slave port<Signal> extended_ppi_in_46[64];
+
+    //! Extended private peripheral interrupts (ID1056-ID1119) for cpu 47.
+    slave port<Signal> extended_ppi_in_47[64];
+
+    //! Extended private peripheral interrupts (ID1056-ID1119) for cpu 48.
+    slave port<Signal> extended_ppi_in_48[64];
+
+    //! Extended private peripheral interrupts (ID1056-ID1119) for cpu 49.
+    slave port<Signal> extended_ppi_in_49[64];
+
+    //! Extended private peripheral interrupts (ID1056-ID1119) for cpu 50.
+    slave port<Signal> extended_ppi_in_50[64];
+
+    //! Extended private peripheral interrupts (ID1056-ID1119) for cpu 51.
+    slave port<Signal> extended_ppi_in_51[64];
+
+    //! Extended private peripheral interrupts (ID1056-ID1119) for cpu 52.
+    slave port<Signal> extended_ppi_in_52[64];
+
+    //! Extended private peripheral interrupts (ID1056-ID1119) for cpu 53.
+    slave port<Signal> extended_ppi_in_53[64];
+
+    //! Extended private peripheral interrupts (ID1056-ID1119) for cpu 54.
+    slave port<Signal> extended_ppi_in_54[64];
+
+    //! Extended private peripheral interrupts (ID1056-ID1119) for cpu 55.
+    slave port<Signal> extended_ppi_in_55[64];
+
+    //! Extended private peripheral interrupts (ID1056-ID1119) for cpu 56.
+    slave port<Signal> extended_ppi_in_56[64];
+
+    //! Extended private peripheral interrupts (ID1056-ID1119) for cpu 57.
+    slave port<Signal> extended_ppi_in_57[64];
+
+    //! Extended private peripheral interrupts (ID1056-ID1119) for cpu 58.
+    slave port<Signal> extended_ppi_in_58[64];
+
+    //! Extended private peripheral interrupts (ID1056-ID1119) for cpu 59.
+    slave port<Signal> extended_ppi_in_59[64];
+
+    //! Extended private peripheral interrupts (ID1056-ID1119) for cpu 60.
+    slave port<Signal> extended_ppi_in_60[64];
+
+    //! Extended private peripheral interrupts (ID1056-ID1119) for cpu 61.
+    slave port<Signal> extended_ppi_in_61[64];
+
+    //! Extended private peripheral interrupts (ID1056-ID1119) for cpu 62.
+    slave port<Signal> extended_ppi_in_62[64];
+
+    //! Extended private peripheral interrupts (ID1056-ID1119) for cpu 63.
+    slave port<Signal> extended_ppi_in_63[64];
+}

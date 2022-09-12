@@ -1,0 +1,1 @@
+FVP_Base_AEMv8A-AEMv8A-MultiGIC -C cluster0.NUM_CORES=2 -C cluster0.gicv3.extended-interrupt-range-support=1 -C cluster1.NUM_CORES=0 -C bp.secure_memory=0 -C gic_iri.ITS-count=1 -C gic_iri.extended-ppi-count=32 --application=image_basic.axf
