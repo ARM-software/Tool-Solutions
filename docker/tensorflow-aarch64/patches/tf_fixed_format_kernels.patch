@@ -16,7 +16,7 @@
  *******************************************************************************
 
 diff --git a/tensorflow/core/kernels/mkl/mkl_batch_matmul_op.cc b/tensorflow/core/kernels/mkl/mkl_batch_matmul_op.cc
-index 6376773abbb..b0ae1f120a8 100644
+index 6376773abbb..a599ea6d4ff 100644
 --- a/tensorflow/core/kernels/mkl/mkl_batch_matmul_op.cc
 +++ b/tensorflow/core/kernels/mkl/mkl_batch_matmul_op.cc
 @@ -139,15 +139,6 @@ class BatchMatMulMkl : public OpKernel {
@@ -58,11 +58,11 @@ index 6376773abbb..b0ae1f120a8 100644
 +      default:
 +        weight_format = memory::format_tag::undef;
 +    }
++    MklDnnData<Trhs> weights_mkl(&(this->cpu_engine_));
 +    if(weight_format != memory::format_tag::undef) {
 +      auto weight_md = memory::desc(params->b_dims, MklDnnType<Trhs>(), weight_format);
 +      std::shared_ptr<dnnl::matmul::primitive_desc> matmul_pd = matmul_prim->GetPrimitiveDesc();
 +      // Reorder weights if necessary
-+      MklDnnData<Trhs> weights_mkl(&(this->cpu_engine_));
 +      // Check whether we need to do reorder
 +      if (weight_md != matmul_pd->weights_desc()) {
 +        weights_mkl.SetUsrMem(weight_md, weight_data);
@@ -246,32 +246,6 @@ index ba87750c1a7..bdabfb61a0b 100644
      key_creator.AddAsKey(typeid(Tlhs).name());
      key_creator.AddAsKey(typeid(Trhs).name());
      key_creator.AddAsKey(typeid(Toutput).name());
-diff --git a/tensorflow/workspace2.bzl b/tensorflow/workspace2.bzl
-index dfd33e998e2..489a4bea834 100644
---- a/tensorflow/workspace2.bzl
-+++ b/tensorflow/workspace2.bzl
-@@ -192,18 +192,16 @@ def _tf_repositories():
-     tf_http_archive(
-         name = "mkl_dnn_acl_compatible",
-         build_file = "//third_party/mkl_dnn:mkldnn_acl.BUILD",
-+        patch_file = ["//third_party/mkl_dnn:onednn_acl_postops.patch", "//third_party/mkl_dnn:onednn_acl_pooling.patch", "//third_party/mkl_dnn:onednn_acl_fixed_format_kernels.patch", "//third_party/mkl_dnn:onednn_acl_depthwise_convolution.patch"],
-         sha256 = "990fdce84197d68064e615d91c182c5bc6baa446348c3c1fe71b7e9a345badc2",
-         strip_prefix = "oneDNN-70d1198de554e61081147c199d661df049233279",
-         urls = tf_mirror_urls("https://github.com/oneapi-src/oneDNN/archive/70d1198de554e61081147c199d661df049233279.tar.gz"),
-     )
- 
--    tf_http_archive(
-+    native.new_local_repository(
-         name = "compute_library",
--        sha256 = "94e2e9ff87c261a9c9987bc9024c449c48014f7fe707311bdfa76b87f3dda5c5",
--        strip_prefix = "ComputeLibrary-22.05",
-         build_file = "//third_party/compute_library:BUILD",
--        patch_file = ["//third_party/compute_library:compute_library.patch", "//third_party/compute_library:activation_func_correct_args.patch"],
--        urls = tf_mirror_urls("https://github.com/ARM-software/ComputeLibrary/archive/v22.05.tar.gz"),
-+        path='/home/ubuntu/packages/ComputeLibrary'
-     )
- 
-     tf_http_archive(
 diff --git a/third_party/compute_library/BUILD b/third_party/compute_library/BUILD
 index d668d9afc9a..e7bb531e1dc 100644
 --- a/third_party/compute_library/BUILD

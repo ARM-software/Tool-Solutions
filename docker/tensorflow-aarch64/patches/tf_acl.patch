@@ -1,0 +1,47 @@
+ *******************************************************************************
+ Copyright 2022 Arm Limited and affiliates.
+ SPDX-License-Identifier: Apache-2.0
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+ *******************************************************************************
+diff --git a/tensorflow/workspace2.bzl b/tensorflow/workspace2.bzl
+index e255103df98..b95f20b6232 100644
+--- a/tensorflow/workspace2.bzl
++++ b/tensorflow/workspace2.bzl
+@@ -192,18 +192,19 @@ def _tf_repositories():
+     tf_http_archive(
+         name = "mkl_dnn_acl_compatible",
+         build_file = "//third_party/mkl_dnn:mkldnn_acl.BUILD",
+-        sha256 = "990fdce84197d68064e615d91c182c5bc6baa446348c3c1fe71b7e9a345badc2",
+-        strip_prefix = "oneDNN-70d1198de554e61081147c199d661df049233279",
+-        urls = tf_mirror_urls("https://github.com/oneapi-src/oneDNN/archive/70d1198de554e61081147c199d661df049233279.tar.gz"),
++        patch_file = ["//third_party/mkl_dnn:onednn_acl_threadcap.patch", "//third_party/mkl_dnn:onednn_acl_fixed_format_kernels.patch", "//third_party/mkl_dnn:onednn_acl_depthwise_convolution.patch"],
++        sha256 = "3b5ccfd197ac7e1618747e3388a836f5e535b7afec1ea83fcee186fa35ba6386",
++        strip_prefix = "oneDNN-80d45b77f1a031a99d628b27aeea45b05f16b8b5",
++        urls = tf_mirror_urls("https://github.com/oneapi-src/oneDNN/archive/80d45b77f1a031a99d628b27aeea45b05f16b8b5.tar.gz"),
+     )
+
+     tf_http_archive(
+         name = "compute_library",
+-        sha256 = "94e2e9ff87c261a9c9987bc9024c449c48014f7fe707311bdfa76b87f3dda5c5",
+-        strip_prefix = "ComputeLibrary-22.05",
++        sha256 = "ac2ce7b5636e99f175b084362f83fe24d72e6ceb0bd62ee5866772f7355d024d",
++        strip_prefix = "ComputeLibrary-22.08",
+         build_file = "//third_party/compute_library:BUILD",
+-        patch_file = ["//third_party/compute_library:compute_library.patch", "//third_party/compute_library:activation_func_correct_args.patch"],
+-        urls = tf_mirror_urls("https://github.com/ARM-software/ComputeLibrary/archive/v22.05.tar.gz"),
++        patch_file = ["//third_party/compute_library:compute_library.patch", "//third_party/compute_library:acl_fixed_format_kernels_striding.patch", "//third_party/compute_library:acl_depthwise_updateable_weights.patch"],
++        urls = tf_mirror_urls("https://github.com/ARM-software/ComputeLibrary/archive/v22.08.tar.gz"),
+     )
+
+     tf_http_archive(

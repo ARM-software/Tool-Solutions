@@ -16,7 +16,7 @@
  *******************************************************************************
 
 diff --git a/src/cpu/aarch64/acl_convolution_utils.cpp b/src/cpu/aarch64/acl_convolution_utils.cpp
-index 2260e7beb..452d761b4 100644
+index c46d69757..ba5a49c6d 100644
 --- a/src/cpu/aarch64/acl_convolution_utils.cpp
 +++ b/src/cpu/aarch64/acl_convolution_utils.cpp
 @@ -212,6 +212,69 @@ status_t acl_init_conf(acl_conv_conf_t &acp, memory_desc_t &src_md,
@@ -90,7 +90,7 @@ index 2260e7beb..452d761b4 100644
  }
  
 diff --git a/src/cpu/aarch64/acl_indirect_gemm_convolution.hpp b/src/cpu/aarch64/acl_indirect_gemm_convolution.hpp
-index 4e4f14a61..793b167e4 100644
+index bcf031a77..4ddc8cf91 100644
 --- a/src/cpu/aarch64/acl_indirect_gemm_convolution.hpp
 +++ b/src/cpu/aarch64/acl_indirect_gemm_convolution.hpp
 @@ -41,6 +41,7 @@ struct acl_indirect_gemm_resource_t : public resource_t {
@@ -113,7 +113,7 @@ index 4e4f14a61..793b167e4 100644
  
          return status::success;
 diff --git a/src/cpu/aarch64/acl_inner_product.hpp b/src/cpu/aarch64/acl_inner_product.hpp
-index fb9be692b..ead12c4b5 100644
+index c5e507085..15ea61173 100644
 --- a/src/cpu/aarch64/acl_inner_product.hpp
 +++ b/src/cpu/aarch64/acl_inner_product.hpp
 @@ -45,6 +45,7 @@ struct acl_ip_conf_t {
@@ -134,7 +134,7 @@ index fb9be692b..ead12c4b5 100644
          // clang-format on
  
          return status::success;
-@@ -158,8 +160,8 @@ struct acl_inner_product_fwd_t : public primitive_t {
+@@ -156,8 +158,8 @@ struct acl_inner_product_fwd_t : public primitive_t {
                  src_shape = (src_tag == nc) ? arm_compute::TensorShape(ic, n)
                                              : arm_compute::TensorShape(n, ic);
  
@@ -145,7 +145,7 @@ index fb9be692b..ead12c4b5 100644
              }
              if (is_4d) {
                  src_shape = (src_tag == nhwc)
-@@ -168,7 +170,8 @@ struct acl_inner_product_fwd_t : public primitive_t {
+@@ -166,7 +168,8 @@ struct acl_inner_product_fwd_t : public primitive_t {
  
                  // ACL requires the weights to be in 2D flattened shape
                  const int flattened_ic = is_4d ? ic * kh * kw : ic;
@@ -155,7 +155,7 @@ index fb9be692b..ead12c4b5 100644
              }
  
              arm_compute::DataLayout src_layout = (src_tag == nhwc)
-@@ -185,6 +188,9 @@ struct acl_inner_product_fwd_t : public primitive_t {
+@@ -183,6 +186,9 @@ struct acl_inner_product_fwd_t : public primitive_t {
              aip.wei_info = arm_compute::TensorInfo(
                      wei_shape, 1, arm_compute::DataType::F32, wei_layout);
  
@@ -165,7 +165,7 @@ index fb9be692b..ead12c4b5 100644
              aip.dst_info
                      = arm_compute::TensorInfo(arm_compute::TensorShape(oc, n),
                              1, arm_compute::DataType::F32);
-@@ -196,15 +202,7 @@ struct acl_inner_product_fwd_t : public primitive_t {
+@@ -194,15 +200,7 @@ struct acl_inner_product_fwd_t : public primitive_t {
                      1, arm_compute::DataType::F32);
  
              aip.fc_info.weights_trained_layout = wei_layout;
@@ -182,9 +182,9 @@ index fb9be692b..ead12c4b5 100644
  
              // Fast math mode
              auto math_mode = get_fpmath_mode();
-@@ -216,6 +214,74 @@ struct acl_inner_product_fwd_t : public primitive_t {
+@@ -214,6 +212,74 @@ struct acl_inner_product_fwd_t : public primitive_t {
                      aip.fc_info.activation_info));
-             aip.use_dst_acc = post_ops_pd.has_sum();
+             aip.use_dst_acc = post_ops.has_sum();
  
 +            arm_compute::WeightFormat expected_weight_format;
 +            auto acl_st = arm_compute::NEFullyConnectedLayer::has_opt_impl(
@@ -258,10 +258,10 @@ index fb9be692b..ead12c4b5 100644
              // Validate fully connected layer manually to check for return status
              ACL_CHECK_VALID(arm_compute::NEFullyConnectedLayer::validate(
 diff --git a/src/cpu/aarch64/matmul/acl_matmul_utils.cpp b/src/cpu/aarch64/matmul/acl_matmul_utils.cpp
-index e33932b7a..c0fe5fd92 100644
+index 679baec3a..2c0b46978 100644
 --- a/src/cpu/aarch64/matmul/acl_matmul_utils.cpp
 +++ b/src/cpu/aarch64/matmul/acl_matmul_utils.cpp
-@@ -68,15 +68,12 @@ status_t init_conf_matmul(acl_matmul_conf_t &amp, memory_desc_t &src_md,
+@@ -66,15 +66,12 @@ status_t init_conf_matmul(acl_matmul_conf_t &amp, memory_desc_t &src_md,
  
      // Transpose A (src) or B (wei)
      amp.is_transA = helper.transA() == 'T';
@@ -279,7 +279,7 @@ index e33932b7a..c0fe5fd92 100644
  
      amp.src_info = arm_compute::TensorInfo(
              arm_compute::TensorShape(K, M, 1, src_batch), 1,
-@@ -105,6 +102,121 @@ status_t init_conf_matmul(acl_matmul_conf_t &amp, memory_desc_t &src_md,
+@@ -103,6 +100,121 @@ status_t init_conf_matmul(acl_matmul_conf_t &amp, memory_desc_t &src_md,
          ACL_CHECK_VALID(arm_compute::NETranspose::validate(
                  &amp.wei_acc_info, &amp.wei_info));
  
