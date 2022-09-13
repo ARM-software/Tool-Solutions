@@ -21,20 +21,6 @@ set -euo pipefail
 
 cd $PACKAGE_DIR
 
-readonly mlplatform_url="https://review.mlplatform.org/ml"
-readonly acl_version="6ad5d50"
-
-## Clone ACL
-git clone "${mlplatform_url}/ComputeLibrary"
-pushd ComputeLibrary
-git checkout "${acl_version}"
-patch -p1 < ../compute_library.patch
-# apply patch for depthwise convolution that adds
-# capability to update weights
-patch -p1 < ../acl_fixed_format_kernels_striding.patch
-patch -p1 < ../acl_depthwise_updateable_weights.patch
-popd
-
 readonly package=tensorflow
 readonly version=$TF_VERSION
 readonly src_host=https://github.com/tensorflow
@@ -99,18 +85,23 @@ if [[ $ONEDNN_BUILD ]]; then
         fi
 
         ## Apply patches to the TensorFlow, Compute Library and oneDNN builds
+        # Patch TensorFlow to update oneDNN and ACL builds
+        patch -p1 < ../tf_acl.patch
         # Patch TensorFlow to call into fixed format kernels
         patch -p1 < ../tf_fixed_format_kernels.patch
         # Patch TensorFlow to build ACL with OpenMP scheduler
         patch -p1 < ../tf_acl_openmp_scheduler.patch
 
-        # Patch for oneDNN to add ACL-based pooling primitive
-        # Based on: https://github.com/oneapi-src/oneDNN/pull/1387
-        mv ../onednn_acl_pooling.patch ./third_party/mkl_dnn/.
+        # Patch to add experimental spin-wait scheduler to Compute Library
+        # Note: overwrites upstream version
+        mv ../compute_library.patch ./third_party/compute_library/.
 
-        # Patch to add improved support for ACL based postops
-        # Based on: https://github.com/oneapi-src/oneDNN/pull/1389
-        mv ../onednn_acl_postops.patch ./third_party/mkl_dnn/.
+        # Patches for depthwise convolution to add capability to update weights
+        mv ../acl_fixed_format_kernels_striding.patch ./third_party/compute_library/.
+        mv ../acl_depthwise_updateable_weights.patch ./third_party/compute_library/.
+
+        # Patch to cap the number of threads for ACL primitives
+        mv ../onednn_acl_threadcap.patch ./third_party/mkl_dnn/.
 
         # Patch to call into fixed format kernels
         mv ../onednn_acl_fixed_format_kernels.patch ./third_party/mkl_dnn/.

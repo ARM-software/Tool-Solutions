@@ -16,7 +16,7 @@
  *******************************************************************************
 
 diff --git a/src/cpu/aarch64/acl_convolution_utils.cpp b/src/cpu/aarch64/acl_convolution_utils.cpp
-index 452d761b4..0058c5885 100644
+index ba5a49c6d..b7caf1479 100644
 --- a/src/cpu/aarch64/acl_convolution_utils.cpp
 +++ b/src/cpu/aarch64/acl_convolution_utils.cpp
 @@ -54,10 +54,12 @@ status_t acl_init_conf(acl_conv_conf_t &acp, memory_desc_t &src_md,
@@ -132,7 +132,7 @@ index 452d761b4..0058c5885 100644
                  src_md.dims[1] < 64, // ic
                  dst_md.dims[1] < 64, // oc
 diff --git a/src/cpu/aarch64/acl_convolution_utils.hpp b/src/cpu/aarch64/acl_convolution_utils.hpp
-index aff8de4f2..2157b0a7f 100644
+index 3e56245fa..809dc13c9 100644
 --- a/src/cpu/aarch64/acl_convolution_utils.hpp
 +++ b/src/cpu/aarch64/acl_convolution_utils.hpp
 @@ -66,6 +66,11 @@ status_t init_conf_indirect_gemm(acl_conv_conf_t &acp, memory_desc_t &src_md,
@@ -147,29 +147,9 @@ index aff8de4f2..2157b0a7f 100644
  status_t init_conf_wino(acl_conv_conf_t &acp, memory_desc_t &src_md,
          memory_desc_t &weights_md, memory_desc_t &dst_md,
          memory_desc_t &bias_md, const convolution_desc_t &cd,
-diff --git a/src/cpu/cpu_convolution_list.cpp b/src/cpu/cpu_convolution_list.cpp
-index 4142dbc7e..1800aaf58 100644
---- a/src/cpu/cpu_convolution_list.cpp
-+++ b/src/cpu/cpu_convolution_list.cpp
-@@ -65,6 +65,7 @@ using namespace dnnl::impl::cpu::x64;
- #if DNNL_AARCH64 && DNNL_AARCH64_USE_ACL
- #include "cpu/aarch64/acl_gemm_convolution.hpp"
- #include "cpu/aarch64/acl_indirect_gemm_convolution.hpp"
-+#include "cpu/aarch64/acl_depthwise_convolution.hpp"
- #include "cpu/aarch64/acl_winograd_convolution.hpp"
- #endif
- using namespace dnnl::impl::cpu::aarch64;
-@@ -104,6 +105,7 @@ const std::map<pk_dt_impl_key_t, std::vector<impl_list_item_t>> &impl_list_map()
-             CPU_INSTANCE_AARCH64(jit_sve_512_dw_convolution_fwd_t)
-             CPU_INSTANCE_AARCH64(jit_sve_512_1x1_convolution_fwd_f32_t)
-             CPU_INSTANCE_AARCH64(jit_sve_512_convolution_fwd_t<f32>)
-+            CPU_INSTANCE_AARCH64_ACL(acl_depthwise_convolution_fwd_t)
-             CPU_INSTANCE_AARCH64_ACL(acl_indirect_gemm_convolution_fwd_t)
-             CPU_INSTANCE_AARCH64_ACL(acl_gemm_convolution_fwd_t<f32>)
-             CPU_INSTANCE(gemm_convolution_fwd_t)
 diff --git a/src/cpu/aarch64/acl_depthwise_convolution.cpp b/src/cpu/aarch64/acl_depthwise_convolution.cpp
 new file mode 100644
-index 000000000..6ccfd3c76
+index 000000000..1beb8b8af
 --- /dev/null
 +++ b/src/cpu/aarch64/acl_depthwise_convolution.cpp
 @@ -0,0 +1,41 @@
@@ -207,20 +187,19 @@ index 000000000..6ccfd3c76
 +                = acl_resource->get_acl_obj();
 +
 +        return execute_forward_conv_acl<acl_obj_t<arm_compute::NEDepthwiseConvolutionLayer>, pd_t,
-+                data_t>(ctx, acl_depthwise_obj, pd(), post_ops);
++                data_t>(ctx, acl_depthwise_obj, pd());
 +    }
 +
 +}
 +}
 +}
 +}
-\ No newline at end of file
 diff --git a/src/cpu/aarch64/acl_depthwise_convolution.hpp b/src/cpu/aarch64/acl_depthwise_convolution.hpp
 new file mode 100644
-index 000000000..e647d6bb2
+index 000000000..97e0a3a30
 --- /dev/null
 +++ b/src/cpu/aarch64/acl_depthwise_convolution.hpp
-@@ -0,0 +1,143 @@
+@@ -0,0 +1,137 @@
 +/*******************************************************************************
 +* Copyright 2022 Arm Ltd. and affiliates
 +*
@@ -288,9 +267,7 @@ index 000000000..e647d6bb2
 +    struct pd_t : public cpu_convolution_fwd_pd_t {
 +        pd_t(const convolution_desc_t* adesc, const primitive_attr_t *attr,
 +                const typename pd_t::base_class *hint_fwd_pd)
-+            : cpu_convolution_fwd_pd_t(adesc, attr, hint_fwd_pd)
-+            , acp_()
-+            , post_ops_pd() {}
++            : cpu_convolution_fwd_pd_t(adesc, attr, hint_fwd_pd), acp_() {}
 +
 +        DECLARE_COMMON_PD_T("depthwise_convolution:acl",
 +                acl_depthwise_convolution_fwd_t, USE_GLOBAL_SCRATCHPAD);
@@ -311,22 +288,19 @@ index 000000000..e647d6bb2
 +            CHECK(acl_convolution_utils::init_conf_depthwise(acp_, src_md_,
 +                    weights_md_, dst_md_, bias_md_, *desc(), *attr()));
 +
-+            CHECK(post_ops_pd.init(
-+                        engine, dst_md_, attr_.post_ops_, acp_.act_info));
-+            acp_.use_dst_acc = post_ops_pd.has_sum();
++            CHECK(post_ops.init(
++                    engine, attr_.post_ops_, dst_md_, acp_.act_info));
++            acp_.use_dst_acc = post_ops.has_sum();
 +
 +            return status::success;
 +        }
 +
 +        acl_conv_conf_t acp_;
 +
-+        typename acl_post_ops_t::pd_t post_ops_pd;
++        acl_post_ops_t post_ops;
 +    };
 +
-+    acl_depthwise_convolution_fwd_t(const pd_t *apd)
-+        : primitive_t(apd), post_ops(&apd->post_ops_pd) {}
-+
-+    status_t init(engine_t *engine) override { return post_ops.init(engine); }
++    acl_depthwise_convolution_fwd_t(const pd_t *apd) : primitive_t(apd) {}
 +
 +    status_t create_resource(
 +        engine_t *engine, resource_mapper_t &mapper) const override {
@@ -338,7 +312,7 @@ index 000000000..e647d6bb2
 +            CHECK(r->configure(pd()->acp_));
 +            mapper.add(this, std::move(r));
 +
-+            CHECK(post_ops.create_resource(engine, mapper));
++            CHECK(pd()->post_ops.create_resource(engine, mapper));
 +
 +            return status::success;
 +        }
@@ -355,7 +329,6 @@ index 000000000..e647d6bb2
 +
 +    const pd_t *pd() const { return (const pd_t *)primitive_t::pd().get(); }
 +
-+    acl_post_ops_t post_ops;
 +};
 +
 +} // namespace aarch64
@@ -364,3 +337,23 @@ index 000000000..e647d6bb2
 +} // namespace dnnl
 +
 +#endif // CPU_AARCH64_ACL_DEPTHWISE_CONVOLUTION_HPP
+diff --git a/src/cpu/cpu_convolution_list.cpp b/src/cpu/cpu_convolution_list.cpp
+index 4142dbc7e..1800aaf58 100644
+--- a/src/cpu/cpu_convolution_list.cpp
++++ b/src/cpu/cpu_convolution_list.cpp
+@@ -65,6 +65,7 @@ using namespace dnnl::impl::cpu::x64;
+ #if DNNL_AARCH64 && DNNL_AARCH64_USE_ACL
+ #include "cpu/aarch64/acl_gemm_convolution.hpp"
+ #include "cpu/aarch64/acl_indirect_gemm_convolution.hpp"
++#include "cpu/aarch64/acl_depthwise_convolution.hpp"
+ #include "cpu/aarch64/acl_winograd_convolution.hpp"
+ #endif
+ using namespace dnnl::impl::cpu::aarch64;
+@@ -104,6 +105,7 @@ const std::map<pk_dt_impl_key_t, std::vector<impl_list_item_t>> &impl_list_map()
+             CPU_INSTANCE_AARCH64(jit_sve_512_dw_convolution_fwd_t)
+             CPU_INSTANCE_AARCH64(jit_sve_512_1x1_convolution_fwd_f32_t)
+             CPU_INSTANCE_AARCH64(jit_sve_512_convolution_fwd_t<f32>)
++            CPU_INSTANCE_AARCH64_ACL(acl_depthwise_convolution_fwd_t)
+             CPU_INSTANCE_AARCH64_ACL(acl_indirect_gemm_convolution_fwd_t)
+             CPU_INSTANCE_AARCH64_ACL(acl_gemm_convolution_fwd_t<f32>)
+             CPU_INSTANCE(gemm_convolution_fwd_t)
