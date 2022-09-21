@@ -1,0 +1,11 @@
+cluster0.NUM_CORES=1
+cluster1.NUM_CORES=0
+cluster0.gicv3.extended-interrupt-range-support=1
+gic_distributor.extended-ppi-count=32
+gic_distributor.extended-spi-count=32
+gic_distributor.GITS_BASER0-type=1
+gic_distributor.GITS_BASER1-type=4
+gic_distributor.GITS_BASER6-type=0
+bp.secure_memory=0
+gic_distributor.ITS-count=1
+gic_distributor.ITS-use-physical-target-addresses=0
