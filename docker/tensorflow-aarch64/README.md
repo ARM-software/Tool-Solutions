@@ -73,12 +73,11 @@ The default user account has sudo privileges (username `ubuntu`, password `Portl
 Separate images are provided with Eigen and oneDNN backends (as given in the image tag). The scripts in this repository can be used to build either.
 
  * **Eigen:** this is the default backend for a TensorFlow build on AArch64, suitable for both training and inference workloads.
- * **oneDNN:** this uses oneDNN with ACL, providing optimized implementations on AArch64 for key oneDNN primitives. There is the option to use either an OpenMP build of oneDNN, with ACL primitives leveraging ACl's CPP scheduler, or to use TensorFlow's Eigen threadpool throughout. Use the `--onednn acl` and `--onednn acl_threadpool` respectively to select between these options. The oneDNN backend is intended for inference workloads on infrastructure-scale platforms. oneDNN optimizations can be disabled at runtime by setting the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+ * **oneDNN:** this uses oneDNN with ACL, providing optimized implementations on AArch64 for key oneDNN primitives. There is the option to use either an OpenMP build of oneDNN and ACL, or to use TensorFlow's Eigen threadpool throughout. Use the `--onednn acl` and `--onednn acl_threadpool` respectively to select between these options. The oneDNN backend is intended for inference workloads on infrastructure-scale platforms. oneDNN optimizations can be disabled at runtime by setting the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
 
 #### oneDNN runtime flags
 
 - `ONEDNN_DEFAULT_FPMATH_MODE`: For builds where ACL is enabled, setting the environment variable `ONEDNN_DEFAULT_FPMATH_MODE` to `BF16` or `ANY` will instruct ACL to dispatch fp32 workloads to bfloat16 kernels where hardware support permits. _Note: this may introduce a drop in accuracy._
-- `ARM_COMPUTE_SPIN_WAIT_CPP_SCHEDULER`: When running models with a high core count that have layers operating on small to medium inputs, the scheduling overhead for ACL can be reduced by setting the environment variable `ARM_COMPUTE_SPIN_WAIT_CPP_SCHEDULER` to `1`. _Note: this will increase CPU utilisation as worker threads in ACL will busy wait for new work and might create contention with other threads._
 - `TF_ENABLE_ONEDNN_OPTS`: enables the oneDNN backend and is set to 1 (i.e. enabled) by default. To disable the oneDNN+ACL backend, set to `0`. _Note: this flag is only available for imaged built with the oneDNN+ACL backend._
 
 ### Hardware support
