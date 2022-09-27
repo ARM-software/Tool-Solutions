@@ -231,7 +231,7 @@ RUN $PACKAGE_DIR/build-scipy.sh
 # to be removed in order for the OpenCV build to complete.
 RUN pip uninstall enum34 -y
 RUN HDF5_DIR=/usr/lib/aarch64-linux-gnu/hdf5/serial pip install h5py==3.1.0
-RUN pip install --no-cache-dir grpcio tensorflow-io-gcs-filesystem pytest
+RUN pip install --no-cache-dir grpcio tensorflow-io pytest
 RUN pip install --no-cache-dir ck==1.55.5 absl-py pycocotools pillow==8.2.0
 RUN pip install --no-cache-dir transformers pandas
 

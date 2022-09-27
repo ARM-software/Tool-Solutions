@@ -24,5 +24,15 @@ The default user's home (/home/ubuntu) contains:
 
 - CK/ containing Collective Knowledge (https://cknowledge.org) repositories
   used to manange datasets for the MLCommons benchmarks.
+
+--------------------------------------------------------------------------------
+Please Note:
+This build may contain features currently in active development
+and is intended only for evaluation purposes.
+Testing of the full stack is limited to validation against the examples provided
+on a selection of AArch64 platforms, including Neoverse-V1, Neoverse-N1 and A72.
+
+Release versions of TensorFlow are available from:
+https://pypi.org/project/tensorflow/.
 ================================================================================
 
