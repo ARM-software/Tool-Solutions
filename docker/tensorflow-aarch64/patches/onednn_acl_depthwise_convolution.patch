@@ -14,9 +14,9 @@
  See the License for the specific language governing permissions and
  limitations under the License.
  *******************************************************************************
-
+ 
 diff --git a/src/cpu/aarch64/acl_convolution_utils.cpp b/src/cpu/aarch64/acl_convolution_utils.cpp
-index ba5a49c6d..b7caf1479 100644
+index 6a840b973..47a3a4a92 100644
 --- a/src/cpu/aarch64/acl_convolution_utils.cpp
 +++ b/src/cpu/aarch64/acl_convolution_utils.cpp
 @@ -54,10 +54,12 @@ status_t acl_init_conf(acl_conv_conf_t &acp, memory_desc_t &src_md,
@@ -73,9 +73,9 @@ index ba5a49c6d..b7caf1479 100644
      acp.weights_info = arm_compute::WeightsInfo(
          false,
          kw,
-@@ -283,6 +297,10 @@ status_t init_conf_gemm(acl_conv_conf_t &acp, memory_desc_t &src_md,
-         memory_desc_t &bias_md, const convolution_desc_t &cd,
+@@ -297,6 +311,10 @@ status_t init_conf_gemm(acl_conv_conf_t &acp, memory_desc_t &src_md,
          const primitive_attr_t &attr) {
+     acp.is_indirect = false;
  
 +    if(weights_md.ndims != 4) {
 +        return status::unimplemented;
@@ -84,17 +84,17 @@ index ba5a49c6d..b7caf1479 100644
      // General Compute Library checks, memory tags are also set there
      CHECK(acl_init_conf(acp, src_md, weights_md, dst_md, bias_md, cd, attr));
  
-@@ -309,7 +327,8 @@ status_t init_conf_indirect_gemm(acl_conv_conf_t &acp, memory_desc_t &src_md,
-         const primitive_attr_t &attr) {
+@@ -325,7 +343,8 @@ status_t init_conf_indirect_gemm(acl_conv_conf_t &acp, memory_desc_t &src_md,
+     auto math_mode = get_fpmath_mode();
      // Indirect convolution results in slowdown for low thread count or 1x1
      // kernels, so fall back to GEMM-based convolution in these cases
 -    if (one_of(true, weights_md.dims[2] == 1, // kh
 +    if (one_of(true, weights_md.ndims != 4,
 +                weights_md.dims[2] == 1, // kh
                  weights_md.dims[3] == 1, // kw
-                 dnnl_get_max_threads() < 28)) {
+                 (!math_mode && dnnl_get_max_threads() < 28))) {
          return status::unimplemented;
-@@ -334,6 +353,26 @@ status_t init_conf_indirect_gemm(acl_conv_conf_t &acp, memory_desc_t &src_md,
+@@ -350,6 +369,27 @@ status_t init_conf_indirect_gemm(acl_conv_conf_t &acp, memory_desc_t &src_md,
      return status::success;
  }
  
@@ -102,6 +102,7 @@ index ba5a49c6d..b7caf1479 100644
 +        memory_desc_t &weights_md, memory_desc_t &dst_md,
 +        memory_desc_t &bias_md, const convolution_desc_t &cd,
 +        const primitive_attr_t &attr) {
++    acp.is_indirect = false;
 +    // We need to make sure that number of dimensions for weights is either 5 or 3
 +    if(weights_md.ndims != 5)
 +        return status::unimplemented;
@@ -121,7 +122,7 @@ index ba5a49c6d..b7caf1479 100644
  status_t init_conf_wino(acl_conv_conf_t &acp, memory_desc_t &src_md,
          memory_desc_t &weights_md, memory_desc_t &dst_md,
          memory_desc_t &bias_md, const convolution_desc_t &cd,
-@@ -342,7 +381,8 @@ status_t init_conf_wino(acl_conv_conf_t &acp, memory_desc_t &src_md,
+@@ -359,7 +399,8 @@ status_t init_conf_wino(acl_conv_conf_t &acp, memory_desc_t &src_md,
      // Under these conditions, fallback to faster GEMM-based convolution
      // unless the user explicitly specifies Winograd algorithm
      // clang-format off
@@ -132,10 +133,10 @@ index ba5a49c6d..b7caf1479 100644
                  src_md.dims[1] < 64, // ic
                  dst_md.dims[1] < 64, // oc
 diff --git a/src/cpu/aarch64/acl_convolution_utils.hpp b/src/cpu/aarch64/acl_convolution_utils.hpp
-index 3e56245fa..809dc13c9 100644
+index 44dc8eecb..7eae5cbb1 100644
 --- a/src/cpu/aarch64/acl_convolution_utils.hpp
 +++ b/src/cpu/aarch64/acl_convolution_utils.hpp
-@@ -66,6 +66,11 @@ status_t init_conf_indirect_gemm(acl_conv_conf_t &acp, memory_desc_t &src_md,
+@@ -67,6 +67,11 @@ status_t init_conf_indirect_gemm(acl_conv_conf_t &acp, memory_desc_t &src_md,
          memory_desc_t &bias_md, const convolution_desc_t &cd,
          const primitive_attr_t &attr);
  
@@ -147,6 +148,26 @@ index 3e56245fa..809dc13c9 100644
  status_t init_conf_wino(acl_conv_conf_t &acp, memory_desc_t &src_md,
          memory_desc_t &weights_md, memory_desc_t &dst_md,
          memory_desc_t &bias_md, const convolution_desc_t &cd,
+diff --git a/src/cpu/cpu_convolution_list.cpp b/src/cpu/cpu_convolution_list.cpp
+index 4142dbc7e..1800aaf58 100644
+--- a/src/cpu/cpu_convolution_list.cpp
++++ b/src/cpu/cpu_convolution_list.cpp
+@@ -65,6 +65,7 @@ using namespace dnnl::impl::cpu::x64;
+ #if DNNL_AARCH64 && DNNL_AARCH64_USE_ACL
+ #include "cpu/aarch64/acl_gemm_convolution.hpp"
+ #include "cpu/aarch64/acl_indirect_gemm_convolution.hpp"
++#include "cpu/aarch64/acl_depthwise_convolution.hpp"
+ #include "cpu/aarch64/acl_winograd_convolution.hpp"
+ #endif
+ using namespace dnnl::impl::cpu::aarch64;
+@@ -104,6 +105,7 @@ const std::map<pk_dt_impl_key_t, std::vector<impl_list_item_t>> &impl_list_map()
+             CPU_INSTANCE_AARCH64(jit_sve_512_dw_convolution_fwd_t)
+             CPU_INSTANCE_AARCH64(jit_sve_512_1x1_convolution_fwd_f32_t)
+             CPU_INSTANCE_AARCH64(jit_sve_512_convolution_fwd_t<f32>)
++            CPU_INSTANCE_AARCH64_ACL(acl_depthwise_convolution_fwd_t)
+             CPU_INSTANCE_AARCH64_ACL(acl_indirect_gemm_convolution_fwd_t)
+             CPU_INSTANCE_AARCH64_ACL(acl_gemm_convolution_fwd_t<f32>)
+             CPU_INSTANCE(gemm_convolution_fwd_t)
 diff --git a/src/cpu/aarch64/acl_depthwise_convolution.cpp b/src/cpu/aarch64/acl_depthwise_convolution.cpp
 new file mode 100644
 index 000000000..1beb8b8af
@@ -337,23 +358,3 @@ index 000000000..97e0a3a30
 +} // namespace dnnl
 +
 +#endif // CPU_AARCH64_ACL_DEPTHWISE_CONVOLUTION_HPP
-diff --git a/src/cpu/cpu_convolution_list.cpp b/src/cpu/cpu_convolution_list.cpp
-index 4142dbc7e..1800aaf58 100644
---- a/src/cpu/cpu_convolution_list.cpp
-+++ b/src/cpu/cpu_convolution_list.cpp
-@@ -65,6 +65,7 @@ using namespace dnnl::impl::cpu::x64;
- #if DNNL_AARCH64 && DNNL_AARCH64_USE_ACL
- #include "cpu/aarch64/acl_gemm_convolution.hpp"
- #include "cpu/aarch64/acl_indirect_gemm_convolution.hpp"
-+#include "cpu/aarch64/acl_depthwise_convolution.hpp"
- #include "cpu/aarch64/acl_winograd_convolution.hpp"
- #endif
- using namespace dnnl::impl::cpu::aarch64;
-@@ -104,6 +105,7 @@ const std::map<pk_dt_impl_key_t, std::vector<impl_list_item_t>> &impl_list_map()
-             CPU_INSTANCE_AARCH64(jit_sve_512_dw_convolution_fwd_t)
-             CPU_INSTANCE_AARCH64(jit_sve_512_1x1_convolution_fwd_f32_t)
-             CPU_INSTANCE_AARCH64(jit_sve_512_convolution_fwd_t<f32>)
-+            CPU_INSTANCE_AARCH64_ACL(acl_depthwise_convolution_fwd_t)
-             CPU_INSTANCE_AARCH64_ACL(acl_indirect_gemm_convolution_fwd_t)
-             CPU_INSTANCE_AARCH64_ACL(acl_gemm_convolution_fwd_t<f32>)
-             CPU_INSTANCE(gemm_convolution_fwd_t)

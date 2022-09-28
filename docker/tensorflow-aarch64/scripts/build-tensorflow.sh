@@ -100,6 +100,10 @@ if [[ $ONEDNN_BUILD ]]; then
         mv ../acl_fixed_format_kernels_striding.patch ./third_party/compute_library/.
         mv ../acl_depthwise_updateable_weights.patch ./third_party/compute_library/.
 
+        # SVE merge fixup
+        wget "https://git.mlplatform.org/ml/ComputeLibrary.git/patch/?id=ce79ac6297e6eb2407abd24846b8504dee43770f" -O ../acl_fixup_SVE_merges.patch
+        mv ../acl_fixup_SVE_merges.patch ./third_party/compute_library/.
+
         # Patch to cap the number of threads for ACL primitives
         mv ../onednn_acl_threadcap.patch ./third_party/mkl_dnn/.
 

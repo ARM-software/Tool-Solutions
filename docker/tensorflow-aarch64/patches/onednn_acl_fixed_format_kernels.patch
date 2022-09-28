@@ -14,12 +14,12 @@
  See the License for the specific language governing permissions and
  limitations under the License.
  *******************************************************************************
-
+ 
 diff --git a/src/cpu/aarch64/acl_convolution_utils.cpp b/src/cpu/aarch64/acl_convolution_utils.cpp
-index c46d69757..ba5a49c6d 100644
+index c46d69757..6a840b973 100644
 --- a/src/cpu/aarch64/acl_convolution_utils.cpp
 +++ b/src/cpu/aarch64/acl_convolution_utils.cpp
-@@ -212,6 +212,69 @@ status_t acl_init_conf(acl_conv_conf_t &acp, memory_desc_t &src_md,
+@@ -212,6 +212,82 @@ status_t acl_init_conf(acl_conv_conf_t &acp, memory_desc_t &src_md,
                  arm_compute::QuantizationInfo(1.0f / scales[0], 0));
      }
  
@@ -50,6 +50,12 @@ index c46d69757..ba5a49c6d 100644
 +    int interleaved_by = arm_compute::interleave_by(expected_weight_format);
 +    int block_by = arm_compute::block_by(expected_weight_format);
 +
++    bool is_fast_math_kernel = arm_compute::is_fixed_format_fast_math(expected_weight_format);
++    if(!is_fast_math_kernel) {
++        // FP32 kernel is faster then BF16
++        acp.fast_math = false;
++    }
++
 +    memory_desc_t want_wei_md = weights_md;
 +
 +    int ic_multiply = ic;
@@ -57,6 +63,13 @@ index c46d69757..ba5a49c6d 100644
 +        ic_multiply = utils::div_up(ic, block_by) * block_by;
 +        // Also we need to set padded dimensions as well
 +        want_wei_md.padded_dims[1] = ic_multiply;
++    } else {
++        // If we do not need to pad input channels for fast math mode
++        // then it would be faster to run convolution with im2row
++        // instead of using indirect buffer
++        if(acp.fast_math && acp.is_indirect) {
++            return status::unimplemented;
++        }
 +    }
 +    if(oc % interleaved_by != 0) {
 +        int padded_dim = utils::div_up(oc, interleaved_by) * interleaved_by;
@@ -79,7 +92,7 @@ index c46d69757..ba5a49c6d 100644
 +        want_wei_md.format_desc.blocking.inner_blks[1] = block_by;
 +    }
 +
-+    if(acp.fast_math) {
++    if(is_fast_math_kernel) {
 +        // If it is fast math mode we need weights in BFloat16
 +        want_wei_md.data_type = dnnl_bf16;
 +    }
@@ -89,6 +102,49 @@ index c46d69757..ba5a49c6d 100644
      return status::success;
  }
  
+@@ -219,6 +295,7 @@ status_t init_conf_gemm(acl_conv_conf_t &acp, memory_desc_t &src_md,
+         memory_desc_t &weights_md, memory_desc_t &dst_md,
+         memory_desc_t &bias_md, const convolution_desc_t &cd,
+         const primitive_attr_t &attr) {
++    acp.is_indirect = false;
+ 
+     // General Compute Library checks, memory tags are also set there
+     CHECK(acl_init_conf(acp, src_md, weights_md, dst_md, bias_md, cd, attr));
+@@ -244,11 +321,13 @@ status_t init_conf_indirect_gemm(acl_conv_conf_t &acp, memory_desc_t &src_md,
+         memory_desc_t &weights_md, memory_desc_t &dst_md,
+         memory_desc_t &bias_md, const convolution_desc_t &cd,
+         const primitive_attr_t &attr) {
++    acp.is_indirect = true;
++    auto math_mode = get_fpmath_mode();
+     // Indirect convolution results in slowdown for low thread count or 1x1
+     // kernels, so fall back to GEMM-based convolution in these cases
+     if (one_of(true, weights_md.dims[2] == 1, // kh
+                 weights_md.dims[3] == 1, // kw
+-                dnnl_get_max_threads() < 28)) {
++                (!math_mode && dnnl_get_max_threads() < 28))) {
+         return status::unimplemented;
+     }
+ 
+@@ -275,6 +354,7 @@ status_t init_conf_wino(acl_conv_conf_t &acp, memory_desc_t &src_md,
+         memory_desc_t &weights_md, memory_desc_t &dst_md,
+         memory_desc_t &bias_md, const convolution_desc_t &cd,
+         const primitive_attr_t &attr) {
++    acp.is_indirect = false;
+ 
+     // Under these conditions, fallback to faster GEMM-based convolution
+     // unless the user explicitly specifies Winograd algorithm
+diff --git a/src/cpu/aarch64/acl_convolution_utils.hpp b/src/cpu/aarch64/acl_convolution_utils.hpp
+index 3e56245fa..44dc8eecb 100644
+--- a/src/cpu/aarch64/acl_convolution_utils.hpp
++++ b/src/cpu/aarch64/acl_convolution_utils.hpp
+@@ -43,6 +43,7 @@ struct acl_conv_conf_t {
+     // If this is true, the result of the convolution goes into a temporarily
+     // allocated ACL tensor to be accumulated into the oneDNN dst during postops
+     bool use_dst_acc;
++    bool is_indirect;
+     arm_compute::TensorInfo src_info;
+     arm_compute::TensorInfo wei_info;
+     arm_compute::TensorInfo bia_info;
 diff --git a/src/cpu/aarch64/acl_indirect_gemm_convolution.hpp b/src/cpu/aarch64/acl_indirect_gemm_convolution.hpp
 index bcf031a77..4ddc8cf91 100644
 --- a/src/cpu/aarch64/acl_indirect_gemm_convolution.hpp
@@ -258,7 +314,7 @@ index c5e507085..15ea61173 100644
              // Validate fully connected layer manually to check for return status
              ACL_CHECK_VALID(arm_compute::NEFullyConnectedLayer::validate(
 diff --git a/src/cpu/aarch64/matmul/acl_matmul_utils.cpp b/src/cpu/aarch64/matmul/acl_matmul_utils.cpp
-index 679baec3a..2c0b46978 100644
+index 679baec3a..4aa219376 100644
 --- a/src/cpu/aarch64/matmul/acl_matmul_utils.cpp
 +++ b/src/cpu/aarch64/matmul/acl_matmul_utils.cpp
 @@ -66,15 +66,12 @@ status_t init_conf_matmul(acl_matmul_conf_t &amp, memory_desc_t &src_md,
@@ -279,7 +335,7 @@ index 679baec3a..2c0b46978 100644
  
      amp.src_info = arm_compute::TensorInfo(
              arm_compute::TensorShape(K, M, 1, src_batch), 1,
-@@ -103,6 +100,121 @@ status_t init_conf_matmul(acl_matmul_conf_t &amp, memory_desc_t &src_md,
+@@ -103,6 +100,125 @@ status_t init_conf_matmul(acl_matmul_conf_t &amp, memory_desc_t &src_md,
          ACL_CHECK_VALID(arm_compute::NETranspose::validate(
                  &amp.wei_acc_info, &amp.wei_info));
  
@@ -310,6 +366,10 @@ index 679baec3a..2c0b46978 100644
 +    // as returned by interleave by from expecting strides
 +    int interleaved_by = arm_compute::interleave_by(expected_weight_format);
 +    int block_by = arm_compute::block_by(expected_weight_format);
++    bool is_fast_math_kernel = arm_compute::is_fixed_format_fast_math(expected_weight_format);
++    if(!is_fast_math_kernel) {
++        amp.gemm_info.set_fast_math(false);
++    }
 +
 +    int blocked_first_dimension = -1;
 +    int blocked_second_dimension = -1;
@@ -392,7 +452,7 @@ index 679baec3a..2c0b46978 100644
 +        want_wei_md.format_desc.blocking.inner_blks[1] = block_by;
 +    }
 +
-+    if(is_fastmath_enabled) {
++    if(is_fast_math_kernel) {
 +        want_wei_md.data_type = dnnl_bf16;
 +    }
 +

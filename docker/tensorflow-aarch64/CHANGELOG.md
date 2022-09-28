@@ -14,6 +14,10 @@ where `YY` is the year, and `MM` the month of the increment.
 ### Removed
 
 ### Fixed
+- oneDNN uses indirect convolution in fast math mode when input channels require padding.
+- ACL uses correct predicate when reading bias in the merge phase of SVE kernels.
+- Convolution and matmul oneDNN primitives only cast to BF16 if selected kernel is in fast math mode.
+- Correct calculation of multi-stride when fastest changing dimension is padded in fast math mode.
 
 ## [r22.09] 2022-09-16
 https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--r22.09/docker/tensorflow-aarch64
