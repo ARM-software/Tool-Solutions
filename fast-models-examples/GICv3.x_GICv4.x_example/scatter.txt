@@ -1,0 +1,21 @@
+LOAD 0x04000000
+{
+  ;
+  ; Trusted SRAM (256K) on Base Platform model
+  ;
+
+  ROM +0x0
+  {
+     *.o (BOOT, +FIRST)
+     * (InRoot$$Sections)
+     * (+RO)
+  }
+
+  RAM +0x0
+  {
+    * (+RW, +ZI)
+  }
+
+  ARM_LIB_STACKHEAP 0x04020000 EMPTY 0x0008000
+  {}
+}
