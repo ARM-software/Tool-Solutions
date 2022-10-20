@@ -27,9 +27,9 @@ index e255103df98..1b0bb41201f 100644
 -        strip_prefix = "oneDNN-70d1198de554e61081147c199d661df049233279",
 -        urls = tf_mirror_urls("https://github.com/oneapi-src/oneDNN/archive/70d1198de554e61081147c199d661df049233279.tar.gz"),
 +        patch_file = ["//third_party/mkl_dnn:onednn_acl_threadcap.patch", "//third_party/mkl_dnn:onednn_acl_fixed_format_kernels.patch", "//third_party/mkl_dnn:onednn_acl_depthwise_convolution.patch"],
-+        sha256 = "3b5ccfd197ac7e1618747e3388a836f5e535b7afec1ea83fcee186fa35ba6386",
-+        strip_prefix = "oneDNN-80d45b77f1a031a99d628b27aeea45b05f16b8b5",
-+        urls = tf_mirror_urls("https://github.com/oneapi-src/oneDNN/archive/80d45b77f1a031a99d628b27aeea45b05f16b8b5.tar.gz"),
++        sha256 = "fc2b617ec8dbe907bb10853ea47c46f7acd8817bc4012748623d911aca43afbb",
++        strip_prefix = "oneDNN-2.7",
++        urls = tf_mirror_urls("https://github.com/oneapi-src/oneDNN/archive/v2.7.tar.gz"),
      )
  
      tf_http_archive(

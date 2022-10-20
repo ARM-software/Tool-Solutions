@@ -1,5 +1,11 @@
 # PyTorch for AArch64
 
+**⚠ Please Note:**
+
+These builds may contain features currently in active development (see the [change-log](./CHANGELOG.md) for more detail) and are intended only for evaluation purposes.
+Testing of the full stack is limited to validation against the [examples](./examples/README.md) provided on a selection of AArch64 platforms, including Neoverse-V1 and Neoverse-N1.
+Release versions of PyTorch are available from: https://pypi.org/project/torch/.
+
 ## Contents
 * [Getting started with PyTorch on AArch64](#getting-started-with-pytorch-on-aarch64)
    * [Downloading an image from Docker Hub](#downloading-an-image-from-docker-hub)

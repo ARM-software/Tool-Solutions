@@ -1,5 +1,11 @@
 # TensorFlow for AArch64
 
+**⚠ Please Note:**
+
+These builds may contain features currently in active development (see the [change-log](./CHANGELOG.md) for more detail) and are intended only for evaluation purposes.
+Testing of the full stack is limited to validation against the [examples](./examples/README.md) provided on a selection of AArch64 platforms, including Neoverse-V1, Neoverse-N1 and A72.
+Release versions of TensorFlow are available from: https://pypi.org/project/tensorflow/.
+
 ## Contents
 * [Getting started with TensorFlow on AArch64](#getting-started-with-tensorflow-on-aarch64)
    * [Downloading an image from Docker Hub](#downloading-an-image-from-docker-hub)
@@ -54,8 +60,8 @@ where `<image name> `is the name of the image, i.e. `armswdev/tensorflow-arm-neo
   * OS: Ubuntu 20.04
   * Compiler: GCC 10.3
   * Maths libraries: [OpenBLAS](https://www.openblas.net/) 0.3.20, used for NumPy's BLAS functionality
-  * [oneDNN](https://github.com/oneapi-src/oneDNN) 2.6
-    - ACL 22.05, provides optimized implementations on AArch64 for main oneDNN primitives
+  * [oneDNN](https://github.com/oneapi-src/oneDNN) 2.7
+    - ACL 22.08 provides optimized implementations on AArch64 for main oneDNN primitives
   * Python 3.8.10 environment containing:
     - NumPy 1.21.5
     - SciPy 1.7.3

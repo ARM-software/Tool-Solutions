@@ -14,6 +14,15 @@ where `YY` is the year, and `MM` the month of the increment.
 ### Removed
 
 ### Fixed
+
+## [r22.10] 2022-10-21
+https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--r22.10/docker/tensorflow-aarch64
+
+### Changed
+- Installs tensorflow-io in place of tensorflow-io-gcs-filesystem (which is in turn installed).
+- Updates oneDNN to v2.7
+
+### Fixed
 - oneDNN uses indirect convolution in fast math mode when input channels require padding.
 - ACL uses correct predicate when reading bias in the merge phase of SVE kernels.
 - Convolution and matmul oneDNN primitives only cast to BF16 if selected kernel is in fast math mode.
@@ -28,7 +37,6 @@ https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--
 - Support for SVE-128 and SVE-256 enabled in JITed eltwise primitives where HW support is available.
 
 ### Changed
-
 - Updates Compute Library to v22.08.
 - Updates oneDNN to 80d45b77f1a031a99d628b27aeea45b05f16b8b5.
 - Updates TensorFlow to v2.10.
