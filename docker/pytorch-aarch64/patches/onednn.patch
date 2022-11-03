@@ -15,28 +15,28 @@
 # limitations under the License.
 # *******************************************************************************
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 86b2562ca..975afd76b 100644
+index 9facfcf27e..cf99eddaa8 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -133,7 +133,7 @@ include("cmake/configuring_primitive_list.cmake")
- if(UNIX OR MINGW)
-     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99")
-     # Let SYCL to choose the C++ standard it needs.
--    if(NOT DNNL_WITH_SYCL)
-+    if((NOT DNNL_WITH_SYCL) AND (NOT DNNL_AARCH64_USE_ACL))
-         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-     endif()
- endif()
+@@ -136,7 +136,7 @@ if(UNIX OR MINGW)
+         # (prepended so the user can override)
+         set(CMAKE_C_FLAGS "-std=c99 ${CMAKE_C_FLAGS}")
+         # Let SYCL to choose the C++ standard it needs.
+-        if(NOT DNNL_WITH_SYCL)
++        if(NOT DNNL_WITH_SYCL AND (NOT DNNL_AARCH64_USE_ACL))
+             set(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
+         endif()
+     else()
 diff --git a/tests/gtests/api/CMakeLists.txt b/tests/gtests/api/CMakeLists.txt
-index ff9a4f900..0cc3335d3 100644
+index 7c91100b9e..4e9c9facbc 100644
 --- a/tests/gtests/api/CMakeLists.txt
 +++ b/tests/gtests/api/CMakeLists.txt
 @@ -14,7 +14,7 @@
  # limitations under the License.
  #===============================================================================
- 
+
 -set(TEST_EXE test_api)
 +set(TEST_EXE test_api_dnnl)
- 
+
  file(GLOB TEST_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/test_*.cpp)
  list(APPEND TEST_SOURCES ${MAIN_SRC_GTEST})

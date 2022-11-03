@@ -47,6 +47,7 @@ scons -j16  Werror=0 debug=0 neon=1 opencl=0 embed_kernels=0 \
   build_dir=$install_dir/build
 
 cp -r arm_compute $install_dir
+cp -r src $install_dir
 cp -r include $install_dir
 cp -r utils $install_dir
 cp -r support $install_dir
