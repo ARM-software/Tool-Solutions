@@ -282,12 +282,12 @@ ENV ONEDNN_BUILD="${onednn_opt}" \
 
 # Key version numbers
 ENV PY_VERSION="${default_py_version}" \
-    ONEDNN_VERSION="v2.6" \
-    TORCH_VERSION=1.12.0 \
-    TORCHXLA_VERSION=1.12.0 \
-    TORCHVISION_VERSION=0.13.0 \
-    TORCHDATA_VERSION=0.4.0 \
-    TORCHTEXT_VERSION=0.13.0 \
+    ONEDNN_VERSION="v2.7" \
+    TORCH_VERSION=1.13.0 \
+    TORCHXLA_VERSION=1.13.0 \
+    TORCHVISION_VERSION=0.14.0 \
+    TORCHDATA_VERSION=0.5.0 \
+    TORCHTEXT_VERSION=0.14.0 \
     BZL_VERSION="${bazel_version}"
 
 # Use a PACKAGE_DIR in userspace
@@ -306,9 +306,6 @@ COPY scripts/build-pytorch.sh $PACKAGE_DIR/.
 COPY patches/onednn.patch $PACKAGE_DIR/.
 COPY scripts/build-torchtext.sh $PACKAGE_DIR/.
 COPY scripts/build-torchdata.sh $PACKAGE_DIR/.
-
-COPY patches/torch_xla.patch $PACKAGE_DIR/.
-COPY patches/xla_cpu_enhancements.patch $PACKAGE_DIR/.
 
 # TODO: Switch to bazelisk for bazel installation
 # Get Bazel binary for AArch64

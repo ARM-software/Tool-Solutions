@@ -34,6 +34,8 @@ git checkout v$version -b v$version
 git submodule sync
 git submodule update --init --recursive
 
+export USE_MKLDNN="OFF"
+export USE_MKLDNN_ACL="OFF"
 if [[ $ONEDNN_BUILD ]]; then
   export USE_MKLDNN="ON"
   case $ONEDNN_BUILD in
@@ -48,7 +50,7 @@ fi
 # Update the oneDNN tag in third_party/ideep
 cd third_party/ideep/mkl-dnn/third_party/oneDNN
 git checkout $ONEDNN_VERSION
-# Do not add C++11 CMake CXX flag when building ACL and
+# Do not add C++11 CMake CXX flag when building with ACL and
 # rename test_api to test_api_dnnl so it does not clash with PyTorch test_api
 patch -p1 < $PACKAGE_DIR/onednn.patch
 
@@ -64,12 +66,6 @@ if [[ $XLA_BUILD ]]; then
   git checkout v$xla_version -b v$xla_version
   git submodule sync
   git submodule update --init --recursive
-
-  # Apply the downstream patches
-  patch -p1 < $PACKAGE_DIR/torch_xla.patch
-
-  cd third_party/tensorflow
-  patch -p1 < $PACKAGE_DIR/xla_cpu_enhancements.patch
 
   cd $PACKAGE_DIR/$src_repo
   # Patch up the torch with the xla support. This is the patch list from upstream pytorch/xla repo

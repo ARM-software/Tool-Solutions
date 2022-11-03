@@ -10,6 +10,11 @@ where `YY` is the year, and `MM` the month of the increment.
 ### Added
 
 ### Changed
+- Updates PyTorch and PyTorch-xla to v1.13
+- Updates oneDNN to v2.7
+- Updates TorchVision to v0.14
+- Updates TorchText to v0.14
+- Updates TorchData to v0.5
 
 ### Removed
 
