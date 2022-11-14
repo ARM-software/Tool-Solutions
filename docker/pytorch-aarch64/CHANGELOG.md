@@ -19,6 +19,7 @@ where `YY` is the year, and `MM` the month of the increment.
 ### Removed
 
 ### Fixed
+ - Adds patch to fix an issue in ACL when workload sizes are smaller than available threads
 
 ## [r22.10] 2022-10-21
 https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--r22.10/docker/pytorch-aarch64

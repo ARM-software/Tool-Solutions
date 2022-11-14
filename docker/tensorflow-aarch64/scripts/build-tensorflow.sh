@@ -99,6 +99,7 @@ if [[ $ONEDNN_BUILD ]]; then
         # Patches for depthwise convolution to add capability to update weights
         mv ../acl_fixed_format_kernels_striding.patch ./third_party/compute_library/.
         mv ../acl_depthwise_updateable_weights.patch ./third_party/compute_library/.
+        mv ../acl_openmp_fix.patch ./third_party/compute_library/.
 
         # SVE merge fixup
         wget "https://git.mlplatform.org/ml/ComputeLibrary.git/patch/?id=ce79ac6297e6eb2407abd24846b8504dee43770f" -O ../acl_fixup_SVE_merges.patch

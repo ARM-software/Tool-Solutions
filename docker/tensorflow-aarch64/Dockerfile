@@ -296,6 +296,7 @@ COPY patches/tf_acl_openmp_scheduler.patch $PACKAGE_DIR/.
 COPY patches/compute_library.patch $PACKAGE_DIR/.
 COPY patches/acl_fixed_format_kernels_striding.patch $PACKAGE_DIR/.
 COPY patches/acl_depthwise_updateable_weights.patch $PACKAGE_DIR/.
+COPY patches/acl_openmp_fix.patch $PACKAGE_DIR/.
 COPY patches/onednn_acl_threadcap.patch $PACKAGE_DIR/.
 COPY patches/onednn_acl_fixed_format_kernels.patch $PACKAGE_DIR/.
 COPY patches/onednn_acl_depthwise_convolution.patch $PACKAGE_DIR/.
