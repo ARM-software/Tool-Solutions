@@ -33,6 +33,9 @@ install_dir=$PROD_DIR/$package
 cd ${src_repo}
 git checkout $version
 
+# Patches for ACL build
+patch -p1 < ../acl_openmp_fix.patch
+
 # Default to v8a if $acl_arch is unset.
 arch=${ACL_ARCH:-"arm64-v8a"}
 echo "Compute Library arch = ${arch}"

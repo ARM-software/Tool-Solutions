@@ -41,7 +41,7 @@ index e255103df98..1b0bb41201f 100644
          build_file = "//third_party/compute_library:BUILD",
 -        patch_file = ["//third_party/compute_library:compute_library.patch", "//third_party/compute_library:activation_func_correct_args.patch"],
 -        urls = tf_mirror_urls("https://github.com/ARM-software/ComputeLibrary/archive/v22.05.tar.gz"),
-+        patch_file = ["//third_party/compute_library:compute_library.patch", "//third_party/compute_library:acl_fixed_format_kernels_striding.patch", "//third_party/compute_library:acl_depthwise_updateable_weights.patch", "//third_party/compute_library:acl_fixup_SVE_merges.patch"],
++        patch_file = ["//third_party/compute_library:compute_library.patch", "//third_party/compute_library:acl_fixed_format_kernels_striding.patch", "//third_party/compute_library:acl_depthwise_updateable_weights.patch", "//third_party/compute_library:acl_fixup_SVE_merges.patch", "//third_party/compute_library:acl_openmp_fix.patch"],
 +        urls = tf_mirror_urls("https://github.com/ARM-software/ComputeLibrary/archive/v22.08.tar.gz"),
      )
  

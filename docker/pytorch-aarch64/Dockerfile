@@ -179,6 +179,7 @@ ENV LD_LIBRARY_PATH=$OPENBLAS_DIR/lib:$LD_LIBRARY_PATH
 
 # Build Arm Compute Library from source
 COPY scripts/build-acl.sh $PACKAGE_DIR/.
+COPY patches/acl_openmp_fix.patch $PACKAGE_DIR/.
 RUN $PACKAGE_DIR/build-acl.sh
 ENV ACL_ROOT_DIR=$PROD_DIR/ComputeLibrary
 
