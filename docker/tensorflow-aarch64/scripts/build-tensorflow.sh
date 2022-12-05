@@ -87,32 +87,21 @@ if [[ $ONEDNN_BUILD ]]; then
         ## Apply patches to the TensorFlow, Compute Library and oneDNN builds
         # Patch TensorFlow to update oneDNN and ACL builds
         patch -p1 < ../tf_acl.patch
-        # Patch TensorFlow to call into fixed format kernels
-        patch -p1 < ../tf_fixed_format_kernels.patch
-        # Patch TensorFlow to build ACL with OpenMP scheduler
-        patch -p1 < ../tf_acl_openmp_scheduler.patch
 
-        # Patch to add experimental spin-wait scheduler to Compute Library
+        # Patch to update arm_compute_version.embed
         # Note: overwrites upstream version
         mv ../compute_library.patch ./third_party/compute_library/.
 
         # Patches for depthwise convolution to add capability to update weights
         mv ../acl_fixed_format_kernels_striding.patch ./third_party/compute_library/.
-        mv ../acl_depthwise_updateable_weights.patch ./third_party/compute_library/.
-        mv ../acl_openmp_fix.patch ./third_party/compute_library/.
 
-        # SVE merge fixup
-        wget "https://git.mlplatform.org/ml/ComputeLibrary.git/patch/?id=ce79ac6297e6eb2407abd24846b8504dee43770f" -O ../acl_fixup_SVE_merges.patch
-        mv ../acl_fixup_SVE_merges.patch ./third_party/compute_library/.
+        # Patch to fix issue with OpenMP scheduler in ACL
+        mv ../acl_openmp_fix.patch ./third_party/compute_library/
 
-        # Patch to cap the number of threads for ACL primitives
-        mv ../onednn_acl_threadcap.patch ./third_party/mkl_dnn/.
-
-        # Patch to call into fixed format kernels
-        mv ../onednn_acl_fixed_format_kernels.patch ./third_party/mkl_dnn/.
-
-        # Patch to call ACL accelerated depthwise convolution
-        mv ../onednn_acl_depthwise_convolution.patch ./third_party/mkl_dnn/.
+        # Patches to support JIT'ed reorder for padded inputs
+        wget https://github.com/oneapi-src/oneDNN/commit/b84c533dad4db495a92fc6d390a7db5ebd938a88.patch -O ../onednn_reorder_update.patch
+        mv ../onednn_reorder_update.patch ./third_party/mkl_dnn/.
+        mv ../onednn_reorder_padded.patch ./third_party/mkl_dnn/.
     fi
 else
     tf_backend_desc="Eigen."

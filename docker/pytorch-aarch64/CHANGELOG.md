@@ -15,15 +15,21 @@ where `YY` is the year, and `MM` the month of the increment.
 
 ### Fixed
 
-## [r22.11] 2022-11-18
-https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--r22.10/docker/pytorch-aarch64
+## [r22.12] 2022-12-06
+https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--r22.12/docker/pytorch-aarch64
 
 ### Changed
-- Updates PyTorch and PyTorch-xla to v1.13
-- Updates oneDNN to v2.7
-- Updates TorchVision to v0.14
-- Updates TorchText to v0.14
-- Updates TorchData to v0.5
+ - Updates Compute Library version to 22.11.
+
+## [r22.11] 2022-11-18
+https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--r22.11/docker/pytorch-aarch64
+
+### Changed
+- Updates PyTorch and PyTorch-xla to v1.13.
+- Updates oneDNN to v2.7.
+- Updates TorchVision to v0.14.
+- Updates TorchText to v0.14.
+- Updates TorchData to v0.5.
 
 ### Fixed
  - Adds patch to fix an issue in ACL when workload sizes are smaller than available threads
@@ -37,7 +43,7 @@ https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--
 ### Added
 
 ### Changed
-- Updates Compute Library to v22.08
+- Updates Compute Library to v22.08.
 
 ### Removed
 

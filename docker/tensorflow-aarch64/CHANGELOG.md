@@ -15,8 +15,18 @@ where `YY` is the year, and `MM` the month of the increment.
 
 ### Fixed
 
+## [r22.12] 2022-12-06
+https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--r22.12/docker/tensorflow-aarch64
+
+### Added
+ - Adds patches to support reorders with padding,
+
+### Changed
+ - Updates TensorFlow version to 2.11.0.
+ - Updates Compute Library version to 22.11.
+
 ## [r22.11] 2022-11-18
-https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--r22.10/docker/tensorflow-aarch64
+https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--r22.11/docker/tensorflow-aarch64
 
 ### Fixed
  - Adds patch to fix an issue in ACL when workload sizes are smaller than available threads
