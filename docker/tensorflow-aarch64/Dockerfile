@@ -238,6 +238,11 @@ RUN pip install --no-cache-dir transformers pandas
 # Install OpenCV into our venv (needed for MLCommons benchmarks)
 RUN pip install --no-cache-dir opencv-python-headless
 
+# Remove dependency on HDF5 save support in Keras as this does not
+# work with TensorFlow 2.11 and Transformers 4.24
+COPY scripts/remove-keras-hdf-save-dependency.sh $PACKAGE_DIR/.
+RUN $PACKAGE_DIR/remove-keras-hdf-save-dependency.sh
+
 CMD ["bash", "-l"]
 
 # ========
@@ -292,14 +297,10 @@ ENV PATH="$PACKAGE_DIR/bazel:$PATH"
 # Build TensorFlow
 COPY patches/tf_acl.patch $PACKAGE_DIR/.
 COPY patches/tf_fixed_format_kernels.patch $PACKAGE_DIR/.
-COPY patches/tf_acl_openmp_scheduler.patch $PACKAGE_DIR/.
 COPY patches/compute_library.patch $PACKAGE_DIR/.
-COPY patches/acl_fixed_format_kernels_striding.patch $PACKAGE_DIR/.
-COPY patches/acl_depthwise_updateable_weights.patch $PACKAGE_DIR/.
 COPY patches/acl_openmp_fix.patch $PACKAGE_DIR/.
-COPY patches/onednn_acl_threadcap.patch $PACKAGE_DIR/.
-COPY patches/onednn_acl_fixed_format_kernels.patch $PACKAGE_DIR/.
-COPY patches/onednn_acl_depthwise_convolution.patch $PACKAGE_DIR/.
+COPY patches/acl_fixed_format_kernels_striding.patch $PACKAGE_DIR/.
+COPY patches/onednn_reorder_padded.patch $PACKAGE_DIR/.
 COPY scripts/build-tensorflow.sh $PACKAGE_DIR/.
 RUN $PACKAGE_DIR/build-tensorflow.sh
 COPY scripts/build-tensorflow-addons.sh $PACKAGE_DIR/.

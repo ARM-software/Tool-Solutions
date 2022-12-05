@@ -61,11 +61,11 @@ where `<image name> `is the name of the image, i.e. `armswdev/tensorflow-arm-neo
   * Compiler: GCC 10.3
   * Maths libraries: [OpenBLAS](https://www.openblas.net/) 0.3.20, used for NumPy's BLAS functionality
   * [oneDNN](https://github.com/oneapi-src/oneDNN) 2.7
-    - ACL 22.08 provides optimized implementations on AArch64 for main oneDNN primitives
+    - ACL 22.11 provides optimized implementations on AArch64 for main oneDNN primitives
   * Python 3.8.10 environment containing:
     - NumPy 1.21.5
     - SciPy 1.7.3
-    - TensorFlow 2.9.1
+    - TensorFlow 2.11
   * [Examples](./examples/README.md) that demonstrate how to run ML models
     - [MLCommons :tm:](https://mlcommons.org/en/) benchmarks with an optional patch to support benchmarking for TF oneDNN builds
     - TensorFlow Benchmarks

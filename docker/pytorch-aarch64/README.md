@@ -61,7 +61,7 @@ where `<image name>` is the name of the image, i.e. `armswdev/pytorch-arm-neover
   * Compiler: GCC 10.3
   * Maths libraries: [OpenBLAS](https://www.openblas.net/) 0.3.20
   * [oneDNN](https://github.com/oneapi-src/oneDNN) 2.7
-    - ACL 22.08, provides optimized implementations on AArch64 for main oneDNN primitives
+    - ACL 22.11, provides optimized implementations on AArch64 for main oneDNN primitives
   * Python 3.8.10 environment containing:
     - NumPy 1.21.5
     - SciPy 1.7.3

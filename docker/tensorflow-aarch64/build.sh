@@ -246,7 +246,7 @@ if [[ $clean_build ]]; then
 fi
 
 # Set TensorFlow and TensorFlow serving versions
-tf_version="v2.10.0"
+tf_version="v2.11.0"
 # Note: TF serving release tags do not have a `v` prefix
 tfserving_version="2.7.0"
 
