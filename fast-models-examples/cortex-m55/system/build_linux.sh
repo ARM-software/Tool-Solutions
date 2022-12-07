@@ -10,6 +10,7 @@ GCC=`gcc -dumpversion 2> /dev/null |  sed -e "s/\([0-9]*\.[0-9]*\)\.[0-9]*/\1/" 
 GCC2=`gcc -dumpversion 2> /dev/null`
 
 case "$GCC" in 
+    9 ) make rel_gcc93_64 ; break ;;
     7 ) make rel_gcc73_64 ; break ;;
     6 ) make rel_gcc64_64 ; break ;;
     4 ) make rel_gcc49_64 ; break ;;

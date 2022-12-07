@@ -4,7 +4,7 @@ This example illustrates the use of the Cortex-M55 Fast Model for software devel
 
 The example is compatible with Windows and Linux host operating systems. Details of the latest supported platforms can be found in the release notes located here: https://developer.arm.com/tools-and-software/simulation-models/fast-models/release-history.
 
-This example was built and tested with Fast Models 11.10 (released in March 2020).  It will be kept current with the latest version of the tools. To build the example as  described you will need to have installed Fast Models and obtained an evaluation license.
+This example was built and tested with Fast Models 11.19 (released in September 2022).  It will be kept current with the latest version of the tools. To build the example as  described you will need to have installed Fast Models and obtained an evaluation license.
 
 * Fast Models can be downloaded from: https://developer.arm.com/tools-and-software/simulation-models/fast-models
 
