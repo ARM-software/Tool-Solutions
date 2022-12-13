@@ -41,17 +41,19 @@ CXX_CMD = $(CXX) $(CXXFLAGS) -o $(TARGET) $(SRCS) $(LDFLAGS)
 .PHONY: dbg_gcc49_64 rel_gcc49_64
 .PHONY: dbg_gcc64_64 rel_gcc64_64
 .PHONY: dbg_gcc73_64 rel_gcc73_64
+.PHONY: dbg_gcc93_64 rel_gcc93_64
 
 .PHONY: dbg_gcc49_64_clean rel_gcc49_64_clean
 .PHONY: dbg_gcc64_64_clean rel_gcc64_64_clean
 .PHONY: dbg_gcc73_64_clean rel_gcc73_64_clean
+.PHONY: dbg_gcc93_64_clean rel_gcc93_64_clean
 
-dbg_gcc49_64 rel_gcc49_64 dbg_gcc64_64 rel_gcc64_64 dbg_gcc73_64 rel_gcc73_64:
+dbg_gcc49_64 rel_gcc49_64 dbg_gcc64_64 rel_gcc64_64 dbg_gcc73_64 rel_gcc73_64 dbg_gcc93_64 rel_gcc93_64:
 	$(SIMGEN_CMD) -b
 	cp $(BUILDDIR)/lib$(EVSLIB).so ./
 	$(CXX_CMD)
 
-dbg_gcc49_64_clean rel_gcc49_64_clean dbg_gcc64_64_clean rel_gcc64_64_clean dbg_gcc73_64_clean rel_gcc73_64_clean:
+dbg_gcc49_64_clean rel_gcc49_64_clean dbg_gcc64_64_clean rel_gcc64_64_clean dbg_gcc73_64_clean rel_gcc73_64_clean dbg_gcc93_64_clean rel_gcc93_64_clean:
 	-$(SIMGEN_CMD) --clean
 	-rm -f $(TARGET)
 	-rm -rf $(CONFIG)

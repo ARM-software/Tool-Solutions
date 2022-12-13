@@ -50,6 +50,7 @@ CXXFLAGS_gcc49 = -std=c++11
 CXXFLAGS_gcc54 = -std=c++11
 CXXFLAGS_gcc64 = -std=c++11
 CXXFLAGS_gcc73 = -std=c++11
+CXXFLAGS_gcc93 = -std=c++11
 CXXFLAGS += $(CXXFLAGS_$(word 2, $(subst _, ,$@)))
 
 # Determine binares and config to use from make target
@@ -61,6 +62,8 @@ GCC_VER_gcc64       = 6.4
 CONFIG_VER_gcc64    = 6.4
 GCC_VER_gcc73       = 7.3
 CONFIG_VER_gcc73    = 7.3
+GCC_VER_gcc93       = 9.3
+CONFIG_VER_gcc93    = 9.3
 
 
 GCC_VER = $(GCC_VER_$(word 2, $(subst _, ,$@)))
@@ -104,6 +107,10 @@ ifeq ($(CXX_VER),7)
 LDFLAGS += -latomic
 endif
 
+ifeq ($(CXX_VER),9)
+LDFLAGS += -latomic
+endif
+
 # Determine additional simgen flags
 ifneq ($(origin CXX),default)
     override SIMGENFLAGS += --gcc-path $(CXX)
@@ -141,6 +148,11 @@ endif
 ifeq ($(CXX_VER),7.4)
 DBG = dbg_gcc73_64
 REL = rel_gcc73_64
+endif
+
+ifeq ($(CXX_VER),9)
+DBG = dbg_gcc93_64
+REL = rel_gcc93_64
 endif
 
 
