@@ -34,6 +34,7 @@ cd ${src_repo}
 git checkout $version
 
 # Patches for ACL build
+patch -p1 < ../acl_fixed_format_kernels_striding.patch
 patch -p1 < ../acl_openmp_fix.patch
 
 # Default to v8a if $acl_arch is unset.
@@ -47,6 +48,7 @@ multi_isa=0
 # Build with scons
 scons -j16  Werror=0 debug=0 neon=1 opencl=0 embed_kernels=0 \
   os=linux arch=$arch build=native multi_isa=$multi_isa \
+  experimental_fixed_format_kernels=1 openmp=1 cppthreads=0 \
   build_dir=$install_dir/build
 
 cp -r arm_compute $install_dir

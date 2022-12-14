@@ -47,14 +47,36 @@ if [[ $ONEDNN_BUILD ]]; then
   esac
 fi
 
+cd third_party/ideep
+# Caches convolution primitive at PyTorch level and removes any tag
+# from destination tensor when creating matmul primitive so that
+# accelerated version can be called
+patch -p1 < $PACKAGE_DIR/ideep.patch
+
+cd mkl-dnn/third_party/oneDNN
 # Update the oneDNN tag in third_party/ideep
-cd third_party/ideep/mkl-dnn/third_party/oneDNN
 git checkout $ONEDNN_VERSION
 # Do not add C++11 CMake CXX flag when building with ACL and
 # rename test_api to test_api_dnnl so it does not clash with PyTorch test_api
 patch -p1 < $PACKAGE_DIR/onednn.patch
 
+# Support for fixed format kernels
+patch -p1 < $PACKAGE_DIR/onednn_acl_fixed_format_kernels.patch
+
+# Support for depthwise convolution
+patch -p1 < $PACKAGE_DIR/onednn_acl_depthwise_convolution.patch
+
+# Support for jitted padded reordering
+patch -p1 < $PACKAGE_DIR/onednn_reorder_padded.patch
+wget https://github.com/oneapi-src/oneDNN/commit/b84c533dad4db495a92fc6d390a7db5ebd938a88.patch -O $PACKAGE_DIR/onednn_reorder_update.patch
+patch -p1 < $PACKAGE_DIR/onednn_reorder_update.patch
+
+# Support for jitted reordering to BF16
+patch -p1 < $PACKAGE_DIR/onednn_reorder_to_bf16.patch
+
 cd $PACKAGE_DIR/$src_repo
+# Call into ACL for some BLAS calls
+patch -p1 < $PACKAGE_DIR/blas_to_mkl_acl.patch
 
 if [[ $XLA_BUILD ]]; then
   readonly xla_version=$TORCHXLA_VERSION

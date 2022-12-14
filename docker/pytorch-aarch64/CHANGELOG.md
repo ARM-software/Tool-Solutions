@@ -8,6 +8,10 @@ where `YY` is the year, and `MM` the month of the increment.
 ## [Unreleased]
 
 ### Added
+ - Fixed format kernels in oneDNN and ACL.
+ - Convolution caching at PyTorch level.
+ - Call oneDNN matrix multiplication for BLAS operation when LHS is transposed, but not RHS.
+ - Jitted reorder when destination tensor is BF16.
 
 ### Changed
 
