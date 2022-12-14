@@ -1,0 +1,231 @@
+# *******************************************************************************
+# Copyright 2022 Arm Limited and affiliates.
+# SPDX-License-Identifier: Apache-2.0
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# *******************************************************************************
+
+diff --git a/include/ideep/operators/conv.hpp b/include/ideep/operators/conv.hpp
+index bf5b4ef..871afcd 100644
+--- a/include/ideep/operators/conv.hpp
++++ b/include/ideep/operators/conv.hpp
+@@ -4,7 +4,7 @@
+ namespace ideep {
+ 
+ struct convolution_forward_params {
+-  dnnl::convolution_forward::primitive_desc pd;
++  std::pair<dnnl::convolution_forward::primitive_desc, dnnl::convolution_forward> pd;
+   // bias_attr contains requantization scales for bias
+   attr_t bias_attr;
+   scale_t dst_scales;
+@@ -218,7 +218,7 @@ struct conv_deconv_utils {
+ 
+ struct convolution_forward
+     : public dnnl::convolution_forward,
+-      utils::computation_cache<dnnl::convolution_forward::primitive_desc> {
++      utils::computation_cache<std::pair<dnnl::convolution_forward::primitive_desc, dnnl::convolution_forward> > {
+ 
+   using super = dnnl::convolution_forward;
+ 
+@@ -647,7 +647,7 @@ struct convolution_forward
+         padding_l, padding_r, is_channels_last, attr, aalgorithm, apkind);
+ 
+     // embed group info into weights_desc
+-    return tensor::desc(pd.weights_desc(), groups);
++    return tensor::desc(pd.first.weights_desc(), groups);
+   }
+ 
+   // [keep_format]
+@@ -658,7 +658,7 @@ struct convolution_forward
+   //   the dst to be plain as src, so that it would also instruct onednn
+   //   to use gemm-based conv implementation. Apply to both NCHW and NHWC.
+   template <bool with_bias, bool keep_format = false>
+-  static primitive_desc get_primitive_desc(
++  static std::pair<primitive_desc, dnnl::convolution_forward> get_primitive_desc(
+       const tensor::desc& src_desc,
+       const tensor::desc& weights_desc,
+       const tensor::desc& bias_desc,
+@@ -702,6 +702,7 @@ struct convolution_forward
+       }
+     }
+ 
++
+     auto key = utils::create_key(
+         aprop_kind,
+         aalgorithm,
+@@ -714,35 +715,38 @@ struct convolution_forward
+         padding_r,
+         attr,
+         omp_get_max_threads());
+-    return fetch_or_create(key, [&]() {
+-      if (with_bias) {
+-        return primitive_desc(
+-            {aprop_kind,
+-             aalgorithm,
+-             src_desc_query,
+-             weights_desc_query,
+-             bias_desc_query,
+-             dst_desc_query,
+-             strides,
+-             dilates,
+-             padding_l,
+-             padding_r},
+-            attr,
+-            aengine);
+-      } else {
+-        return primitive_desc(
+-            {aprop_kind,
+-             aalgorithm,
+-             src_desc_query,
+-             weights_desc_query,
+-             dst_desc_query,
+-             strides,
+-             dilates,
+-             padding_l,
+-             padding_r},
+-            attr,
+-            aengine);
+-      }
++    dnnl::convolution_forward::primitive_desc pd;
++    if (with_bias) {
++      pd = primitive_desc(
++          {aprop_kind,
++           aalgorithm,
++           src_desc_query,
++           weights_desc_query,
++           bias_desc_query,
++           dst_desc_query,
++           strides,
++           dilates,
++           padding_l,
++           padding_r},
++          attr,
++          aengine);
++    } else {
++      pd = primitive_desc(
++          {aprop_kind,
++           aalgorithm,
++           src_desc_query,
++           weights_desc_query,
++           dst_desc_query,
++           strides,
++           dilates,
++           padding_l,
++           padding_r},
++          attr,
++          aengine);
++    }
++
++     return fetch_or_create(key, [&]() {
++       return std::make_pair(pd, super(pd));
+     });
+   }
+ 
+@@ -861,7 +865,7 @@ private:
+         padding_l, padding_r, is_channels_last, op_attr, aalgorithm, aprop_kind, aengine);
+ 
+     // allocate scratchpad
+-    tensor scratchpad(pd.scratchpad_desc());
++    tensor scratchpad(pd.first.scratchpad_desc());
+ 
+     params = {std::move(pd), bias_attr, scale_t(), zero_point_t(),
+              groups, std::move(scratchpad)};
+@@ -941,7 +945,7 @@ private:
+         padding_l, padding_r, is_channels_last, op_attr, aalgorithm, aprop_kind, aengine);
+ 
+     // allocate scratchpad
+-    tensor scratchpad(pd.scratchpad_desc());
++    tensor scratchpad(pd.first.scratchpad_desc());
+ 
+     param = {std::move(pd), bias_attr, std::move(dst_scales), std::move(src_zero_point),
+              groups, std::move(scratchpad)};
+@@ -951,7 +955,7 @@ private:
+   static void do_compute(const convolution_forward_params& param,
+                          const tensor& src, const tensor& weights,
+                          const tensor& bias, tensor& dst) {
+-    auto& pd = param.pd;
++    auto& pd = param.pd.first;
+     auto& scratchpad = param.scratchpad;
+     auto expected_src = src.reorder_if_differ_in(pd.src_desc());
+     auto expected_weights = weights.make_grouped_weights(param.groups)
+@@ -968,7 +972,7 @@ private:
+         ideep::engine(pd.get_engine().get_kind()), src_zero_point_m);
+     if (with_bias) {
+       auto expected_bias = bias.reorder_if_differ_in(pd.bias_desc(), param.bias_attr);
+-      super(pd).execute(stream::default_stream(), 
++      param.pd.second.execute(stream::default_stream(),
+                         {{DNNL_ARG_SRC, expected_src},
+                          {DNNL_ARG_WEIGHTS, expected_weights},
+                          {DNNL_ARG_BIAS, expected_bias},
+@@ -976,7 +980,7 @@ private:
+                          {DNNL_ARG_SCRATCHPAD, scratchpad},
+                          {DNNL_ARG_ATTR_ZERO_POINTS | DNNL_ARG_SRC, src_zero_point_m}});
+     } else {
+-      super(pd).execute(stream::default_stream(), 
++      param.pd.second.execute(stream::default_stream(),
+                         {{DNNL_ARG_SRC, expected_src},
+                          {DNNL_ARG_WEIGHTS, expected_weights},
+                          {DNNL_ARG_DST, dst},
+@@ -992,7 +996,7 @@ private:
+                                 const tensor &weights,
+                                 const tensor &bias,
+                                 tensor &dst) {
+-    auto &pd = param.pd;
++    auto &pd = param.pd.first;
+     auto &scratchpad = param.scratchpad;
+     auto expected_src = src.reorder_if_differ_in(pd.src_desc());
+     // make sure other has same format with dst.
+@@ -1104,7 +1108,7 @@ struct convolution_backward_data : public dnnl::convolution_backward_data {
+ 
+     auto pd = primitive_desc(
+         {aalgorithm, diff_src_desc, weights_desc, diff_dst_desc, strides,
+-         dilates_, padding_l, padding_r}, op_attr, aengine, forward_hints);
++         dilates_, padding_l, padding_r}, op_attr, aengine, forward_hints.first);
+ 
+     auto expected_diff_dst = diff_dst.reorder_if_differ_in(pd.diff_dst_desc());
+     auto expected_weights = weights_.reorder_if_differ_in(pd.weights_desc());
+@@ -1156,7 +1160,7 @@ struct convolution_backward_data : public dnnl::convolution_backward_data {
+ 
+     auto pd = primitive_desc(
+         {aalgorithm, diff_src_desc, weights_desc, diff_dst_desc, strides,
+-         dilates_, padding_l, padding_r}, op_attr, aengine, forward_hints);
++         dilates_, padding_l, padding_r}, op_attr, aengine, forward_hints.first);
+ 
+     auto expected_diff_dst = diff_dst.reorder_if_differ_in(pd.diff_dst_desc());
+     auto expected_weights = weights_.reorder_if_differ_in(pd.weights_desc());
+@@ -1324,10 +1328,10 @@ struct convolution_backward_weights
+     auto pd = with_diff_bias
+         ? primitive_desc({aalgorithm, src_desc, diff_weights_desc,
+                           diff_bias_desc, diff_dst_desc, strides, dilates_,
+-                          padding_l, padding_r}, op_attr, aengine, forward_hints)
++                          padding_l, padding_r}, op_attr, aengine, forward_hints.first)
+         : primitive_desc({aalgorithm, src_desc, diff_weights_desc,
+                           diff_dst_desc, strides, dilates_,
+-                          padding_l, padding_r}, op_attr, aengine, forward_hints);
++                          padding_l, padding_r}, op_attr, aengine, forward_hints.first);
+ 
+     auto expected_diff_dst = diff_dst.reorder_if_differ_in(pd.diff_dst_desc());
+     auto expected_src = src.reorder_if_differ_in(pd.src_desc());
+diff --git a/include/ideep/operators/matmul.hpp b/include/ideep/operators/matmul.hpp
+index fc94d1a..e1b6a7c 100644
+--- a/include/ideep/operators/matmul.hpp
++++ b/include/ideep/operators/matmul.hpp
+@@ -515,7 +515,7 @@ enum task_type {
+          std::vector<int64_t>({dst_dims[1], 1});
+      tensor::desc dst_desc = is_dynamic ?
+          tensor::desc(dst_dims, dst_data_type, dst_strides) :
+-         tensor::desc(dst_dims, dst_data_type, tag::any);
++         tensor::desc(dst_dims, dst_data_type);
+      auto key = utils::create_key(
+          src_desc,
+          weights_desc,
