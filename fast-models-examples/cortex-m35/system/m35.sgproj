@@ -1,0 +1,181 @@
+sgproject "m35.sgproj"
+{
+TOP_LEVEL_COMPONENT = "m35";
+ACTIVE_CONFIG_LINUX = "Linux64-Release-GCC-7.3";
+ACTIVE_CONFIG_WINDOWS = "Win64-Release-VC2017";
+config "Linux64-Debug-GCC-4.9"
+{
+    ADDITIONAL_COMPILER_SETTINGS = "-march=core2 -ggdb3 -Wall -std=c++11";
+    ADDITIONAL_LINKER_SETTINGS = "-Wl,--no-undefined";
+    BUILD_DIR = "./Linux64-Debug-GCC-4.9";
+    CONFIG_DESCRIPTION = "Default x86_64 Linux configuration for GCC 4.9 with debug information";
+    CONFIG_NAME = "Linux64-Debug-GCC-4.9";
+    ENABLE_DEBUG_SUPPORT = "1";
+    PLATFORM = "Linux64";
+    SIMGEN_WARNINGS_AS_ERRORS = "1";
+    TARGET_SYSTEMC = "1";
+    TARGET_SYSTEMC_AUTO = "0";
+    TARGET_SYSTEMC_ISIM = "0";
+}
+config "Linux64-Debug-GCC-6.4"
+{
+    ADDITIONAL_COMPILER_SETTINGS = "-march=core2 -ggdb3 -Wall -std=c++11 -Wno-deprecated -Wno-unused-function";
+    ADDITIONAL_LINKER_SETTINGS = "-Wl,--no-undefined";
+    BUILD_DIR = "./Linux64-Debug-GCC-6.4";
+    CONFIG_DESCRIPTION = "Default x86_64 Linux configuration for GCC 6.4 with debug information";
+    CONFIG_NAME = "Linux64-Debug-GCC-6.4";
+    ENABLE_DEBUG_SUPPORT = "1";
+    PLATFORM = "Linux64";
+    SIMGEN_WARNINGS_AS_ERRORS = "1";
+    TARGET_SYSTEMC = "1";
+    TARGET_SYSTEMC_AUTO = "0";
+    TARGET_SYSTEMC_ISIM = "0";
+}
+config "Linux64-Debug-GCC-7.3"
+{
+    ADDITIONAL_COMPILER_SETTINGS = "-march=core2 -ggdb3 -Wall -std=c++11 -Wno-deprecated -Wno-unused-function";
+    ADDITIONAL_LINKER_SETTINGS = "-Wl,--no-undefined";
+    BUILD_DIR = "./Linux64-Debug-GCC-7.3";
+    COMPILER = "gcc-7.3";
+    CONFIG_DESCRIPTION = "Default x86_64 Linux configuration for GCC 7.3 with debug information";
+    CONFIG_NAME = "Linux64-Debug-GCC-7.3";
+    ENABLE_DEBUG_SUPPORT = "1";
+    PLATFORM = "Linux64";
+    SIMGEN_WARNINGS_AS_ERRORS = "1";
+    TARGET_SYSTEMC = "1";
+    TARGET_SYSTEMC_AUTO = "0";
+    TARGET_SYSTEMC_ISIM = "0";
+}
+config "Linux64-Debug-GCC-9.3"
+{
+    ADDITIONAL_COMPILER_SETTINGS = "-march=core2 -ggdb3 -Wall -std=c++11 -Wno-deprecated -Wno-unused-function";
+    ADDITIONAL_LINKER_SETTINGS = "-Wl,--no-undefined";
+    BUILD_DIR = "./Linux64-Debug-GCC-9.3";
+    COMPILER = "gcc-9.3";
+    CONFIG_DESCRIPTION = "Default x86_64 Linux configuration for GCC 9.3 with debug information";
+    CONFIG_NAME = "Linux64-Debug-GCC-9.3";
+    ENABLE_DEBUG_SUPPORT = "1";
+    PLATFORM = "Linux64";
+    SIMGEN_WARNINGS_AS_ERRORS = "1";
+    TARGET_SYSTEMC = "1";
+    TARGET_SYSTEMC_AUTO = "0";
+    TARGET_SYSTEMC_ISIM = "0";
+}
+config "Linux64-Release-GCC-4.9"
+{
+    ADDITIONAL_COMPILER_SETTINGS = "-march=core2 -O3 -Wall -std=c++11";
+    ADDITIONAL_LINKER_SETTINGS = "-Wl,--no-undefined";
+    BUILD_DIR = "./Linux64-Release-GCC-4.9";
+    CONFIG_DESCRIPTION = "Default x86_64 Linux configuration for GCC 4.9, optimized for speed";
+    CONFIG_NAME = "Linux64-Release-GCC-4.9";
+    PLATFORM = "Linux64";
+    PREPROCESSOR_DEFINES = "NDEBUG";
+    SIMGEN_WARNINGS_AS_ERRORS = "1";
+    TARGET_SYSTEMC = "1";
+    TARGET_SYSTEMC_AUTO = "0";
+    TARGET_SYSTEMC_ISIM = "0";
+}
+config "Linux64-Release-GCC-6.4"
+{
+    ADDITIONAL_COMPILER_SETTINGS = "-march=core2 -O3 -Wall -std=c++11 -Wno-deprecated -Wno-unused-function";
+    ADDITIONAL_LINKER_SETTINGS = "-Wl,--no-undefined";
+    BUILD_DIR = "./Linux64-Release-GCC-6.4";
+    CONFIG_DESCRIPTION = "Default x86_64 Linux configuration for GCC 6.4, optimized for speed";
+    CONFIG_NAME = "Linux64-Release-GCC-6.4";
+    PLATFORM = "Linux64";
+    PREPROCESSOR_DEFINES = "NDEBUG";
+    SIMGEN_WARNINGS_AS_ERRORS = "1";
+    TARGET_SYSTEMC = "1";
+    TARGET_SYSTEMC_AUTO = "0";
+    TARGET_SYSTEMC_ISIM = "0";
+}
+config "Linux64-Release-GCC-7.3"
+{
+    ADDITIONAL_COMPILER_SETTINGS = "-march=core2 -O3 -Wall -std=c++11 -Wno-deprecated -Wno-unused-function";
+    ADDITIONAL_LINKER_SETTINGS = "-Wl,--no-undefined";
+    BUILD_DIR = "./Linux64-Release-GCC-7.3";
+    COMPILER = "gcc-7.3";
+    CONFIG_DESCRIPTION = "Default x86_64 Linux configuration for GCC 7.3, optimized for speed";
+    CONFIG_NAME = "Linux64-Release-GCC-7.3";
+    PLATFORM = "Linux64";
+    PREPROCESSOR_DEFINES = "NDEBUG";
+    SIMGEN_WARNINGS_AS_ERRORS = "1";
+    TARGET_SYSTEMC = "1";
+    TARGET_SYSTEMC_AUTO = "0";
+    TARGET_SYSTEMC_ISIM = "0";
+}
+config "Linux64-Release-GCC-9.3"
+{
+    ADDITIONAL_COMPILER_SETTINGS = "-march=core2 -O3 -Wall -std=c++11 -Wno-deprecated -Wno-unused-function";
+    ADDITIONAL_LINKER_SETTINGS = "-Wl,--no-undefined";
+    BUILD_DIR = "./Linux64-Release-GCC-9.3";
+    COMPILER = "gcc-9.3";
+    CONFIG_DESCRIPTION = "Default x86_64 Linux configuration for GCC 9.3, optimized for speed";
+    CONFIG_NAME = "Linux64-Release-GCC-9.3";
+    PLATFORM = "Linux64";
+    PREPROCESSOR_DEFINES = "NDEBUG";
+    SIMGEN_WARNINGS_AS_ERRORS = "1";
+    TARGET_SYSTEMC = "1";
+    TARGET_SYSTEMC_AUTO = "0";
+    TARGET_SYSTEMC_ISIM = "0";
+}
+config "Win64-Debug-VC2015"
+{
+    ADDITIONAL_COMPILER_SETTINGS = "/Od /RTCsu /Zi";
+    ADDITIONAL_LINKER_SETTINGS = "/DEBUG";
+    BUILD_DIR = "./Win64-Debug-VC2015";
+    CONFIG_DESCRIPTION = "Default x86_64 Windows configuration for Visual Studio 2015 with debug information";
+    CONFIG_NAME = "Win64-Debug-VC2015";
+    ENABLE_DEBUG_SUPPORT = "1";
+    PLATFORM = "Win64D";
+    SIMGEN_WARNINGS_AS_ERRORS = "1";
+    TARGET_SYSTEMC = "1";
+    TARGET_SYSTEMC_AUTO = "0";
+    TARGET_SYSTEMC_ISIM = "0";
+}
+config "Win64-Debug-VC2017"
+{
+    ADDITIONAL_COMPILER_SETTINGS = "/Od /RTCsu /Zi";
+    ADDITIONAL_LINKER_SETTINGS = "/DEBUG";
+    BUILD_DIR = "./Win64-Debug-VC2017";
+    CONFIG_DESCRIPTION = "Default x86_64 Windows configuration for Visual Studio 2017 with debug information";
+    CONFIG_NAME = "Win64-Debug-VC2017";
+    ENABLE_DEBUG_SUPPORT = "1";
+    PLATFORM = "Win64D";
+    SIMGEN_WARNINGS_AS_ERRORS = "1";
+    TARGET_SYSTEMC = "1";
+    TARGET_SYSTEMC_AUTO = "0";
+    TARGET_SYSTEMC_ISIM = "0";
+}
+config "Win64-Release-VC2015"
+{
+    ADDITIONAL_COMPILER_SETTINGS = "/O2";
+    BUILD_DIR = "./Win64-Release-VC2015";
+    CONFIG_DESCRIPTION = "Default x86_64 Windows configuration for Visual Studio 2015, optimized for speed";
+    CONFIG_NAME = "Win64-Release-VC2015";
+    PLATFORM = "Win64";
+    PREPROCESSOR_DEFINES = "NDEBUG";
+    SIMGEN_WARNINGS_AS_ERRORS = "1";
+    TARGET_SYSTEMC = "1";
+    TARGET_SYSTEMC_AUTO = "0";
+    TARGET_SYSTEMC_ISIM = "0";
+}
+config "Win64-Release-VC2017"
+{
+    ADDITIONAL_COMPILER_SETTINGS = "/O2";
+    BUILD_DIR = "./Win64-Release-VC2017";
+    CONFIG_DESCRIPTION = "Default x86_64 Windows configuration for Visual Studio 2017, optimized for speed";
+    CONFIG_NAME = "Win64-Release-VC2017";
+    PLATFORM = "Win64";
+    PREPROCESSOR_DEFINES = "NDEBUG";
+    SIMGEN_WARNINGS_AS_ERRORS = "1";
+    TARGET_SYSTEMC = "1";
+    TARGET_SYSTEMC_AUTO = "0";
+    TARGET_SYSTEMC_ISIM = "0";
+}
+files
+{
+    path = "$(PVLIB_HOME)/etc/sglib.sgrepo";
+    path = "m35.lisa";
+}
+}
