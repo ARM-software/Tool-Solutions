@@ -47,3 +47,15 @@ index 18b63ab47fb..91150f50bc3 100644
          sha256 = "fc2b617ec8dbe907bb10853ea47c46f7acd8817bc4012748623d911aca43afbb",
          strip_prefix = "oneDNN-2.7",
          urls = tf_mirror_urls("https://github.com/oneapi-src/oneDNN/archive/v2.7.tar.gz"),
+diff --git a/third_party/mkl_dnn/mkldnn_acl.BUILD b/third_party/mkl_dnn/mkldnn_acl.BUILD
+index c2642201602..787e92a05fd 100644
+--- a/third_party/mkl_dnn/mkldnn_acl.BUILD
++++ b/third_party/mkl_dnn/mkldnn_acl.BUILD
+@@ -161,7 +161,6 @@ cc_library(
+         "src/cpu/aarch64/xbyak_aarch64/xbyak_aarch64",
+         "src/cpu/gemm",
+     ],
+-    linkopts = ["-lgomp"],
+     textual_hdrs = glob(
+         [
+             "include/**/*",

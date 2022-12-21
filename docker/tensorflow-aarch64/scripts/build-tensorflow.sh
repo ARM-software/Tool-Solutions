@@ -61,7 +61,7 @@ export TF_NEED_TENSORRT=0
 # Bazel build options
 config_flags=""
 compile_flags="--copt=-mtune=${TUNE} --copt=-march=${ARCH} --copt=-O3 --copt=-flax-vector-conversions"
-link_flags="--linkopt=-lgomp"
+link_flags=""
 extra_flags="--verbose_failures -s"
 
 if [[ $BZL_RAM ]]; then extra_flags="$extra_flags --local_ram_resources=$BZL_RAM"; fi
