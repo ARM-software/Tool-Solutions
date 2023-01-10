@@ -1,5 +1,5 @@
 # *******************************************************************************
-# Copyright 2022 Arm Limited and affiliates.
+# Copyright 2022 - 2023 Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -52,3 +52,46 @@ index 125e45267a..584d8eea23 100644
      });
      // If hit, use cached data. If miss, fall back to normal path.
      if (get_conv_cache().hit(cache_key)) {
+diff --git a/aten/src/ATen/native/mkldnn/Matmul.cpp b/aten/src/ATen/native/mkldnn/Matmul.cpp
+index d41ebac635..e2cc13fe00 100644
+--- a/aten/src/ATen/native/mkldnn/Matmul.cpp
++++ b/aten/src/ATen/native/mkldnn/Matmul.cpp
+@@ -128,23 +128,25 @@ void mkldnn_matmul(
+               (mat1.dim() == 1 && mat2.dim() == 1),  // aten::dot
+               "mkldnn_matmul:  unsupported dims for mat and mat2");
+ 
++#if defined(__aarch64__)
++  // oneDNN fast-maths mode (enabled by setting the environment variable ONEDNN_DEFAULT_FPMATH_MODE=BF16) will dispatch
++  // fp32 inputs to bf16 kernels where HW permits. So, both fp32 and bf16 inputs are permitted.
++  TORCH_CHECK((mat1.scalar_type() == mat2.scalar_type()) && (mat1.scalar_type() == result.scalar_type()) &&
++              ((mat1.scalar_type() == at::kFloat) || (mat1.scalar_type() == at::kBFloat16)),
++              "mkldnn_matmul:  only enabled for fp32 and bf16 path");
++  // device needs to support bf16 if the inputs are of bf16 type
++  if (mat1.scalar_type() == at::kBFloat16) {
++    TORCH_CHECK(mkldnn_bf16_device_check_arm(),
++                "mkldnn_matmul: mkldnn_matmul bf16 path needs a cpu with bf16 support");
++  }
++#else
+   TORCH_CHECK(mkldnn_bf16_device_check(),
+     "mkldnn_matmul: mkldnn_matmul bf16 path needs the cpu support avx512bw, avx512vl and avx512dq, or AWS Graviton3");
+ 
+-#if defined(__aarch64__)
+-  if (mkldnn_bf16_device_check_arm()) {
+-     //onednn fastmath mode can leverage bf16 HW even for the fp32 input, e.g. Arm Neoverse V1
+-     //so, don't restrict the mkldnn_matmul only for bf16 inputs, allow it for float as well
+-     TORCH_CHECK((mat1.scalar_type() == mat2.scalar_type()) && (mat1.scalar_type() == result.scalar_type()) &&
+-                 ((mat1.scalar_type() == at::kFloat) || (mat1.scalar_type() == at::kBFloat16)),
+-                 "mkldnn_matmul:  only enabled for fp32 and bf16 path");
+-  } else
++  TORCH_CHECK(mat1.scalar_type() == at::kBFloat16 &&
++              mat2.scalar_type() == at::kBFloat16 &&
++              result.scalar_type() == at::kBFloat16, "mkldnn_matmul:  only enabled for bf16 path");
+ #endif
+-  {
+-     TORCH_CHECK(mat1.scalar_type() == at::kBFloat16 &&
+-                 mat2.scalar_type() == at::kBFloat16 &&
+-                 result.scalar_type() == at::kBFloat16, "mkldnn_matmul:  only enabled for bf16 path");
+-  }
+ 
+   auto mat1_unsqueezed = mat1.dim() == 1 ? mat1.unsqueeze(0) : mat1;
+   auto mat2_unsqueezed = mat2.dim() == 1 ? mat2.unsqueeze(1) : mat2;
