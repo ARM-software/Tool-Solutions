@@ -8,16 +8,21 @@ where `YY` is the year, and `MM` the month of the increment.
 ## [Unreleased]
 
 ### Added
- - Fixed format kernels in oneDNN and ACL.
- - Convolution caching at PyTorch level.
- - Call oneDNN matrix multiplication for BLAS operation when LHS is transposed, but not RHS.
- - Jitted reorder when destination tensor is BF16.
 
 ### Changed
 
 ### Removed
 
 ### Fixed
+
+## [r23.01] 2022-01-17
+https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--r23.01/docker/pytorch-aarch64
+
+### Added
+ - Fixed format kernels in oneDNN and ACL.
+ - Convolution caching at PyTorch level.
+ - Call oneDNN matrix multiplication for BLAS operation when LHS is transposed, but not RHS.
+ - Jitted reorder when destination tensor is BF16.
 
 ## [r22.12] 2022-12-06
 https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--r22.12/docker/pytorch-aarch64
