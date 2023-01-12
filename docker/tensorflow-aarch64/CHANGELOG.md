@@ -15,6 +15,12 @@ where `YY` is the year, and `MM` the month of the increment.
 
 ### Fixed
 
+## [r23.01] 2022-01-17
+https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--r23.01/docker/tensorflow-aarch64
+
+### Changed
+ - Unsets TF_MKL_OPTIMIZE_PRIMITIVE_MEMUSE for TF build to ensure ACL primitives are always cached.
+
 ## [r22.12] 2022-12-06
 https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--r22.12/docker/tensorflow-aarch64
 
