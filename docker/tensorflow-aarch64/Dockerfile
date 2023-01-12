@@ -1,5 +1,5 @@
 # *******************************************************************************
-# Copyright 2020-2022 Arm Limited and affiliates.
+# Copyright 2020-2023 Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -274,6 +274,8 @@ ENV PY_VERSION="${default_py_version}" \
     TF_VERSION="${tf_version}"
 # Set runtime flag to enable/disable oneDNN backend
 ENV TF_ENABLE_ONEDNN_OPTS="${enable_onednn}"
+# Set runtime flag to ensure oneDNN primitives are cached for large batch sizes
+ENV TF_MKL_OPTIMIZE_PRIMITIVE_MEMUSE=0
 
 # Use a PACKAGE_DIR in userspace
 WORKDIR /home/$DOCKER_USER
