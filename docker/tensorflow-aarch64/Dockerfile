@@ -229,9 +229,12 @@ RUN $PACKAGE_DIR/build-scipy.sh
 # enum34 is not compatible with Python 3.6+, and not required
 # it is installed as a dependency for an earlier package and needs
 # to be removed in order for the OpenCV build to complete.
+# Note: tensorflow-io v0.27.0 is specified as later releases are unable to
+# load `libtensorflow_io_plugins.so` on AArch64.
+# TODO: update to tensorflow-io once the issue is resolved in the released wheel.
 RUN pip uninstall enum34 -y
 RUN HDF5_DIR=/usr/lib/aarch64-linux-gnu/hdf5/serial pip install h5py==3.1.0
-RUN pip install --no-cache-dir grpcio tensorflow-io pytest
+RUN pip install --no-cache-dir grpcio tensorflow-io==0.27.0 pytest
 RUN pip install --no-cache-dir ck==1.55.5 absl-py pycocotools pillow==8.2.0
 RUN pip install --no-cache-dir transformers pandas
 
