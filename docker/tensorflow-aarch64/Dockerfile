@@ -306,6 +306,7 @@ COPY patches/compute_library.patch $PACKAGE_DIR/.
 COPY patches/acl_openmp_fix.patch $PACKAGE_DIR/.
 COPY patches/acl_fixed_format_kernels_striding.patch $PACKAGE_DIR/.
 COPY patches/onednn_reorder_padded.patch $PACKAGE_DIR/.
+COPY patches/onednn_acl_threadpoolscheduler.patch $PACKAGE_DIR/.
 COPY scripts/build-tensorflow.sh $PACKAGE_DIR/.
 RUN $PACKAGE_DIR/build-tensorflow.sh
 COPY scripts/build-tensorflow-addons.sh $PACKAGE_DIR/.

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # *******************************************************************************
-# Copyright 2020-2022 Arm Limited and affiliates.
+# Copyright 2020-2023 Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -102,6 +102,8 @@ if [[ $ONEDNN_BUILD ]]; then
         wget https://github.com/oneapi-src/oneDNN/commit/b84c533dad4db495a92fc6d390a7db5ebd938a88.patch -O ../onednn_reorder_update.patch
         mv ../onednn_reorder_update.patch ./third_party/mkl_dnn/.
         mv ../onednn_reorder_padded.patch ./third_party/mkl_dnn/.
+        # Threadpool fix patch
+        mv ../onednn_acl_threadpoolscheduler.patch ./third_party/mkl_dnn/.
     fi
 else
     tf_backend_desc="Eigen."
