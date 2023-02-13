@@ -50,8 +50,10 @@
 //   <o>Kernel Tick Frequency [Hz] <1-1000000>
 //   <i> Defines base time unit for delays and timeouts.
 //   <i> Default: 1000 (1ms tick)
+//   Adjust the Kernel Tick Frequency [Hz] for fast model to match
+//   delay similar to FPGA. The value 20 is the closest match.
 #ifndef OS_TICK_FREQ
-#define OS_TICK_FREQ                1000
+#define OS_TICK_FREQ                20
 #endif
 
 //   <e>Round-Robin Thread switching
