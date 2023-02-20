@@ -2,7 +2,7 @@
 #//////////////////////////////////////////////////////////////////////////
 #//
 #//  File:    m35.sgcanvas
-#//  Created: Tue Dec 13 12:20:53 2022
+#//  Created: Tue Jan 24 22:03:46 2023
 #//  By: Fast Models  System Canvas 11.19.14  (Sep  8 2022)
 #//
 # *  Do NOT modify this file. It is for internal use by System Canvas only.
@@ -10240,13 +10240,13 @@ editor
                 )
             )
         )
-        instance "clockdivider"
+        instance "clock25MHz"
         (
             x = -810;
-            y = -370;
+            y = -450;
             width = 171;
-            height = 99;
-            sheight = 61;
+            height = 79;
+            sheight = 41;
             show_title = true;
             show_name = true;
             show_type = false;
@@ -10290,8 +10290,8 @@ editor
         )
         instance "masterclock"
         (
-            x = -810;
-            y = -480;
+            x = -1050;
+            y = -470;
             width = 171;
             height = 81;
             sheight = 61;
@@ -10449,35 +10449,23 @@ editor
         define "armcortexm35pct.pvbus_m=>pvbusdecoder.pvbus_s"
         (
         )
-        define "clockdivider.clk_out=>armcortexm35pct.clk_in"
-        (
-        )
-        define "masterclock.clk_out=>clockdivider.clk_in"
+        define "clock25MHz.clk_out=>armcortexm35pct.clk_in"
         (
             point
             (
-                x = -630;
-                y = -410;
+                x = -590;
+                y = -400;
                 automatic = true;
             )
             point
             (
-                x = -630;
-                y = -380;
-                automatic = true;
-            )
-            point
-            (
-                x = -820;
-                y = -380;
-                automatic = true;
-            )
-            point
-            (
-                x = -820;
+                x = -590;
                 y = -300;
                 automatic = true;
             )
+        )
+        define "masterclock.clk_out=>clock25MHz.clk_in"
+        (
         )
         define "pvbusdecoder.pvbus_m_range=>pvbus2ambapv.pvbus_s"
         (

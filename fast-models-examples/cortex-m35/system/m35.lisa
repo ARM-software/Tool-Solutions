@@ -9,17 +9,17 @@ component m35
 		pvbus2ambapv : PVBus2AMBAPV();
 		ramdevice : RAMDevice("size"=0x1000000000);
 		pvbusdecoder : PVBusDecoder();
-		clockdivider : ClockDivider("mul"=50);
+		clock25MHz : ClockDivider("mul"=25000000);
 		masterclock : MasterClock();
     }
     connection
     {
-	masterclock.clk_out => clockdivider.clk_in;
+	masterclock.clk_out => clock25MHz.clk_in;
 	pvbus2ambapv.amba_pv_m => self.m_port_to_external_counter;
 	pvbusdecoder.pvbus_m_range[0x21000000..0x21000fff] => pvbus2ambapv.pvbus_s;
 	pvbusdecoder.pvbus_m_range[0x0..0x20ffffff] => ramdevice.pvbus;
 	self.slave_counter_irq_in => ambapvsignal2sgsignal.amba_pv_signal_s;
-	clockdivider.clk_out => armcortexm35pct.clk_in;
+	clock25MHz.clk_out => armcortexm35pct.clk_in;
 	ambapvsignal2sgsignal.sg_signal_m => armcortexm35pct.irq[30];
 	armcortexm35pct.pvbus_m => pvbusdecoder.pvbus_s;
     }
