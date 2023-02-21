@@ -21,15 +21,15 @@
 # ========
 ARG njobs
 ARG bazel_mem
-ARG default_py_version=3.8
+ARG default_py_version=3.10
 
-FROM ubuntu:20.04 AS tensorflow-base
+FROM ubuntu:22.04 AS tensorflow-base
 ARG default_py_version
 ENV PY_VERSION="${default_py_version}"
 
 RUN if ! [ "$(arch)" = "aarch64" ] ; then exit 1; fi
 
-#Install core OS packages
+# Install core OS packages
 RUN apt-get -y update && \
     apt-get -y install software-properties-common && \
     add-apt-repository ppa:ubuntu-toolchain-r/test && \
@@ -45,14 +45,11 @@ RUN apt-get -y update && \
       cpufrequtils \
       curl \
       ethtool \
-      gcc-10 \
-      g++-10 \
       gettext-base \
-      gfortran-10 \
+      gfortran-11 \
       git \
       iproute2 \
       iputils-ping \
-      lxd \
       libbz2-dev \
       libc++-dev \
       libcgal-dev \
@@ -85,7 +82,7 @@ RUN apt-get -y update && \
       python${PY_VERSION}-distutils \
       python${PY_VERSION}-venv \
       python3-pip \
-      python-openssl \
+      python3-openssl \
       rsync \
       rsyslog \
       snapd \
@@ -106,9 +103,9 @@ RUN apt-get -y update && \
 
 
 # Set default gcc, python and pip versions
-RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 1 && \
-    update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-10 1 && \
-    update-alternatives --install /usr/bin/gfortran gfortran /usr/bin/gfortran-10 1 && \
+RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 1 && \
+    update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-11 1 && \
+    update-alternatives --install /usr/bin/gfortran gfortran /usr/bin/gfortran-11 1 && \
     update-alternatives --install /usr/bin/python python /usr/bin/python3 1 && \
     update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 1
 
@@ -144,7 +141,7 @@ ENV NP_MAKE="${njobs}" \
 
 # Key version numbers
 ENV OPENBLAS_VERSION=0.3.20 \
-    YAML_VERSION=yaml-cpp-0.7.0
+    YAML_VERSION=master
 
 # Package build parameters
 ENV PROD_DIR=/opt \
@@ -233,7 +230,7 @@ RUN $PACKAGE_DIR/build-scipy.sh
 # load `libtensorflow_io_plugins.so` on AArch64.
 # TODO: update to tensorflow-io once the issue is resolved in the released wheel.
 RUN pip uninstall enum34 -y
-RUN HDF5_DIR=/usr/lib/aarch64-linux-gnu/hdf5/serial pip install h5py==3.1.0
+RUN HDF5_DIR=/usr/lib/aarch64-linux-gnu/hdf5/serial pip install h5py==3.8.0
 RUN pip install --no-cache-dir grpcio tensorflow-io==0.27.0 pytest
 RUN pip install --no-cache-dir ck==1.55.5 absl-py pycocotools pillow==8.2.0
 RUN pip install --no-cache-dir transformers pandas

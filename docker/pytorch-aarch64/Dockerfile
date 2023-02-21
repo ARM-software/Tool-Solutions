@@ -1,5 +1,5 @@
 # *******************************************************************************
-# Copyright 2020-2022 Arm Limited and affiliates.
+# Copyright 2020-2023 Arm Limited and affiliates.
 # Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -20,29 +20,19 @@
 # Stage 1: Base image including OS and key packages
 # ========
 ARG njobs
-ARG default_py_version=3.8
+ARG default_py_version=3.10
 
-FROM ubuntu:20.04 AS pytorch-base
+FROM ubuntu:22.04 AS pytorch-base
 ARG default_py_version
 ENV PY_VERSION="${default_py_version}"
 
 RUN if ! [ "$(arch)" = "aarch64" ] ; then exit 1; fi
 
-RUN apt-get -y update && \
-    apt-get -y install \
-      software-properties-common \
-      wget
-
-# Add additional repositories
-RUN wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null \
-      | gpg --dearmor - \
-      | tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null
-
-RUN add-apt-repository ppa:ubuntu-toolchain-r/test && \
-    add-apt-repository 'deb https://apt.kitware.com/ubuntu/ focal main'
-
 # Install core OS packages
-RUN apt-get -y install \
+RUN apt-get -y update && \
+    apt-get -y install software-properties-common && \
+    add-apt-repository ppa:ubuntu-toolchain-r/test && \
+    apt-get -y install \
       accountsservice \
       apport \
       at \
@@ -53,14 +43,11 @@ RUN apt-get -y install \
       cpufrequtils \
       curl \
       ethtool \
-      g++-10 \
-      gcc-10 \
       gettext-base \
-      gfortran-10 \
+      gfortran-11 \
       git \
       iproute2 \
       iputils-ping \
-      lxd \
       libbz2-dev \
       libc++-dev \
       libcgal-dev \
@@ -93,7 +80,7 @@ RUN apt-get -y install \
       python${PY_VERSION}-distutils \
       python${PY_VERSION}-venv \
       python3-pip \
-      python-openssl \
+      python3-openssl \
       rsync \
       rsyslog \
       snapd \
@@ -107,14 +94,15 @@ RUN apt-get -y install \
       ufw \
       uuid-runtime \
       vim \
+      wget \
       xz-utils \
       zip \
       zlib1g-dev
 
 # Set default gcc, python and pip versions
-RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 1 && \
-    update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-10 1 && \
-    update-alternatives --install /usr/bin/gfortran gfortran /usr/bin/gfortran-10 1 && \
+RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 1 && \
+    update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-11 1 && \
+    update-alternatives --install /usr/bin/gfortran gfortran /usr/bin/gfortran-11 1 && \
     update-alternatives --install /usr/bin/python python /usr/bin/python3 1 && \
     update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 1
 
