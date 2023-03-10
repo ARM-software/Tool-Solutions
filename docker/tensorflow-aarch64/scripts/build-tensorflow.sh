@@ -87,6 +87,9 @@ if [[ $ONEDNN_BUILD ]]; then
         ## Apply patches to the TensorFlow, Compute Library and oneDNN builds
         # Patch TensorFlow to update oneDNN and ACL builds
         patch -p1 < ../tf_acl.patch
+        # Path TensorFlow to use heuristics to decide whether to rewrite
+        # node in a graph to use oneDNN primitive or Eigen
+        patch -p1 < ../tf_dispatch_with_heuristics.patch
 
         # Patch to update arm_compute_version.embed
         # Note: overwrites upstream version
