@@ -15,14 +15,20 @@ where `YY` is the year, and `MM` the month of the increment.
 
 ### Fixed
 
-## [r23.02] 2022-02-14
+## [r23.03] 2023-03-14
+https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--r23.03/docker/tensorflow-aarch64
+
+### Added
+ - Adds patch to rewrite node in graph to run with oneDNN primitive or Eigen based on heuristics.
+
+## [r23.02] 2023-02-14
 https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--r23.02/docker/tensorflow-aarch64
 
 ### Changed
  - Updates oneDNN to version v2.7.3
  - Adds patch to fix threadpool scheduler in oneDNN to make local thread activate and deactivate threadpool
 
-## [r23.01] 2022-01-17
+## [r23.01] 2023-01-17
 https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--r23.01/docker/tensorflow-aarch64
 
 ### Changed
@@ -321,4 +327,3 @@ This tag marks the first monthly increment of the TensorFlow container build.
 ### Changed
 - Updates oneDNN to v2.2.
 - Updated Compute Library to v21.02.
-
