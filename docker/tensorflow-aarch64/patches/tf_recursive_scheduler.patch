@@ -1,0 +1,81 @@
+ *******************************************************************************
+ Copyright 2023 Arm Limited and affiliates.
+ SPDX-License-Identifier: Apache-2.0
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+ *******************************************************************************
+diff --git a/tensorflow/core/util/mkl_threadpool.h b/tensorflow/core/util/mkl_threadpool.h
+index ee4b5bc1392..c3001935c87 100644
+--- a/tensorflow/core/util/mkl_threadpool.h
++++ b/tensorflow/core/util/mkl_threadpool.h
+@@ -29,6 +29,8 @@ limitations under the License.
+ #include "dnnl.hpp"
+ #include "tensorflow/core/framework/op_kernel.h"
+ #include "tensorflow/core/platform/threadpool.h"
++#include "tensorflow/core/platform/blocking_counter.h"
++
+ #define EIGEN_USE_THREADS
+ 
+ namespace tensorflow {
+@@ -88,20 +90,38 @@ struct MklDnnThreadPool : public threadpool_iface {
+ 
+     int nthr = get_num_threads();
+     int njobs = std::min(n, nthr);
+-    bool balance = (nthr < n);
+-    for (int i = 0; i < njobs; i++) {
+-      eigen_interface_->ScheduleWithHint(
+-          [balance, i, n, njobs, fn]() {
+-            if (balance) {
+-              int start, end;
+-              balance211(n, njobs, i, &start, &end);
+-              for (int j = start; j < end; j++) fn(j, n);
+-            } else {
+-              fn(i, n);
+-            }
+-          },
+-          i, i + 1);
++
++    if (njobs == 1) {
++      for (int j = 0; j < n; j++)
++        fn(j, n);
++      return;
+     }
++
++    BlockingCounter counter(njobs);
++    std::function<void(int, int)> handle_range =
++      [=, &handle_range, &counter](int first, int last) {
++
++        while (last - first > 1) {
++          const auto mid = first + (last - first) / 2 ;
++            // Find something near the midpoint which is a multiple of block size.
++            eigen_interface_->ScheduleWithHint([=]() { handle_range(mid, last); }, mid, mid+1);
++            last = mid;
++        }
++        counter.DecrementCount();
++
++        int start, end;
++        balance211(n, njobs, first, &start, &end);
++
++        for (int j = start; j < end; j++)
++          fn(j, n);
++      };
++
++    // Eigen avoids a thread hop by running the root of the tree on the main
++    // thread. We have disabled this because it actually slows things down
++    // relative to base because base cheats and uses n threads while letting
++    // main continue doing other work
++    eigen_interface_->ScheduleWithHint([=]() { handle_range(0, njobs); }, 0, 1);
++    counter.Wait();
+   }
+   ~MklDnnThreadPool() {}
+ 
