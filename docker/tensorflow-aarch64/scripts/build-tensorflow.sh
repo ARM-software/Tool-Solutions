@@ -91,6 +91,9 @@ if [[ $ONEDNN_BUILD ]]; then
         # node in a graph to use oneDNN primitive or Eigen
         patch -p1 < ../tf_dispatch_with_heuristics.patch
 
+        #  Recursive scheduler patch
+        patch -p1 < ../tf_recursive_scheduler.patch
+
         # Patch to update arm_compute_version.embed
         # Note: overwrites upstream version
         mv ../compute_library.patch ./third_party/compute_library/.
