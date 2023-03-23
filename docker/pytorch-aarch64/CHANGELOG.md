@@ -10,6 +10,9 @@ where `YY` is the year, and `MM` the month of the increment.
 ### Added
 
 ### Changed
+- Updates base OS image to Ubuntu 22.04.
+- Updates Python version from 3.8 to 3.10.
+- Updates GCC to v11.
 
 ### Removed
 
