@@ -10,8 +10,11 @@ where `YY` is the year, and `MM` the month of the increment.
 ### Added
 
 ### Changed
+- Increments PyTorch version from 1.13 to 2.0.
+- Incremetns PyTorch XLA version from 1.13 to 2.0.
 
 ### Removed
+- MLCommons RNNT example removed from examples/README.md due to incompatability with PyTorch 2.0.
 
 ### Fixed
 

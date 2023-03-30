@@ -60,7 +60,7 @@ export TF_NEED_TENSORRT=0
 
 # Bazel build options
 config_flags=""
-compile_flags="--copt=-mtune=${TUNE} --copt=-march=${ARCH} --copt=-O3 --copt=-flax-vector-conversions"
+compile_flags="--copt=-mtune=${TUNE} --copt=-march=${ARCH} --copt=-O3 --copt=-flax-vector-conversions --copt=-Wno-error=stringop-overflow"
 link_flags=""
 extra_flags="--verbose_failures -s"
 
@@ -84,34 +84,30 @@ if [[ $ONEDNN_BUILD ]]; then
             tf_backend_desc="oneDNN + Compute Library (OpenMP runtime)."
         fi
 
-        ## Apply patches to the TensorFlow, Compute Library and oneDNN builds
-        # Patch TensorFlow to update oneDNN and ACL builds
-        patch -p1 < ../tf_acl.patch
-        # Path TensorFlow to use heuristics to decide whether to rewrite
-        # node in a graph to use oneDNN primitive or Eigen
+        ### Apply patches to the TensorFlow, Compute Library and oneDNN builds
+        ## TensorFlow patches:
+        # Make fixed format ACL convolution able to handle NCHW input
+        # See PR #60432 for details
+        wget https://github.com/tensorflow/tensorflow/commit/fc11099c63d7bc0ee6d6c2c8e54159131ac2abe9.patch -O ../tf_acl_nchw_conv_fix.patch
+        patch -p1 < ../tf_acl_nchw_conv_fix.patch
+        # Use heuristics to decide whether to rewrite node in a graph to use oneDNN primitive or Eigen
         patch -p1 < ../tf_dispatch_with_heuristics.patch
-        # Patch to divert calls to oneDNN's gemm_api into ACL
+        # Divert calls to oneDNN's gemm_api into ACL
         patch -p1 < ../tf_use_acl_instead_of_gemm_api.patch
-
-        #  Recursive scheduler patch
+        # Add recursive scheduler
         patch -p1 < ../tf_recursive_scheduler.patch
-
-        # Patch to update arm_compute_version.embed
+        # Fix build of matmul benchmarks to support ACL matmul
+        wget https://github.com/tensorflow/tensorflow/pull/60390.patch -O ../tf_fix_matmul_bm_build.patch
+        patch -p1 < ../tf_fix_matmul_bm_build.patch
+        # Update arm_compute_version.embed
         # Note: overwrites upstream version
         mv ../compute_library.patch ./third_party/compute_library/.
 
-        # Patches for depthwise convolution to add capability to update weights
-        mv ../acl_fixed_format_kernels_striding.patch ./third_party/compute_library/.
-
-        # Patch to fix issue with OpenMP scheduler in ACL
-        mv ../acl_openmp_fix.patch ./third_party/compute_library/
-
+        ## oneDNN patches:
         # Patches to support JIT'ed reorder for padded inputs
         wget https://github.com/oneapi-src/oneDNN/commit/b84c533dad4db495a92fc6d390a7db5ebd938a88.patch -O ../onednn_reorder_update.patch
         mv ../onednn_reorder_update.patch ./third_party/mkl_dnn/.
         mv ../onednn_reorder_padded.patch ./third_party/mkl_dnn/.
-        # Threadpool fix patch
-        mv ../onednn_acl_threadpoolscheduler.patch ./third_party/mkl_dnn/.
     fi
 else
     tf_backend_desc="Eigen."

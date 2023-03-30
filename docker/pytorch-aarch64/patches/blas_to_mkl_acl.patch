@@ -36,22 +36,6 @@ index c658d4427c..5c792f0e73 100644
          using opmath_t = at::opmath_type<scalar_t>;
          at::native::cpublas::gemm(
              transpose_a ? a.is_conj() ? TransposeType::ConjTranspose : TransposeType::Transpose : TransposeType::NoTranspose,
-diff --git a/aten/src/ATen/native/quantized/cpu/qconv.cpp b/aten/src/ATen/native/quantized/cpu/qconv.cpp
-index 125e45267a..584d8eea23 100644
---- a/aten/src/ATen/native/quantized/cpu/qconv.cpp
-+++ b/aten/src/ATen/native/quantized/cpu/qconv.cpp
-@@ -1299,9 +1299,9 @@ at::Tensor PackedConvWeightsOnednn<kSpatialDim>::apply_impl(
-             op_attr, dnnl::algorithm::convolution_direct,
-             dnnl::prop_kind::forward_inference,
-             ideep::u8s8, ideep::engine::cpu_engine());
--        get_conv_cache() = ConvPrimitiveCache(cache_key, params.pd, b, params.bias_attr);
-+        get_conv_cache() = ConvPrimitiveCache(cache_key, params.pd.first, b, params.bias_attr);
-         onednn_utils::try_reorder(
--            weights, (ideep::tensor::desc)params.pd.weights_desc(), weights_scales);
-+            weights, (ideep::tensor::desc)params.pd.first.weights_desc(), weights_scales);
-     });
-     // If hit, use cached data. If miss, fall back to normal path.
-     if (get_conv_cache().hit(cache_key)) {
 diff --git a/aten/src/ATen/native/mkldnn/Matmul.cpp b/aten/src/ATen/native/mkldnn/Matmul.cpp
 index d41ebac635..e2cc13fe00 100644
 --- a/aten/src/ATen/native/mkldnn/Matmul.cpp

@@ -273,11 +273,11 @@ ENV ONEDNN_BUILD="${onednn_opt}" \
 # Key version numbers
 ENV PY_VERSION="${default_py_version}" \
     ONEDNN_VERSION="v2.7" \
-    TORCH_VERSION=1.13.0 \
-    TORCHXLA_VERSION=1.13.0 \
-    TORCHVISION_VERSION=0.14.0 \
-    TORCHDATA_VERSION=0.5.0 \
-    TORCHTEXT_VERSION=0.14.0 \
+    TORCH_VERSION=2.0.0 \
+    TORCHXLA_VERSION=2.0.0 \
+    TORCHVISION_VERSION=0.15.1 \
+    TORCHDATA_VERSION=0.6.0 \
+    TORCHTEXT_VERSION=0.15.1 \
     BZL_VERSION="${bazel_version}"
 
 # Use a PACKAGE_DIR in userspace
@@ -293,7 +293,6 @@ ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 # Build PyTorch
 COPY scripts/build-pytorch.sh $PACKAGE_DIR/.
-COPY patches/ideep.patch $PACKAGE_DIR/.
 COPY patches/onednn.patch $PACKAGE_DIR/.
 COPY patches/onednn_acl_fixed_format_kernels.patch $PACKAGE_DIR/.
 COPY patches/onednn_acl_depthwise_convolution.patch $PACKAGE_DIR/.

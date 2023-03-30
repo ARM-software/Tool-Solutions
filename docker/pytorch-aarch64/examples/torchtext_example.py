@@ -1,5 +1,5 @@
 # *****************************************************************************$
-# Copyright 2021 Arm Limited and affiliates.
+# Copyright 2023 Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,16 +26,34 @@ from torchtext.vocab import build_vocab_from_iterator
 from torchtext.datasets import AG_NEWS
 from torchtext.data.utils import get_tokenizer
 from torchtext.data.functional import to_map_style_dataset
-from TextClassificationModel import TextClassificationModel
 from pathlib import Path
 import time
 import sys
 
 
 # Hyperparameters
-EPOCHS = 10  # epoch
-LR = 5  # learning rate
-BATCH_SIZE = 64  # batch size for training
+EPOCHS = 10      # epochs
+LR = 5           # learning rate
+BATCH_SIZE = 64  # batch size
+
+
+class TextClassificationModel(nn.Module):
+
+    def __init__(self, vocab_size, embed_dim, num_class):
+        super(TextClassificationModel, self).__init__()
+        self.embedding = nn.EmbeddingBag(vocab_size, embed_dim, sparse=False)
+        self.fc = nn.Linear(embed_dim, num_class)
+        self.init_weights()
+
+    def init_weights(self):
+        initrange = 0.5
+        self.embedding.weight.data.uniform_(-initrange, initrange)
+        self.fc.weight.data.uniform_(-initrange, initrange)
+        self.fc.bias.data.zero_()
+
+    def forward(self, text, offsets):
+        embedded = self.embedding(text, offsets)
+        return self.fc(embedded)
 
 
 # Yields a list of tokens from iterator of input data

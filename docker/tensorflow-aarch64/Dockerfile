@@ -297,84 +297,18 @@ RUN chmod a+x $PACKAGE_DIR/bazel/bazel
 ENV PATH="$PACKAGE_DIR/bazel:$PATH"
 
 # Build TensorFlow
-COPY patches/tf_acl.patch $PACKAGE_DIR/.
 COPY patches/tf_recursive_scheduler.patch $PACKAGE_DIR/.
 COPY patches/tf_dispatch_with_heuristics.patch $PACKAGE_DIR/.
 COPY patches/tf_use_acl_instead_of_gemm_api.patch $PACKAGE_DIR/.
 COPY patches/compute_library.patch $PACKAGE_DIR/.
-COPY patches/acl_openmp_fix.patch $PACKAGE_DIR/.
 COPY patches/acl_fixed_format_kernels_striding.patch $PACKAGE_DIR/.
 COPY patches/onednn_reorder_padded.patch $PACKAGE_DIR/.
-COPY patches/onednn_acl_threadpoolscheduler.patch $PACKAGE_DIR/.
 COPY scripts/build-tensorflow.sh $PACKAGE_DIR/.
 RUN $PACKAGE_DIR/build-tensorflow.sh
 COPY scripts/build-tensorflow-addons.sh $PACKAGE_DIR/.
 RUN $PACKAGE_DIR/build-tensorflow-addons.sh
 
 CMD ["bash", "-l"]
-
-# =========
-# Stage 4b: install Bazel, and build tensorflow-serving
-# =========
-FROM tensorflow-libs AS tensorflow-serving
-ARG njobs
-ARG bazel_mem
-ARG enable_onednn
-ARG onednn_opt
-ARG tfserving_version
-ARG default_py_version
-ARG cpu
-ARG arch
-
-ENV NP_MAKE="${njobs}" \
-    BZL_RAM="${bazel_mem}" \
-    ONEDNN_BUILD="${onednn_opt}" \
-    CPU="${cpu}" \
-    ARCH="${arch}"
-
-# Key version numbers
-ENV PY_VERSION="${default_py_version}" \
-    TFSERVING_VERSION="${tfserving_version}"
-# Set runtime flag to enable/disable oneDNN backend
-ENV TF_ENABLE_ONEDNN_OPTS="${enable_onednn}"
-
-# gRPC port
-EXPOSE 8500
-# REST port
-EXPOSE 8501
-
-# Model store within the container
-ENV MODEL_BASE_PATH=/home/$DOCKER_USER/models
-RUN mkdir -p ${MODEL_BASE_PATH}
-# MODEL_NAME is updated at runtime with `docker run -e MODEL_NAME=<name> ...`
-ENV MODEL_NAME=model
-
-# Use a PACKAGE_DIR in userspace
-WORKDIR /home/$DOCKER_USER
-USER $DOCKER_USER
-ENV PACKAGE_DIR=/home/$DOCKER_USER/$PACKAGE_DIR
-RUN mkdir -p $PACKAGE_DIR
-
-# Copy in the Python virtual environment
-ENV VIRTUAL_ENV=/home/$DOCKER_USER/python3-venv
-COPY --chown=$DOCKER_USER:$DOCKER_USER --from=tensorflow-tools $VIRTUAL_ENV /home/$DOCKER_USER/python3-venv
-ENV PATH="$VIRTUAL_ENV/bin:$PATH"
-
-# Get Bazel binary for AArch64 using the latest Bazelisk release
-RUN mkdir -p $PACKAGE_DIR/bazel
-RUN bazelisk_url=$(curl -L -s https://api.github.com/repos/bazelbuild/bazelisk/releases/latest \
-    | grep -o -E "https://(.*)bazelisk-linux-arm64") && \
-    wget $bazelisk_url -O $PACKAGE_DIR/bazel/bazel
-RUN chmod a+x $PACKAGE_DIR/bazel/bazel
-ENV PATH="$PACKAGE_DIR/bazel:$PATH"
-
-# Build TensorFlow Serving
-COPY scripts/build-tensorflow-serving.sh $PACKAGE_DIR/.
-RUN $PACKAGE_DIR/build-tensorflow-serving.sh
-
-# Setup entrypoint for passing model details through `docker run`
-COPY scripts/tf_serving_entrypoint.sh /home/$DOCKER_USER/.
-ENTRYPOINT [ "/bin/bash", "-c", "exec /home/$DOCKER_USER/tf_serving_entrypoint.sh \"${@}\"", "--" ]
 
 # ========
 # Stage 5: Install benchmarks and examples
