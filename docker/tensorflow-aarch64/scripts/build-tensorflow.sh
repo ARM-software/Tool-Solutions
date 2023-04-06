@@ -90,6 +90,8 @@ if [[ $ONEDNN_BUILD ]]; then
         # Path TensorFlow to use heuristics to decide whether to rewrite
         # node in a graph to use oneDNN primitive or Eigen
         patch -p1 < ../tf_dispatch_with_heuristics.patch
+        # Patch to divert calls to oneDNN's gemm_api into ACL
+        patch -p1 < ../tf_use_acl_instead_of_gemm_api.patch
 
         #  Recursive scheduler patch
         patch -p1 < ../tf_recursive_scheduler.patch
