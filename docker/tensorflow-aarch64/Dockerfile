@@ -300,6 +300,7 @@ ENV PATH="$PACKAGE_DIR/bazel:$PATH"
 COPY patches/tf_acl.patch $PACKAGE_DIR/.
 COPY patches/tf_recursive_scheduler.patch $PACKAGE_DIR/.
 COPY patches/tf_dispatch_with_heuristics.patch $PACKAGE_DIR/.
+COPY patches/tf_use_acl_instead_of_gemm_api.patch $PACKAGE_DIR/.
 COPY patches/compute_library.patch $PACKAGE_DIR/.
 COPY patches/acl_openmp_fix.patch $PACKAGE_DIR/.
 COPY patches/acl_fixed_format_kernels_striding.patch $PACKAGE_DIR/.
