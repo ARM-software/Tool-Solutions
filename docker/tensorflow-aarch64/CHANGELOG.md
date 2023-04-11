@@ -10,6 +10,18 @@ where `YY` is the year, and `MM` the month of the increment.
 ### Added
 
 ### Changed
+
+### Removed
+
+### Fixed
+
+## [r23.04] 2023-04-13
+https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--r23.04/docker/tensorflow-aarch64
+
+### Added
+- Adds patch to divert calls of oneDNN's gemm_api into ACL
+
+### Changed
 - Updates base OS image to Ubuntu 22.04.
 - Updates Python version from 3.8 to 3.10.
 - Updates GCC to v11.
