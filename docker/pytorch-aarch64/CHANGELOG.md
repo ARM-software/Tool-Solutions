@@ -10,6 +10,17 @@ where `YY` is the year, and `MM` the month of the increment.
 ### Added
 
 ### Changed
+
+### Removed
+
+### Fixed
+
+## [r23.04] 2023-04-13
+https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--r23.04/docker/pytorch-aarch64
+
+### Added
+
+### Changed
 - Updates base OS image to Ubuntu 22.04.
 - Updates Python version from 3.8 to 3.10.
 - Updates GCC to v11.
