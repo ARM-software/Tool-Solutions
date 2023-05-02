@@ -86,10 +86,8 @@ if [[ $ONEDNN_BUILD ]]; then
 
         ### Apply patches to the TensorFlow, Compute Library and oneDNN builds
         ## TensorFlow patches:
-        # Make fixed format ACL convolution able to handle NCHW input
-        # See PR #60432 for details
-        wget https://github.com/tensorflow/tensorflow/commit/fc11099c63d7bc0ee6d6c2c8e54159131ac2abe9.patch -O ../tf_acl_nchw_conv_fix.patch
-        patch -p1 < ../tf_acl_nchw_conv_fix.patch
+        # Patch TensorFlow to update oneDNN and ACL builds
+        patch -p1 < ../tf_acl.patch
         # Use heuristics to decide whether to rewrite node in a graph to use oneDNN primitive or Eigen
         patch -p1 < ../tf_dispatch_with_heuristics.patch
         # Divert calls to oneDNN's gemm_api into ACL
@@ -99,9 +97,6 @@ if [[ $ONEDNN_BUILD ]]; then
         # Fix build of matmul benchmarks to support ACL matmul
         wget https://github.com/tensorflow/tensorflow/pull/60390.patch -O ../tf_fix_matmul_bm_build.patch
         patch -p1 < ../tf_fix_matmul_bm_build.patch
-        # Update arm_compute_version.embed
-        # Note: overwrites upstream version
-        mv ../compute_library.patch ./third_party/compute_library/.
 
         ## oneDNN patches:
         # Patches to support JIT'ed reorder for padded inputs

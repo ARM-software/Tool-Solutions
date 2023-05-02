@@ -22,7 +22,7 @@ https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--
 
 ### Changed
 - Increments PyTorch version from 1.13 to 2.0.
-- Incremetns PyTorch XLA version from 1.13 to 2.0.
+- Increments PyTorch XLA version from 1.13 to 2.0.
 
 ### Removed
 - MLCommons RNNT example removed from examples/README.md due to incompatability with PyTorch 2.0.
