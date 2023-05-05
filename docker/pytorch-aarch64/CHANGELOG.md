@@ -10,6 +10,17 @@ where `YY` is the year, and `MM` the month of the increment.
 ### Added
 
 ### Changed
+
+### Removed
+
+### Fixed
+
+## [r23.05] 2023-05-09
+https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--r23.05/docker/pytorch-aarch64
+
+### Added
+
+### Changed
 - Increments PyTorch version from 1.13 to 2.0.
 - Incremetns PyTorch XLA version from 1.13 to 2.0.
 
@@ -251,4 +262,3 @@ This tag marks the first monthly increment of the PyTorch container build.
 ### Changed
 - Updates oneDNN to v2.2.
 - Updates Compute Library to v21.02.
-
