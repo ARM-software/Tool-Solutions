@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2021-2022 Arm Ltd. and affiliates.
+ * Copyright 2021-2023 Arm Ltd. and affiliates.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -99,7 +99,7 @@ tf::Status read_image_into_tensor(const std::string &filename, tf::int32 img_w,
   std::unique_ptr<tf::Session> session(tf::NewSession(tf::SessionOptions()));
   TF_RETURN_IF_ERROR(session->Create(graph));
   TF_RETURN_IF_ERROR(session->Run({}, {output_name}, {}, out_tensors));
-  return tf::Status::OK();
+  return tf::Status();
 }
 
 // Get the top predictions: score and label
@@ -124,7 +124,7 @@ tf::Status get_top_labels(const std::vector<tf::Tensor> &outputs, int count,
                              &out_tensors);
   *scores = out_tensors[0];
   *indices = out_tensors[1];
-  return tf::Status::OK();
+  return tf::Status();
 }
 
 // Returns the relative model path as a string

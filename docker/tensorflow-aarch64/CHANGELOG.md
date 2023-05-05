@@ -15,6 +15,20 @@ where `YY` is the year, and `MM` the month of the increment.
 
 ### Fixed
 
+## [r23.05] 2023-05-09
+https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--r23.05/docker/tensorflow-aarch64
+
+### Added
+
+### Changed
+- Updates TensorFlow to v2.12.
+
+### Removed
+- Support for building TF Serving removed.
+
+### Fixed
+- Make fixed format ACL convolution able to handle NCHW input.
+
 ## [r23.04] 2023-04-13
 https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--r23.04/docker/tensorflow-aarch64
 

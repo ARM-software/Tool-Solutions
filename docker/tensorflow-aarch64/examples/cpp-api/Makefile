@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2021 Arm Ltd. and affiliates.
+# Copyright 2021-2023 Arm Ltd. and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -33,7 +33,7 @@ YAML_INCLUDE_DIR = /opt/yaml-cpp/include
 YAML_LIB_DIR     = /opt/yaml-cpp/build
 
 CC=g++
-CFLAGS=-std=c++14 -Wno-deprecated-declarations
+CFLAGS=-std=c++17 -Wno-deprecated-declarations
 LDFLAGS=-Wl,-rpath,$(TF_LIB_DIR):$(CV_LIB_DIR)
 
 all : detect_objects classify_image inception_inference

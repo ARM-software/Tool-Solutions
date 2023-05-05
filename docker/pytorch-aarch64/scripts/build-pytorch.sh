@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # *******************************************************************************
-# Copyright 2020-2022 Arm Limited and affiliates.
+# Copyright 2020-2023 Arm Limited and affiliates.
 # Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -47,15 +47,13 @@ if [[ $ONEDNN_BUILD ]]; then
   esac
 fi
 
-cd third_party/ideep
-# Caches convolution primitive at PyTorch level and removes any tag
-# from destination tensor when creating matmul primitive so that
-# accelerated version can be called
-patch -p1 < $PACKAGE_DIR/ideep.patch
-
-cd mkl-dnn/third_party/oneDNN
 # Update the oneDNN tag in third_party/ideep
+cd third_party/ideep/mkl-dnn
+rm -rf third_party/* && cd third_party
+git clone https://github.com/oneapi-src/oneDNN.git oneDNN
+cd oneDNN
 git checkout $ONEDNN_VERSION
+
 # Do not add C++11 CMake CXX flag when building with ACL and
 # rename test_api to test_api_dnnl so it does not clash with PyTorch test_api
 patch -p1 < $PACKAGE_DIR/onednn.patch
