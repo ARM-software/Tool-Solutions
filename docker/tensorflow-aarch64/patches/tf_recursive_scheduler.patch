@@ -15,26 +15,18 @@
  limitations under the License.
  *******************************************************************************
 diff --git a/tensorflow/core/util/mkl_threadpool.h b/tensorflow/core/util/mkl_threadpool.h
-index e3bf6adc0b5..aa5a220212e 100644
+index e3bf6adc0b5..5f946a4ec53 100644
 --- a/tensorflow/core/util/mkl_threadpool.h
 +++ b/tensorflow/core/util/mkl_threadpool.h
-@@ -25,12 +25,14 @@ limitations under the License.
- #include <utility>
- #include <vector>
-
--#include "dnnl_threadpool.hpp"
+@@ -28,6 +28,7 @@ limitations under the License.
+ #include "dnnl_threadpool.hpp"
  #include "dnnl.hpp"
-+#include "dnnl_threadpool.hpp"
  #include "tensorflow/core/framework/op_kernel.h"
 +#include "tensorflow/core/platform/blocking_counter.h"
  #include "tensorflow/core/platform/cpu_info.h"
  #include "tensorflow/core/platform/threadpool.h"
  #include "tensorflow/core/util/onednn_env_vars.h"
-+
- #define EIGEN_USE_THREADS
-
- namespace tensorflow {
-@@ -108,15 +110,33 @@ struct MklDnnThreadPool : public threadpool_iface {
+@@ -108,15 +109,33 @@ struct MklDnnThreadPool : public threadpool_iface {
      const bool use_caller_thread =
          ThreadPoolUseCallerThread() && nthr == port::NumSchedulableCPUs();
      const int njobs_to_schedule = use_caller_thread ? njobs - 1 : njobs;

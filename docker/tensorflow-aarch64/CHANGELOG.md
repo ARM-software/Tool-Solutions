@@ -27,7 +27,6 @@ https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--
 - Support for building TF Serving removed.
 
 ### Fixed
-- Make fixed format ACL convolution able to handle NCHW input.
 
 ## [r23.04] 2023-04-13
 https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--r23.04/docker/tensorflow-aarch64
