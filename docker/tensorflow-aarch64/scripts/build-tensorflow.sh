@@ -103,6 +103,14 @@ if [[ $ONEDNN_BUILD ]]; then
         wget https://github.com/oneapi-src/oneDNN/commit/b84c533dad4db495a92fc6d390a7db5ebd938a88.patch -O ../onednn_reorder_update.patch
         mv ../onednn_reorder_update.patch ./third_party/mkl_dnn/.
         mv ../onednn_reorder_padded.patch ./third_party/mkl_dnn/.
+
+        ## Compute Library
+        # Back-port dilation support
+        git clone "https://review.mlplatform.org/ml/ComputeLibrary" && cd ComputeLibrary
+        git format-patch -1 4e2bbbbb23e6f4bd452f7f865e51228e1f51efec \
+            | xargs -I {} mv {} ../third_party/compute_library/acl_conv_dilation_support.patch
+        cd .. && rm -rf ComputeLibrary
+
     fi
 else
     tf_backend_desc="Eigen."

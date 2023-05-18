@@ -8,6 +8,7 @@ where `YY` is the year, and `MM` the month of the increment.
 ## [Unreleased]
 
 ### Added
+- Back-ports support for dilated conv. kernels in ACL.
 
 ### Changed
 
