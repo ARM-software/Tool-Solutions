@@ -301,7 +301,6 @@ COPY patches/tf_acl.patch $PACKAGE_DIR/.
 COPY patches/tf_recursive_scheduler.patch $PACKAGE_DIR/.
 COPY patches/tf_dispatch_with_heuristics.patch $PACKAGE_DIR/.
 COPY patches/tf_use_acl_instead_of_gemm_api.patch $PACKAGE_DIR/.
-COPY patches/acl_fixed_format_kernels_striding.patch $PACKAGE_DIR/.
 COPY patches/onednn_reorder_padded.patch $PACKAGE_DIR/.
 COPY scripts/build-tensorflow.sh $PACKAGE_DIR/.
 RUN $PACKAGE_DIR/build-tensorflow.sh

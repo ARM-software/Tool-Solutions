@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # *******************************************************************************
-# Copyright 2020-2022 Arm Limited and affiliates.
+# Copyright 2020-2023 Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -31,9 +31,15 @@ install_dir=$PROD_DIR/$package
 # Clone oneDNN
 [[ ! -d ${src_repo} ]] && git clone ${src_host}/${src_repo}.git
 cd ${src_repo}
+
+# Get patch to back-port dilation support
+git format-patch -1 4e2bbbbb23e6f4bd452f7f865e51228e1f51efec \
+  | xargs -I {} mv {} ../acl_conv_dilation_support.patch
+
 git checkout $version
 
-# Patches for ACL build
+# Apply patches for Compute Library
+patch -p1 < ../acl_conv_dilation_support.patch
 patch -p1 < ../acl_fixed_format_kernels_striding.patch
 patch -p1 < ../acl_openmp_fix.patch
 
