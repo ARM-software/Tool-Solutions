@@ -1,5 +1,6 @@
  *******************************************************************************
  Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ Copyright 2023 Arm Limited and affiliates.
  SPDX-License-Identifier: Apache-2.0
 
  Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,21 +15,19 @@
  See the License for the specific language governing permissions and
  limitations under the License.
  *******************************************************************************
-
 diff --git a/src/cpu/aarch64/acl_convolution_utils.cpp b/src/cpu/aarch64/acl_convolution_utils.cpp
-index 6ebac0d17..e2d482085 100644
+index 85e45ace9d..5c21185d33 100644
 --- a/src/cpu/aarch64/acl_convolution_utils.cpp
 +++ b/src/cpu/aarch64/acl_convolution_utils.cpp
-@@ -390,7 +390,10 @@ status_t init_conf_depthwise(acl_conv_conf_t &acp, memory_desc_t &src_md,
-         &acp.wei_info,
-         acp.with_bias ? &acp.bia_info : nullptr,
-         &acp.dst_info,
--        acp.padstride_info));
-+        acp.padstride_info,
-+        1, // depth multiplier default value
-+        acp.act_info,
-+        acp.dilation_info));
- 
+@@ -345,7 +345,9 @@ status_t init_conf_depthwise(acl_conv_conf_t &acp, memory_desc_t &src_md,
+     ACL_CHECK_VALID(arm_compute::NEDepthwiseConvolutionLayer::validate(
+             &acp.src_tensor_info, &acp.wei_tensor_info,
+             acp.with_bias ? &acp.bia_tensor_info : nullptr,
+-            &acp.dst_tensor_info, acp.padstride_info));
++            &acp.dst_tensor_info, acp.padstride_info,
++            1, // depth multiplier default value
++            acp.act_info, acp.dilation_info));
+
      return status::success;
  }
 diff --git a/src/cpu/aarch64/acl_depthwise_convolution.hpp b/src/cpu/aarch64/acl_depthwise_convolution.hpp
