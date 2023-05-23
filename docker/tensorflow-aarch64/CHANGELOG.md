@@ -12,8 +12,11 @@ where `YY` is the year, and `MM` the month of the increment.
 - Adds tensor dilation parameter configuration for acl depthwise convolution
 
 ### Changed
+- Updates Compute Library to 23.05.
+- Now using Bazel build from Compute Library when building Tensorflow
 
 ### Removed
+- Removed ACL Winograd support.
 
 ### Fixed
 

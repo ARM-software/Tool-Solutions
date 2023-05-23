@@ -103,14 +103,18 @@ if [[ $ONEDNN_BUILD ]]; then
         wget https://github.com/oneapi-src/oneDNN/commit/b84c533dad4db495a92fc6d390a7db5ebd938a88.patch -O ../onednn_reorder_update.patch
         mv ../onednn_reorder_update.patch ./third_party/mkl_dnn/.
         mv ../onednn_reorder_padded.patch ./third_party/mkl_dnn/.
+        # Adds tensor dilation parameter configuration for Compute Library depthwise conv
         mv ../onednn_acl_depthwise_convolution_dilation.patch ./third_party/mkl_dnn/.
+        # Remove Compute Library Winograd support
+        mv ../onednn_acl_remove_winograd.patch ./third_party/mkl_dnn/.
+        # Updates Depthwise patch in Tensorflow with changes for Compute Library 23.05
+        mv ../onednn_acl_depthwise_convolution.patch ./third_party/mkl_dnn/.
+        # Updates Fixed Format patch in Tensorflow with changes for Compute Library 23.05
+        mv ../onednn_acl_fixed_format_kernels.patch ./third_party/mkl_dnn/.
 
         ## Compute Library
-        # Back-port dilation support
-        git clone "https://review.mlplatform.org/ml/ComputeLibrary" && cd ComputeLibrary
-        git format-patch -1 4e2bbbbb23e6f4bd452f7f865e51228e1f51efec \
-            | xargs -I {} mv {} ../third_party/compute_library/acl_conv_dilation_support.patch
-        cd .. && rm -rf ComputeLibrary
+        # Manually defining Compute Library version for now. Also removes FP16 support from Bazel build.
+        mv ../compute_library.patch ./third_party/compute_library/.
 
     fi
 else
