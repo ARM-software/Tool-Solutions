@@ -1,5 +1,6 @@
  *******************************************************************************
  Copyright 2022 Arm Limited and affiliates.
+ Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  SPDX-License-Identifier: Apache-2.0
 
  Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,7 +17,7 @@
  *******************************************************************************
 
 diff --git a/src/cpu/aarch64/acl_convolution_utils.cpp b/src/cpu/aarch64/acl_convolution_utils.cpp
-index fc93d2aa9..6ebac0d17 100644
+index fc93d2aa9..406f3d033 100644
 --- a/src/cpu/aarch64/acl_convolution_utils.cpp
 +++ b/src/cpu/aarch64/acl_convolution_utils.cpp
 @@ -54,10 +54,12 @@ status_t acl_init_conf(acl_conv_conf_t &acp, memory_desc_t &src_md,
@@ -94,7 +95,7 @@ index fc93d2aa9..6ebac0d17 100644
                  weights_md.dims[3] == 1, // kw
                  (!math_mode && dnnl_get_max_threads() < 28))) {
          return status::unimplemented;
-@@ -355,6 +374,27 @@ status_t init_conf_indirect_gemm(acl_conv_conf_t &acp, memory_desc_t &src_md,
+@@ -355,6 +374,30 @@ status_t init_conf_indirect_gemm(acl_conv_conf_t &acp, memory_desc_t &src_md,
      return status::success;
  }
  
@@ -114,7 +115,10 @@ index fc93d2aa9..6ebac0d17 100644
 +        &acp.wei_info,
 +        acp.with_bias ? &acp.bia_info : nullptr,
 +        &acp.dst_info,
-+        acp.padstride_info));
++        acp.padstride_info,
++        1, // depth mutliplier default value
++        acp.act_info,
++        acp.dilation_info));
 +
 +    return status::success;
 +}
@@ -122,7 +126,7 @@ index fc93d2aa9..6ebac0d17 100644
  status_t init_conf_wino(acl_conv_conf_t &acp, memory_desc_t &src_md,
          memory_desc_t &weights_md, memory_desc_t &dst_md,
          memory_desc_t &bias_md, const convolution_desc_t &cd,
-@@ -364,7 +404,8 @@ status_t init_conf_wino(acl_conv_conf_t &acp, memory_desc_t &src_md,
+@@ -364,7 +407,8 @@ status_t init_conf_wino(acl_conv_conf_t &acp, memory_desc_t &src_md,
      // Under these conditions, fallback to faster GEMM-based convolution
      // unless the user explicitly specifies Winograd algorithm
      // clang-format off
@@ -148,26 +152,6 @@ index 44dc8eecb..7eae5cbb1 100644
  status_t init_conf_wino(acl_conv_conf_t &acp, memory_desc_t &src_md,
          memory_desc_t &weights_md, memory_desc_t &dst_md,
          memory_desc_t &bias_md, const convolution_desc_t &cd,
-diff --git a/src/cpu/cpu_convolution_list.cpp b/src/cpu/cpu_convolution_list.cpp
-index 4142dbc7e..1800aaf58 100644
---- a/src/cpu/cpu_convolution_list.cpp
-+++ b/src/cpu/cpu_convolution_list.cpp
-@@ -65,6 +65,7 @@ using namespace dnnl::impl::cpu::x64;
- #if DNNL_AARCH64 && DNNL_AARCH64_USE_ACL
- #include "cpu/aarch64/acl_gemm_convolution.hpp"
- #include "cpu/aarch64/acl_indirect_gemm_convolution.hpp"
-+#include "cpu/aarch64/acl_depthwise_convolution.hpp"
- #include "cpu/aarch64/acl_winograd_convolution.hpp"
- #endif
- using namespace dnnl::impl::cpu::aarch64;
-@@ -104,6 +105,7 @@ const std::map<pk_dt_impl_key_t, std::vector<impl_list_item_t>> &impl_list_map()
-             CPU_INSTANCE_AARCH64(jit_sve_512_dw_convolution_fwd_t)
-             CPU_INSTANCE_AARCH64(jit_sve_512_1x1_convolution_fwd_f32_t)
-             CPU_INSTANCE_AARCH64(jit_sve_512_convolution_fwd_t<f32>)
-+            CPU_INSTANCE_AARCH64_ACL(acl_depthwise_convolution_fwd_t)
-             CPU_INSTANCE_AARCH64_ACL(acl_indirect_gemm_convolution_fwd_t)
-             CPU_INSTANCE_AARCH64_ACL(acl_gemm_convolution_fwd_t<f32>)
-             CPU_INSTANCE(gemm_convolution_fwd_t)
 diff --git a/src/cpu/aarch64/acl_depthwise_convolution.cpp b/src/cpu/aarch64/acl_depthwise_convolution.cpp
 new file mode 100644
 index 000000000..1beb8b8af
@@ -217,10 +201,10 @@ index 000000000..1beb8b8af
 +}
 diff --git a/src/cpu/aarch64/acl_depthwise_convolution.hpp b/src/cpu/aarch64/acl_depthwise_convolution.hpp
 new file mode 100644
-index 000000000..d84fc4fb5
+index 000000000..832aab96e
 --- /dev/null
 +++ b/src/cpu/aarch64/acl_depthwise_convolution.hpp
-@@ -0,0 +1,139 @@
+@@ -0,0 +1,140 @@
 +/*******************************************************************************
 +* Copyright 2022 Arm Ltd. and affiliates
 +*
@@ -268,7 +252,8 @@ index 000000000..d84fc4fb5
 +            &acl_obj_->dst_tensor,
 +            acp.padstride_info,
 +            1, // depth multiplier default value
-+            acp.act_info);
++            acp.act_info,
++            acp.dilation_info);
 +
 +        // clang-format on
 +        return status::success;
@@ -360,3 +345,26 @@ index 000000000..d84fc4fb5
 +} // namespace dnnl
 +
 +#endif // CPU_AARCH64_ACL_DEPTHWISE_CONVOLUTION_HPP
+diff --git a/src/cpu/cpu_convolution_list.cpp b/src/cpu/cpu_convolution_list.cpp
+index 4142dbc7e..1800aaf58 100644
+--- a/src/cpu/cpu_convolution_list.cpp
++++ b/src/cpu/cpu_convolution_list.cpp
+@@ -65,6 +65,7 @@ using namespace dnnl::impl::cpu::x64;
+ #if DNNL_AARCH64 && DNNL_AARCH64_USE_ACL
+ #include "cpu/aarch64/acl_gemm_convolution.hpp"
+ #include "cpu/aarch64/acl_indirect_gemm_convolution.hpp"
++#include "cpu/aarch64/acl_depthwise_convolution.hpp"
+ #include "cpu/aarch64/acl_winograd_convolution.hpp"
+ #endif
+ using namespace dnnl::impl::cpu::aarch64;
+@@ -104,6 +105,7 @@ const std::map<pk_dt_impl_key_t, std::vector<impl_list_item_t>> &impl_list_map()
+             CPU_INSTANCE_AARCH64(jit_sve_512_dw_convolution_fwd_t)
+             CPU_INSTANCE_AARCH64(jit_sve_512_1x1_convolution_fwd_f32_t)
+             CPU_INSTANCE_AARCH64(jit_sve_512_convolution_fwd_t<f32>)
++            CPU_INSTANCE_AARCH64_ACL(acl_depthwise_convolution_fwd_t)
+             CPU_INSTANCE_AARCH64_ACL(acl_indirect_gemm_convolution_fwd_t)
+             CPU_INSTANCE_AARCH64_ACL(acl_gemm_convolution_fwd_t<f32>)
+             CPU_INSTANCE(gemm_convolution_fwd_t)
+-- 
+2.25.1
+
