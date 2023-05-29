@@ -9,7 +9,6 @@ where `YY` is the year, and `MM` the month of the increment.
 
 ### Added
 - Back-ports support for dilated conv. kernels in ACL.
-- Adds tensor dilation parameter configuration for acl depthwise convolution
 
 ### Changed
 
@@ -21,6 +20,7 @@ where `YY` is the year, and `MM` the month of the increment.
 https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--r23.05/docker/pytorch-aarch64
 
 ### Added
+- Adds tensor dilation parameter configuration for acl depthwise convolution
 
 ### Changed
 - Increments PyTorch version from 1.13 to 2.0.
