@@ -46,7 +46,7 @@ Where `<image tag>` identifies the image version, as well as the TensorFlow vers
 - `<TF version>` = TensorFlow version, see [image contents](#image-contents).
 - `<backend>` = `eigen`, `onednn-acl`, or `onednn-acl_threadpool` see [optimized backend for AArch64](#optimized-backend-for-aarch64).
 
-For example: `r22.06-tf-2.9.1-onednn-acl`.
+For example: `r23.05-tf-2.12.0-onednn-acl`.
 
 ### Running the Docker image
 To run the downloaded image:
@@ -57,15 +57,15 @@ where `<image name> `is the name of the image, i.e. `armswdev/tensorflow-arm-neo
 
 ## Image contents
 
-  * OS: Ubuntu 20.04
-  * Compiler: GCC 10.3
+  * OS: Ubuntu 22.04
+  * Compiler: GCC 11.3
   * Maths libraries: [OpenBLAS](https://www.openblas.net/) 0.3.20, used for NumPy's BLAS functionality
   * [oneDNN](https://github.com/oneapi-src/oneDNN) 2.7.3
-    - ACL 22.11 provides optimized implementations on AArch64 for main oneDNN primitives
-  * Python 3.8.10 environment containing:
+    - ACL 23.05 provides optimized implementations on AArch64 for main oneDNN primitives
+  * Python 3.10 environment containing:
     - NumPy 1.21.5
     - SciPy 1.7.3
-    - TensorFlow 2.11
+    - TensorFlow 2.12
   * [Examples](./examples/README.md) that demonstrate how to run ML models
     - [MLCommons :tm:](https://mlcommons.org/en/) benchmarks with an optional patch to support benchmarking for TF oneDNN builds
     - TensorFlow Benchmarks
@@ -126,7 +126,6 @@ This script implements a multi-stage build to minimize the size of the final ima
   * Stage 2: 'libs' image including essential tools and libraries such as Python and OpenBLAS
   * Stage 3: 'tools' image, including a Python3 virtual environment in userspace and a build of NumPy and SciPy against OpenBLAS, as well as other Python essentials
   * Stage 4: 'dev' image, including Bazel and TensorFlow and the source code
-  * Stage 4b: 'serving' image, an optional final stage, in place of stages 4 and 5, which provides a TensorFlow Serving Docker image (for more details see [Building a Tensorflow Serving image](#building-a-tensorflow-serving-image))'serving' image.
   * Stage 5: 'tensorflow' image, including only the Python3 virtual environment, the TensorFlow module, the basic benchmarks, and the example scripts. Bazel and TensorFlow sources are not included in this image
 
 To see the command line options for `build.sh` use:
@@ -135,7 +134,7 @@ To see the command line options for `build.sh` use:
 ./build.sh -h
 ```
 
-The image to build is selected with the `--build-type` flag. The options are base, libs, tools, dev, serving, tensorflow, or full. Selecting full builds all of the images. The default value is 'tensorflow'.
+The image to build is selected with the `--build-type` flag. The options are base, libs, tools, dev, tensorflow, or full. Selecting full builds all of the images. The default value is 'tensorflow'.
 
 
 For example:
@@ -188,54 +187,3 @@ control the resources Bazel consumes:
   * `--bazel_memory_limit` sets a memory limit for Bazel build, in MiB
 
 In addition to the Dockerfile, please refer to the files in the `scripts/` and `patches/` directories to see how the software is built.
-
-### Building a TensorFlow Serving image
-
-The `build.sh` script can be used to build a [TensorFlow Serving](https://github.com/tensorflow/serving) image by setting `--build-type` to `serving`. For example to build a TensorFlow serving image with the oneDNN-ACL backend:
-
-```
-./build.sh --build-type serving --onednn acl
-```
-
-This will generate an image named `tensorflow-serving-v2acl`.
-
-#### Running a simple example with TensorFlow Serving
-
-1. Checkout TF serving:
-
-   ```
-   git clone https://github.com/tensorflow/serving
-   ```
-
-2. Locate a demo model to use:
-
-   ```
-   TESTDATA="$(pwd)/serving/tensorflow_serving/servables/tensorflow/testdata"
-   ```
-
-3. Start TensorFlow Serving container:
-
-   This example uses the `half_plus_two` model, the saved model is mounted inside the Docker image in the `models` directory inside the default user's home.
-
-   _Note: The REST API port (8501) needs to be open._
-
-   ```
-   docker run -t --rm -p 8501:8501 \
-     -v "$TESTDATA/saved_model_half_plus_two_cpu:/home/ubuntu/models/half_plus_two" \
-     -e MODEL_NAME=half_plus_two \
-     tensorflow-serving-v2acl &
-   ```
-
-4. Query the model using the predict API:
-
-   ```
-   curl -d '{"instances": [1.0, 2.0, 5.0]}' -X POST http://localhost:8501/v1/models/half_plus_two:predict
-   ```
-
-   This example should return:
-
-   ```
-   { "predictions": [2.5, 3.0, 4.5] }
-   ```
-
-See [TensorFlow Serving with Docker](https://github.com/tensorflow/serving/blob/master/tensorflow_serving/g3doc/docker.md), in the [TensorFlow Serving GitHub project](https://github.com/tensorflow/serving) for more details.

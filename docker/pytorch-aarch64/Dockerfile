@@ -139,7 +139,7 @@ ENV NP_MAKE="${njobs}" \
     ACL_ARCH="${acl_arch}"
 
 # Key version numbers
-ENV ACL_VERSION="v22.11" \
+ENV ACL_VERSION="v23.05" \
     OPENBLAS_VERSION=0.3.20 \
     NINJA_VERSION=1.9.0
 
@@ -167,8 +167,6 @@ ENV LD_LIBRARY_PATH=$OPENBLAS_DIR/lib:$LD_LIBRARY_PATH
 
 # Build Arm Compute Library from source
 COPY scripts/build-acl.sh $PACKAGE_DIR/.
-COPY patches/acl_fixed_format_kernels_striding.patch $PACKAGE_DIR/.
-COPY patches/acl_openmp_fix.patch $PACKAGE_DIR/.
 RUN $PACKAGE_DIR/build-acl.sh
 ENV ACL_ROOT_DIR=$PROD_DIR/ComputeLibrary
 
@@ -294,8 +292,10 @@ ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 # Build PyTorch
 COPY scripts/build-pytorch.sh $PACKAGE_DIR/.
 COPY patches/onednn.patch $PACKAGE_DIR/.
+COPY patches/onednn_acl_remove_winograd.patch  $PACKAGE_DIR/.
 COPY patches/onednn_acl_fixed_format_kernels.patch $PACKAGE_DIR/.
 COPY patches/onednn_acl_depthwise_convolution.patch $PACKAGE_DIR/.
+COPY patches/onednn_acl_depthwise_convolution_dilation.patch $PACKAGE_DIR/.
 COPY patches/onednn_reorder_padded.patch $PACKAGE_DIR/.
 COPY patches/onednn_reorder_to_bf16.patch $PACKAGE_DIR/.
 COPY patches/blas_to_mkl_acl.patch $PACKAGE_DIR/.

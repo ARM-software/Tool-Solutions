@@ -1,0 +1,49 @@
+ *******************************************************************************
+ Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ Copyright 2023 Arm Limited and affiliates.
+ SPDX-License-Identifier: Apache-2.0
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+ *******************************************************************************
+diff --git a/src/cpu/aarch64/acl_convolution_utils.cpp b/src/cpu/aarch64/acl_convolution_utils.cpp
+index 85e45ace9d..5c21185d33 100644
+--- a/src/cpu/aarch64/acl_convolution_utils.cpp
++++ b/src/cpu/aarch64/acl_convolution_utils.cpp
+@@ -345,7 +345,9 @@ status_t init_conf_depthwise(acl_conv_conf_t &acp, memory_desc_t &src_md,
+     ACL_CHECK_VALID(arm_compute::NEDepthwiseConvolutionLayer::validate(
+             &acp.src_tensor_info, &acp.wei_tensor_info,
+             acp.with_bias ? &acp.bia_tensor_info : nullptr,
+-            &acp.dst_tensor_info, acp.padstride_info));
++            &acp.dst_tensor_info, acp.padstride_info,
++            1, // depth multiplier default value
++            acp.act_info, acp.dilation_info));
+
+     return status::success;
+ }
+diff --git a/src/cpu/aarch64/acl_depthwise_convolution.hpp b/src/cpu/aarch64/acl_depthwise_convolution.hpp
+index d84fc4fb5..832aab96e 100644
+--- a/src/cpu/aarch64/acl_depthwise_convolution.hpp
++++ b/src/cpu/aarch64/acl_depthwise_convolution.hpp
+@@ -45,7 +45,8 @@ struct acl_depthwise_convolution_resource_t : public resource_t {
+             &acl_obj_->dst_tensor,
+             acp.padstride_info,
+             1, // depth multiplier default value
+-            acp.act_info);
++            acp.act_info,
++            acp.dilation_info);
+ 
+         // clang-format on
+         return status::success;
+-- 
+2.25.1
+

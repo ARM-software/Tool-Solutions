@@ -8,12 +8,22 @@ where `YY` is the year, and `MM` the month of the increment.
 ## [Unreleased]
 
 ### Added
-- Back-ports support for dilated conv. kernels in ACL.
-- Adds tensor dilation parameter configuration for acl depthwise convolution
+
+### Changed
+
+### Removed
+
+### Fixed
+
+## [r23.06] 2023-06-08
+https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--r23.08/docker/tensorflow-aarch64
+
+### Added
+- Adds tensor dilation parameter configuration for acl depthwise convolution.
 
 ### Changed
 - Updates Compute Library to 23.05.
-- Now using Bazel build from Compute Library when building Tensorflow
+- Now using Bazel build from Compute Library when building Tensorflow.
 
 ### Removed
 - Removed ACL Winograd support.

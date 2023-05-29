@@ -32,16 +32,7 @@ install_dir=$PROD_DIR/$package
 [[ ! -d ${src_repo} ]] && git clone ${src_host}/${src_repo}.git
 cd ${src_repo}
 
-# Get patch to back-port dilation support
-git format-patch -1 4e2bbbbb23e6f4bd452f7f865e51228e1f51efec \
-  | xargs -I {} mv {} ../acl_conv_dilation_support.patch
-
 git checkout $version
-
-# Apply patches for Compute Library
-patch -p1 < ../acl_conv_dilation_support.patch
-patch -p1 < ../acl_fixed_format_kernels_striding.patch
-patch -p1 < ../acl_openmp_fix.patch
 
 # Default to v8a if $acl_arch is unset.
 arch=${ACL_ARCH:-"arm64-v8a"}
@@ -54,7 +45,7 @@ multi_isa=0
 # Build with scons
 scons -j16  Werror=0 debug=0 neon=1 opencl=0 embed_kernels=0 \
   os=linux arch=$arch build=native multi_isa=$multi_isa \
-  experimental_fixed_format_kernels=1 openmp=1 cppthreads=0 \
+  fixed_format_kernels=1 openmp=1 cppthreads=0 \
   build_dir=$install_dir/build
 
 cp -r arm_compute $install_dir

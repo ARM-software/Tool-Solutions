@@ -45,7 +45,7 @@ Where `<image tag>` identifies the image version, as well as the PyTorch version
 - `<torch version>` = PyTorch version, see [image contents](#image-contents).
 - `<backend>` = `openblas` or `onednn-acl`, see [optimized backend for AArch64](#optimized-backend-for-aarch64).
 
-For example: `r22.06-torch-1.11.0-onednn-acl`.
+For example: `r23.05-torch-2.0.0-onednn-acl`.
 
 ### Running the Docker image
 To run the downloaded image:
@@ -57,19 +57,21 @@ where `<image name>` is the name of the image, i.e. `armswdev/pytorch-arm-neover
 
 ## Image contents
 
-  * OS: Ubuntu 20.04
-  * Compiler: GCC 10.3
+  * OS: Ubuntu 22.04
+  * Compiler: GCC 11.3
   * Maths libraries: [OpenBLAS](https://www.openblas.net/) 0.3.20
-  * [oneDNN](https://github.com/oneapi-src/oneDNN) 2.7
-    - ACL 22.11, provides optimized implementations on AArch64 for main oneDNN primitives
-  * Python 3.8.10 environment containing:
+  * [oneDNN](https://github.com/oneapi-src/oneDNN) 2.7.3
+    - ACL 23.05, provides optimized implementations on AArch64 for main oneDNN primitives
+  * Python 3.10 environment containing:
     - NumPy 1.21.5
     - SciPy 1.7.3
-    - PyTorch 1.13.0
+    - PyTorch 2.0.0
+    - TorchVision 0.15.1
+    - TorchData 0.6.0
+    - TorchText 0.15.1
   * [Examples](./examples/README.md) that demonstrate how to run ML models
     - [MLCommons :tm:](https://mlcommons.org/en/) benchmarks
     - Python API examples
-    - C++ API examples
 
 The default user account has sudo privileges (username `ubuntu`, password `Portland`).
 
@@ -95,7 +97,6 @@ A small selection of inference benchmarks and examples are provided with the ima
 
   * [MLCommons :tm:](https://mlcommons.org/en/) benchmarks
   * Python API examples
-  * C++ API examples
 
 More details can be found in the [examples](./examples/README.md) folder.
 
