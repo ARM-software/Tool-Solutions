@@ -103,7 +103,6 @@ if [[ $ONEDNN_BUILD ]]; then
         wget https://github.com/oneapi-src/oneDNN/commit/b84c533dad4db495a92fc6d390a7db5ebd938a88.patch -O ../onednn_reorder_update.patch
         mv ../onednn_reorder_update.patch ./third_party/mkl_dnn/.
         mv ../onednn_reorder_padded.patch ./third_party/mkl_dnn/.
-        mv ../onednn_acl_depthwise_convolution_dilation.patch ./third_party/mkl_dnn/.
 
         ## Compute Library
         # Back-port dilation support

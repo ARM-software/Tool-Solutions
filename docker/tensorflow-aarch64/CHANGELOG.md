@@ -20,7 +20,6 @@ where `YY` is the year, and `MM` the month of the increment.
 https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--r23.05/docker/tensorflow-aarch64
 
 ### Added
-- Adds tensor dilation parameter configuration for acl depthwise convolution
 
 ### Changed
 - Updates TensorFlow to v2.12.
