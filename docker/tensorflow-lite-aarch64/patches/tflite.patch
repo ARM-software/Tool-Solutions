@@ -1,5 +1,5 @@
- *******************************************************************************
- Copyright 2021-2022 Arm Limited and affiliates.
+*******************************************************************************
+ Copyright 2021-2023 Arm Limited and affiliates.
  SPDX-License-Identifier: Apache-2.0
 
  Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,31 +14,34 @@
  See the License for the specific language governing permissions and
  limitations under the License.
  *******************************************************************************
-
+diff --git a/tensorflow/lite/CMakeLists.txt b/tensorflow/lite/CMakeLists.txt
+index c71a3925ac6..affe5895d20 100644
+--- a/tensorflow/lite/CMakeLists.txt
++++ b/tensorflow/lite/CMakeLists.txt
+@@ -493,6 +493,7 @@ set(TFLITE_PROFILER_SRCS
+   ${TFLITE_SOURCE_DIR}/profiling/root_profiler.h
+   ${TFLITE_SOURCE_DIR}/profiling/root_profiler.cc
+   ${TFLITE_SOURCE_DIR}/profiling/telemetry/profiler.cc
++  ${TFLITE_SOURCE_DIR}/profiling/telemetry/telemetry.cc
+ )
+ if(CMAKE_SYSTEM_NAME MATCHES "Android")
+   list(APPEND TFLITE_PROFILER_SRCS
+@@ -654,4 +655,4 @@ target_link_libraries(_pywrap_tensorflow_interpreter_wrapper
+ target_compile_options(_pywrap_tensorflow_interpreter_wrapper
+   PUBLIC ${TFLITE_TARGET_PUBLIC_OPTIONS}
+   PRIVATE ${TFLITE_TARGET_PRIVATE_OPTIONS}
+-)
+\ No newline at end of file
++)
 diff --git a/tensorflow/lite/tools/benchmark/CMakeLists.txt b/tensorflow/lite/tools/benchmark/CMakeLists.txt
-index d66af0dcd4a..8eeb215b5a6 100644
+index 423c95fa9f5..de7831c2544 100644
 --- a/tensorflow/lite/tools/benchmark/CMakeLists.txt
 +++ b/tensorflow/lite/tools/benchmark/CMakeLists.txt
-@@ -33,6 +33,8 @@ list(APPEND TFLITE_BENCHMARK_SRCS
+@@ -34,6 +34,7 @@ list(APPEND TFLITE_BENCHMARK_SRCS
+   ${TFLITE_SOURCE_DIR}/tools/command_line_flags.cc
+   ${TFLITE_SOURCE_DIR}/tools/delegates/default_execution_provider.cc
    ${TFLITE_SOURCE_DIR}/tools/delegates/delegate_provider.cc
-   ${TFLITE_SOURCE_DIR}/tools/evaluation/utils.cc
-   ${TFLITE_SOURCE_DIR}/tools/tool_params.cc
 +  ${TFLITE_SOURCE_DIR}/tools/delegates/external_delegate_provider.cc
-+  ${TFLITE_SOURCE_DIR}/delegates/external/external_delegate.cc
- )
-
- list(APPEND TFLITE_BENCHMARK_LIBS
-diff --git a/tensorflow/lite/tools/benchmark/benchmark_model.cc b/tensorflow/lite/tools/benchmark/benchmark_model.cc
-index 610afe273bc..bb7355036e9 100644
---- a/tensorflow/lite/tools/benchmark/benchmark_model.cc
-+++ b/tensorflow/lite/tools/benchmark/benchmark_model.cc
-@@ -63,7 +63,8 @@ void BenchmarkLoggingListener::OnBenchmarkEnd(const BenchmarkResults& results) {
-                    << "Init: " << init_us << ", "
-                    << "First inference: " << warmup_us.first() << ", "
-                    << "Warmup (avg): " << warmup_us.avg() << ", "
--                   << "Inference (avg): " << inference_us.avg();
-+                   << "Inference (avg): " << inference_us.avg() << ", "
-+                   << "Inference (min): " << inference_us.min();
-
-   if (!init_mem_usage.IsSupported()) return;
-   TFLITE_LOG(INFO)
+   ${TFLITE_SOURCE_DIR}/tools/evaluation/utils.cc
+   ${TFLITE_SOURCE_DIR}/tools/model_loader.cc
+   ${TFLITE_SOURCE_DIR}/tools/tool_params.cc
