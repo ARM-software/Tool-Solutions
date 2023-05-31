@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # *******************************************************************************
-# Copyright 2021-2022 Arm Limited and affiliates.
+# Copyright 2021-2023 Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,21 +23,19 @@ readonly num_cpus=$(nproc)
 
 cd $PACKAGE_DIR
 
-wget -O flatbuffers-1.12.0.tar.gz https://github.com/google/flatbuffers/archive/v1.12.0.tar.gz
-tar xf flatbuffers-1.12.0.tar.gz
-cd flatbuffers-1.12.0
-# Apply patch not to error with new GCC versions
-patch -p1 < ../flatbuffers.patch
+wget -O flatbuffers-2.0.7.tar.gz https://github.com/google/flatbuffers/archive/v2.0.7.tar.gz
+tar xf flatbuffers-2.0.7.tar.gz
+cd flatbuffers-2.0.7
 mkdir build && cd build
 CXXFLAGS="-fPIC" cmake .. -DFLATBUFFERS_BUILD_FLATC=1 -DCMAKE_INSTALL_PREFIX:PATH=$PACKAGE_DIR/flatbuffers
 make -j ${num_cpus}
 make install
 
 cd $PACKAGE_DIR
-git clone https://review.mlplatform.org/ml/armnn
+git clone https://github.com/ARM-software/armnn.git
 cd armnn
-git checkout tags/v22.02 -b v22.02
+git checkout v23.05 -b v23.05
 patch -p1 < ../armnn.patch
 mkdir build && cd build
-cmake .. -DARMCOMPUTE_ROOT=$PACKAGE_DIR/ComputeLibrary -DARMCOMPUTE_BUILD_DIR=$PACKAGE_DIR/ComputeLibrary/build -DBUILD_TF_LITE_PARSER=1 -DTF_LITE_GENERATED_PATH=$PACKAGE_DIR/tensorflow_src/tensorflow/lite/schema -DFLATBUFFERS_ROOT=$PACKAGE_DIR/flatbuffers -DFLATC_DIR=$PACKAGE_DIR/flatbuffers-1.12.0/build -DARMCOMPUTENEON=1 -DARMNNREF=1 -DBUILD_TESTS=1 -DBUILD_ARMNN_TFLITE_DELEGATE=1 -DTENSORFLOW_ROOT=$PACKAGE_DIR/tensorflow_src -DTFLITE_LIB_ROOT=$PACKAGE_DIR/tflite_build -DFLATBUFFERS_ROOT=$PACKAGE_DIR/flatbuffers
+cmake .. -DARMCOMPUTE_ROOT=$PACKAGE_DIR/ComputeLibrary -DARMCOMPUTE_BUILD_DIR=$PACKAGE_DIR/ComputeLibrary/build -DBUILD_TF_LITE_PARSER=1 -DTF_LITE_GENERATED_PATH=$PACKAGE_DIR/tensorflow_src/tensorflow/lite/schema -DFLATBUFFERS_ROOT=$PACKAGE_DIR/flatbuffers -DFLATC_DIR=$PACKAGE_DIR/flatbuffers-2.0.7/build -DARMCOMPUTENEON=1 -DARMNNREF=1 -DBUILD_TESTS=1 -DBUILD_ARMNN_TFLITE_DELEGATE=1 -DTENSORFLOW_ROOT=$PACKAGE_DIR/tensorflow_src -DTFLITE_LIB_ROOT=$PACKAGE_DIR/tflite_build -DFLATBUFFERS_ROOT=$PACKAGE_DIR/flatbuffers -DBUILD_DELEGATE_JNI_INTERFACE=0
 make -j ${num_cpus}
