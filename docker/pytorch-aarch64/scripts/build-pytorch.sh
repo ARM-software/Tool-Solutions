@@ -58,6 +58,9 @@ git checkout $ONEDNN_VERSION
 # rename test_api to test_api_dnnl so it does not clash with PyTorch test_api
 patch -p1 < $PACKAGE_DIR/onednn.patch
 
+# Remove unsupported winograd kernel
+patch -p1 < $PACKAGE_DIR/onednn_acl_remove_winograd.patch
+
 # Support for fixed format kernels
 patch -p1 < $PACKAGE_DIR/onednn_acl_fixed_format_kernels.patch
 
@@ -68,6 +71,9 @@ patch -p1 < $PACKAGE_DIR/onednn_acl_depthwise_convolution.patch
 patch -p1 < $PACKAGE_DIR/onednn_reorder_padded.patch
 wget https://github.com/oneapi-src/oneDNN/commit/b84c533dad4db495a92fc6d390a7db5ebd938a88.patch -O $PACKAGE_DIR/onednn_reorder_update.patch
 patch -p1 < $PACKAGE_DIR/onednn_reorder_update.patch
+
+# Enable depthwise convolution with dilation
+patch -p1 < $PACKAGE_DIR/onednn_acl_depthwise_convolution_dilation.patch
 
 # Support for jitted reordering to BF16
 patch -p1 < $PACKAGE_DIR/onednn_reorder_to_bf16.patch
