@@ -303,6 +303,7 @@ COPY patches/onednn_acl_remove_winograd.patch $PACKAGE_DIR/.
 COPY patches/onednn_acl_depthwise_convolution.patch $PACKAGE_DIR/.
 COPY patches/onednn_acl_fixed_format_kernels.patch $PACKAGE_DIR/.
 COPY patches/tf_recursive_scheduler.patch $PACKAGE_DIR/.
+COPY patches/tf_mkl_matmul_defined_weights_as_any.patch $PACKAGE_DIR/.
 COPY patches/tf_dispatch_with_heuristics.patch $PACKAGE_DIR/.
 COPY patches/tf_use_acl_instead_of_gemm_api.patch $PACKAGE_DIR/.
 COPY patches/onednn_reorder_padded.patch $PACKAGE_DIR/.

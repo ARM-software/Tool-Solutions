@@ -97,6 +97,8 @@ if [[ $ONEDNN_BUILD ]]; then
         # Fix build of matmul benchmarks to support ACL matmul
         wget https://github.com/tensorflow/tensorflow/pull/60390.patch -O ../tf_fix_matmul_bm_build.patch
         patch -p1 < ../tf_fix_matmul_bm_build.patch
+        # Specify that format is any for weights for matmul and inner product
+        patch -p1 < ../tf_mkl_matmul_defined_weights_as_any.patch
 
         ## oneDNN patches:
         # Patches to support JIT'ed reorder for padded inputs

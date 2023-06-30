@@ -14,6 +14,8 @@ where `YY` is the year, and `MM` the month of the increment.
 ### Removed
 
 ### Fixed
+- Specifies in TensorFlow that type of weights for matrix multiplication
+  and inner product is `any` so that accelerated kernels from ACL are invoked.
 
 ## [r23.06] 2023-06-08
 https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--r23.08/docker/tensorflow-aarch64
