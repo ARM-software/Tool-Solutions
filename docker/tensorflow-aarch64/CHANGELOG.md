@@ -9,11 +9,26 @@ where `YY` is the year, and `MM` the month of the increment.
 
 ### Added
 
+- Heuristics for matmul added.
+- Inter scheduler support added.
+- ACL reorder for select shapes.
+
 ### Changed
+
+- Updates Tensorflow to unreleased version, Git hash: 5c1dcfd.
+- Refactored code for reducing MKL overheads by calling into Eigen for small shapes.
 
 ### Removed
 
+- Patch for dispatch with heuristics removed, now upstream.
+- Patch for using ACL instead of GEMM API removed, now upstream.
+- Patch for Tensorflow recursive scheduler removed, now upstream.
+- Patch for matmul benchmarks removed, now upstream.
+
 ### Fixed
+
+- Remedial fixes moving some ops to Eigen for increased performance.
+- Fix to specify that format should be any for weights for matmul and inner product.
 
 ## [r23.07] 2023-07-04
 https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--r23.07/docker/tensorflow-aarch64

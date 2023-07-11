@@ -1,0 +1,547 @@
+ *******************************************************************************
+ Copyright 2023 Arm Limited and affiliates.
+ SPDX-License-Identifier: Apache-2.0
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+ *******************************************************************************
+diff --git a/tensorflow/core/kernels/mkl/mkl_concat_op.cc b/tensorflow/core/kernels/mkl/mkl_concat_op.cc
+index 07e758a5e77..d80dfb1016b 100644
+--- a/tensorflow/core/kernels/mkl/mkl_concat_op.cc
++++ b/tensorflow/core/kernels/mkl/mkl_concat_op.cc
+@@ -32,7 +32,7 @@ limitations under the License.
+ #include "tensorflow/core/lib/core/status.h"
+ #include "tensorflow/core/platform/types.h"
+ #include "tensorflow/core/util/mkl_util.h"
+-#ifdef DNNL_AARCH64_USE_ACL
++#if defined(DNNL_AARCH64_USE_ACL) && defined(ENABLE_ONEDNN_OPENMP)
+ #include "tensorflow/core/platform/mutex.h"
+ #endif
+ 
+@@ -297,7 +297,7 @@ class MklConcatFwdPrimitive : public MklPrimitive {
+                const dnnl::memory& dst_data,
+                const MklConcatFwdParams& concat_fwd_dims,
+                std::shared_ptr<stream> fwd_stream) {
+-#ifdef DNNL_AARCH64_USE_ACL
++#if defined(DNNL_AARCH64_USE_ACL) && defined(ENABLE_ONEDNN_OPENMP)
+     mutex_lock lock(primitive_execution_mu_);
+ #endif
+     DCHECK_EQ(in_data.size(), context_.data_mem.size());
+@@ -397,7 +397,7 @@ class MklConcatFwdPrimitive : public MklPrimitive {
+ 
+   struct ConcatFwdContext context_;
+ 
+-#ifdef DNNL_AARCH64_USE_ACL
++#if defined(DNNL_AARCH64_USE_ACL) && defined(ENABLE_ONEDNN_OPENMP)
+   mutex primitive_execution_mu_;
+ #endif
+ };
+diff --git a/tensorflow/core/kernels/mkl/mkl_conv_grad_filter_ops.cc b/tensorflow/core/kernels/mkl/mkl_conv_grad_filter_ops.cc
+index 0b5519fc46b..ce869e186d9 100644
+--- a/tensorflow/core/kernels/mkl/mkl_conv_grad_filter_ops.cc
++++ b/tensorflow/core/kernels/mkl/mkl_conv_grad_filter_ops.cc
+@@ -23,7 +23,7 @@ limitations under the License.
+ #include "tensorflow/core/kernels/mkl/mkl_conv_ops.h"
+ #include "tensorflow/core/util/use_cudnn.h"
+ #include "tensorflow/core/util/work_sharder.h"
+-#ifdef DNNL_AARCH64_USE_ACL
++#if defined(DNNL_AARCH64_USE_ACL) && defined(ENABLE_ONEDNN_OPENMP)
+ #include "tensorflow/core/platform/mutex.h"
+ #endif
+ 
+@@ -93,7 +93,7 @@ class MklConvBwdFilterPrimitive : public MklPrimitive {
+   void Execute(const T* src_data, const T* diff_filter_data,
+                const T* diff_bias_data, const T* diff_dst_data,
+                std::shared_ptr<stream> bwd_filter_stream) {
+-#ifdef DNNL_AARCH64_USE_ACL
++#if defined(DNNL_AARCH64_USE_ACL) && defined(ENABLE_ONEDNN_OPENMP)
+     mutex_lock lock(primitive_execution_mu_);
+ #endif
+ #ifndef ENABLE_ONEDNN_OPENMP
+@@ -315,7 +315,7 @@ class MklConvBwdFilterPrimitive : public MklPrimitive {
+ 
+   struct ConvBwdFilterContext context_;
+ 
+-#ifdef DNNL_AARCH64_USE_ACL
++#if defined(DNNL_AARCH64_USE_ACL) && defined(ENABLE_ONEDNN_OPENMP)
+   mutex primitive_execution_mu_;
+ #endif
+ };
+diff --git a/tensorflow/core/kernels/mkl/mkl_conv_grad_input_ops.cc b/tensorflow/core/kernels/mkl/mkl_conv_grad_input_ops.cc
+index 3eab40d24ee..3a1e8a88949 100644
+--- a/tensorflow/core/kernels/mkl/mkl_conv_grad_input_ops.cc
++++ b/tensorflow/core/kernels/mkl/mkl_conv_grad_input_ops.cc
+@@ -30,7 +30,7 @@ limitations under the License.
+ #include "tensorflow/core/kernels/mkl/mkl_conv_ops.h"
+ #include "tensorflow/core/util/use_cudnn.h"
+ #include "tensorflow/core/util/work_sharder.h"
+-#ifdef DNNL_AARCH64_USE_ACL
++#if defined(DNNL_AARCH64_USE_ACL) && defined(ENABLE_ONEDNN_OPENMP)
+ #include "tensorflow/core/platform/mutex.h"
+ #endif
+ 
+@@ -100,7 +100,7 @@ class MklConvBwdInputPrimitive : public MklPrimitive {
+   void Execute(const T* diff_src_data, const T* filter_data,
+                const T* diff_dst_data,
+                std::shared_ptr<stream> bwd_input_stream) {
+-#ifdef DNNL_AARCH64_USE_ACL
++#if defined(DNNL_AARCH64_USE_ACL) && defined(ENABLE_ONEDNN_OPENMP)
+     mutex_lock lock(primitive_execution_mu_);
+ #endif
+ #if !defined(ENABLE_ONEDNN_OPENMP) && !defined(ENABLE_ONEDNN_V3)
+@@ -255,7 +255,7 @@ class MklConvBwdInputPrimitive : public MklPrimitive {
+   }
+ 
+   struct ConvBwdInputContext context_;
+-#ifdef DNNL_AARCH64_USE_ACL
++#if defined(DNNL_AARCH64_USE_ACL) && defined(ENABLE_ONEDNN_OPENMP)
+   mutex primitive_execution_mu_;
+ #endif
+ };
+diff --git a/tensorflow/core/kernels/mkl/mkl_conv_ops.cc b/tensorflow/core/kernels/mkl/mkl_conv_ops.cc
+index 8dae3705e0a..4b933ae5c15 100644
+--- a/tensorflow/core/kernels/mkl/mkl_conv_ops.cc
++++ b/tensorflow/core/kernels/mkl/mkl_conv_ops.cc
+@@ -27,7 +27,7 @@ limitations under the License.
+ #include "tensorflow/core/kernels/mkl/mkl_kernel_util.h"
+ #include "tensorflow/core/kernels/mkl/mkl_quantized_conv_ops.h"
+ #include "tensorflow/core/kernels/no_op.h"
+-#ifdef DNNL_AARCH64_USE_ACL
++#if defined(DNNL_AARCH64_USE_ACL) && defined(ENABLE_ONEDNN_OPENMP)
+ #include "tensorflow/core/platform/mutex.h"
+ #endif
+ 
+@@ -151,7 +151,7 @@ class MklConvFwdPrimitive : public MklPrimitive {
+                const Tinput* bn_scale_data, const Tinput* bn_mean_data,
+                const Tinput* bn_offset_data, const Tinput* bn_rsqrt_data,
+                std::shared_ptr<stream> fwd_stream, void* sp_data) {
+-#ifdef DNNL_AARCH64_USE_ACL
++#if defined(DNNL_AARCH64_USE_ACL) && defined(ENABLE_ONEDNN_OPENMP)
+     // When we are using single global cache then in this case we can have
+     // multiple threads running the same primitive that we created so this
+     // should happen under the lock.
+@@ -496,7 +496,7 @@ class MklConvFwdPrimitive : public MklPrimitive {
+ 
+   struct ConvFwdContext context_;
+ 
+-#ifdef DNNL_AARCH64_USE_ACL
++#if defined(DNNL_AARCH64_USE_ACL) && defined(ENABLE_ONEDNN_OPENMP)
+   // Guards Execution()
+   mutex primitive_execution_mu_;
+ #endif
+diff --git a/tensorflow/core/kernels/mkl/mkl_eltwise_activation_base_op.h b/tensorflow/core/kernels/mkl/mkl_eltwise_activation_base_op.h
+index 9bfddc2f1d0..40d67a2382b 100644
+--- a/tensorflow/core/kernels/mkl/mkl_eltwise_activation_base_op.h
++++ b/tensorflow/core/kernels/mkl/mkl_eltwise_activation_base_op.h
+@@ -30,7 +30,7 @@ limitations under the License.
+ #include "tensorflow/core/framework/tensor.h"
+ #include "tensorflow/core/lib/core/errors.h"
+ #include "tensorflow/core/util/mkl_util.h"
+-#ifdef DNNL_AARCH64_USE_ACL
++#if defined(DNNL_AARCH64_USE_ACL) && defined(ENABLE_ONEDNN_OPENMP)
+ #include "tensorflow/core/platform/mutex.h"
+ #endif
+ 
+@@ -100,7 +100,7 @@ class MklEltwiseFwdActivationPrimitive : public MklPrimitive {
+   //   src_data:  input data buffer of src
+   //   dst_data:  output data buffer of dst
+   void Execute(const T* src_data, T* dst_data, OpKernelContext* op_context) {
+-#ifdef DNNL_AARCH64_USE_ACL
++#if defined(DNNL_AARCH64_USE_ACL) && defined(ENABLE_ONEDNN_OPENMP)
+     mutex_lock lock(primitive_execution_mu_);
+ #endif
+     context_.src_mem->set_data_handle(
+@@ -202,7 +202,7 @@ class MklEltwiseFwdActivationPrimitive : public MklPrimitive {
+ 
+   struct EltwiseFwdActivationContext context_;
+ 
+-#ifdef DNNL_AARCH64_USE_ACL
++#if defined(DNNL_AARCH64_USE_ACL) && defined(ENABLE_ONEDNN_OPENMP)
+   mutex primitive_execution_mu_;
+ #endif
+ };
+diff --git a/tensorflow/core/kernels/mkl/mkl_fused_batch_norm_op.cc b/tensorflow/core/kernels/mkl/mkl_fused_batch_norm_op.cc
+index 611c3709878..a7238c167cd 100644
+--- a/tensorflow/core/kernels/mkl/mkl_fused_batch_norm_op.cc
++++ b/tensorflow/core/kernels/mkl/mkl_fused_batch_norm_op.cc
+@@ -24,7 +24,7 @@ limitations under the License.
+ #include "tensorflow/core/kernels/no_op.h"
+ #include "tensorflow/core/util/mkl_util.h"
+ #include "tensorflow/core/util/tensor_format.h"
+-#ifdef DNNL_AARCH64_USE_ACL
++#if defined(DNNL_AARCH64_USE_ACL) && defined(ENABLE_ONEDNN_OPENMP)
+ #include "tensorflow/core/platform/mutex.h"
+ #endif
+ 
+@@ -85,7 +85,7 @@ class MklFusedBatchNormFwdPrimitive : public MklPrimitive {
+   void Execute(const T* src_data, const U* weights_data, T* dst_data,
+                U* mean_data, U* variance_data,
+                std::shared_ptr<stream> fwd_stream, U* workspace_data) {
+-#ifdef DNNL_AARCH64_USE_ACL
++#if defined(DNNL_AARCH64_USE_ACL) && defined(ENABLE_ONEDNN_OPENMP)
+     mutex_lock lock(primitive_execution_mu_);
+ #endif
+ #ifndef ENABLE_ONEDNN_OPENMP
+@@ -330,7 +330,7 @@ class MklFusedBatchNormFwdPrimitive : public MklPrimitive {
+ 
+   struct BatchNormFwdContext context_;
+ 
+-#ifdef DNNL_AARCH64_USE_ACL
++#if defined(DNNL_AARCH64_USE_ACL) && defined(ENABLE_ONEDNN_OPENMP)
+   mutex primitive_execution_mu_;
+ #endif
+ };
+@@ -438,7 +438,7 @@ class MklFusedBatchNormBwdPrimitive : public MklPrimitive {
+                const T* diff_dst_data, const U* weights_data, T* diff_src_data,
+                U* diff_weights_data, U* res_space_data,
+                std::shared_ptr<stream> bwd_stream) {
+-#ifdef DNNL_AARCH64_USE_ACL
++#if defined(DNNL_AARCH64_USE_ACL) && defined(ENABLE_ONEDNN_OPENMP)
+     mutex_lock lock(primitive_execution_mu_);
+ #endif
+ #ifndef ENABLE_ONEDNN_OPENMP
+@@ -598,7 +598,7 @@ class MklFusedBatchNormBwdPrimitive : public MklPrimitive {
+ 
+   struct BatchNormBwdContext context_;
+ 
+-#ifdef DNNL_AARCH64_USE_ACL
++#if defined(DNNL_AARCH64_USE_ACL) && defined(ENABLE_ONEDNN_OPENMP)
+   mutex primitive_execution_mu_;
+ #endif
+ };
+diff --git a/tensorflow/core/kernels/mkl/mkl_matmul_ops_common.h b/tensorflow/core/kernels/mkl/mkl_matmul_ops_common.h
+index 33e2e8a646d..d745bc582f3 100644
+--- a/tensorflow/core/kernels/mkl/mkl_matmul_ops_common.h
++++ b/tensorflow/core/kernels/mkl/mkl_matmul_ops_common.h
+@@ -27,7 +27,7 @@ limitations under the License.
+ #include "tensorflow/core/framework/op_kernel.h"
+ #include "tensorflow/core/util/mkl_util.h"
+ #include "tensorflow/core/util/onednn_env_vars.h"
+-#ifdef DNNL_AARCH64_USE_ACL
++#if defined(DNNL_AARCH64_USE_ACL) && defined(ENABLE_ONEDNN_OPENMP)
+ #include "tensorflow/core/platform/mutex.h"
+ #endif
+ 
+@@ -151,7 +151,7 @@ class MklDnnMatMulFwdPrimitive : public MklPrimitive {
+                const void* bias_data, Toutput* dst_data,
+                const MklDnnMatMulFwdParams& matmul_fwd_params, void* sp_data,
+                std::shared_ptr<stream> fwd_stream) {
+-#ifdef DNNL_AARCH64_USE_ACL
++#if defined(DNNL_AARCH64_USE_ACL) && defined(ENABLE_ONEDNN_OPENMP)
+     mutex_lock lock(primitive_execution_mu_);
+ #endif
+     context_.src_mem->set_data_handle(
+@@ -439,7 +439,7 @@ class MklDnnMatMulFwdPrimitive : public MklPrimitive {
+ 
+   struct MklDnnMatMulFwdContext context_;
+ 
+-#ifdef DNNL_AARCH64_USE_ACL
++#if defined(DNNL_AARCH64_USE_ACL) && defined(ENABLE_ONEDNN_OPENMP)
+   // Guards Execution()
+   mutex primitive_execution_mu_;
+ #endif
+@@ -721,7 +721,7 @@ class MklMatMulPrimitive : public MklPrimitive {
+   void Execute(const std::shared_ptr<stream>& stream, const Tlhs* a_data,
+                const Trhs* b_data, const Toutput* c_data, void* sp_data,
+                void* mul_data = nullptr, void* add_data = nullptr) {
+-#ifdef DNNL_AARCH64_USE_ACL
++#if defined(DNNL_AARCH64_USE_ACL) && defined(ENABLE_ONEDNN_OPENMP)
+     mutex_lock lock(primitive_execution_mu_);
+ #endif
+ #if !defined(ENABLE_ONEDNN_OPENMP) && !defined(ENABLE_ONEDNN_V3)
+@@ -913,7 +913,7 @@ class MklMatMulPrimitive : public MklPrimitive {
+   }
+ 
+   struct MklMatMulContext context_;
+-#ifdef DNNL_AARCH64_USE_ACL
++#if defined(DNNL_AARCH64_USE_ACL) && defined(ENABLE_ONEDNN_OPENMP)
+   mutex primitive_execution_mu_;
+ #endif
+ };
+diff --git a/tensorflow/core/kernels/mkl/mkl_pooling_ops_common.cc b/tensorflow/core/kernels/mkl/mkl_pooling_ops_common.cc
+index aab190f5ac6..310ab3a6926 100644
+--- a/tensorflow/core/kernels/mkl/mkl_pooling_ops_common.cc
++++ b/tensorflow/core/kernels/mkl/mkl_pooling_ops_common.cc
+@@ -101,7 +101,7 @@ template <typename T>
+ void MklPoolingFwdPrimitive<T>::Execute(const T* src_data, T* dst_data,
+                                         void* ws_data,
+                                         std::shared_ptr<stream> fwd_stream) {
+-#ifdef DNNL_AARCH64_USE_ACL
++#if defined(DNNL_AARCH64_USE_ACL) && defined(ENABLE_ONEDNN_OPENMP)
+   mutex_lock lock(primitive_execution_mu_);
+ #endif
+ #if !defined(ENABLE_ONEDNN_OPENMP) && !defined(ENABLE_ONEDNN_V3)
+@@ -218,7 +218,7 @@ template <typename T>
+ void MklPoolingBwdPrimitive<T>::Execute(const T* diff_dst_data,
+                                         T* diff_src_data, const void* ws_data,
+                                         std::shared_ptr<stream> bwd_stream) {
+-#ifdef DNNL_AARCH64_USE_ACL
++#if defined(DNNL_AARCH64_USE_ACL) && defined(ENABLE_ONEDNN_OPENMP)
+   mutex_lock lock(primitive_execution_mu_);
+ #endif
+ #if !defined(ENABLE_ONEDNN_OPENMP) && !defined(ENABLE_ONEDNN_V3)
+diff --git a/tensorflow/core/kernels/mkl/mkl_pooling_ops_common.h b/tensorflow/core/kernels/mkl/mkl_pooling_ops_common.h
+index 012244a7969..fe5e7f03285 100644
+--- a/tensorflow/core/kernels/mkl/mkl_pooling_ops_common.h
++++ b/tensorflow/core/kernels/mkl/mkl_pooling_ops_common.h
+@@ -27,7 +27,7 @@ limitations under the License.
+ #include "tensorflow/core/framework/ops_util.h"
+ #include "tensorflow/core/util/mkl_util.h"
+ #include "tensorflow/core/util/padding.h"
+-#ifdef DNNL_AARCH64_USE_ACL
++#if defined(DNNL_AARCH64_USE_ACL) && defined(ENABLE_ONEDNN_OPENMP)
+ #include "tensorflow/core/platform/mutex.h"
+ #endif
+ 
+@@ -176,7 +176,7 @@ class MklPoolingFwdPrimitive : public MklPrimitive {
+ 
+   struct PoolingFwdContext context_;
+ 
+-#ifdef DNNL_AARCH64_USE_ACL
++#if defined(DNNL_AARCH64_USE_ACL) && defined(ENABLE_ONEDNN_OPENMP)
+   mutex primitive_execution_mu_;
+ #endif
+ };
+@@ -331,7 +331,7 @@ class MklPoolingBwdPrimitive : public MklPrimitive {
+   };
+ 
+   struct PoolingBwdContext context_;
+-#ifdef DNNL_AARCH64_USE_ACL
++#if defined(DNNL_AARCH64_USE_ACL) && defined(ENABLE_ONEDNN_OPENMP)
+   mutex primitive_execution_mu_;
+ #endif
+ };
+diff --git a/tensorflow/core/kernels/mkl/mkl_quantize_op.cc b/tensorflow/core/kernels/mkl/mkl_quantize_op.cc
+index f2f2234f5fa..fc33d5edba0 100644
+--- a/tensorflow/core/kernels/mkl/mkl_quantize_op.cc
++++ b/tensorflow/core/kernels/mkl/mkl_quantize_op.cc
+@@ -25,7 +25,7 @@ limitations under the License.
+ #include "tensorflow/core/graph/mkl_graph_util.h"
+ #include "tensorflow/core/lib/core/errors.h"
+ #include "tensorflow/core/util/mkl_util.h"
+-#ifdef DNNL_AARCH64_USE_ACL
++#if defined(DNNL_AARCH64_USE_ACL) && defined(ENABLE_ONEDNN_OPENMP)
+ #include "tensorflow/core/platform/mutex.h"
+ #endif
+ 
+@@ -111,7 +111,7 @@ class MklReorderWithScalePrimitive : public MklPrimitive {
+                void* scale_data,
+ #endif  // ENABLE_ONEDNN_V3
+                std::shared_ptr<stream> reorder_stream) {
+-#ifdef DNNL_AARCH64_USE_ACL
++#if defined(DNNL_AARCH64_USE_ACL) && defined(ENABLE_ONEDNN_OPENMP)
+     mutex_lock lock(primitive_execution_mu_);
+ #endif
+ #if !defined(ENABLE_ONEDNN_OPENMP) && !defined(ENABLE_ONEDNN_V3)
+@@ -202,7 +202,7 @@ class MklReorderWithScalePrimitive : public MklPrimitive {
+ #endif  // ENABLE_ONEDNN_V3
+   }
+ 
+-#ifdef DNNL_AARCH64_USE_ACL
++#if defined(DNNL_AARCH64_USE_ACL) && defined(ENABLE_ONEDNN_OPENMP)
+   mutex primitive_execution_mu_;
+ #endif
+ };
+diff --git a/tensorflow/core/kernels/mkl/mkl_relu_op.cc b/tensorflow/core/kernels/mkl/mkl_relu_op.cc
+index 24a0ae60fc0..fe58b746ac3 100644
+--- a/tensorflow/core/kernels/mkl/mkl_relu_op.cc
++++ b/tensorflow/core/kernels/mkl/mkl_relu_op.cc
+@@ -26,7 +26,7 @@ limitations under the License.
+ #include "tensorflow/core/framework/tensor.h"
+ #include "tensorflow/core/lib/core/errors.h"
+ #include "tensorflow/core/util/mkl_util.h"
+-#ifdef DNNL_AARCH64_USE_ACL
++#if defined(DNNL_AARCH64_USE_ACL) && defined(ENABLE_ONEDNN_OPENMP)
+ #include "tensorflow/core/platform/mutex.h"
+ #endif
+ 
+@@ -77,7 +77,7 @@ class MklEltwiseFwdPrimitive : public MklPrimitive {
+   //   dst_data:  output data buffer of dst
+   void Execute(const T* src_data, T* dst_data,
+                std::shared_ptr<stream> fwd_stream) {
+-#ifdef DNNL_AARCH64_USE_ACL
++#if defined(DNNL_AARCH64_USE_ACL) && defined(ENABLE_ONEDNN_OPENMP)
+     mutex_lock lock(primitive_execution_mu_);
+ #endif
+ #ifndef ENABLE_ONEDNN_OPENMP
+@@ -160,7 +160,7 @@ class MklEltwiseFwdPrimitive : public MklPrimitive {
+ 
+   struct EltwiseFwdContext context_;
+ 
+-#ifdef DNNL_AARCH64_USE_ACL
++#if defined(DNNL_AARCH64_USE_ACL) && defined(ENABLE_ONEDNN_OPENMP)
+   mutex primitive_execution_mu_;
+ #endif
+ };
+@@ -259,7 +259,7 @@ class MklEltwiseBwdPrimitive : public MklPrimitive {
+   //   diff_src_data:  output data buffer of diff_src
+   void Execute(const T* src_data, const T* diff_dst_data, T* diff_src_data,
+                std::shared_ptr<stream> bwd_stream) {
+-#ifdef DNNL_AARCH64_USE_ACL
++#if defined(DNNL_AARCH64_USE_ACL) && defined(ENABLE_ONEDNN_OPENMP)
+     mutex_lock lock(primitive_execution_mu_);
+ #endif
+ #ifndef ENABLE_ONEDNN_OPENMP
+@@ -368,7 +368,7 @@ class MklEltwiseBwdPrimitive : public MklPrimitive {
+ 
+   struct EltwiseBwdContext context_;
+ 
+-#ifdef DNNL_AARCH64_USE_ACL
++#if defined(DNNL_AARCH64_USE_ACL) && defined(ENABLE_ONEDNN_OPENMP)
+   mutex primitive_execution_mu_;
+ #endif
+ };
+diff --git a/tensorflow/core/kernels/mkl/mkl_softmax_op.cc b/tensorflow/core/kernels/mkl/mkl_softmax_op.cc
+index 9291d2c0991..48307bc8b3e 100644
+--- a/tensorflow/core/kernels/mkl/mkl_softmax_op.cc
++++ b/tensorflow/core/kernels/mkl/mkl_softmax_op.cc
+@@ -26,7 +26,7 @@ limitations under the License.
+ #include "tensorflow/core/lib/core/errors.h"
+ #include "tensorflow/core/util/mkl_util.h"
+ #include "tensorflow/core/util/tensor_format.h"
+-#ifdef DNNL_AARCH64_USE_ACL
++#if defined(DNNL_AARCH64_USE_ACL) && defined(ENABLE_ONEDNN_OPENMP)
+ #include "tensorflow/core/platform/mutex.h"
+ #endif
+ #include "third_party/eigen3/unsupported/Eigen/CXX11/Tensor"
+@@ -64,7 +64,7 @@ class MklSoftmaxPrimitive : public MklPrimitive {
+   //   dst_data:  output data buffer of dst
+   void Execute(const T* src_data, T* dst_data,
+                std::shared_ptr<stream> fwd_cpu_stream) {
+-#ifdef DNNL_AARCH64_USE_ACL
++#if defined(DNNL_AARCH64_USE_ACL) && defined(ENABLE_ONEDNN_OPENMP)
+     mutex_lock lock(primitive_execution_mu_);
+ #endif
+ #ifndef ENABLE_ONEDNN_OPENMP
+@@ -160,7 +160,7 @@ class MklSoftmaxPrimitive : public MklPrimitive {
+ 
+   struct SoftmaxFwdContext context_;
+ 
+-#ifdef DNNL_AARCH64_USE_ACL
++#if defined(DNNL_AARCH64_USE_ACL) && defined(ENABLE_ONEDNN_OPENMP)
+   mutex primitive_execution_mu_;
+ #endif
+ };
+diff --git a/tensorflow/core/util/mkl_threadpool.h b/tensorflow/core/util/mkl_threadpool.h
+index cedc828b98b..71e8bded620 100644
+--- a/tensorflow/core/util/mkl_threadpool.h
++++ b/tensorflow/core/util/mkl_threadpool.h
+@@ -83,11 +83,15 @@ struct MklDnnThreadPool : public threadpool_iface {
+                            ->tensorflow_cpu_worker_threads()
+                            ->workers->AsEigenThreadPool();
+     if (num_threads == -1) {
++#ifndef DNNL_AARCH64_USE_ACL
+       dnnl_threadpool_interop_set_max_concurrency(
+           eigen_interface_->NumThreads());
++#endif
+       num_threads_ = eigen_interface_->NumThreads();
+     } else {
++#ifndef DNNL_AARCH64_USE_ACL
+       dnnl_threadpool_interop_set_max_concurrency(num_threads);
++#endif
+       num_threads_ = num_threads;
+     }
+   }
+diff --git a/tensorflow/core/util/mkl_util.h b/tensorflow/core/util/mkl_util.h
+index 322991376f9..35f8cb47c20 100644
+--- a/tensorflow/core/util/mkl_util.h
++++ b/tensorflow/core/util/mkl_util.h
+@@ -40,7 +40,7 @@ limitations under the License.
+ #include "tensorflow/core/util/onednn_env_vars.h"
+ #include "tensorflow/core/util/padding.h"
+ #include "tensorflow/core/util/tensor_format.h"
+-#ifdef DNNL_AARCH64_USE_ACL
++#if defined(DNNL_AARCH64_USE_ACL) && defined(ENABLE_ONEDNN_OPENMP)
+ #include "tensorflow/core/platform/mutex.h"
+ #endif
+ 
+@@ -1824,7 +1824,7 @@ class LRUCache {
+   }
+ 
+   T* GetOp(const string& key) {
+-#ifdef DNNL_AARCH64_USE_ACL
++#if defined(DNNL_AARCH64_USE_ACL) && defined(ENABLE_ONEDNN_OPENMP)
+     mutex_lock lock(lru_mu_);
+ #endif
+     auto it = cache_.find(key);
+@@ -1840,7 +1840,7 @@ class LRUCache {
+   }
+ 
+   void SetOp(const string& key, T* op) {
+-#ifdef DNNL_AARCH64_USE_ACL
++#if defined(DNNL_AARCH64_USE_ACL) && defined(ENABLE_ONEDNN_OPENMP)
+     mutex_lock lock(lru_mu_);
+ #endif
+     if (lru_list_.size() >= capacity_) {
+@@ -1851,7 +1851,7 @@ class LRUCache {
+     lru_list_.push_front(key);
+     Entry entry(op, lru_list_.begin());
+     cache_.emplace(std::make_pair(key, std::move(entry)));
+-#ifdef DNNL_AARCH64_USE_ACL
++#if defined(DNNL_AARCH64_USE_ACL) && defined(ENABLE_ONEDNN_OPENMP)
+     FinishedAllocation(key);
+ #endif
+   }
+@@ -1864,7 +1864,7 @@ class LRUCache {
+     lru_list_.clear();
+   }
+ 
+-#ifdef DNNL_AARCH64_USE_ACL
++#if defined(DNNL_AARCH64_USE_ACL) && defined(ENABLE_ONEDNN_OPENMP)
+   bool IsAllocating(const string& key) {
+     mutex_lock lock(in_flight_mu_);
+     return in_flight_.find(key) != in_flight_.end();
+@@ -1929,7 +1929,7 @@ class LRUCache {
+   // entry, while the back of the list is the least recently accessed entry.
+   std::list<string> lru_list_;
+ 
+-#ifdef DNNL_AARCH64_USE_ACL
++#if defined(DNNL_AARCH64_USE_ACL) && defined(ENABLE_ONEDNN_OPENMP)
+   // Guards access to the cache and LRU list
+   mutex lru_mu_;
+ 
+@@ -1948,7 +1948,7 @@ class MklPrimitiveFactory {
+   ~MklPrimitiveFactory() {}
+ 
+   MklPrimitive* GetOp(const string& key) {
+-#ifndef DNNL_AARCH64_USE_ACL
++#if !defined(DNNL_AARCH64_USE_ACL) || (defined(DNNL_AARCH64_USE_ACL) && !defined(ENABLE_ONEDNN_OPENMP))
+     auto& lru_cache = MklPrimitiveFactory<T>::GetLRUCache();
+     return lru_cache.GetOp(key);
+ #else
+@@ -1984,7 +1984,7 @@ class MklPrimitiveFactory {
+   }
+ 
+   void SetOp(const string& key, MklPrimitive* op) {
+-#ifndef DNNL_AARCH64_USE_ACL
++#if !defined(DNNL_AARCH64_USE_ACL) || (defined(DNNL_AARCH64_USE_ACL) && !defined(ENABLE_ONEDNN_OPENMP))
+     auto& lru_cache = MklPrimitiveFactory<T>::GetLRUCache();
+     lru_cache.SetOp(key, op);
+ #else
+@@ -2034,7 +2034,7 @@ class MklPrimitiveFactory {
+  private:
+   static inline LRUCache<MklPrimitive>& GetLRUCache() {
+     static const int kCapacity = 1024;  // cache capacity
+-#ifndef DNNL_AARCH64_USE_ACL
++#if !defined(DNNL_AARCH64_USE_ACL) || (defined(DNNL_AARCH64_USE_ACL) && !defined(ENABLE_ONEDNN_OPENMP))
+     static thread_local LRUCache<MklPrimitive> lru_cache_(kCapacity);
+ #else
+     static LRUCache<MklPrimitive> lru_cache_(kCapacity);
+@@ -2042,7 +2042,7 @@ class MklPrimitiveFactory {
+     return lru_cache_;
+   }
+ 
+-#ifdef DNNL_AARCH64_USE_ACL
++#if defined(DNNL_AARCH64_USE_ACL) && defined(ENABLE_ONEDNN_OPENMP)
+   mutex primitive_creation_mu_;
+   condition_variable primitive_creation_cv_;
+ #endif

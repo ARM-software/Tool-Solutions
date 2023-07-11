@@ -65,7 +65,7 @@ where `<image name> `is the name of the image, i.e. `armswdev/tensorflow-arm-neo
   * Python 3.10 environment containing:
     - NumPy 1.21.5
     - SciPy 1.7.3
-    - TensorFlow 2.12
+    - TensorFlow unreleased, Git hash: 5c1dcfd
   * [Examples](./examples/README.md) that demonstrate how to run ML models
     - [MLCommons :tm:](https://mlcommons.org/en/) benchmarks with an optional patch to support benchmarking for TF oneDNN builds
     - TensorFlow Benchmarks
