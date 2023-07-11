@@ -1,0 +1,946 @@
+ *******************************************************************************
+ Copyright 2023 Arm Limited and affiliates.
+ SPDX-License-Identifier: Apache-2.0
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+ *******************************************************************************
+diff --git a/tensorflow/core/common_runtime/mkl_layout_pass.cc b/tensorflow/core/common_runtime/mkl_layout_pass.cc
+index dae6ce57bde..025cba5f89c 100644
+--- a/tensorflow/core/common_runtime/mkl_layout_pass.cc
++++ b/tensorflow/core/common_runtime/mkl_layout_pass.cc
+@@ -33,6 +33,7 @@ limitations under the License.
+ #include "absl/base/call_once.h"
+ #include "tensorflow/core/common_runtime/function.h"
+ #include "tensorflow/core/common_runtime/optimization_registry.h"
++#include "tensorflow/core/common_runtime/process_util.h"
+ #include "tensorflow/core/framework/node_def_util.h"
+ #include "tensorflow/core/framework/tensor.pb.h"
+ #include "tensorflow/core/graph/algorithm.h"
+@@ -44,6 +45,7 @@ limitations under the License.
+ #include "tensorflow/core/lib/gtl/map_util.h"
+ #include "tensorflow/core/lib/hash/hash.h"
+ #include "tensorflow/core/platform/logging.h"
++#include "tensorflow/core/util/mkl_heuristics.h"
+ #include "tensorflow/core/util/tensor_format.h"
+ #include "tensorflow/core/util/util.h"
+ 
+@@ -239,7 +241,7 @@ namespace tensorflow {
+ //
+ class MklLayoutRewritePass : public GraphOptimizationPass {
+  public:
+-  MklLayoutRewritePass() {
++  MklLayoutRewritePass() : num_intra_threads_(port::MaxParallelism()) {
+     // NOTE: names are alphabetically sorted.
+     csinfo_.addn = "AddN";
+     csinfo_.avg_pool = "AvgPool";
+@@ -317,6 +319,7 @@ class MklLayoutRewritePass : public GraphOptimizationPass {
+     csinfo_.mkl_native_pad_with_fused_conv2d = "_MklNativePadWithFusedConv2D";
+     csinfo_.mkl_pad_with_conv2d = "_MklPadWithConv2D";
+     csinfo_.mkl_pad_with_fused_conv2d = "_MklPadWithFusedConv2D";
++    csinfo_.mkl_swish = "_MklSwish";
+     csinfo_.pad = "Pad";
+     csinfo_.pad_with_conv2d = "__MklDummyPadWithConv2D";
+     csinfo_.pad_with_fused_conv2d = "__MklDummyPadWithFusedConv2D";
+@@ -380,6 +383,7 @@ class MklLayoutRewritePass : public GraphOptimizationPass {
+     csinfo_.mul = "Mul";
+     csinfo_.squared_difference = "SquaredDifference";
+     csinfo_.sub = "Sub";
++    csinfo_.sigmoid = "Sigmoid";
+     // End - element-wise ops. See note above.
+ 
+     const bool native_fmt = NativeFormatEnabled();
+@@ -425,9 +429,12 @@ class MklLayoutRewritePass : public GraphOptimizationPass {
+         {csinfo_.conjugate_transpose,
+          mkl_op_registry::GetMklOpName(csinfo_.conjugate_transpose),
+          CopyAttrsAll, AlwaysRewrite, kRewriteForOpNameChange});
+-    rinfo_.push_back(
+-        {csinfo_.conv2d, mkl_op_registry::GetMklOpName(csinfo_.conv2d),
+-         CopyAttrsConvCheckConstFilter, AlwaysRewrite, GetRewriteCause()});
++    rinfothr_.push_back(
++        {{csinfo_.conv2d, mkl_op_registry::GetMklOpName(csinfo_.conv2d),
++          CopyAttrsConvCheckConstFilter,
++          std::function<bool(const Node*)>(),  // we set this function to empty
++          GetRewriteCause()},
++         Conv2DRewrite});
+     rinfo_.push_back({csinfo_.conv2d_with_bias,
+                       native_fmt ? csinfo_.mkl_native_conv2d_with_bias
+                                  : csinfo_.mkl_conv2d_with_bias,
+@@ -487,10 +494,11 @@ class MklLayoutRewritePass : public GraphOptimizationPass {
+ 
+     // Using CopyAttrsAll for V3 on CPU, as there are no additional
+     // attributes.
+-    rinfo_.push_back(
+-        {csinfo_.fused_batch_norm_v3,
+-         mkl_op_registry::GetMklOpName(csinfo_.fused_batch_norm_v3),
+-         CopyAttrsAll, FusedBatchNormV3Rewrite, GetRewriteCause()});
++    rinfothr_.push_back(
++        {{csinfo_.fused_batch_norm_v3,
++          mkl_op_registry::GetMklOpName(csinfo_.fused_batch_norm_v3),
++          CopyAttrsAll, std::function<bool(const Node*)>(), GetRewriteCause()},
++         FusedBatchNormV3RewriteWithThreads});
+     rinfo_.push_back(
+         {csinfo_.fused_batch_norm_grad_v3,
+          mkl_op_registry::GetMklOpName(csinfo_.fused_batch_norm_grad_v3),
+@@ -501,11 +509,15 @@ class MklLayoutRewritePass : public GraphOptimizationPass {
+                       CopyAttrsAll, FusedBatchNormExRewrite,
+                       GetRewriteCause()});
+ #endif  // !ENABLE_ONEDNN_V3
+-    rinfo_.push_back({csinfo_.fused_conv2d,
+-                      native_fmt ? csinfo_.mkl_native_fused_conv2d
+-                                 : csinfo_.mkl_fused_conv2d,
+-                      CopyAttrsAllCheckConstFilter, FusedConv2DRewrite,
+-                      GetRewriteCause()});
++    rinfothr_.push_back(
++        {{csinfo_.fused_conv2d,
++          native_fmt ? csinfo_.mkl_native_fused_conv2d
++                     : csinfo_.mkl_fused_conv2d,
++          CopyAttrsAllCheckConstFilter,
++          std::function<bool(const Node*)>(),  // we set this function to empty
++          GetRewriteCause()},
++         FusedConv2DRewrite});
++
+     rinfo_.push_back({csinfo_.fused_conv3d, csinfo_.mkl_native_fused_conv3d,
+                       CopyAttrsAllCheckConstFilter, AlwaysRewrite,
+                       kRewriteForOpNameChange});
+@@ -808,6 +820,15 @@ class MklLayoutRewritePass : public GraphOptimizationPass {
+     RewriteCause rewrite_cause;
+   } RewriteInfo;
+ 
++  /// Structure that carries the original rewrite info, but
++  /// in this case it is using the function that can accept
++  /// what is number of threads that will be used to run
++  /// the operation in parallel.
++  typedef struct {
++    RewriteInfo rinfo;
++    std::function<bool(const Node*, const int)> rewrite_rule;
++  } RewriteInfoThreadCount;
++
+   /// Structure to specify a forward op, a backward op, and the slot numbers
+   /// in the forward and backward ops where we will add a workspace edge.
+   typedef struct {
+@@ -943,6 +964,7 @@ class MklLayoutRewritePass : public GraphOptimizationPass {
+     string mkl_native_pad_with_fused_conv2d;
+     string mkl_pad_with_conv2d;
+     string mkl_pad_with_fused_conv2d;
++    string mkl_swish;
+     string mul;
+     string pad;
+     string pad_with_conv2d;
+@@ -977,6 +999,7 @@ class MklLayoutRewritePass : public GraphOptimizationPass {
+     string relu6;
+     string relu6_grad;
+     string requantize;
++    string sigmoid;
+     string tanh;
+     string tanh_grad;
+     string transpose;
+@@ -991,6 +1014,11 @@ class MklLayoutRewritePass : public GraphOptimizationPass {
+  private:
+   /// Maintain info about nodes to rewrite
+   std::vector<RewriteInfo> rinfo_;
++  /// Maintain info about nodes to rewrite with additional
++  /// information that holds number of threads that should
++  /// be used to parallelise the kernel so that we can decide
++  /// whether it is worth rewriting op to run with oneDNN.
++  std::vector<RewriteInfoThreadCount> rinfothr_;
+ 
+   /// Maintain info about nodes to add workspace edge
+   std::vector<WorkSpaceInfo> wsinfo_;
+@@ -1004,6 +1032,9 @@ class MklLayoutRewritePass : public GraphOptimizationPass {
+   /// Maintain structure of constant strings
+   static ConstStringsInfo csinfo_;
+ 
++  /// Number of threads used for intra-parallelism.
++  int num_intra_threads_;
++
+  private:
+   // Is OpDef::ArgDef a list type? It could be N * T or list(type).
+   // Refer to opdef.proto for details of list type.
+@@ -1751,6 +1782,16 @@ class MklLayoutRewritePass : public GraphOptimizationPass {
+     return true;
+   }
+ 
++  static bool FusedBatchNormV3RewriteWithThreads(const Node* n, int threads) {
++    double mflops = CalculateNodeMFlops(n->attrs(), n->type_string());
++    double thr = FindRewriteThreshold(n->type_string(), threads);
++    if (mflops > 0 && mflops < thr) {
++      return false;
++    }
++
++    return FusedBatchNormV3Rewrite(n);
++  }
++
+   static bool FusedBatchNormExRewrite(const Node* n) {
+     DCHECK(n);
+ 
+@@ -1776,7 +1817,25 @@ class MklLayoutRewritePass : public GraphOptimizationPass {
+     return true;
+   }
+ 
+-  static bool FusedConv2DRewrite(const Node* n) {
++  static bool Conv2DRewrite(const Node* n, int threads) {
++    // Find out what are dimensions of the convolution,
++    // if dimensions are small we will not rewrite node
++    // to use oneDNN operations as overhead to call into oneDNN
++    // as data setup is higher then actual useful work we
++    // might end up doing.
++    double total_mflops = CalculateNodeMFlops(n->attrs(), n->type_string());
++    double thr = FindRewriteThreshold(n->type_string(), threads);
++
++    return true ? (total_mflops < 0 || total_mflops >= thr) : false;
++  }
++
++  static bool FusedConv2DRewrite(const Node* n, int threads) {
++    // Decide whether it is worth rewriting it to oneDNN operation
++    // due to overheads as they will dominate for small shapes.
++    if (!Conv2DRewrite(n, threads)) {
++      return false;
++    }
++
+     // MKL DNN currently doesn't support all fusions that grappler fuses
+     // together with Conv2D (ex. batchnorm). We rewrite _FusedConv2D only if
+     // it includes those we support.
+@@ -3489,10 +3548,12 @@ Status MklLayoutRewritePass::MergeNode(std::unique_ptr<Graph>* g, Node* m,
+   }
+   if ((m->type_string() == csinfo_.pad &&
+        (n->type_string() == csinfo_.conv2d ||
+-        (n->type_string() == csinfo_.fused_conv2d && FusedConv2DRewrite(n)))) ||
++        (n->type_string() == csinfo_.fused_conv2d &&
++         FusedConv2DRewrite(n, num_intra_threads_)))) ||
+       (n->type_string() == csinfo_.pad &&
+        (m->type_string() == csinfo_.conv2d ||
+-        (m->type_string() == csinfo_.fused_conv2d && FusedConv2DRewrite(m))))) {
++        (m->type_string() == csinfo_.fused_conv2d &&
++         FusedConv2DRewrite(m, num_intra_threads_))))) {
+     return this->MergePadWithConv2D(g, m, n);
+   }
+ 
+@@ -3811,6 +3872,13 @@ MklLayoutRewritePass::CheckForNodeRewrite(const Node* n) const {
+     }
+   }
+ 
++  for (auto rit = rinfothr_.cbegin(); rit != rinfothr_.cend(); ++rit) {
++    if (n->type_string().compare(rit->rinfo.name) == 0 &&
++        rit->rewrite_rule(n, num_intra_threads_)) {
++      return &(rit->rinfo);
++    }
++  }
++
+   // Else return not found.
+   return nullptr;
+ }
+@@ -4167,6 +4235,10 @@ Status MklLayoutRewritePass::Run(const GraphOptimizationPassOptions& options) {
+     return OkStatus();
+   }
+ 
++  if (options.session_options != nullptr) {
++    num_intra_threads_ =
++        options.session_options->config.intra_op_parallelism_threads();
++  }
+   auto process_graph = [&](std::unique_ptr<Graph>* g) {
+     // Get the ownership of a graph
+     std::unique_ptr<Graph>* ng = std::move(g);
+diff --git a/tensorflow/core/common_runtime/optimize_function_graph_utils.cc b/tensorflow/core/common_runtime/optimize_function_graph_utils.cc
+index 921eb3a4c06..222dab9efba 100644
+--- a/tensorflow/core/common_runtime/optimize_function_graph_utils.cc
++++ b/tensorflow/core/common_runtime/optimize_function_graph_utils.cc
+@@ -553,6 +553,13 @@ StatusOr<OptimizedFunctionGraphInfo> OptimizeFunctionGraph(
+       options.shape_inference_on_tfe_dialect_import;
+   optimization_options.debug_filename_prefix = function_name;
+ 
++  if (cpu_device->tensorflow_cpu_worker_threads() != nullptr) {
++    // Forward to the optimisation pass number of intra threads that are used to
++    // parallelise operations.
++    session_options.config.set_intra_op_parallelism_threads(
++        cpu_device->tensorflow_cpu_worker_threads()->num_threads);
++  }
++
+   DEBUG_DATA_DUMPER()->DumpGraph(function_name, kDebugGroupMain,
+                                  "before_pre_placement_passes", graph.get(),
+                                  &reachable_lib_def, false);
+diff --git a/tensorflow/core/graph/mkl_graph_util.h b/tensorflow/core/graph/mkl_graph_util.h
+index 886c4051c8c..8cf7788327a 100644
+--- a/tensorflow/core/graph/mkl_graph_util.h
++++ b/tensorflow/core/graph/mkl_graph_util.h
+@@ -288,6 +288,7 @@ static inline bool IsMklElementWiseOp(const string& op_name, DataType T) {
+                  0 == op_name.compare(GetMklOpName("Sub")) ||
+                  0 == op_name.compare(GetMklOpName("Mul")) ||
+                  0 == op_name.compare(GetMklOpName("Maximum")) ||
++                 0 == op_name.compare(GetMklOpName("Sigmoid")) ||
+                  0 == op_name.compare(GetMklOpName("SquaredDifference")));
+ 
+   return result;
+diff --git a/tensorflow/core/grappler/grappler_item.h b/tensorflow/core/grappler/grappler_item.h
+index c7faf23566a..8fcfba288f2 100644
+--- a/tensorflow/core/grappler/grappler_item.h
++++ b/tensorflow/core/grappler/grappler_item.h
+@@ -27,6 +27,7 @@ limitations under the License.
+ #include "tensorflow/core/framework/tensor.h"
+ #include "tensorflow/core/framework/variable.pb.h"
+ #include "tensorflow/core/protobuf/queue_runner.pb.h"
++#include "tensorflow/tsl/platform/cpu_info.h"
+ 
+ namespace tensorflow {
+ namespace grappler {
+@@ -102,6 +103,9 @@ struct GrapplerItem {
+ 
+     // Mark the grapper optimization run in eager mode or not.
+     bool is_eager_mode = false;
++
++    // Number of intra threads used to run operation.
++    int intra_op_parallelism_threads = tsl::port::MaxParallelism();
+   };
+ 
+   const std::unordered_set<string>& devices() const;
+diff --git a/tensorflow/core/grappler/optimizers/meta_optimizer.cc b/tensorflow/core/grappler/optimizers/meta_optimizer.cc
+index 605b18bf102..0680d25f5f8 100644
+--- a/tensorflow/core/grappler/optimizers/meta_optimizer.cc
++++ b/tensorflow/core/grappler/optimizers/meta_optimizer.cc
+@@ -1383,6 +1383,12 @@ Status OptimizeGraph(
+   tensorflow::grappler::GrapplerItem item;
+   item.id = grappler_item_id;
+   item.optimization_options() = optimization_options;
++  if (cpu_device->tensorflow_cpu_worker_threads() != nullptr) {
++    // Forward to the optimisation pass number of intra threads that are used to
++    // parallelise operations.
++    item.optimization_options().intra_op_parallelism_threads =
++        cpu_device->tensorflow_cpu_worker_threads()->num_threads;
++  }
+ 
+   // Add all available devices so that inlined function can be placed.
+   for (const Device* d : device_set.devices()) {
+diff --git a/tensorflow/core/grappler/optimizers/remapper.cc b/tensorflow/core/grappler/optimizers/remapper.cc
+index 6706f1c97ff..e9488d3358f 100644
+--- a/tensorflow/core/grappler/optimizers/remapper.cc
++++ b/tensorflow/core/grappler/optimizers/remapper.cc
+@@ -40,6 +40,9 @@ limitations under the License.
+ #include "tensorflow/core/protobuf/rewriter_config.pb.h"
+ #include "tensorflow/core/util/env_var.h"
+ #include "tensorflow/core/util/use_cudnn.h"
++#ifdef INTEL_MKL
++#include "tensorflow/core/util/mkl_heuristics.h"
++#endif  // INTEL_MKL
+ #include "tensorflow/core/util/util.h"
+ 
+ #if GOOGLE_CUDA
+@@ -733,6 +736,23 @@ bool IsBiasSemanticAdd(const RemapperContext& ctx,
+   return false;
+ }
+ 
++void AddInputShapesAttr(const RemapperContext& ctx, int node_index) {
++  auto mutable_node = ctx.graph_view.graph()->mutable_node(node_index);
++
++  AttrValue attr_input_shape;
++  auto tensor_properties =
++      ctx.graph_properties.GetInputProperties(mutable_node->name());
++  for (const auto& tensor_property : tensor_properties) {
++    TensorShapeProto* proto = attr_input_shape.mutable_list()->add_shape();
++    *proto = tensor_property.shape();
++  }
++
++  if (IsMKLEnabled() && tensor_properties.size() > 0) {
++    (*mutable_node->mutable_attr())["_input_shapes"] =
++        std::move(attr_input_shape);
++  }
++}
++
+ bool FindContractionWithBias(const RemapperContext& ctx, int node_index,
+                              ContractionWithBiasAdd* matched,
+                              bool check_device_compatible = true) {
+@@ -2762,6 +2782,11 @@ void CopyConv2DAttributes(const NodeDef& conv2d, NodeDef* fused_conv2d,
+   (*attr)["dilations"] = src_attr.at("dilations");
+   (*attr)["data_format"] = src_attr.at("data_format");
+   (*attr)["use_cudnn_on_gpu"] = src_attr.at("use_cudnn_on_gpu");
++  // When copying attributes check whether this convolution has
++  // attribute that describes the shapes on which it is working.
++  if (IsMKLEnabled() && src_attr.find("_input_shapes") != src_attr.end()) {
++    (*attr)["_input_shapes"] = src_attr.at("_input_shapes");
++  }
+   // Copy LeakyRelu's attr alpha to FusedConv2D's attr leakyrelu_alpha
+   if (activation != nullptr && IsLeakyRelu(*activation)) {
+     auto& activation_attr = activation->attr();
+@@ -2914,6 +2939,7 @@ Status AddFusedContractionNode(RemapperContext* ctx,
+   fused_op.add_input(bias_add.input(matched.bias_port));  // 2: bias
+   if (IsConv2D(contraction)) {
+     fused_op.set_op(kFusedConv2D);
++    AddInputShapesAttr(*ctx, matched.contraction);
+     CopyConv2DAttributes(contraction, &fused_op);
+   } else if (IsDepthwiseConv2dNative(contraction)) {
+     fused_op.set_op(kFusedDepthwiseConv2dNative);
+@@ -3017,6 +3043,7 @@ Status AddFusedContractionNode(
+ 
+   if (IsConv2D(contraction)) {
+     fused_op.set_op(kFusedConv2D);
++    AddInputShapesAttr(*ctx, matched.contraction);
+     // leaky relu has a special attribute alpha
+     CopyConv2DAttributes(contraction, &fused_op, &activation);
+   } else if (IsDepthwiseConv2dNative(contraction)) {
+@@ -3071,6 +3098,7 @@ Status AddFusedConvNode(RemapperContext* ctx,
+ 
+   if (IsConv2D(contraction)) {
+     fused_conv.set_op(kFusedConv2D);
++    AddInputShapesAttr(*ctx, matched.contraction);
+     CopyConv2DAttributes(contraction, &fused_conv);
+   } else if (IsConv3D(contraction)) {
+     fused_conv.set_op(kFusedConv3D);
+@@ -3121,6 +3149,7 @@ Status AddFusedConv2DNode(RemapperContext* ctx,
+   fused_conv2d.add_input(fused_batch_norm.input(3));  // 4: mean
+   fused_conv2d.add_input(fused_batch_norm.input(4));  // 5: variance
+ 
++  AddInputShapesAttr(*ctx, matched.contraction);
+   CopyConv2DAttributes(contraction, &fused_conv2d);
+   SetFusedOpAttributes(&fused_conv2d, {"FusedBatchNorm"},
+                        /*num_args=*/4, /*epsilon=*/matched.epsilon);
+@@ -3164,6 +3193,7 @@ Status AddFusedConv2DNode(RemapperContext* ctx,
+   fused_conv2d.add_input(fused_batch_norm.input(3));  // 4: mean
+   fused_conv2d.add_input(fused_batch_norm.input(4));  // 5: variance
+ 
++  AddInputShapesAttr(*ctx, matched.contraction);
+   CopyConv2DAttributes(contraction, &fused_conv2d, &activation);
+   SetFusedOpAttributes(&fused_conv2d, {"FusedBatchNorm", activation.op()},
+                        /*num_args=*/4, /*epsilon=*/matched.epsilon);
+@@ -3209,6 +3239,7 @@ Status AddFusedContractionNode(RemapperContext* ctx,
+ 
+   if (IsConv2D(contraction)) {
+     contraction_node.set_op(kFusedConv2D);
++    AddInputShapesAttr(*ctx, matched.contraction);
+     CopyConv2DAttributes(contraction, &contraction_node);
+   } else if (IsMatMul(contraction)) {
+     contraction_node.set_op(kFusedMatMul);
+@@ -3309,6 +3340,7 @@ Status AddFusedContractionNode(
+ 
+   if (IsConv2D(contraction)) {
+     fused_conv.set_op(kFusedConv2D);
++    AddInputShapesAttr(*ctx, matched.contraction);
+     CopyConv2DAttributes(contraction, &fused_conv);
+   } else if (IsConv3D(contraction)) {
+     fused_conv.set_op(kFusedConv3D);
+@@ -3366,6 +3398,7 @@ Status FuseConv2DSwish(RemapperContext* ctx,
+     SetFusedOpAttributes(&fused_op, {"FusedBatchNorm", "_MklSwish"},
+                          /*num_args=*/4, /*epsilon=*/epsilon);
+   }
++  AddInputShapesAttr(*ctx, matched_nodes_map.at("conv"));
+   CopyConv2DAttributes(*conv2d, &fused_op);
+ 
+   utils::Mutation* mutation = ctx->graph_view.GetMutationBuilder();
+@@ -4368,7 +4401,9 @@ bool RequiresInferredShapes(const RemapperContext& ctx, int node_index,
+   if (IsMKLEnabled())
+     return is_batch_norm_candidate() || is_batch_norm_fusion_candidate() ||
+            IsContractionWithAdd(ctx, node_index) ||
+-           is_act_biasadd_conv_candidate();
++           is_act_biasadd_conv_candidate() ||
++           IsBiasAdd(*node_def) ||
++           IsTranspose(*node_def);
+ 
+   return is_act_biasadd_conv_candidate() || is_batch_norm_candidate() ||
+          is_batch_norm_fusion_candidate() ||
+@@ -4391,6 +4426,8 @@ Status Remapper::Optimize(Cluster* cluster, const GrapplerItem& item,
+       ctx.graph_view.SortTopologically(/*ignore_cycles=*/false, {}));
+ 
+   const int num_nodes = item.graph.node_size();
++  const int intra_op_parallelism_threads =
++      item.optimization_options().intra_op_parallelism_threads;
+   // Skip nodes that were invalidated by a remapper, e.g. do not process BiasAdd
+   // and Activation nodes that were fused into a Conv2D node.
+   std::vector<bool> invalidated_nodes(num_nodes);
+@@ -4423,6 +4460,17 @@ Status Remapper::Optimize(Cluster* cluster, const GrapplerItem& item,
+     ContractionWithActivation contract_with_activation;
+     ContractionWithBiasAndAddActivation contract_with_bias_and_add_activation;
+ 
++    // Store dimensions so that they can be retrieved later in
++    // mkl_layout_rewrite_pass when deciding whether to rewrite node.
++    if (IsConv2D(ctx.graph_view.graph()->node(i)) ||
++        IsFusedBatchNorm(ctx.graph_view.graph()->node(i)) ||
++        IsDepthwiseConv2dNative(ctx.graph_view.graph()->node(i)) ||
++        IsBiasAdd(ctx.graph_view.graph()->node(i)) ||
++        IsTranspose(ctx.graph_view.graph()->node(i)) ||
++        IsSigmoid(ctx.graph_view.graph()->node(i))) {
++      AddInputShapesAttr(ctx, i);
++    }
++
+     if (IsMKLEnabled()) {
+       // Remap Conv2D+BiasAdd+Add+relu into the _FusedConv2D.
+       // or Remap Conv3D+BiasAdd+Add+relu into _FusedConv3D
+@@ -4520,10 +4568,34 @@ Status Remapper::Optimize(Cluster* cluster, const GrapplerItem& item,
+       std::set<int> sigmoidmul_remove_node_indices;
+       if (FindSigmoidAndMul(&ctx, i, &sigmoidmul_matched_nodes_map,
+                             &sigmoidmul_remove_node_indices)) {
+-        TF_RETURN_IF_ERROR(ReplaceSigmoidMulWithSwish(
+-            &ctx, sigmoidmul_matched_nodes_map, sigmoidmul_remove_node_indices,
+-            &invalidated_nodes, &nodes_to_delete));
+-        continue;
++        bool replace = true;
++#ifdef DNNL_AARCH64_USE_ACL
++        // Need to check whether the cost of rewriting node
++        // to execute using oneDNN kernel will be amortised
++        // based on the size of the input
++        const int sigmoid_idx = sigmoidmul_matched_nodes_map.at("sigmoid");
++        // We need to infer what is the shape of sigmoid
++        AddInputShapesAttr(ctx, sigmoid_idx);
++        const NodeDef* sigmoid = ctx.graph_view.GetNode(sigmoid_idx)->node();
++
++        double total_mflops =
++            CalculateNodeMFlops(AttrSlice(*sigmoid), "Sigmoid");
++        double thr =
++            FindRewriteThreshold("Sigmoid", intra_op_parallelism_threads);
++
++        if (total_mflops != -1 && total_mflops < thr) {
++          // The overhead of using oneDNN kernel is not amortized
++          // so we are not going to rewrite node
++          replace = false;
++        }
++#endif
++        if (replace) {
++          TF_RETURN_IF_ERROR(
++              ReplaceSigmoidMulWithSwish(&ctx, sigmoidmul_matched_nodes_map,
++                                         sigmoidmul_remove_node_indices,
++                                         &invalidated_nodes, &nodes_to_delete));
++          continue;
++        }
+       }
+ 
+       // Remap smaller ops from layernorm python api into _MklLayerNorm
+diff --git a/tensorflow/core/util/BUILD b/tensorflow/core/util/BUILD
+index 7076340d5a5..b6193a71d0f 100644
+--- a/tensorflow/core/util/BUILD
++++ b/tensorflow/core/util/BUILD
+@@ -11,6 +11,7 @@ load(
+     "check_deps",
+     "tf_cc_test",
+     "tf_cc_tests",
++    "tf_cc_test_mkl",
+     "tf_copts",
+     "tf_cuda_library",
+     "tf_cuda_only_cc_test",
+@@ -163,6 +164,7 @@ filegroup(
+         "matmul_autotune.h",
+         "matmul_bcast.h",
+         "mirror_pad_mode.h",
++        "mkl_heuristics.h",
+         "mkl_threadpool.h",
+         "mkl_util.h",
+         "onednn_env_vars.h",
+@@ -296,6 +298,7 @@ filegroup(
+ filegroup(
+     name = "mkl_util_hdrs",
+     srcs = [
++        "mkl_heuristics.h",
+         "mkl_threadpool.h",
+         "mkl_util.h",
+         "onednn_env_vars.h",
+@@ -958,6 +961,21 @@ tf_cc_test(
+     ],
+ )
+ 
++tf_cc_test_mkl(
++    name = "mkl_heuristics_test",
++    size = "small",
++    srcs = ["mkl_heuristics_test.cc"],
++    linkstatic = 1,  # Fixes dyld error on MacOS.
++    deps = [
++        "//tensorflow/core:framework_lite",
++        "//tensorflow/core:test",
++        "//tensorflow/core:test_main",
++        "//tensorflow/core:graph",
++        "//tensorflow/core:framework",
++        "//tensorflow/core/kernels:ops_testutil",
++    ],
++)
++
+ # Proto libraries.
+ tf_proto_library(
+     name = "test_log_proto",
+diff --git a/tensorflow/core/util/mkl_heuristics.h b/tensorflow/core/util/mkl_heuristics.h
+new file mode 100644
+index 00000000000..162dbe81331
+--- /dev/null
++++ b/tensorflow/core/util/mkl_heuristics.h
+@@ -0,0 +1,123 @@
++/* Copyright 2023 The TensorFlow Authors. All Rights Reserved.
++
++Licensed under the Apache License, Version 2.0 (the "License");
++you may not use this file except in compliance with the License.
++You may obtain a copy of the License at
++
++    http://www.apache.org/licenses/LICENSE-2.0
++
++Unless required by applicable law or agreed to in writing, software
++distributed under the License is distributed on an "AS IS" BASIS,
++WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++See the License for the specific language governing permissions and
++limitations under the License.
++==============================================================================*/
++
++// This file contains heuristics data and methods that are used to
++// decide whether to rewrite node to use oneDNN kernels
++
++#ifndef TENSORFLOW_CORE_UTIL_MKL_HEURISTICS_H
++#define TENSORFLOW_CORE_UTIL_MKL_HEURISTICS_H_
++#ifdef INTEL_MKL
++
++#include "tensorflow/tsl/platform/cpu_info.h"
++
++namespace tensorflow {
++
++struct RewriteThreshold {
++  string op;
++  int cpu_family;
++  int cpu_model_num;
++  // The model that is used to decide whether it is worth
++  // accelerating operations using oneDNN is:
++  //
++  // threshold = thread_synchronisation * thread_num + framework_tax
++  //
++  // This finds threshold when framework overhead and thread synchronisations
++  // are amortized with amount of computation that has to be performed.
++  // If we are below this threshold then we will not rewrite the operation to
++  // to be run using oneDNN primitive.
++  struct PerformanceParameters {
++    double thread_sync_cost;
++    double framework_cost;
++  } params;
++};
++
++// Table storing thread synchronization and framework overhead costs on each CPU
++// architecture for each oneNN-eligible operation. Our heuristics use these
++// costs to determine whether we should rewrite the operation to use oneDNN.
++static const RewriteThreshold rewrite_thresholds[] = {
++#ifdef DNNL_AARCH64_USE_ACL
++    {"Conv2D", 0x41, 0xd40, {0.9349, 22.603}},
++    {"_FusedConv2D", 0x41, 0xd40, {0.9349, 22.603}},
++    {"FusedBatchNormV3", 0x41, 0xd40, {0.3223, -0.8822}},
++    {"Sigmoid", 0x41, 0xd40, {0.0, 0.064736}},
++#endif  // DNNL_AARCH64_USE_ACL
++    {"", 0x0, 0x0, {0, 0}}};
++
++static double FindRewriteThreshold(const string node_name, int threads) {
++  int cpu_family_ = tsl::port::CPUFamily();
++  int cpu_model_num_ = tsl::port::CPUModelNum();
++
++  if (threads == 0) {
++    // if we do not have information how many threads are used
++    // to parallelise operation we revert to the old behaviour
++    return 0;
++  }
++
++  for (const RewriteThreshold* i = rewrite_thresholds;
++       i->op != "" && threads > 0; i++) {
++    if (node_name == i->op && cpu_family_ == i->cpu_family &&
++        cpu_model_num_ == i->cpu_model_num) {
++      return i->params.thread_sync_cost * threads + i->params.framework_cost;
++    }
++  }
++
++  return 0;
++}
++
++static double CalculateNodeMFlops(const AttrSlice& attrs,
++                                  const string node_name) {
++  // Check if we can obtained dimensions for this node.
++  std::vector<const TensorShapeProto*> shape_attrs;
++  if (!TryGetNodeAttr(attrs, "_input_shapes", &shape_attrs)) {
++    // We can't obtain shape so we will revert to default behaviour
++    // to rewrite node.
++    return -1;
++  }
++
++  if ((node_name == "Conv2D" || node_name == "_FusedConv2D") &&
++      shape_attrs.size() == 2) {
++    TensorShape input_shape, filter_shape;
++    if (TensorShape::BuildTensorShape(*shape_attrs[0], &input_shape) !=
++        tsl::OkStatus()) {
++      return -1;
++    }
++    if (TensorShape::BuildTensorShape(*shape_attrs[1], &filter_shape) !=
++        tsl::OkStatus()) {
++      return -1;
++    }
++
++    // MFLOPS = N * H * W * C * FH * FW * FC / 1e6.
++    return input_shape.dim_size(0) * input_shape.dim_size(1) *
++           input_shape.dim_size(2) * input_shape.dim_size(3) *
++           filter_shape.dim_size(0) * filter_shape.dim_size(1) *
++           filter_shape.dim_size(3) / (double)1e6;
++  } else if ((node_name == "FusedBatchNormV3" || node_name == "Sigmoid") &&
++             shape_attrs.size() >= 1) {
++    TensorShape input_shape;
++    if (TensorShape::BuildTensorShape(*shape_attrs[0], &input_shape) !=
++        tsl::OkStatus()) {
++      return -1;
++    }
++    return input_shape.dim_size(0) * input_shape.dim_size(1) *
++           input_shape.dim_size(2) * input_shape.dim_size(3) / (double)1e6;
++  }
++
++  return -1;
++}
++
++}  // namespace tensorflow
++
++#endif  // INTEL_MKL
++#endif  // TENSORFLOW_CORE_UTIL_MKL_HEURISTICS_H_
+diff --git a/tensorflow/core/util/mkl_heuristics_test.cc b/tensorflow/core/util/mkl_heuristics_test.cc
+new file mode 100644
+index 00000000000..5dfdd1fa24a
+--- /dev/null
++++ b/tensorflow/core/util/mkl_heuristics_test.cc
+@@ -0,0 +1,120 @@
++/* Copyright 2017 The TensorFlow Authors. All Rights Reserved.
++
++Licensed under the Apache License, Version 2.0 (the "License");
++you may not use this file except in compliance with the License.
++You may obtain a copy of the License at
++
++    http://www.apache.org/licenses/LICENSE-2.0
++
++Unless required by applicable law or agreed to in writing, software
++distributed under the License is distributed on an "AS IS" BASIS,
++WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++See the License for the specific language governing permissions and
++limitations under the License.
++==============================================================================*/
++
++#ifdef INTEL_MKL
++#define EIGEN_USE_THREADS
++
++#include "tensorflow/core/util/mkl_heuristics.h"
++
++#include "tensorflow/core/framework/node_def.pb.h"
++#include "tensorflow/core/kernels/ops_testutil.h"
++#include "tensorflow/core/platform/test.h"
++
++namespace tensorflow {
++
++namespace {
++
++TEST(MklHeuristicsTest, MklCalculateMFlops) {
++  int batch = 8;
++  int width = 32;
++  int height = 32;
++  int in_depth = 3;
++
++  int filter_h = 3;
++  int filter_w = 3;
++  int out_depth = 64;
++
++  // Test calculation for number of MFLOPs for convolution
++  AttrValue attr_input_shape;
++  TensorShapeProto* proto = attr_input_shape.mutable_list()->add_shape();
++  proto->add_dim()->set_size(batch);
++  proto->add_dim()->set_size(width);
++  proto->add_dim()->set_size(height);
++  proto->add_dim()->set_size(in_depth);
++  proto = attr_input_shape.mutable_list()->add_shape();
++  proto->add_dim()->set_size(filter_h);
++  proto->add_dim()->set_size(filter_w);
++  proto->add_dim()->set_size(in_depth);
++  proto->add_dim()->set_size(out_depth);
++
++  NodeDef ndef;
++
++  // If node doesn't have any _input_shapes it should return -1
++  double calculated_empty_mflops =
++      CalculateNodeMFlops(AttrSlice(ndef), "Conv2D");
++  EXPECT_EQ(calculated_empty_mflops, -1);
++
++  (*ndef.mutable_attr())["_input_shapes"] = attr_input_shape;
++
++  double conv_calculated_mflops =
++      CalculateNodeMFlops(AttrSlice(ndef), "Conv2D");
++  double expected_conv_mflops = batch * width * height * in_depth * filter_h *
++                                filter_w * out_depth / double(1e6);
++  EXPECT_EQ(conv_calculated_mflops, expected_conv_mflops);
++
++  // We should get the same calculation for fused convolution too
++  double fused_calculated_mflops =
++      CalculateNodeMFlops(AttrSlice(ndef), "_FusedConv2D");
++  EXPECT_EQ(conv_calculated_mflops, expected_conv_mflops);
++
++  // Finally calculate for sigmoid number of MFLOPS
++  double sigmoid_calculated_mflops =
++      CalculateNodeMFlops(AttrSlice(ndef), "Sigmoid");
++  double expected_sigmoid_mflops =
++      batch * width * height * in_depth / double(1e6);
++  EXPECT_EQ(sigmoid_calculated_mflops, expected_sigmoid_mflops);
++}
++
++#ifdef DNNL_AARCH64_USE_ACL
++TEST(MklHeuristicsTest, MklThresholds) {
++  int cpu_family = tsl::port::CPUFamily();
++  int cpu_model_num = tsl::port::CPUModelNum();
++
++  int neoverse_v1_family = 0x41;
++  int neoverse_v1_model = 0xd40;
++
++  string op_type = "Conv2D";
++
++  if (neoverse_v1_family == cpu_family && neoverse_v1_model == cpu_model_num) {
++    double thread_sync_cost = -1;
++    double framework_cost = -1;
++    for (const RewriteThreshold* i = rewrite_thresholds; i->op != ""; i++) {
++      if (i->op == op_type) {
++        thread_sync_cost = i->params.thread_sync_cost;
++        framework_cost = i->params.framework_cost;
++        break;
++      }
++    }
++
++    EXPECT_NE(thread_sync_cost, -1);
++    EXPECT_NE(thread_sync_cost, -1);
++
++    int no_threads = 0;
++    double calculated_threshold_zero_threads =
++        FindRewriteThreshold(op_type, no_threads);
++    EXPECT_EQ(calculated_threshold_zero_threads, 0);
++
++    int threads = 8;
++    double calculated_threshold = FindRewriteThreshold(op_type, threads);
++    double expected_threshold = threads * thread_sync_cost + framework_cost;
++    EXPECT_EQ(expected_threshold, calculated_threshold);
++  }
++}
++#endif  // DNNL_AARCG64_USE_ACL
++
++}  // namespace
++}  // namespace tensorflow
++
++#endif  // INTEL_MKL
+\ No newline at end of file
+diff --git a/tensorflow/tsl/platform/cpu_info.cc b/tensorflow/tsl/platform/cpu_info.cc
+index fae0be99ac2..1f9d6905fe4 100644
+--- a/tensorflow/tsl/platform/cpu_info.cc
++++ b/tensorflow/tsl/platform/cpu_info.cc
+@@ -22,6 +22,13 @@ limitations under the License.
+ #if defined(PLATFORM_IS_X86)
+ #include <mutex>  // NOLINT
+ #endif
++#if defined(PLATFORM_IS_ARM64)
++#include <sys/auxv.h>
++#ifndef HWCAP_CPUID
++#define HWCAP_CPUID (1 << 11)
++#endif
++#include <fstream>
++#endif
+ 
+ // SIMD extension querying is only available on x86.
+ #ifdef PLATFORM_IS_X86
+@@ -345,6 +352,89 @@ void InitCPUIDInfo() {
+ 
+ #endif  // PLATFORM_IS_X86
+ 
++#ifdef PLATFORM_IS_ARM64
++
++class CPUIDInfo;
++void InitCPUIDInfo();
++
++CPUIDInfo* cpuid = nullptr;
++
++// Structure for basic CPUID info.
++class CPUIDInfo {
++ public:
++  CPUIDInfo() : implementer_(0), variant_(0), cpunum_(0) {}
++
++  static void Initialize() {
++    // Initialize cpuid struct.
++    if (cpuid != nullptr) {
++      return;
++    }
++
++    cpuid = new CPUIDInfo;
++
++    if (!(getauxval(AT_HWCAP) & HWCAP_CPUID)) {
++      return;
++    }
++
++    std::ifstream CPUspresent;
++    CPUspresent.open("/sys/devices/system/cpu/present", std::ios::in);
++    int present_cpu = -1;
++    if (CPUspresent.is_open()) {
++      std::string line;
++      if (bool(getline(CPUspresent, line))) {
++        // We just need to find one CPU that is active
++        // from which we can read MIDR register to find
++        // implement, variant and revision information.
++        auto ending = line.end();
++        for (auto i = line.begin(); i < line.end(); ++i) {
++          if (*i == '-' || *i == ',') {
++            ending = i;
++            break;
++          }
++        }
++        line.erase(ending, line.end());
++        // That should be the fist number.
++        present_cpu = std::stoi(line);
++      }
++    }
++
++    if (present_cpu == -1) {
++      return;
++    }
++
++    std::stringstream str;
++    str << "/sys/devices/system/cpu/cpu" << present_cpu
++        << "/regs/identification/midr_el1";
++    std::ifstream midr_el1_file(str.str(), std::ios::in);
++    if (midr_el1_file.is_open()) {
++      std::string line;
++      if (bool(getline(midr_el1_file, line))) {
++        uint32 midr_el1 = std::stoul(line, nullptr, 16);
++
++        // Unpack variant and CPU ID.
++        cpuid->implementer_ = (midr_el1 >> 24) & 0xFF;
++        cpuid->variant_ = (midr_el1 >> 20) & 0xF;
++        cpuid->cpunum_ = (midr_el1 >> 4) & 0xFFF;
++      }
++    }
++  }
++
++  int implementer() const { return implementer_; }
++  int cpunum() const { return cpunum_; }
++
++ private:
++  int implementer_;
++  int variant_;
++  int cpunum_;
++};
++
++absl::once_flag cpuid_once_flag;
++
++void InitCPUIDInfo() {
++  absl::call_once(cpuid_once_flag, CPUIDInfo::Initialize);
++}
++
++#endif
+ }  // namespace
+ 
+ bool TestCPUFeature(CPUFeature feature) {
+@@ -368,6 +458,9 @@ int CPUFamily() {
+ #ifdef PLATFORM_IS_X86
+   InitCPUIDInfo();
+   return cpuid->family();
++#elif defined(PLATFORM_IS_ARM64)
++  InitCPUIDInfo();
++  return cpuid->implementer();
+ #else
+   return 0;
+ #endif
+@@ -377,6 +470,9 @@ int CPUModelNum() {
+ #ifdef PLATFORM_IS_X86
+   InitCPUIDInfo();
+   return cpuid->model_num();
++#elif defined(PLATFORM_IS_ARM64)
++  InitCPUIDInfo();
++  return cpuid->cpunum();
+ #else
+   return 0;
+ #endif

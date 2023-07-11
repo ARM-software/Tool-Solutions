@@ -1,0 +1,109 @@
+ *******************************************************************************
+ Copyright 2023 Arm Limited and affiliates.
+ SPDX-License-Identifier: Apache-2.0
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+ *******************************************************************************
+diff --git a/tensorflow/core/common_runtime/mkl_layout_pass.cc b/tensorflow/core/common_runtime/mkl_layout_pass.cc
+index 8aeb877e868..dae6ce57bde 100644
+--- a/tensorflow/core/common_runtime/mkl_layout_pass.cc
++++ b/tensorflow/core/common_runtime/mkl_layout_pass.cc
+@@ -396,7 +396,7 @@ class MklLayoutRewritePass : public GraphOptimizationPass {
+ #endif  // !ENABLE_ONEDNN_V3
+     rinfo_.push_back({csinfo_.avg_pool,
+                       mkl_op_registry::GetMklOpName(csinfo_.avg_pool),
+-                      CopyAttrsAll, AlwaysRewrite, GetRewriteCause()});
++                      CopyAttrsAll, RewriteIfX86, GetRewriteCause()});
+     rinfo_.push_back({csinfo_.avg_pool_grad,
+                       mkl_op_registry::GetMklOpName(csinfo_.avg_pool_grad),
+                       CopyAttrsAll, AlwaysRewrite, GetRewriteCause()});
+@@ -722,7 +722,7 @@ class MklLayoutRewritePass : public GraphOptimizationPass {
+ #endif  // !ENABLE_ONEDNN_V3
+     rinfo_.push_back({csinfo_.softmax,
+                       mkl_op_registry::GetMklOpName(csinfo_.softmax),
+-                      CopyAttrsAll, AlwaysRewrite, GetRewriteCause()});
++                      CopyAttrsAll, RewriteIfX86, GetRewriteCause()});
+ 
+ #ifndef ENABLE_ONEDNN_V3
+     rinfo_.push_back({csinfo_.squared_difference,
+@@ -735,7 +735,7 @@ class MklLayoutRewritePass : public GraphOptimizationPass {
+ #endif  // !ENABLE_ONEDNN_V3
+     rinfo_.push_back({csinfo_.transpose,
+                       mkl_op_registry::GetMklOpName(csinfo_.transpose),
+-                      CopyAttrsAll, AlwaysRewrite, kRewriteForOpNameChange});
++                      CopyAttrsAll, RewriteIfX86, kRewriteForOpNameChange});
+ 
+     // Add info about which ops to add workspace edge to and the slots.
+     wsinfo_.push_back({csinfo_.lrn, csinfo_.lrn_grad, 0, 2, 1, 3});
+@@ -1463,6 +1463,13 @@ class MklLayoutRewritePass : public GraphOptimizationPass {
+   // Default rewrite rule to be used in scenario 1 for rewrite.
+   // @return - true (since we want to always rewrite)
+   static bool AlwaysRewrite(const Node* n) { return true; }
++  static bool RewriteIfX86(const Node* n) {
++#ifdef DNNL_AARCH64_USE_ACL
++    return false;
++#else
++    return true;
++#endif
++  }
+ 
+   // Rewrite rule which considers "context" of the current node to decide if we
+   // should rewrite. By "context" we currently mean all the inputs of current
+diff --git a/tensorflow/core/grappler/optimizers/remapper.cc b/tensorflow/core/grappler/optimizers/remapper.cc
+index bd1431e5ca8..6706f1c97ff 100644
+--- a/tensorflow/core/grappler/optimizers/remapper.cc
++++ b/tensorflow/core/grappler/optimizers/remapper.cc
+@@ -758,6 +758,10 @@ bool FindContractionWithBias(const RemapperContext& ctx, int node_index,
+                         IsMatMul(*contraction_node_def) ||
+                         IsDepthwiseConv2dNative(*contraction_node_def);
+ 
++#ifdef DNNL_AARCH64_USE_ACL
++  if (IsDepthwiseConv2dNative(*contraction_node_def)) is_contraction = false;
++#endif
++
+   if (!is_contraction || !HaveSameDataType(node_def, contraction_node_def) ||
+       HasControlFaninOrFanout(*contraction_node_view) ||
+       !HasAtMostOneFanoutAtPort0(*contraction_node_view) ||
+@@ -4439,6 +4443,7 @@ Status Remapper::Optimize(Cluster* cluster, const GrapplerItem& item,
+         continue;
+       }
+ 
++#ifndef DNNL_AARCH64_USE_ACL
+       // Remap {Conv2D,Conv3D}+BiasAdd+Add into the _FusedConv2D/3D.
+       if (FindContractionWithBiasAddAndAdd(ctx, i,
+                                            &contract_with_bias_and_add)) {
+@@ -4447,6 +4452,7 @@ Status Remapper::Optimize(Cluster* cluster, const GrapplerItem& item,
+                                     &invalidated_nodes, &nodes_to_delete));
+         continue;
+       }
++#endif
+ 
+       PadWithConv3D pad_with_conv3d;
+       // Remap Pad+{Conv3D,_FusedConv3D} into the _FusedConv3D.
+@@ -4483,6 +4489,7 @@ Status Remapper::Optimize(Cluster* cluster, const GrapplerItem& item,
+         continue;
+       }
+ 
++#ifndef DNNL_AARCH64_USE_ACL
+       // Fuse Conv2d + BiasAdd/FusedBatchNorm + Swish.
+       std::map<string, int> fusedconv2dSwish_matched_nodes_map;
+       std::set<int> fusedconv2dSwish_remove_node_indices;
+@@ -4494,6 +4501,8 @@ Status Remapper::Optimize(Cluster* cluster, const GrapplerItem& item,
+                             &invalidated_nodes, &nodes_to_delete));
+         continue;
+       }
++#endif
++
+       // Remap Maximum(x, alpha * x) pattern, fuse them into the LeakyRelu(x).
+       std::map<string, int> mulmax_matched_nodes_map;
+       std::set<int> mulmax_remove_node_indices;

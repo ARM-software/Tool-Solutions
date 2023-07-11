@@ -15,14 +15,10 @@
  limitations under the License.
  *******************************************************************************
 diff --git a/tensorflow/core/kernels/mkl/mkl_batch_matmul_op.cc b/tensorflow/core/kernels/mkl/mkl_batch_matmul_op.cc
-index 735ece1b364..7426fadb052 100644
+index eb3ab9fd6e1..a09a69b2e7c 100644
 --- a/tensorflow/core/kernels/mkl/mkl_batch_matmul_op.cc
 +++ b/tensorflow/core/kernels/mkl/mkl_batch_matmul_op.cc
-@@ -162,47 +162,24 @@ class BatchMatMulMkl : public OpKernel {
-             *params, false /* value for do_not_cache */);
- 
-     Trhs* weight_data = const_cast<Trhs*>(rhs.flat<Trhs>().data());
--
+@@ -171,42 +171,19 @@ class BatchMatMulMkl : public OpKernel {
  // TODO(Arm, Intel): Reach agreement on whether this block should be deleted.
  // https://github.com/tensorflow/tensorflow/pull/57987#discussion_r993731524
  #ifdef DNNL_AARCH64_USE_ACL
@@ -75,15 +71,13 @@ index 735ece1b364..7426fadb052 100644
 +      weight_data =
 +          reinterpret_cast<Trhs*>(weights_mkl.GetOpMem().get_data_handle());
      }
-+
- #endif  // DNNL_AARCH64_USE_ACL
- 
-     UserScratchPad<unsigned char> scratch_pad;
+     // Reorder src
+     Tlhs* src_data = const_cast<Tlhs*>(lhs.flat<Tlhs>().data());
 diff --git a/tensorflow/core/kernels/mkl/mkl_matmul_ops_common.h b/tensorflow/core/kernels/mkl/mkl_matmul_ops_common.h
-index 1c2632d8438..914a3aa24f4 100644
+index 33e2e8a646d..5fd88d4d7d4 100644
 --- a/tensorflow/core/kernels/mkl/mkl_matmul_ops_common.h
 +++ b/tensorflow/core/kernels/mkl/mkl_matmul_ops_common.h
-@@ -210,7 +210,11 @@ class MklDnnMatMulFwdPrimitive : public MklPrimitive {
+@@ -260,7 +260,11 @@ class MklDnnMatMulFwdPrimitive : public MklPrimitive {
  
      context_.weight_md.reset(new memory::desc({matmul_fwd_params.weight_dims},
                                                MklDnnType<Tweight>(),
@@ -95,7 +89,7 @@ index 1c2632d8438..914a3aa24f4 100644
  
      context_.dst_md.reset(new memory::desc({matmul_fwd_params.dst_dims},
                                             MklDnnType<Toutput>(),
-@@ -711,8 +715,11 @@ class MklMatMulPrimitive : public MklPrimitive {
+@@ -818,8 +822,11 @@ class MklMatMulPrimitive : public MklPrimitive {
                                           params.a_strides));
  
      context_.b_md.reset(new memory::desc({params.b_dims}, MklDnnType<Trhs>(),
@@ -108,7 +102,7 @@ index 1c2632d8438..914a3aa24f4 100644
      context_.c_md.reset(new memory::desc({params.c_dims}, MklDnnType<Toutput>(),
                                           params.c_strides));
  
-@@ -754,8 +761,13 @@ class MklMatMulPrimitive : public MklPrimitive {
+@@ -873,8 +880,13 @@ class MklMatMulPrimitive : public MklPrimitive {
      // Create memory primitive based on dummy data.
      context_.a_mem.reset(
          new dnnl::memory(*context_.a_md, cpu_engine_, DummyData));

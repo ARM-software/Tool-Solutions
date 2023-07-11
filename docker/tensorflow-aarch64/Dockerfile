@@ -99,7 +99,8 @@ RUN apt-get -y update && \
       wget \
       xz-utils \
       zip \
-      zlib1g-dev
+      zlib1g-dev \
+      patchelf
 
 
 # Set default gcc, python and pip versions
@@ -299,15 +300,22 @@ ENV PATH="$PACKAGE_DIR/bazel:$PATH"
 # Build TensorFlow
 COPY patches/tf_acl.patch $PACKAGE_DIR/.
 COPY patches/compute_library.patch $PACKAGE_DIR/.
+COPY patches/acl_acl_reorder.patch $PACKAGE_DIR/.
+COPY patches/acl_thread_local_scheduler.patch $PACKAGE_DIR/.
+COPY patches/tf_mkl_matmul_defined_weights_as_any.patch $PACKAGE_DIR/.
+COPY patches/tf_remedial_fixes.patch $PACKAGE_DIR/.
+COPY patches/tf_update_acl.patch $PACKAGE_DIR/.
+COPY patches/tf_reduce_mkl_overheads_small_shapes.patch $PACKAGE_DIR/.
+COPY patches/tf_matmul_heuristics.patch $PACKAGE_DIR/.
+COPY patches/tf_inter_scheduler.patch $PACKAGE_DIR/.
 COPY patches/onednn_acl_remove_winograd.patch $PACKAGE_DIR/.
 COPY patches/onednn_acl_depthwise_convolution.patch $PACKAGE_DIR/.
 COPY patches/onednn_acl_fixed_format_kernels.patch $PACKAGE_DIR/.
-COPY patches/tf_recursive_scheduler.patch $PACKAGE_DIR/.
-COPY patches/tf_mkl_matmul_defined_weights_as_any.patch $PACKAGE_DIR/.
-COPY patches/tf_dispatch_with_heuristics.patch $PACKAGE_DIR/.
-COPY patches/tf_use_acl_instead_of_gemm_api.patch $PACKAGE_DIR/.
 COPY patches/onednn_reorder_padded.patch $PACKAGE_DIR/.
 COPY patches/onednn_acl_depthwise_convolution_dilation.patch $PACKAGE_DIR/.
+COPY patches/onednn_acl_matmul.patch $PACKAGE_DIR/.
+COPY patches/onednn_acl_reorder.patch $PACKAGE_DIR/.
+COPY patches/onednn_thread_local_scheduler.patch $PACKAGE_DIR/.
 COPY scripts/build-tensorflow.sh $PACKAGE_DIR/.
 RUN $PACKAGE_DIR/build-tensorflow.sh
 COPY scripts/build-tensorflow-addons.sh $PACKAGE_DIR/.
