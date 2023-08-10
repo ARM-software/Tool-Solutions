@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # *******************************************************************************
-# Copyright 2020-2021 Arm Limited and affiliates.
+# Copyright 2020-2023 Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,19 +26,16 @@ sudo apt-get -y install protobuf-compiler libprotoc-dev
 cd $MLCOMMONS_DIR
 git clone https://github.com/mlcommons/inference.git --recursive
 cd inference
-git checkout r0.7
-# Scripts to support running of MLPerf in different modes. Refer to README.md for details.
-patch -p1 < $MLCOMMONS_DIR/optional-mlcommons-changes.patch
-git checkout v1.0.1 -- language/bert
-patch -p1 < $MLCOMMONS_DIR/mlcommons_bert.patch
-rm $MLCOMMONS_DIR/mlcommons_bert.patch
+git checkout r2.1
 
 # Build loadgen
 cd loadgen
-CFLAGS="-std=c++14" python setup.py develop
-# Build image classification and object  detection benchmarks
+CFLAGS="-std=c++14" python setup.py bdist_wheel
+pip install dist/*.whl
+# Build image classification and object detection benchmarks
 cd ../vision/classification_and_detection
-python setup.py develop
+python setup.py bdist_wheel
+pip install dist/*.whl
 
 # Note: the BERT NLP benchmakrs are not built by default, due to the size
 # of the datasets downloaded during the build. Uncomment the following

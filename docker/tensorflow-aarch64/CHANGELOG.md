@@ -17,6 +17,7 @@ where `YY` is the year, and `MM` the month of the increment.
 
 - Updates Tensorflow to unreleased version, Git hash: 5c1dcfd.
 - Refactored code for reducing MKL overheads by calling into Eigen for small shapes.
+- Increments ML Commons from v0.7 to v2.1.
 
 ### Removed
 
@@ -24,6 +25,8 @@ where `YY` is the year, and `MM` the month of the increment.
 - Patch for using ACL instead of GEMM API removed, now upstream.
 - Patch for Tensorflow recursive scheduler removed, now upstream.
 - Patch for matmul benchmarks removed, now upstream.
+- Support for ssd-resnet34 model in ML Commons removed, due to deprication by ML Commons.
+- Patch for optional run_cnn.py wrapper script removed, no longer supported.
 
 ### Fixed
 
