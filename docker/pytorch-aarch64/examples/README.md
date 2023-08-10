@@ -114,8 +114,8 @@ This script was built following the approach detailed in https://pytorch.org/tut
 
 To run the image classification and object detection benchmarks, first download the datasets and models using the scripts provided in the `$HOME/examples/MLCommons` directory of the final image.
 
-  * `download-dataset.sh` downloads the ImageNet min-validation and Coco 2017 datasets using CK to `${HOME}/CK-TOOLS/`. Select option 1: for the val-min ImageNet dataset.
-  * `download-model.sh` downloads the ResNet50 and SSD-ResNet34 models.
+  * `download-dataset.sh` downloads the ImageNet min-validation dataset using CK to `${HOME}/CK-TOOLS/` and additionally downloads the openimages dataset. Select option 1: for the val-min ImageNet dataset.
+  * `download-model.sh` downloads the ResNet50 and RetinaNet models.
 
 The environment variables `DATA_DIR` and `MODEL_DIR` will need to be set to the location of the downloaded dataset and model in each case.
 
@@ -134,19 +134,17 @@ From `$HOME/examples/MLCommons/inference/vision/classification_and_detection` us
 ./run_local.sh pytorch resnet50 cpu
 ```
 
-#### Object detection
-
-To run ResNet34-ssd with the COCO 2017 validation dataset for object detection, set `DATA_DIR` to the location of the downloaded dataset and `MODEL_DIR` to the location of the downloaded model.
+To run RetinaNet on the openimages validation dataset for image classification, set `DATA_DIR` to the location of the downloaded dataset and `MODEL_DIR` to the location of the downloaded model.
 
 ```
-export DATA_DIR=${HOME}/CK-TOOLS/dataset-coco-2017-val
+export DATA_DIR=${HOME}/CK-TOOLS/openimages-val
 export MODEL_DIR=${HOME}/examples/MLCommons/inference/vision/classification_and_detection
 ```
 
-From `$HOME/examples/MLCommons/inference/vision/classification_and_detection` use the `run_local.sh` to start the benchmark:
+From `$HOME/examples/MLCommons/inference/vision/classification_and_detection` use the `run_local.sh` to start the benchmark.
 
 ```
-./run_local.sh pytorch ssd-resnet34 cpu
+./run_local.sh pytorch retinanet cpu
 ```
 
 _Note: you can use `ONEDNN_VERBOSE=1` to verify the build uses oneDNN when running the benchmarks._

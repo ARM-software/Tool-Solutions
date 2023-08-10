@@ -1,5 +1,5 @@
 # *******************************************************************************
-# Copyright 2021 Arm Limited and affiliates.
+# Copyright 2021-2023 Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -109,33 +109,6 @@ index 0000000..8d4ac05
 +  --input_dir $librispeech_download_dir/dev-clean \
 +  --dest_dir $local_data_dir/dev-clean-wav \
 +  --output_json $local_data_dir/dev-clean-wav.json
-diff --git a/speech_recognition/rnnt/pytorch/rnn.py b/speech_recognition/rnnt/pytorch/rnn.py
-index 9bbea9c..39e2121 100644
---- a/speech_recognition/rnnt/pytorch/rnn.py
-+++ b/speech_recognition/rnnt/pytorch/rnn.py
-@@ -96,12 +96,14 @@ class StackTime(torch.nn.Module):
- 
-     def forward(self, x, x_lens):
-         # T, B, U
--        seq = [x]
--        for i in range(1, self.factor):
--            # This doesn't seem to make much sense...
--            tmp = torch.zeros_like(x)
--            tmp[:-i, :, :] = x[i:, :, :]
--            seq.append(tmp)
-+        r = torch.transpose(x, 0, 1)
-+        s = r.shape
-+        zeros = torch.zeros(
-+            s[0], (-s[1]) % self.factor, s[2], dtype=r.dtype, device=r.device)
-+        r = torch.cat([r, zeros], 1)
-+        s = r.shape
-+        rs = [s[0], s[1] // self.factor, s[2] * self.factor]
-+        r = torch.reshape(r, rs)
-+        rt = torch.transpose(r, 0, 1)
-         x_lens = torch.ceil(x_lens.float() / self.factor).int()
--        # Gross, this is horrible. What a waste of memory...
--        return torch.cat(seq, dim=2)[::self.factor, :, :], x_lens
-+        return rt, x_lens
 diff --git a/speech_recognition/rnnt/run.sh b/speech_recognition/rnnt/run.sh
 index 7538df9..d65a87c 100755
 --- a/speech_recognition/rnnt/run.sh

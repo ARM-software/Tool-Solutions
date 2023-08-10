@@ -210,7 +210,7 @@ ENV PATH="/home/$DOCKER_USER/.cargo/bin:${PATH}"
 
 # Install some basic python packages needed for NumPy
 RUN pip install --no-cache-dir --upgrade pip
-RUN pip install --no-cache-dir "setuptools>=41.0.0" six mock wheel cython
+RUN pip install --no-cache-dir "setuptools>=41.0.0" six mock wheel cython==0.29.36
 
 # Build numpy from source, using OpenBLAS for BLAS calls
 COPY scripts/build-numpy.sh $PACKAGE_DIR/.
@@ -219,7 +219,7 @@ RUN $PACKAGE_DIR/build-numpy.sh
 
 # Install some  basic python packages needed for SciPy
 RUN pip install --no-cache-dir pybind11==2.6.2 pyangbind pythran
-# Build numpy from source, using OpenBLAS for BLAS calls
+# Build scipy from source, using OpenBLAS for BLAS calls
 COPY scripts/build-scipy.sh $PACKAGE_DIR/.
 COPY patches/site.cfg $PACKAGE_DIR/site.cfg
 RUN $PACKAGE_DIR/build-scipy.sh
@@ -248,7 +248,7 @@ RUN pip install --no-cache-dir scikit-build
 # it is installed as a dependency for an earlier package and needs
 # to be removed in order for the OpenCV build to complete.
 RUN pip uninstall enum34 -y
-RUN pip install --no-cache-dir opencv-python-headless
+RUN pip install --no-cache-dir opencv-python-headless==4.8.0.74
 
 CMD ["bash", "-l"]
 
@@ -299,7 +299,9 @@ COPY patches/onednn_acl_depthwise_convolution_dilation.patch $PACKAGE_DIR/.
 COPY patches/onednn_reorder_padded.patch $PACKAGE_DIR/.
 COPY patches/onednn_reorder_to_bf16.patch $PACKAGE_DIR/.
 COPY patches/blas_to_mkl_acl.patch $PACKAGE_DIR/.
+COPY patches/torchvision.patch $PACKAGE_DIR/.
 
+COPY scripts/build-torchvision.sh $PACKAGE_DIR/.
 COPY scripts/build-torchtext.sh $PACKAGE_DIR/.
 COPY scripts/build-torchdata.sh $PACKAGE_DIR/.
 
@@ -310,10 +312,11 @@ RUN $PACKAGE_DIR/get-bazel.sh
 ENV PATH=$PACKAGE_DIR/bazel:$PATH
 
 RUN $PACKAGE_DIR/build-pytorch.sh
-# Install torchvision, torchdata and torchtext
-RUN pip install --no-cache-dir torchvision==$TORCHVISION_VERSION
 
+# Install torchvision, torchdata and torchtext
 ENV VENV_PACKAGE_DIR=$VENV_DIR/lib/python$PY_VERSION/site-packages
+# Build torchvision from source to workaround the undefined C++ symbols issues
+RUN $PACKAGE_DIR/build-torchvision.sh
 # Build torchtext from source to workaround the undefined symbol issue with the wheel
 RUN $PACKAGE_DIR/build-torchtext.sh
 # Build torchdata from source because there is no wheel for v0.4.0

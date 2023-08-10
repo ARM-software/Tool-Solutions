@@ -1,5 +1,5 @@
  *******************************************************************************
- Copyright 2021 Arm Limited and affiliates.
+ Copyright 2021-2023 Arm Limited and affiliates.
  SPDX-License-Identifier: Apache-2.0
 
  Licensed under the Apache License, Version 2.0 (the "License");
@@ -42,7 +42,7 @@ index ed58170..3cbb405 100755
          self.inputs = ["input"]
          return self
 diff --git a/vision/classification_and_detection/python/backend_onnxruntime.py b/vision/classification_and_detection/python/backend_onnxruntime.py
-index 66b8fda..4456925 100755
+index ea85ae0..367f098 100755
 --- a/vision/classification_and_detection/python/backend_onnxruntime.py
 +++ b/vision/classification_and_detection/python/backend_onnxruntime.py
 @@ -24,7 +24,7 @@ class BackendOnnxruntime(backend.Backend):
@@ -55,7 +55,7 @@ index 66b8fda..4456925 100755
          opt = rt.SessionOptions()
          # enable level 3 optimizations
 diff --git a/vision/classification_and_detection/python/backend_pytorch.py b/vision/classification_and_detection/python/backend_pytorch.py
-index 02b010a..6858147 100755
+index 02b010a..6858147 100644
 --- a/vision/classification_and_detection/python/backend_pytorch.py
 +++ b/vision/classification_and_detection/python/backend_pytorch.py
 @@ -30,7 +30,7 @@ class BackendPytorch(backend.Backend):
@@ -68,66 +68,49 @@ index 02b010a..6858147 100755
  
          # find inputs from the model if not passed in by config
 diff --git a/vision/classification_and_detection/python/backend_pytorch_native.py b/vision/classification_and_detection/python/backend_pytorch_native.py
-index f631ac5..13f16d6 100755
+index a302ae0..3db1861 100755
 --- a/vision/classification_and_detection/python/backend_pytorch_native.py
 +++ b/vision/classification_and_detection/python/backend_pytorch_native.py
-@@ -1,18 +1,18 @@
+@@ -1,5 +1,5 @@
  """
 -pytoch native backend 
 +pytorch native backend
  """
  # pylint: disable=unused-argument,missing-docstring
  import torch  # currently supports pytorch1.0
- import backend
- 
- 
--
- class BackendPytorchNative(backend.Backend):
-     def __init__(self):
-         super(BackendPytorchNative, self).__init__()
-         self.sess = None
-         self.model = None
-         self.device = "cuda:0" if torch.cuda.is_available() else "cpu"
-+
-     def version(self):
-         return torch.__version__
- 
-@@ -22,8 +22,14 @@ class BackendPytorchNative(backend.Backend):
+@@ -23,8 +23,19 @@ class BackendPytorchNative(backend.Backend):
      def image_format(self):
          return "NCHW"
  
 -    def load(self, model_path, inputs=None, outputs=None):
--        self.model = torch.load(model_path,map_location=lambda storage, loc: storage)
+-        self.model = torch.load(model_path, map_location=lambda storage, loc: storage)
 +    def load(self, model_path, profile=None, inputs=None, outputs=None):
 +        self.profile = profile
 +        if profile == "resnet50-pytorch":
 +            from torchvision.models.resnet import resnet50
-+            self.model = resnet50(pretrained=False)
++            self.model = resnet50(weights=None)
 +            self.model.load_state_dict(torch.load(model_path,map_location=lambda storage, loc: storage))
++        elif profile == "retinanet-pytorch":
++            from torchvision.models.detection.retinanet import retinanet_resnext50_32x4d_fpn
++            self.model = retinanet_resnext50_32x4d_fpn(weights=None)
++            state_dict = torch.load(model_path,map_location=lambda storage, loc: storage)["model"]
++            self.model.load_state_dict(state_dict)
 +        else:
 +            self.model = torch.load(model_path,map_location=lambda storage, loc: storage)
          self.model.eval()
          # find inputs from the model if not passed in by config
          if inputs:
-@@ -48,10 +54,9 @@ class BackendPytorchNative(backend.Backend):
-         self.model = self.model.to(self.device)
-         return self
- 
--        
-     def predict(self, feed):
--        key=[key for key in feed.keys()][0]    
-+        key=[key for key in feed.keys()][0]
+@@ -54,4 +65,4 @@ class BackendPytorchNative(backend.Backend):
          feed[key] = torch.tensor(feed[key]).float().to(self.device)
          with torch.no_grad():
--            output = self.model(feed[key])    
+             output = self.model(feed[key])
 -        return output
-+            output = self.model(feed[key])
 +        return [output] if self.profile == "resnet50-pytorch" else output
 diff --git a/vision/classification_and_detection/python/backend_tf.py b/vision/classification_and_detection/python/backend_tf.py
-index b8d1c6d..7682dce 100755
+index ab32b56..7fd4077 100755
 --- a/vision/classification_and_detection/python/backend_tf.py
 +++ b/vision/classification_and_detection/python/backend_tf.py
-@@ -27,7 +27,7 @@ class BackendTensorflow(backend.Backend):
+@@ -26,7 +26,7 @@ class BackendTensorflow(backend.Backend):
          # By default tensorflow uses NHWC (and the cpu implementation only does NHWC)
          return "NHWC"
  
@@ -137,74 +120,34 @@ index b8d1c6d..7682dce 100755
          if not inputs:
              raise ValueError("BackendTensorflow needs inputs")
 diff --git a/vision/classification_and_detection/python/backend_tflite.py b/vision/classification_and_detection/python/backend_tflite.py
-index de0a958..e4e7e81 100755
+index 7c8c78c..3710f91 100755
 --- a/vision/classification_and_detection/python/backend_tflite.py
 +++ b/vision/classification_and_detection/python/backend_tflite.py
-@@ -28,7 +28,7 @@ class BackendTflite(backend.Backend):
+@@ -39,7 +39,7 @@ class BackendTflite(backend.Backend):
          # tflite is always NHWC
          return "NHWC"
  
 -    def load(self, model_path, inputs=None, outputs=None):
 +    def load(self, model_path, profile=None, inputs=None, outputs=None):
-         self.sess = interpreter_wrapper.Interpreter(model_path=model_path)
+         self.sess = tflite.Interpreter(model_path=model_path)
          self.sess.allocate_tensors()
          # keep input/output name to index mapping
-diff --git a/vision/classification_and_detection/python/dataset.py b/vision/classification_and_detection/python/dataset.py
-index 597c751..dce968a 100755
---- a/vision/classification_and_detection/python/dataset.py
-+++ b/vision/classification_and_detection/python/dataset.py
-@@ -202,6 +202,22 @@ def pre_process_mobilenet(img, dims=None, need_transpose=False):
-     return img
- 
- 
-+def pre_process_imagenet_pytorch(img, dims=None, need_transpose=False):
-+    from PIL import Image
-+    import torchvision.transforms.functional as F
-+
-+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-+    img = Image.fromarray(img)
-+    img = F.resize(img, 256, Image.BILINEAR)
-+    img = F.center_crop(img, 224)
-+    img = F.to_tensor(img)
-+    img = F.normalize(img, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225], inplace=False)
-+    if not need_transpose:
-+        img = img.permute(1, 2, 0) # NHWC
-+    img = np.asarray(img, dtype='float32')
-+    return img
-+
-+
- def maybe_resize(img, dims):
-     img = np.array(img, dtype=np.float32)
-     if len(img.shape) < 3 or img.shape[2] != 3:
 diff --git a/vision/classification_and_detection/python/main.py b/vision/classification_and_detection/python/main.py
-index cd6825f..cff785e 100755
+index 7b2348b..b5be5d0 100755
 --- a/vision/classification_and_detection/python/main.py
 +++ b/vision/classification_and_detection/python/main.py
-@@ -37,6 +37,9 @@ SUPPORTED_DATASETS = {
-     "imagenet":
-         (imagenet.Imagenet, dataset.pre_process_vgg, dataset.PostProcessCommon(offset=-1),
-          {"image_size": [224, 224, 3]}),
-+    "imagenet-pytorch":
-+        (imagenet.Imagenet, dataset.pre_process_imagenet_pytorch, dataset.PostProcessArgMax(offset=0),
-+         {"image_size": [224, 224, 3]}),
-     "imagenet_mobilenet":
-         (imagenet.Imagenet, dataset.pre_process_mobilenet, dataset.PostProcessArgMax(offset=-1),
-          {"image_size": [224, 224, 3]}),
-@@ -85,6 +88,13 @@ SUPPORTED_PROFILES = {
-         "backend": "onnxruntime",
+@@ -98,8 +98,8 @@ SUPPORTED_PROFILES = {
+     "resnet50-pytorch": {
+         "inputs": "image",
+         "outputs": "ArgMax:0",
+-        "dataset": "imagenet",
+-        "backend": "tensorflow",
++        "dataset": "imagenet_pytorch",
++        "backend": "pytorch-native",
          "model-name": "resnet50",
      },
-+    "resnet50-pytorch": {
-+         "inputs": "image",
-+         "dataset": "imagenet-pytorch",
-+         "outputs": "ArgMax:0",
-+         "backend": "pytorch-native",
-+         "model-name": "resnet50",
-+    },
- 
-     # mobilenet
-     "mobilenet-tf": {
-@@ -429,7 +439,7 @@ def main():
+     "resnet50-onnxruntime": {
+@@ -473,7 +473,7 @@ def main():
                          use_cache=args.cache,
                          count=count, **kwargs)
      # load model to backend
@@ -214,18 +157,14 @@ index cd6825f..cff785e 100755
          "runtime": model.name(),
          "version": model.version(),
 diff --git a/vision/classification_and_detection/run_common.sh b/vision/classification_and_detection/run_common.sh
-index ea7c1d6..5a294ab 100755
+index 8188f61..337674e 100755
 --- a/vision/classification_and_detection/run_common.sh
 +++ b/vision/classification_and_detection/run_common.sh
-@@ -82,9 +82,8 @@ fi
- # pytorch
- #
+@@ -88,7 +88,6 @@ fi
  if [ $name == "resnet50-pytorch" ] ; then
--    model_path="$MODEL_DIR/resnet50_v1.onnx"
--    profile=resnet50-onnxruntime
+     model_path="$MODEL_DIR/resnet50-19c8e357.pth"
+     profile=resnet50-pytorch
 -    extra_args="$extra_args --backend pytorch"
-+    model_path="$MODEL_DIR/resnet50-19c8e357.pth"
-+    profile=resnet50-pytorch
  fi
  if [ $name == "mobilenet-pytorch" ] ; then
      model_path="$MODEL_DIR/mobilenet_v1_1.0_224.onnx"

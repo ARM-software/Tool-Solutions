@@ -101,7 +101,7 @@ fi
 MAX_JOBS=${NP_MAKE:-$((num_cpus / 2))} PYTORCH_BUILD_VERSION=$TORCH_VERSION \
   PYTORCH_BUILD_NUMBER=1 OpenBLAS_HOME=$OPENBLAS_DIR BLAS="OpenBLAS" \
   CXX_FLAGS="$BASE_CFLAGS -O3 -mcpu=$CPU" LDFLAGS=$BASE_LDFLAGS USE_OPENMP=1 \
-  USE_LAPACK=1 USE_CUDA=0 USE_FBGEMM=0 USE_DISTRIBUTED=0 python setup.py bdist_wheel
+  USE_LAPACK=1 USE_CUDA=0 USE_FBGEMM=0 USE_DISTRIBUTED=0 BUILD_CAFFE2=1 python setup.py bdist_wheel
 
 # Install the PyTorch python wheel via pip
 pip install $(ls -tr dist/*.whl | tail)

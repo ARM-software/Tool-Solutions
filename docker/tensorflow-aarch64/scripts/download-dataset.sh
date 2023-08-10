@@ -13,6 +13,3 @@ ck install package --tags=image-classification,dataset,imagenet,val
 
 # Copy the labels into the image location
 cp ${HOME}/CK-TOOLS/dataset-imagenet-ilsvrc2012-aux/val.txt ${HOME}/CK-TOOLS/dataset-imagenet-ilsvrc2012-val-min/val_map.txt
-
-# Download Coco dataset
-ck install package --tags=object-detection,dataset,coco,2017,val,original

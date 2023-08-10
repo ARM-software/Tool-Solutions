@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # *******************************************************************************
-# Copyright 2020-2021 Arm Limited and affiliates.
+# Copyright 2020-2023 Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,21 +22,25 @@ set -euo pipefail
 source python3-venv/bin/activate
 ck pull repo:ck-env
 sudo apt-get -y install protobuf-compiler libprotoc-dev
+
 cd $EXAMPLE_DIR/MLCommons
 git clone https://github.com/mlcommons/inference.git --recursive
 cd inference
-git checkout r0.7
+git checkout r2.1
 
 patch -p1 < $MLCOMMONS_DIR/pytorch_native.patch
 rm $MLCOMMONS_DIR/pytorch_native.patch
 
-git checkout v1.0.1 -- language/bert
 patch -p1 < $MLCOMMONS_DIR/mlcommons_bert.patch
 rm $MLCOMMONS_DIR/mlcommons_bert.patch
 
+# Get updated openimages install script
+git checkout v3.0 -- vision/classification_and_detection/tools/openimages_mlperf.sh vision/classification_and_detection/tools/openimages.py
+
 # Build loadgen
 cd loadgen
-CFLAGS="-std=c++14" python setup.py develop
+CFLAGS="-std=c++14" python setup.py bdist_wheel
+pip install dist/*.whl
 
 # patch RNNT
 cd $MLCOMMONS_DIR/inference/
@@ -45,7 +49,8 @@ rm $MLCOMMONS_DIR/mlcommons_rnnt.patch
 
 # Build image classification and object detection benchmarks
 cd $MLCOMMONS_DIR/inference/vision/classification_and_detection
-python setup.py develop
+python setup.py bdist_wheel
+pip install dist/*.whl
 # view method generates a runtime error where tensor is not
 # contigious in memory. Using reshape avoids this.
 sed -ie "s/\.view/\.reshape/g" python/models/ssd_r34.py

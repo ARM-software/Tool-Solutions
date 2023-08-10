@@ -209,7 +209,7 @@ ENV PATH="/home/$DOCKER_USER/.cargo/bin:${PATH}"
 
 # Install some basic python packages
 RUN pip install --no-cache-dir --upgrade pip
-RUN pip install --no-cache-dir "setuptools>=41.0.0" six mock wheel cython sh
+RUN pip install --no-cache-dir "setuptools>=41.0.0" six mock wheel cython==0.29.36 sh
 
 # Build numpy from source, using OpenBLAS for BLAS calls
 COPY scripts/build-numpy.sh $PACKAGE_DIR/.
@@ -217,7 +217,7 @@ COPY patches/site.cfg $PACKAGE_DIR/site.cfg
 RUN $PACKAGE_DIR/build-numpy.sh
 
 # Install some  basic python packages needed for SciPy
-RUN pip install --no-cache-dir pybind11 pyangbind pythran
+RUN pip install --no-cache-dir pybind11 pyangbind pythran==0.9.11
 # Build scipy from source, using OpenBLAS for BLAS calls
 COPY scripts/build-scipy.sh $PACKAGE_DIR/.
 COPY patches/site.cfg $PACKAGE_DIR/site.cfg
@@ -237,7 +237,7 @@ RUN pip install --no-cache-dir ck==1.55.5 absl-py pycocotools pillow==8.2.0
 RUN pip install --no-cache-dir transformers pandas
 
 # Install OpenCV into our venv (needed for MLCommons benchmarks)
-RUN pip install --no-cache-dir opencv-python-headless
+RUN pip install --no-cache-dir opencv-python-headless==4.8.0.74
 
 # Remove dependency on HDF5 save support in Keras as this does not
 # work with TensorFlow 2.11 and Transformers 4.24
@@ -349,14 +349,12 @@ RUN mkdir -p $EXAMPLE_DIR
 RUN mkdir -p $MLCOMMONS_DIR
 
 # Clone and install MLCommons (MLPerf)
-COPY patches/optional-mlcommons-changes.patch $MLCOMMONS_DIR/optional-mlcommons-changes.patch
-COPY patches/mlcommons_bert.patch $MLCOMMONS_DIR/mlcommons_bert.patch
 COPY scripts/build-mlcommons.sh $MLCOMMONS_DIR/.
 RUN $MLCOMMONS_DIR/build-mlcommons.sh
 RUN rm -f $MLCOMMONS_DIR/build-mlcommons.sh
 
 # Install missing Python package dependencies required to run examples
-RUN pip install --no-cache-dir pyyaml
+RUN pip install --no-cache-dir pyyaml==5.3.1
 RUN pip install --no-cache-dir tqdm
 
 # MLCommons ServerMode

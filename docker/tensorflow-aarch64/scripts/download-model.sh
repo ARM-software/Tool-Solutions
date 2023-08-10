@@ -19,14 +19,3 @@ wget http://download.tensorflow.org/models/object_detection/ssd_mobilenet_v1_coc
 tar -zxf ssd_mobilenet_v1_coco_2018_01_28.tar.gz
 rm ssd_mobilenet_v1_coco_2018_01_28.tar.gz
 cp ssd_mobilenet_v1_coco_2018_01_28/frozen_inference_graph.pb  ssd_mobilenet_v1_coco_2018_01_28.pb
-
-# ssd-resnet34
-wget https://zenodo.org/record/3246481/files/ssd_resnet34_mAP_20.2.pb
-wget https://zenodo.org/record/3345892/files/tf_ssd_resnet34_22.1.zip
-unzip tf_ssd_resnet34_22.1.zip
-rm tf_ssd_resnet34_22.1.zip
-mv tf_ssd_resnet34_22.1 tf_ssd_resnet34_22.1_NCHW
-# Use MLCommons script to convert resnet34_tf.22.1.pb to channels-last
-python tools/ssd-nhwc.py tf_ssd_resnet34_22.1_NCHW/resnet34_tf.22.1.pb
-mv tf_ssd_resnet34_22.1_NCHW/resnet34_tf.22.1.pb.patch resnet34_tf.22.1.pb
-

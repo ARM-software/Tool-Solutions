@@ -8,10 +8,13 @@ where `YY` is the year, and `MM` the month of the increment.
 ## [Unreleased]
 
 ### Added
+- Adds support for the RetinaNet model to ML Commons.
 
 ### Changed
+- Increments ML Commons from v0.7 to v2.1.
 
 ### Removed
+- Support for ssd-resnet34 model in ML Commons removed, due to deprication by ML Commons.
 
 ### Fixed
 

@@ -109,8 +109,8 @@ where `<context>` is the text file containing the text on which the `<question>`
 
 To run the image classification and object detection benchmarks, first download the datasets and models using the scripts provided in the `$HOME/examples/MLCommons` directory of the final image.
 
-  * `download-dataset.sh` downloads the ImageNet min-validation and Coco 2017 datasets using CK to `${HOME}/CK-TOOLS/`. Select option 1: for the val-min ImageNet dataset.
-  * `download-model.sh` downloads the ResNet50 and SSD-ResNet34 models. The SSD-ResNet34 model is converted to channels-last (NHWC) format as required by TensorFlow for CPU targets.
+  * `download-dataset.sh` downloads the ImageNet min-validation dataset using CK to `${HOME}/CK-TOOLS/`. Select option 1: for the val-min ImageNet dataset.
+  * `download-model.sh` downloads the ResNet50 model.
 
 The environment variables `DATA_DIR` and `MODEL_DIR` will need to be set to the location of the downloaded dataset and model in each case.
 
@@ -130,57 +130,6 @@ From `$HOME/examples/MLCommons/inference/vision/classification_and_detection` us
 ```
 
 _Note: you can use `ONEDNN_VERBOSE=1` to verify the build uses oneDNN when running the benchmarks._
-
-##### Running with (optional) `run_cnn.py` wrapper script provided
-
-The script `run_cnn.py` is located in `$HOME/examples/MLCommons/inference/vision/classification_and_detection`. To find out the usages and default settings:
-
-
-```
-./run_cnn.py --help
-```
-
-To run benchmarks in the multiprogrammed mode:
-
-```
-OMP_NUM_THREADS=$(nproc) ./run_cnn.py --processes $(nproc) --threads 1
-```
-
-To run benchmarks in the multithreaded mode:
-
-```
-OMP_NUM_THREADS=$(nproc) ./run_cnn.py --processes 1 --threads $(nproc)
-```
-
-To run benchmarks in the hybrid mode:
-
-For example, run 8 processes each of which has 8 threads on a 64-core machine
-
-```
-OMP_NUM_THREADS=64 ./run_cnn.py --processes 8 --threads 8
-```
-
-Please refer to [MLCommons, Inference](https://github.com/mlcommons/inference/tree/master/vision/classification_and_detection) for further details.
-
-#### Object detection
-
-To run ResNet34-ssd with the COCO 2017 validation dataset for object detection, set `DATA_DIR` to the location of the downloaded dataset and `MODEL_DIR` to the location of the downloaded model.
-
-```
-export DATA_DIR=${HOME}/CK-TOOLS/dataset-coco-2017-val
-export MODEL_DIR=${HOME}/examples/MLCommons/inference/vision/classification_and_detection
-```
-
-From `$HOME/examples/MLCommons/inference/vision/classification_and_detection` use the `run_local.sh` to start the benchmark, `--count` can be used to control the number of inferences:
-
-```
-./run_local.sh tf ssd-resnet34 cpu --count 10 --data-format NHWC
-```
-
-_Note: you can use `ONEDNN_VERBOSE=1` to verify the build uses oneDNN when running the benchmarks._
-
-Please refer to [MLCommons, Inference](https://github.com/mlcommons/inference/tree/master/vision/classification_and_detection) for further details.
-
 
 ### BERT
 
@@ -224,16 +173,14 @@ To run the examples:
 * `./classify_image -m resnet50.yml -i images/guineapig.jpeg`
   * Resnet50 in `SavedModel` format (single image inference)
   * _input_: images/guineapig.jpeg | _labels:_ labels/imagenet-labels.txt
-  * _output:_ Top 3 predictions with confidence and labels
+  * _output:_ Top 5 predictions with confidence and labels
 * `./inception_inference -m inception.yml -i images/guineapig.jpeg`
   * Inception model in `FrozenModel.pb` format (single image inference)
   * _input:_ images/guineapig.jpes | _labels_: labels/imagenet_slim_labels.txt
-  * _output:_ Top 3 predictions with confidence and labels
+  * _output:_ Top 5 predictions with confidence and labels
 * `./detect_objects -m ssd_resnet50.yml -i images/cows.jpeg`
   * SSD-Resnet50 in `SavedModel` format (single image inference)
   * uses OpenCV to load _and_ post-process the image.
   * post-processing creates a new image `output_image.jpeg` where the detected objects are framed in red rectangles.
   * _input:_ images/cows.jpeg | _labels:_ labels/coco-labels.txt
-  *  _output:_ All detected objects with confidence above 70% threshold
-
-
+  *  _output:_ All detected objects with confidence above 50% threshold
