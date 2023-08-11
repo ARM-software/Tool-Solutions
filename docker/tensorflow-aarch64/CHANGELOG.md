@@ -32,6 +32,7 @@ where `YY` is the year, and `MM` the month of the increment.
 
 - Remedial fixes moving some ops to Eigen for increased performance.
 - Fix to specify that format should be any for weights for matmul and inner product.
+- Pinned the protobuf version to 4.23.4 to prevent a segfault during inference.
 
 ## [r23.07] 2023-07-04
 https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--r23.07/docker/tensorflow-aarch64

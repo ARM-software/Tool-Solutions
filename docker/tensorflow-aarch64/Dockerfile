@@ -356,6 +356,7 @@ RUN rm -f $MLCOMMONS_DIR/build-mlcommons.sh
 # Install missing Python package dependencies required to run examples
 RUN pip install --no-cache-dir pyyaml==5.3.1
 RUN pip install --no-cache-dir tqdm
+RUN pip install --no-cache-dir protobuf==4.23.4
 
 # MLCommons ServerMode
 COPY patches/Makefile.patch $MLCOMMONS_DIR/.
