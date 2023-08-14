@@ -11,6 +11,16 @@ where `YY` is the year, and `MM` the month of the increment.
 
 ### Changed
 
+### Removed
+
+### Fixed
+
+## [r23.08] 2023-08-16
+https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--r23.08/docker/tensorflow-aarch64
+
+### Added
+
+### Changed
 - Updates Tensorflow to unreleased version, Git hash: 59ec4da. This release contains the following changes:
   - Refactored code for reducing MKL overheads by calling into Eigen for small shapes.
   - Heuristics for matmul.
@@ -24,12 +34,10 @@ where `YY` is the year, and `MM` the month of the increment.
 - Increments ML Commons from v0.7 to v2.1.
 
 ### Removed
-
 - Support for ssd-resnet34 model in ML Commons removed, due to deprication by ML Commons.
 - Patch for optional run_cnn.py wrapper script removed, no longer supported.
 
 ### Fixed
-
 - Remedial fixes moving some ops to Eigen for increased performance.
 - Fix to specify that format should be any for weights for matmul and inner product.
 - Pinned the protobuf version to 4.23.4 to prevent a segfault during inference.
