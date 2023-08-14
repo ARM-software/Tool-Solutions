@@ -8,6 +8,17 @@ where `YY` is the year, and `MM` the month of the increment.
 ## [Unreleased]
 
 ### Added
+
+### Changed
+
+### Removed
+
+### Fixed
+
+## [r23.08] 2023-08-16
+https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--r23.08/docker/pytorch-aarch64
+
+### Added
 - Adds support for the RetinaNet model to ML Commons.
 
 ### Changed
