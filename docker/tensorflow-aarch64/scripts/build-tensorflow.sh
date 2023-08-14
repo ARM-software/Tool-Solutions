@@ -29,8 +29,7 @@ readonly src_repo=tensorflow
 # Clone tensorflow and benchmarks
 git clone ${src_host}/${src_repo}.git
 cd ${src_repo}
-# Checkout Tensorflow unreleased 5c1dcfd
-git checkout 5c1dcfd436548558312710ace3db60f56d2e082c
+git checkout $version
 
 # Env vars used to avoid interactive elements of the build.
 export HOST_C_COMPILER=(which gcc)
@@ -85,53 +84,6 @@ if [[ $ONEDNN_BUILD ]]; then
         else
             tf_backend_desc="oneDNN + Compute Library (OpenMP runtime)."
         fi
-
-        ### Apply patches to the TensorFlow, Compute Library and oneDNN builds
-        ## TensorFlow patches:
-
-        # Updates ACL to 23.05 and moves build to in-tree Bazel
-        patch -p1 < ../tf_update_acl.patch
-        # Moves some ops to Eigen for performance
-        patch -p1 < ../tf_remedial_fixes.patch
-        # Reduces MKL overhead for small shapes
-        patch -p1 < ../tf_reduce_mkl_overheads_small_shapes.patch
-        # Matmul heuristics
-        patch -p1 < ../tf_matmul_heuristics.patch
-        # Adds inter scheduler
-        patch -p1 < ../tf_inter_scheduler.patch
-        # Patch TensorFlow to update oneDNN and ACL builds
-        patch -p1 < ../tf_acl.patch
-        # Specify that format is any for weights for matmul and inner product
-        patch -p1 < ../tf_mkl_matmul_defined_weights_as_any.patch
-
-        ## oneDNN patches:
-        # Patches to support JIT'ed reorder for padded inputs
-        wget https://github.com/oneapi-src/oneDNN/commit/b84c533dad4db495a92fc6d390a7db5ebd938a88.patch -O ../onednn_acl_reorder_update.patch
-        mv ../onednn_acl_reorder_update.patch ./third_party/mkl_dnn/.
-        mv ../onednn_reorder_padded.patch ./third_party/mkl_dnn/.
-        # Adds tensor dilation parameter configuration for Compute Library depthwise conv
-        mv ../onednn_acl_depthwise_convolution_dilation.patch ./third_party/mkl_dnn/.
-        # Remove Compute Library Winograd support
-        mv ../onednn_acl_remove_winograd.patch ./third_party/mkl_dnn/.
-        # Updates Depthwise patch in Tensorflow with changes for Compute Library 23.05
-        mv ../onednn_acl_depthwise_convolution.patch ./third_party/mkl_dnn/.
-        # Updates Fixed Format patch in Tensorflow with changes for Compute Library 23.05
-        mv ../onednn_acl_fixed_format_kernels.patch ./third_party/mkl_dnn/.
-        # Adds ACL reorder to oneDNN
-        mv ../onednn_acl_reorder.patch ./third_party/mkl_dnn/.
-        # Adds inter scheduler to oneDNN
-        mv ../onednn_thread_local_scheduler.patch ./third_party/mkl_dnn/.
-        # oneDNN ACL matmul fix
-        mv ../onednn_acl_matmul.patch ./third_party/mkl_dnn/.
-
-        ## Compute Library
-        # Manually defining Compute Library version for now. Also removes FP16 support from Bazel build.
-        mv ../compute_library.patch ./third_party/compute_library/.
-        # Adds ACL reorder to ACL
-        mv ../acl_acl_reorder.patch ./third_party/compute_library/.
-        # Adds inter scheduler to ACL
-        mv ../acl_thread_local_scheduler.patch ./third_party/compute_library/.
-
     fi
 else
     tf_backend_desc="Eigen."
