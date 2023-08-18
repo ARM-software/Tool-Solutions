@@ -1,5 +1,5 @@
 # *******************************************************************************
-# Copyright 2021-2022 Arm Limited and affiliates.
+# Copyright 2021-2023 Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,6 +21,7 @@ Class that wraps around TensorFlow session and executes the frozen model
 import os
 import sys
 import time
+from urllib.parse import urlparse
 import urllib.request
 import zipfile
 
@@ -33,6 +34,15 @@ from tensorflow.python.tools.optimize_for_inference_lib import (
     optimize_for_inference,
 )
 from tensorflow.python.framework import dtypes
+
+
+def _zip_file(zip_file, model_name, extract):
+    with zipfile.ZipFile(zip_file) as zf_h:
+        for file in zf_h.namelist():
+            if file.endswith(model_name):
+                if extract:
+                    zf_h.extract(file)
+                return file
 
 
 class DownloadProgressBar:
@@ -75,9 +85,7 @@ class Model:
     Wrap around TensorFlow session and run inference
     """
 
-    def __init__(
-        self, unoptimized: bool, intra_threads: int, inter_threads: int
-    ) -> None:
+    def __init__(self, unoptimized: bool, intra_threads: int, inter_threads: int) -> None:
         self._session = None
         self._inputs = None
         self._outputs = None
@@ -87,71 +95,60 @@ class Model:
         self._inter_threads = inter_threads
         self._frozen = True
 
-    def _zip_file(self, zip_file, model_name, extract):
-        with zipfile.ZipFile(zip_file) as zf_h:
-            for file in zf_h.namelist():
-                if file.endswith(model_name):
-                    if extract:
-                        zf_h.extract(file)
-                    return file
-
     def _download_model(self, model_descriptor):
-        model_url = model_descriptor["source"]
+        model_url = model_descriptor["model"]["source"]
         # check if source starts with http
-        if not model_url.startswith('http'):
+        if model_url is not None and not model_url.startswith('http'):
             return None
 
         # we need to download the model
-        model_file = model_url.split("/")[-1]
-        model_ext = os.path.splitext(model_file)[1]
+        model_file = urlparse(model_url).path.split("/")[-1]
+        is_zip = model_file.endswith(".zip")
 
-        if model_ext == ".zip":
+        if is_zip:
             model_name = model_file
         else:
-            model_name = model_descriptor["name"]
+            model_name = model_descriptor["model"]["name"]
 
         # check to see whether the model exists in the
         # current directory and if it exists then we do
         # not need to download it
         if os.path.isfile(model_name):
             # it exists we do not need to download it
-            if model_ext == ".zip":
-                model_name = self._zip_file(model_file, model_descriptor["name"], False)
+            if is_zip:
+                model_name = _zip_file(model_file, model_descriptor["model"]["name"], False)
                 if os.path.isfile(model_name):
                     return model_name
             else:
                 return model_name
 
-        try:
-            # Download the model
-            urllib.request.urlretrieve(
-                model_url,
-                model_name,
-                DownloadProgressBar("Downloading: " + model_name + "..."),
-            )
-        except:  # pylint: disable=bare-except
-            sys.exit("Failed to set up the model: failed to download model from %s", model_url)
+        # Download the model
+        urllib.request.urlretrieve(
+            model_url,
+            model_name,
+            DownloadProgressBar("Downloading: " + model_name + "..."),
+        )
 
         # once it is downloaded and if it is archive then
         # find the model and extract it
-        if model_ext == ".zip":
-            model_name = self._zip_file(model_name, model_descriptor["name"], True)
+        if is_zip:
+            model_name = _zip_file(model_name, model_descriptor["model"]["name"], True)
 
         return model_name
 
     def _read_model(self, model_descriptor):
         # check to see whether name tag exists
-        if "name" in model_descriptor:
+        if "name" in model_descriptor["model"]:
             model_name = os.path.join(
-                model_descriptor["source"],
-                model_descriptor["name"])
+                model_descriptor["model"]["source"],
+                model_descriptor["model"]["name"])
             if not os.path.isfile(model_name):
                 sys.exit('Failed to set up the mode: file %s does not exists' % model_name)
 
         # if the name tag is not provided then we are assuming
         # that the model is in SavedModel format
         self._frozen = False
-        return model_descriptor["source"]
+        return model_descriptor["model"]["source"]
 
     def _load_frozen_model(self, model_name, model_descriptor):
         infer_config = tf.compat.v1.ConfigProto()
@@ -164,7 +161,7 @@ class Model:
 
         self._outputs = [
             output + ":0"
-            for output in model_descriptor["output"].split(",")
+            for output in model_descriptor["arguments"]["output"].split(",")
         ]
 
         # by default Graph is optimized for the inference
@@ -182,14 +179,14 @@ class Model:
 
     def _load_saved_model(self, model_name, model_descriptor):
         self._session = tf.saved_model.load(model_name).signatures['serving_default']
-        self._outputs = model_descriptor["output"].split(",")[0]
+        self._outputs = model_descriptor["arguments"]["output"].split(",")[0]
 
-    def load(self, model_file):
+    def load(self, model_descriptor):
         """
         Downloads the model from given URL or reads it from disk  and builds
         a function from frozen model or from saved model that can be used
         for inference
-        :param model_file: File describing model to build
+        :param model_descriptor: Parsed yaml file describing model to build
         :returns: Boolean true if it builds function for inference otherwise false
         """
 
@@ -198,16 +195,11 @@ class Model:
             # function to do inference
             return True
 
-        with open(model_file) as model_file_handle:
-            model_descriptor = yaml.load(
-                model_file_handle, Loader=yaml.FullLoader
-            )
-
         # check if source starts with http, if it does then
-        # then we need to download the mode
-        model_name = self._download_model(model_descriptor["model"][0])
+        # then we need to download the model
+        model_name = self._download_model(model_descriptor)
         if model_name is None:
-            model_name = self._read_model(model_descriptor["model"][0])
+            model_name = self._read_model(model_descriptor)
         # if we still haven't found a model return and inform that
         # we cannot load model neither by downloading from URL or
         # by reading from disk
@@ -215,11 +207,11 @@ class Model:
             return False
 
         # prepare inputs, outputs and load model
-        self._inputs = [model_descriptor["arguments"][0]["input"] + ":0"]
+        self._inputs = [model_descriptor["arguments"]["input"] + ":0"]
         if self._frozen:
-            self._load_frozen_model(model_name, model_descriptor["arguments"][0])
+            self._load_frozen_model(model_name, model_descriptor)
         else:
-            self._load_saved_model(model_name, model_descriptor["arguments"][0])
+            self._load_saved_model(model_name, model_descriptor)
 
         return True
 

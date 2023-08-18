@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2021 Arm Limited and affiliates.
+# Copyright 2021-2023 Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,10 +18,10 @@
 description: >-
     Inception Model
 model:
-  - name: inception_v3_2016_08_28_frozen.pb
+    name: inception_v3_2016_08_28_frozen.pb
     source: models/inception_v3_2016_08_28_frozen.pb
     labels: labels/imagenet-labels.txt
 arguments:
-  - input_shape: [1,299,299,3]
+    input_shape: [1,299,299,3]
     input: input
     output: ["InceptionV3/Predictions/Reshape_1"]

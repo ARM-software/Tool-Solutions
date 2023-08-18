@@ -1,5 +1,5 @@
 # *******************************************************************************
-# Copyright 2021-2022 Arm Limited and affiliates.
+# Copyright 2021-2023 Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -46,7 +46,7 @@ def _download_image(image_loc):
         image_file = image_loc.split("/")[-1]  # filename
 
         if not os.path.isfile(image_file):
-            # Download the image if required
+            # download the image if required
             urllib.request.urlretrieve(image_loc, image_file)
 
     if not os.path.isfile(image_file):
@@ -55,12 +55,31 @@ def _download_image(image_loc):
     return image_file
 
 
-def preprocess_image_for_classification(image_url):
+def preprocess_image(image_url, model_descriptor):
+    """
+    Preprocess image for different models
+    :param image_url: URL from where to download image
+    :param model_descriptor: Parsed yaml file describing model
+    :returns: Preprocessed image for the given model
+    """
+    model_name = model_descriptor["model"]["name"]
+
+    # getting the appropriate preprocess function for the model
+    preprocess_func = {
+        common.RESNET50_NAME: _preprocess_image_for_classification,
+        common.RETINANET_NAME: _preprocess_image_for_detection,
+        common.SSD_RESNET34_NAME: _preprocess_image_for_detection,
+    }[model_name]
+
+    return preprocess_func(image_url, model_descriptor)
+
+
+def _preprocess_image_for_classification(image_url, model_descriptor):
     """
     Preprocess image for classification to do for inference on models
     that were trained using ImageNet
     :param image_url: Path to the image
-    :param model_file: File describing model to build
+    :param model_descriptor: Parsed yaml file describing model
     :returns: Preprocessed image for image classification
     """
     image_file = _download_image(image_url)
@@ -82,33 +101,33 @@ def preprocess_image_for_classification(image_url):
     return processed_image
 
 
-def preprocess_image_for_detection(image_url, model_file):
+def _preprocess_image_for_detection(image_url, model_descriptor):
     """
-    Preprocess image for object detection for SSD-ResNet34 model
+    Preprocess image for object detection
     :param image_url: URL from where to download image
-    :param model_file: File describing model
+    :param model_descriptor: Parsed yaml file describing model
     :returns: Preprocess image for object detection
     """
-
     image_file = _download_image(image_url)
-    model_descriptor = common.parse_model_file(model_file)
 
     input_image = cv2.imread(image_file)
 
-    dimensions = model_descriptor["image_preprocess"][0]["input_shape"][2:4]
+    dimensions = model_descriptor["image_preprocess"]["input_shape"][2:4]
     numpy_image = cv2.resize(
         input_image, tuple(dimensions), interpolation=cv2.INTER_LINEAR
     )
 
     # normalise image
-    mean = np.array(
-        model_descriptor["image_preprocess"][0]["mean"], dtype=np.float32
-    )
-    std = np.array(
-        model_descriptor["image_preprocess"][0]["std"], dtype=np.float32
-    )
-    numpy_image = numpy_image / 255.0 - mean
-    numpy_image = numpy_image / std
+    numpy_image = numpy_image / 255.0
+    if model_descriptor["model"]["name"] == common.SSD_RESNET34_NAME:
+        # ssd_resnet34 needs to normalised around 0
+        mean = np.array(
+            model_descriptor["image_preprocess"]["mean"], dtype=np.float32
+        )
+        std = np.array(
+            model_descriptor["image_preprocess"]["std"], dtype=np.float32
+        )
+        numpy_image = (numpy_image - mean) / std
 
     # the expected input is CHW, instead of HWC
     numpy_image = numpy_image.transpose([2, 0, 1])
@@ -119,20 +138,88 @@ def preprocess_image_for_detection(image_url, model_file):
     return torch.tensor(image_batch).float().to("cpu"), image_file
 
 
-def postprocess_image_for_detection(
-    model_file, image_file, predictions, labels
+def postprocess_image(
+        model_descriptor, image_file, predictions, labels
 ):
     """
-    Draw bounding boxes around objects that were detected
-    :param model_file: File describing model
+    Draw bounding boxes around objects that were detected for different models
+    :param model_descriptor: Parsed yaml file describing model
     :param image_file: Path to image
     :param predictions: Detected objects
     :param labels: Object labels
-    :returns: Post processed image with boxes around detected objects
     """
+    model_name = model_descriptor["model"]["name"]
 
-    model_descriptor = common.parse_model_file(model_file)
-    threshold = model_descriptor["model"][0]["threshold"]
+    # getting the appropriate postprocess function for the model
+    postprocess_func = {
+        common.RETINANET_NAME: _postprocess_image_for_openimages_detection,
+        common.SSD_RESNET34_NAME: _postprocess_image_for_coco_detection
+    }[model_name]
+
+    return postprocess_func(model_descriptor, image_file, predictions, labels)
+
+
+def _draw_box(image, label, left, right, top, bottom):
+    """
+    Draws a box and label of a detected object on a given image
+    :param image: OpenCV image to draw the box on
+    :param label: String to draw next to the box
+    :param left: Left box coordinate
+    :param right: Right box coordinate
+    :param top: Top box coordinate
+    :param bottom: Bottom box coordinate
+    """
+    # we are putting green rectangle around the object
+    cv2.rectangle(image, (left, top), (right, bottom), (0, 255, 0), 1)
+    # write label with green background
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    font_scale = 1
+    font_thickness = 2
+    label_size, _ = cv2.getTextSize(
+        label, font, font_scale, font_thickness
+    )
+    label_width, label_height = label_size
+    cv2.rectangle(
+        image,
+        (left, top),
+        (left + label_width, top - label_height),
+        (0, 255, 0),
+        -1,
+    )
+    cv2.putText(
+        image,
+        label,
+        (left, top),
+        font,
+        font_scale,
+        (0, 0, 0),
+        font_thickness,
+    )
+
+
+def _write_boxes_file(image_file, image):
+    """
+    Writes the output image file with boxes drawn on it
+    :param image_file: Name of the given image file
+    :param image: OpenCV image with boxes drawn on
+    """
+    basename, ext = os.path.splitext(image_file)
+    image_file_boxes = basename + "_boxes" + ext
+    cv2.imwrite(image_file_boxes, image)
+
+    print("Image with bounding boxes written to %s" % image_file_boxes)
+
+def _postprocess_image_for_coco_detection(
+        model_descriptor, image_file, predictions, labels
+):
+    """
+    Draw bounding boxes around objects that were detected
+    :param model_descriptor: Parsed yaml file describing model
+    :param image_file: Path to image
+    :param predictions: Detected objects
+    :param labels: Object labels
+    """
+    threshold = model_descriptor["model"]["threshold"]
 
     image = cv2.imread(image_file)
     height, width, _ = image.shape
@@ -144,7 +231,6 @@ def postprocess_image_for_detection(
         if score < threshold:
             break
 
-        # ymin, xmin, ymax, xmax = boxes[idx]
         xmin, ymin, xmax, ymax = boxes[idx]
 
         left = int(xmin * width)
@@ -152,35 +238,46 @@ def postprocess_image_for_detection(
         top = int(ymin * height)
         bottom = int(ymax * height)
 
-        # we are putting green rectangle around the object
-        cv2.rectangle(image, (left, top), (right, bottom), (0, 255, 0), 1)
-        # write label with green background
-        font = cv2.FONT_HERSHEY_SIMPLEX
-        font_scale = 1
-        font_thickness = 2
-        label_size, _ = cv2.getTextSize(
-            labels[idx], font, font_scale, font_thickness
-        )
-        label_width, label_height = label_size
-        cv2.rectangle(
-            image,
-            (left, top),
-            (left + label_width, top - label_height),
-            (0, 255, 0),
-            -1,
-        )
-        cv2.putText(
-            image,
-            labels[idx],
-            (left, top),
-            font,
-            font_scale,
-            (0, 0, 0),
-            font_thickness,
-        )
+        _draw_box(image, labels[idx], left, right, top, bottom)
 
-    basename, ext = os.path.splitext(image_file)
-    image_file_boxes = basename + "_boxes" + ext
-    cv2.imwrite(image_file_boxes, image)
+    _write_boxes_file(image_file, image)
 
-    print("Image with bounding boxes written to %s" % image_file_boxes)
+
+def _postprocess_image_for_openimages_detection(
+        model_descriptor, image_file, predictions, labels
+):
+    """
+    Draw bounding boxes around objects that were detected
+    :param model_descriptor: Parsed yaml file describing model
+    :param image_file: Path to image
+    :param predictions: Detected objects
+    :param labels: Object labels
+    """
+    threshold = model_descriptor["model"]["threshold"]
+
+    image = cv2.imread(image_file)
+    height, width, _ = image.shape
+
+    # unwrapping the single value predictions array
+    [results] = predictions
+    boxes = results['boxes'].cpu()
+    scores = results['scores'].cpu()
+
+    label_idx = 0
+    for box, score in zip(boxes, scores):
+        if score < threshold:
+            break
+
+        # resizing the box values from the 800x800 image to the original
+        # resolution.
+        resize = lambda x, orig: int((x / 800) * orig)
+        left = resize(box[0], width)
+        top = resize(box[1], height)
+        right = resize(box[2], width)
+        bottom = resize(box[3], height)
+
+        _draw_box(image, labels[label_idx], left, right, top, bottom)
+
+        label_idx += 1
+
+    _write_boxes_file(image_file, image)

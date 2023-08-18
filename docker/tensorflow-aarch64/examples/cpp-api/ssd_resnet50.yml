@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2021 Arm Limited and affiliates.
+# Copyright 2021-2023 Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,12 +18,12 @@
 description: >-
   SSD-Resnet50
 model:
-  - name: ssd_resnet50
+    name: ssd_resnet50
     source: models/ssd_resnet50_v1_fpn_640x640_coco17_tpu-8/saved_model
     labels: labels/coco-labels.txt
     threshold: 0.5
 arguments:
-  - input: serving_default_input_tensor:0
+    input: serving_default_input_tensor:0
     output: ["StatefulPartitionedCall:0",
       "StatefulPartitionedCall:1",
       "StatefulPartitionedCall:2",
