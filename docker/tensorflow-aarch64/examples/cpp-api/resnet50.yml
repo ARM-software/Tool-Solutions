@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2021 Arm Limited and affiliates.
+# Copyright 2021-2023 Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,10 +18,10 @@
 description: >-
   Resnet Model
 model:
-  - name: resnet50
+    name: resnet50
     source: models/resnet50
     labels: labels/imagenet-labels.txt
 arguments:
-  - input_shape: [1,224,224,3]
+    input_shape: [1,224,224,3]
     input: serving_default_input_1
     output: ["StatefulPartitionedCall:0"]

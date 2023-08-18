@@ -230,7 +230,7 @@ if [[ $clean_build ]]; then
 fi
 
 # Set TensorFlow version
-tf_version="59ec4da1b1b2d4ac016e0d88b6b4696520605111"
+tf_version="v2.14.0-rc0"
 
 # Add build-args to pass version numbers,
 extra_args="$extra_args \

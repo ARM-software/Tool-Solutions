@@ -129,32 +129,32 @@ tf::Status get_top_labels(const std::vector<tf::Tensor> &outputs, int count,
 
 // Returns the relative model path as a string
 std::string get_yaml_model(YAML::Node config) {
-  return config["model"][0]["source"].as<std::string>();
+  return config["model"]["source"].as<std::string>();
 }
 
 // Returns the relative labels path as a string
 std::string get_yaml_labels(YAML::Node config) {
-  return config["model"][0]["labels"].as<std::string>();
+  return config["model"]["labels"].as<std::string>();
 }
 
 // Returns the image width
 int get_yaml_img_w(YAML::Node config) {
-  return config["arguments"][0]["input_shape"][1].as<int>();
+  return config["arguments"]["input_shape"][1].as<int>();
 }
 
 // Returns the image height
 int get_yaml_img_h(YAML::Node config) {
-  return config["arguments"][0]["input_shape"][2].as<int>();
+  return config["arguments"]["input_shape"][2].as<int>();
 }
 
 // Returns the input node name
 std::string get_yaml_input(YAML::Node config) {
-  return config["arguments"][0]["input"].as<std::string>();
+  return config["arguments"]["input"].as<std::string>();
 }
 
 // Returns the output node names in a vector of strings
 std::vector<std::string> get_yaml_output(YAML::Node config) {
-  auto output = config["arguments"][0]["output"];
+  auto output = config["arguments"]["output"];
   std::vector<string> output_nodes_;
   for (int i = 0; i < output.size(); i++)
     output_nodes_.push_back(output[i].as<string>());
@@ -164,7 +164,7 @@ std::vector<std::string> get_yaml_output(YAML::Node config) {
 
 // Returns the confidence threshold as a float
 float get_yaml_threshold(YAML::Node config) {
-  return config["model"][0]["threshold"].as<float>();
+  return config["model"]["threshold"].as<float>();
 }
 
 } // namespace utils

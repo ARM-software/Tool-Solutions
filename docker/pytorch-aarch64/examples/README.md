@@ -25,19 +25,30 @@ The file [resnet_v1-50.yml](resnet_v1-50.yml) provides, in [YAML format](https:/
 
 ### Object detection
 
-The script [detect_objects.py](detect_object.py) demonstrates how to run inference using SSD-ResNet-34 model trained from the Common Object in Context (COCO) image dataset. This is a multiscale SSD (Single Shot Detection) model based on the ResNet-34 backbone network that performs object detection.
+The script [detect_objects.py](detect_object.py) demonstrates how to run inference using different models. Currently supported models are the SSD-ResNet-34 and RetinaNet (also known as ResNext50).
 
-To run inference on example image call:
+The SSD-ResNet-34 model is trained from the Common Object in Context (COCO) image dataset. This is a multiscale SSD (Single Shot Detection) model based on the ResNet-34 backbone network that performs object detection.
+
+RetinaNet is trained on the OpenImages dataset. It is a one-stage object detection model that is based on the ResNet-50 backbone network.
+
+To run inference with SSD-ResNet-34 on example image call:
 
 ```
 python detect_objects.py -m ./ssd_resnet34.yml -i https://raw.githubusercontent.com/zhreshold/mxnet-ssd/master/data/demo/street.jpg
 ```
 
+And similarly for RetinaNet:
+
+```
+python detect_objects.py -m ./retinanet.yml -i https://raw.githubusercontent.com/zhreshold/mxnet-ssd/master/data/demo/street.jpg
+```
+
 Where `-m` sets the configuration file (see below) that describes the model, and `-i` sets the URL, or filename, of the image in which you want to detect objects. The output of the script will list what object the model detected and with what confidence. It will also draw bounding boxes around those objects in a new image.
 
-The file [ssd_resnet34.yml](ssd_resnet34.yml) provides, in [YAML format](https://docs.ansible.com/ansible/latest/reference_appendices/YAMLSyntax.html) information about the model:
+The files [ssd_resnet34.yml](ssd_resnet34.yml) and [retinanet.yml](retinanet.yml) provide, in [YAML format](https://docs.ansible.com/ansible/latest/reference_appendices/YAMLSyntax.html) information about the models:
 - `name`: Name of the model used for inference
 - `script`: Script to download the Python model class and put it in the `PYTHONPATH`
+- `class`: Name of the Python model class to import
 - `source`: URL from where to download the model
 - `labels`: URL from where to download labels for the model
 - `threshold`: If confidence is below this threshold, then object will not be reported as detected
