@@ -10,7 +10,7 @@ where `YY` is the year, and `MM` the month of the increment.
 ### Added
 
 ### Changed
-- Updates Tensorflow to release candidate, Git tag: v2.14.0-rc0.
+- Updates Tensorflow to release candidate, Git tag: v2.14.0-rc1.
 
 ### Removed
 
