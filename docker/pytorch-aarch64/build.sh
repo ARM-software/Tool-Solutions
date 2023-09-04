@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # *******************************************************************************
-# Copyright 2020-2021 Arm Limited and affiliates.
+# Copyright 2020-2023 Arm Limited and affiliates.
 # Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -90,6 +90,7 @@ onednn=
 target="native"
 clean_build=
 xla=
+image_tag="latest"
 
 while [ $# -gt 0 ]
 do
@@ -240,26 +241,26 @@ extra_args="$extra_args --build-arg cpu=$cpu \
 
 if [[ $build_base_image ]]; then
   # Stage 1: Base image, Ubuntu with core packages and GCC9
-  docker build $extra_args --target pytorch-base -t pytorch-base:latest .
+  docker build $extra_args --target pytorch-base -t pytorch-base:$image_tag .
 fi
 
 if [[ $build_libs_image ]]; then
   # Stage 2: Libs image, essential maths libs and Python built and installed
-  docker build $extra_args --target pytorch-libs -t pytorch-libs:latest .
+  docker build $extra_args --target pytorch-libs -t pytorch-libs:$image_tag .
 fi
 
 if [[ $build_tools_image ]]; then
   # Stage 3: Tools image, Python3 venv added with additional Python essentials
-  docker build $extra_args --target pytorch-tools -t pytorch-tools:latest .
+  docker build $extra_args --target pytorch-tools -t pytorch-tools:$image_tag .
 fi
 
 if [[ $build_dev_image ]]; then
   # Stage 4: Adds PyTorch build with sources
-  docker build $extra_args --target pytorch-dev -t pytorch-dev${onednn:+"-$onednn"}-$target:latest .
+  docker build $extra_args --target pytorch-dev -t pytorch-dev${onednn:+"-$onednn"}-$target:$image_tag .
 fi
 
 if [[ $build_pytorch_image ]]; then
   # Stage 5: Adds PyTorch examples
-  docker build $extra_args --target pytorch -t pytorch${onednn:+"-$onednn"}-$target:latest .
+  docker build $extra_args --target pytorch -t pytorch${onednn:+"-$onednn"}-$target:$image_tag .
 fi
 
