@@ -217,7 +217,7 @@ COPY patches/site.cfg $PACKAGE_DIR/site.cfg
 RUN $PACKAGE_DIR/build-numpy.sh
 
 # Install some  basic python packages needed for SciPy
-RUN pip install --no-cache-dir pybind11 pyangbind pythran==0.9.11
+RUN pip install --no-cache-dir pybind11 pyangbind pythran
 # Build scipy from source, using OpenBLAS for BLAS calls
 COPY scripts/build-scipy.sh $PACKAGE_DIR/.
 COPY patches/site.cfg $PACKAGE_DIR/site.cfg
@@ -336,7 +336,7 @@ RUN $MLCOMMONS_DIR/build-mlcommons.sh
 RUN rm -f $MLCOMMONS_DIR/build-mlcommons.sh
 
 # Install missing Python package dependencies required to run examples
-RUN pip install --no-cache-dir pyyaml==5.3.1
+RUN pip install --no-cache-dir pyyaml
 RUN pip install --no-cache-dir tqdm
 RUN pip install --no-cache-dir protobuf==4.23.4
 
