@@ -25,6 +25,7 @@ readonly package=ComputeLibrary
 readonly version=$ACL_VERSION
 readonly src_host=https://review.mlplatform.org/ml
 readonly src_repo=ComputeLibrary
+readonly num_cpus=$(nproc)
 
 install_dir=$PROD_DIR/$package
 
@@ -43,7 +44,7 @@ multi_isa=0
 [[ "$arch" == "armv8.2-a" ]] || [[ "$arch" == "armv8a" ]] && multi_isa=1
 
 # Build with scons
-scons -j16  Werror=0 debug=0 neon=1 opencl=0 embed_kernels=0 \
+scons -j${NP_MAKE:-$((num_cpus / 2))}  Werror=0 debug=0 neon=1 opencl=0 embed_kernels=0 \
   os=linux arch=$arch build=native multi_isa=$multi_isa \
   fixed_format_kernels=1 openmp=1 cppthreads=0 \
   build_dir=$install_dir/build
