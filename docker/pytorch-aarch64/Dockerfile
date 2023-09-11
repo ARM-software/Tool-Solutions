@@ -229,7 +229,7 @@ RUN pip install --no-cache-dir hypothesis pyyaml pytest
 RUN pip install --no-cache-dir matplotlib
 RUN pip install --no-cache-dir pillow==6.1 lmdb
 RUN pip install --no-cache-dir ck==1.55.5 absl-py pycocotools typing_extensions
-RUN pip install --no-cache-dir transformers pandas
+RUN pip install --no-cache-dir transformers==4.32.1 pandas
 
 # Install OpenCV into our venv,
 # Note: Scripts are provided to build and install OpenCV from the
