@@ -10,6 +10,17 @@ where `YY` is the year, and `MM` the month of the increment.
 ### Added
 
 ### Changed
+
+### Removed
+
+### Fixed
+
+## [r23.09] 2023-09-14
+https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--r23.09/docker/tensorflow-aarch64
+
+### Added
+
+### Changed
 - Updates Tensorflow to release candidate, Git tag: v2.14.0-rc1.
 
 ### Removed

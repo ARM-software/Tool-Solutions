@@ -14,7 +14,19 @@ where `YY` is the year, and `MM` the month of the increment.
 ### Removed
 
 ### Fixed
- - Fixed a bug in the build.sh script to use the `tag` argument when building any pytorch image
+
+## [r23.09] 2023-09-14
+https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--r23.09/docker/pytorch-aarch64
+
+### Added
+
+### Changed
+
+### Removed
+
+### Fixed
+ - Fixed a bug in the build.sh script to use the `tag` argument when building any pytorch image.
+ - Pins transformers to v4.32.1 to avoid runtime failure when built with `--xla`.
 
 ## [r23.08] 2023-08-16
 https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--r23.08/docker/pytorch-aarch64
