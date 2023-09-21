@@ -8,10 +8,16 @@ where `YY` is the year, and `MM` the month of the increment.
 ## [Unreleased]
 
 ### Added
+ - oneDNN patch to enable JITed BF16 reorders.
 
 ### Changed
+ - oneDNN updated to v3.2.1
+ - Replaced numpy/scipy builds with pip installed versions.
+ - Updated numpy to v1.25.2.
+ - Updated scipy to v1.10.1.
 
 ### Removed
+ - OpenBLAS build removed.
 
 ### Fixed
 

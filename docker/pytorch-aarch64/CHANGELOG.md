@@ -10,10 +10,14 @@ where `YY` is the year, and `MM` the month of the increment.
 ### Added
 
 ### Changed
+ - Replaced numpy/scipy builds with pip installed versions.
+ - Updates numpy to v1.25.2.
+ - Updates scipy to v1.10.1.
 
 ### Removed
 
 ### Fixed
+ - Fixes numpy array load bug in MLCommons vision examples.
 
 ## [r23.09] 2023-09-14
 https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--r23.09/docker/pytorch-aarch64

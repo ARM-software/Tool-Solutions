@@ -34,6 +34,9 @@ rm $MLCOMMONS_DIR/pytorch_native.patch
 patch -p1 < $MLCOMMONS_DIR/mlcommons_bert.patch
 rm $MLCOMMONS_DIR/mlcommons_bert.patch
 
+patch -p1 < $MLCOMMONS_DIR/mlcommons_numpy_array.patch
+rm $MLCOMMONS_DIR/mlcommons_numpy_array.patch
+
 # Get updated openimages install script
 git checkout v3.0 -- vision/classification_and_detection/tools/openimages_mlperf.sh vision/classification_and_detection/tools/openimages.py
 
