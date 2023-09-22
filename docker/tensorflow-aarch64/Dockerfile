@@ -141,8 +141,7 @@ ENV NP_MAKE="${njobs}" \
     BLAS_NCORES="${blas_ncores}"
 
 # Key version numbers
-ENV OPENBLAS_VERSION=0.3.20 \
-    YAML_VERSION=master
+ENV YAML_VERSION=master
 
 # Package build parameters
 ENV PROD_DIR=/opt \
@@ -158,12 +157,6 @@ ENV CC=gcc \
     CXX=g++ \
     BASE_CFLAGS="-mcpu=${CPU} -march=${ARCH} -O3" \
     BASE_LDFLAGS=""
-
-# Build OpenBLAS from source
-COPY scripts/build-openblas.sh $PACKAGE_DIR/.
-RUN $PACKAGE_DIR/build-openblas.sh
-ENV OPENBLAS_DIR=$PROD_DIR/openblas
-ENV LD_LIBRARY_PATH=$OPENBLAS_DIR/lib:$LD_LIBRARY_PATH
 
 # Build and install OpenCV from GitHub sources (needed for C++ API examples)
 COPY scripts/build-opencv.sh $PACKAGE_DIR/.
@@ -187,10 +180,6 @@ ENV PY_VERSION="${default_py_version}" \
     NP_MAKE="${njobs}" \
     CPU="${cpu}" \
     ARCH="${arch}"
-# Key version numbers
-ENV NUMPY_VERSION=1.21.5 \
-    SCIPY_VERSION=1.7.3 \
-    NPY_DISTUTILS_APPEND_FLAGS=1
 
 # Using venv means this can be done in userspace
 WORKDIR /home/$DOCKER_USER
@@ -211,28 +200,19 @@ ENV PATH="/home/$DOCKER_USER/.cargo/bin:${PATH}"
 RUN pip install --no-cache-dir --upgrade pip
 RUN pip install --no-cache-dir "setuptools>=41.0.0" six mock wheel cython==0.29.36 sh
 
-# Build numpy from source, using OpenBLAS for BLAS calls
-COPY scripts/build-numpy.sh $PACKAGE_DIR/.
-COPY patches/site.cfg $PACKAGE_DIR/site.cfg
-RUN $PACKAGE_DIR/build-numpy.sh
-
 # Install some  basic python packages needed for SciPy
 RUN pip install --no-cache-dir pybind11 pyangbind pythran
-# Build scipy from source, using OpenBLAS for BLAS calls
-COPY scripts/build-scipy.sh $PACKAGE_DIR/.
-COPY patches/site.cfg $PACKAGE_DIR/site.cfg
-RUN $PACKAGE_DIR/build-scipy.sh
+
+# Install NumPy and SciPy
+RUN pip install --no-cache-dir numpy==1.25.2 scipy==1.10.1
 
 # Install some TensorFlow essentials
 # enum34 is not compatible with Python 3.6+, and not required
 # it is installed as a dependency for an earlier package and needs
 # to be removed in order for the OpenCV build to complete.
-# Note: tensorflow-io v0.27.0 is specified as later releases are unable to
-# load `libtensorflow_io_plugins.so` on AArch64.
-# TODO: update to tensorflow-io once the issue is resolved in the released wheel.
 RUN pip uninstall enum34 -y
 RUN HDF5_DIR=/usr/lib/aarch64-linux-gnu/hdf5/serial pip install h5py==3.8.0
-RUN pip install --no-cache-dir grpcio tensorflow-io==0.27.0 pytest
+RUN pip install --no-cache-dir grpcio tensorflow-io pytest
 RUN pip install --no-cache-dir ck==1.55.5 absl-py pycocotools pillow==8.2.0
 RUN pip install --no-cache-dir transformers pandas
 

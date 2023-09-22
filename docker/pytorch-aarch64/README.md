@@ -63,8 +63,8 @@ where `<image name>` is the name of the image, i.e. `armswdev/pytorch-arm-neover
   * [oneDNN](https://github.com/oneapi-src/oneDNN) 2.7.3
     - ACL 23.05, provides optimized implementations on AArch64 for main oneDNN primitives
   * Python 3.10 environment containing:
-    - NumPy 1.21.5
-    - SciPy 1.7.3
+    - NumPy 1.25.2
+    - SciPy 1.10.1
     - PyTorch 2.0.0
     - TorchVision 0.15.1
     - TorchData 0.6.0

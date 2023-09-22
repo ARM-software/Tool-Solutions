@@ -188,10 +188,6 @@ ENV PY_VERSION="${default_py_version}" \
     NP_MAKE="${njobs}" \
     CPU="${cpu}" \
     ARCH="${arch}"
-# Key version numbers
-ENV NUMPY_VERSION=1.21.5 \
-    SCIPY_VERSION=1.7.3 \
-    NPY_DISTUTILS_APPEND_FLAGS=1
 
 # Using venv means this can be done in userspace
 WORKDIR /home/$DOCKER_USER
@@ -212,17 +208,11 @@ ENV PATH="/home/$DOCKER_USER/.cargo/bin:${PATH}"
 RUN pip install --no-cache-dir --upgrade pip
 RUN pip install --no-cache-dir "setuptools>=41.0.0" six mock wheel cython==0.29.36
 
-# Build numpy from source, using OpenBLAS for BLAS calls
-COPY scripts/build-numpy.sh $PACKAGE_DIR/.
-COPY patches/site.cfg $PACKAGE_DIR/site.cfg
-RUN $PACKAGE_DIR/build-numpy.sh
-
 # Install some  basic python packages needed for SciPy
 RUN pip install --no-cache-dir pybind11==2.6.2 pyangbind pythran
-# Build scipy from source, using OpenBLAS for BLAS calls
-COPY scripts/build-scipy.sh $PACKAGE_DIR/.
-COPY patches/site.cfg $PACKAGE_DIR/site.cfg
-RUN $PACKAGE_DIR/build-scipy.sh
+
+# Install NumPy and SciPy
+RUN pip install --no-cache-dir numpy==1.25.2 scipy==1.10.1
 
 # Install some more essentials.
 RUN pip install --no-cache-dir hypothesis pyyaml pytest
@@ -349,6 +339,7 @@ RUN mkdir -p $MLCOMMONS_DIR
 COPY scripts/build-mlcommons.sh $MLCOMMONS_DIR/.
 COPY patches/mlcommons_bert.patch $MLCOMMONS_DIR/.
 COPY patches/mlcommons_rnnt.patch $MLCOMMONS_DIR/.
+COPY patches/mlcommons_numpy_array.patch $MLCOMMONS_DIR/.
 COPY patches/pytorch_native.patch $MLCOMMONS_DIR/.
 RUN $MLCOMMONS_DIR/build-mlcommons.sh
 RUN rm -f $MLCOMMONS_DIR/build-mlcommons.sh
