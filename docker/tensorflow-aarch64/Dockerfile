@@ -239,6 +239,10 @@ RUN pip install --no-cache-dir transformers pandas
 # Install OpenCV into our venv (needed for MLCommons benchmarks)
 RUN pip install --no-cache-dir opencv-python-headless==4.8.0.74
 
+# Pin to 0.2.0 due to incompatibility of newer
+# versions with TF 2.14-RC
+RUN pip install --no-cache-dir ml_dtypes==0.2.0
+
 # Remove dependency on HDF5 save support in Keras as this does not
 # work with TensorFlow 2.11 and Transformers 4.24
 COPY scripts/remove-keras-hdf-save-dependency.sh $PACKAGE_DIR/.
@@ -298,6 +302,11 @@ RUN chmod a+x $PACKAGE_DIR/bazel/bazel
 ENV PATH="$PACKAGE_DIR/bazel:$PATH"
 
 # Build TensorFlow
+COPY patches/tf_acl.patch $PACKAGE_DIR/.
+COPY patches/onednn_acl_reorder.patch $PACKAGE_DIR/.
+COPY patches/onednn_acl_thread_local_scheduler.patch $PACKAGE_DIR/.
+COPY patches/onednn_acl_threadcap.patch $PACKAGE_DIR/.
+COPY patches/onednn_acl_fp32_bf16_reorder.patch $PACKAGE_DIR/.
 COPY scripts/build-tensorflow.sh $PACKAGE_DIR/.
 RUN $PACKAGE_DIR/build-tensorflow.sh
 COPY scripts/build-tensorflow-addons.sh $PACKAGE_DIR/.

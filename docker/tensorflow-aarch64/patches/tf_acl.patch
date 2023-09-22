@@ -1,0 +1,97 @@
+ *******************************************************************************
+ Copyright 2023 Arm Limited and affiliates.
+ SPDX-License-Identifier: Apache-2.0
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+ *******************************************************************************
+diff --git a/tensorflow/tsl/mkl/build_defs.bzl b/tensorflow/tsl/mkl/build_defs.bzl
+index c89fb8c5461..f44262f3b75 100644
+--- a/tensorflow/tsl/mkl/build_defs.bzl
++++ b/tensorflow/tsl/mkl/build_defs.bzl
+@@ -115,7 +115,7 @@ def onednn_v3_define():
+       An empty list of all other cases (include ARM builds).
+     """
+     return select({
+-        "@org_tensorflow//tensorflow/tsl/mkl:build_with_mkl_aarch64": [],
++        "@org_tensorflow//tensorflow/tsl/mkl:build_with_mkl_aarch64": ["-DENABLE_ONEDNN_V3"],
+         "@org_tensorflow//tensorflow/tsl:linux_x86_64": ["-DENABLE_ONEDNN_V3"],
+         "@org_tensorflow//tensorflow/tsl:windows": ["-DENABLE_ONEDNN_V3"],
+         "//conditions:default": [],
+diff --git a/tensorflow/workspace2.bzl b/tensorflow/workspace2.bzl
+index 7e9faa558a4..748d860c57a 100644
+--- a/tensorflow/workspace2.bzl
++++ b/tensorflow/workspace2.bzl
+@@ -204,18 +204,13 @@ def _tf_repositories():
+         build_file = "//third_party/mkl_dnn:mkldnn_acl.BUILD",
+         patch_file = [
+             "//third_party/mkl_dnn:onednn_acl_threadcap.patch",
+-            "//third_party/mkl_dnn:onednn_acl_remove_winograd.patch",
+-            "//third_party/mkl_dnn:onednn_acl_fixed_format_kernels.patch",
+-            "//third_party/mkl_dnn:onednn_acl_depthwise_convolution.patch",
+-            "//third_party/mkl_dnn:onednn_acl_threadpool_scheduler.patch",
+-            "//third_party/mkl_dnn:onednn_acl_reorder_padded.patch",
+-            "//third_party/mkl_dnn:onednn_acl_reorder_update.patch",
+             "//third_party/mkl_dnn:onednn_acl_reorder.patch",
+             "//third_party/mkl_dnn:onednn_acl_thread_local_scheduler.patch",
++            "//third_party/mkl_dnn:onednn_acl_fp32_bf16_reorder.patch",
+         ],
+-        sha256 = "a50993aa6265b799b040fe745e0010502f9f7103cc53a9525d59646aef006633",
+-        strip_prefix = "oneDNN-2.7.3",
+-        urls = tf_mirror_urls("https://github.com/oneapi-src/oneDNN/archive/v2.7.3.tar.gz"),
++        sha256 = "8b1db9cc5799ae39c2a567eb836962de0346d79fbc3d8e6f7090a3d9f8729129",
++        strip_prefix = "oneDNN-3.2",
++        urls = tf_mirror_urls("https://github.com/oneapi-src/oneDNN/archive/refs/tags/v3.2.tar.gz"),
+     )
+ 
+     tf_http_archive(
+diff --git a/third_party/mkl_dnn/mkldnn_acl.BUILD b/third_party/mkl_dnn/mkldnn_acl.BUILD
+index a1085427ec0..f9c4d89d92d 100644
+--- a/third_party/mkl_dnn/mkldnn_acl.BUILD
++++ b/third_party/mkl_dnn/mkldnn_acl.BUILD
+@@ -61,6 +61,7 @@ _DNNL_RUNTIME_THREADPOOL = {
+     "#cmakedefine01 BUILD_XEHPG": "#define BUILD_XEHPG 0",
+     "#cmakedefine01 BUILD_XEHPC": "#define BUILD_XEHPC 0",
+     "#cmakedefine01 BUILD_XEHP": "#define BUILD_XEHP 0",
++    "#cmakedefine ONEDNN_BUILD_GRAPH": "#undef ONEDNN_BUILD_GRAPH",
+ }
+ 
+ _DNNL_RUNTIME_OMP = {
+@@ -108,6 +109,7 @@ _DNNL_RUNTIME_OMP = {
+     "#cmakedefine01 BUILD_XEHPG": "#define BUILD_XEHPG 0",
+     "#cmakedefine01 BUILD_XEHPC": "#define BUILD_XEHPC 0",
+     "#cmakedefine01 BUILD_XEHP": "#define BUILD_XEHP 0",
++    "#cmakedefine ONEDNN_BUILD_GRAPH": "#undef ONEDNN_BUILD_GRAPH",
+ }
+ 
+ expand_template(
+@@ -124,9 +126,9 @@ expand_template(
+     name = "dnnl_version_h",
+     out = "include/oneapi/dnnl/dnnl_version.h",
+     substitutions = {
+-        "@DNNL_VERSION_MAJOR@": "2",
+-        "@DNNL_VERSION_MINOR@": "7",
+-        "@DNNL_VERSION_PATCH@": "3",
++        "@DNNL_VERSION_MAJOR@": "3",
++        "@DNNL_VERSION_MINOR@": "2",
++        "@DNNL_VERSION_PATCH@": "0",
+         "@DNNL_VERSION_HASH@": "N/A",
+     },
+     template = "include/oneapi/dnnl/dnnl_version.h.in",
+@@ -142,6 +144,7 @@ cc_library(
+         ],
+         exclude = [
+             "src/cpu/x64/**",
++            "src/cpu/rv64/**",
+         ],
+     ),
+     copts = select({
