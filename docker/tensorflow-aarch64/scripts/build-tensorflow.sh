@@ -84,6 +84,14 @@ if [[ $ONEDNN_BUILD ]]; then
         else
             tf_backend_desc="oneDNN + Compute Library (OpenMP runtime)."
         fi
+
+        patch -p1 < ../tf_acl.patch
+        mv ../onednn_acl_reorder.patch ./third_party/mkl_dnn/.
+        mv ../onednn_acl_thread_local_scheduler.patch ./third_party/mkl_dnn/.
+        mv ../onednn_acl_threadcap.patch ./third_party/mkl_dnn/.
+        mv ../onednn_acl_fp32_bf16_reorder.patch ./third_party/mkl_dnn/.
+
+
     fi
 else
     tf_backend_desc="Eigen."
