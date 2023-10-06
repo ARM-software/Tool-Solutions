@@ -86,6 +86,7 @@ if [[ $ONEDNN_BUILD ]]; then
         fi
 
         patch -p1 < ../tf_acl.patch
+        patch -p1 < ../tf_threadpool_threadcap.patch
         mv ../onednn_acl_reorder.patch ./third_party/mkl_dnn/.
         mv ../onednn_acl_thread_local_scheduler.patch ./third_party/mkl_dnn/.
         mv ../onednn_acl_threadcap.patch ./third_party/mkl_dnn/.

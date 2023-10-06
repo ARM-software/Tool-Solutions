@@ -9,6 +9,7 @@ where `YY` is the year, and `MM` the month of the increment.
 
 ### Added
  - oneDNN patch to enable JITed BF16 reorders.
+ - Tensorflow patch to limit Eigen ThreadPool threads.
 
 ### Changed
  - oneDNN updated to v3.2.1
