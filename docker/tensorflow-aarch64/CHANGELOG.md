@@ -8,11 +8,23 @@ where `YY` is the year, and `MM` the month of the increment.
 ## [Unreleased]
 
 ### Added
+
+### Changed
+
+### Removed
+
+### Fixed
+
+## [r23.10] 2023-10-11
+https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--r23.10/docker/tensorflow-aarch64
+
+### Added
  - oneDNN patch to enable JITed BF16 reorders.
  - Tensorflow patch to limit Eigen ThreadPool threads.
 
 ### Changed
  - oneDNN updated to v3.2.1
+ - Pinned ml_dtypes to 0.2.0 to fix incompatibility with TF 2.14-rc
  - Replaced numpy/scipy builds with pip installed versions.
  - Updated numpy to v1.25.2.
  - Updated scipy to v1.10.1.

@@ -10,6 +10,17 @@ where `YY` is the year, and `MM` the month of the increment.
 ### Added
 
 ### Changed
+
+### Removed
+
+### Fixed
+
+## [r23.10] 2023-10-11
+https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--r23.10/docker/pytorch-aarch64
+
+### Added
+
+### Changed
  - Replaced numpy/scipy builds with pip installed versions.
  - Updates numpy to v1.25.2.
  - Updates scipy to v1.10.1.
