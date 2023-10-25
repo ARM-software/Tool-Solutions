@@ -90,7 +90,6 @@ if [[ $ONEDNN_BUILD ]]; then
         mv ../onednn_acl_reorder.patch ./third_party/mkl_dnn/.
         mv ../onednn_acl_thread_local_scheduler.patch ./third_party/mkl_dnn/.
         mv ../onednn_acl_threadcap.patch ./third_party/mkl_dnn/.
-        mv ../onednn_acl_fp32_bf16_reorder.patch ./third_party/mkl_dnn/.
 
 
     fi

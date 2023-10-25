@@ -28,10 +28,10 @@ index c89fb8c5461..f44262f3b75 100644
          "@org_tensorflow//tensorflow/tsl:windows": ["-DENABLE_ONEDNN_V3"],
          "//conditions:default": [],
 diff --git a/tensorflow/workspace2.bzl b/tensorflow/workspace2.bzl
-index 7e9faa558a4..748d860c57a 100644
+index 7e9faa558a4..759041daf67 100644
 --- a/tensorflow/workspace2.bzl
 +++ b/tensorflow/workspace2.bzl
-@@ -204,18 +204,13 @@ def _tf_repositories():
+@@ -204,18 +204,12 @@ def _tf_repositories():
          build_file = "//third_party/mkl_dnn:mkldnn_acl.BUILD",
          patch_file = [
              "//third_party/mkl_dnn:onednn_acl_threadcap.patch",
@@ -43,38 +43,49 @@ index 7e9faa558a4..748d860c57a 100644
 -            "//third_party/mkl_dnn:onednn_acl_reorder_update.patch",
              "//third_party/mkl_dnn:onednn_acl_reorder.patch",
              "//third_party/mkl_dnn:onednn_acl_thread_local_scheduler.patch",
-+            "//third_party/mkl_dnn:onednn_acl_fp32_bf16_reorder.patch",
          ],
 -        sha256 = "a50993aa6265b799b040fe745e0010502f9f7103cc53a9525d59646aef006633",
 -        strip_prefix = "oneDNN-2.7.3",
 -        urls = tf_mirror_urls("https://github.com/oneapi-src/oneDNN/archive/v2.7.3.tar.gz"),
-+        sha256 = "8b1db9cc5799ae39c2a567eb836962de0346d79fbc3d8e6f7090a3d9f8729129",
-+        strip_prefix = "oneDNN-3.2",
-+        urls = tf_mirror_urls("https://github.com/oneapi-src/oneDNN/archive/refs/tags/v3.2.tar.gz"),
++        sha256 = "8d150a77025f38bff182aaef4dd643625563b2f311c635f86cf4b769b04d7b48",
++        strip_prefix = "oneDNN-3.3",
++        urls = tf_mirror_urls("https://github.com/oneapi-src/oneDNN/archive/refs/tags/v3.3.tar.gz"),
      )
- 
+
      tf_http_archive(
 diff --git a/third_party/mkl_dnn/mkldnn_acl.BUILD b/third_party/mkl_dnn/mkldnn_acl.BUILD
-index a1085427ec0..f9c4d89d92d 100644
+index a1085427ec0..daff639aee7 100644
 --- a/third_party/mkl_dnn/mkldnn_acl.BUILD
 +++ b/third_party/mkl_dnn/mkldnn_acl.BUILD
-@@ -61,6 +61,7 @@ _DNNL_RUNTIME_THREADPOOL = {
+@@ -61,6 +61,13 @@ _DNNL_RUNTIME_THREADPOOL = {
      "#cmakedefine01 BUILD_XEHPG": "#define BUILD_XEHPG 0",
      "#cmakedefine01 BUILD_XEHPC": "#define BUILD_XEHPC 0",
      "#cmakedefine01 BUILD_XEHP": "#define BUILD_XEHP 0",
++    "#cmakedefine01 BUILD_GROUP_NORMALIZATION": "#define BUILD_GROUP_NORMALIZATION 0",
++    "#cmakedefine01 BUILD_GEMM_KERNELS_ALL": "#define BUILD_GEMM_KERNELS_ALL 1",
++    "#cmakedefine01 BUILD_GEMM_KERNELS_NONE": "#define BUILD_GEMM_KERNELS_NONE 0",
++    "#cmakedefine01 BUILD_GEMM_SSE41": "#define BUILD_GEMM_SSE41 0",
++    "#cmakedefine01 BUILD_GEMM_AVX2": "#define BUILD_GEMM_AVX2 0",
++    "#cmakedefine01 BUILD_GEMM_AVX512": "#define BUILD_GEMM_AVX512 0",
 +    "#cmakedefine ONEDNN_BUILD_GRAPH": "#undef ONEDNN_BUILD_GRAPH",
  }
  
  _DNNL_RUNTIME_OMP = {
-@@ -108,6 +109,7 @@ _DNNL_RUNTIME_OMP = {
+@@ -108,6 +115,13 @@ _DNNL_RUNTIME_OMP = {
      "#cmakedefine01 BUILD_XEHPG": "#define BUILD_XEHPG 0",
      "#cmakedefine01 BUILD_XEHPC": "#define BUILD_XEHPC 0",
      "#cmakedefine01 BUILD_XEHP": "#define BUILD_XEHP 0",
++    "#cmakedefine01 BUILD_GROUP_NORMALIZATION": "#define BUILD_GROUP_NORMALIZATION 0",
++    "#cmakedefine01 BUILD_GEMM_KERNELS_ALL": "#define BUILD_GEMM_KERNELS_ALL 1",
++    "#cmakedefine01 BUILD_GEMM_KERNELS_NONE": "#define BUILD_GEMM_KERNELS_NONE 0",
++    "#cmakedefine01 BUILD_GEMM_SSE41": "#define BUILD_GEMM_SSE41 0",
++    "#cmakedefine01 BUILD_GEMM_AVX2": "#define BUILD_GEMM_AVX2 0",
++    "#cmakedefine01 BUILD_GEMM_AVX512": "#define BUILD_GEMM_AVX512 0",
 +    "#cmakedefine ONEDNN_BUILD_GRAPH": "#undef ONEDNN_BUILD_GRAPH",
  }
  
  expand_template(
-@@ -124,9 +126,9 @@ expand_template(
+@@ -124,9 +138,9 @@ expand_template(
      name = "dnnl_version_h",
      out = "include/oneapi/dnnl/dnnl_version.h",
      substitutions = {
@@ -82,12 +93,12 @@ index a1085427ec0..f9c4d89d92d 100644
 -        "@DNNL_VERSION_MINOR@": "7",
 -        "@DNNL_VERSION_PATCH@": "3",
 +        "@DNNL_VERSION_MAJOR@": "3",
-+        "@DNNL_VERSION_MINOR@": "2",
++        "@DNNL_VERSION_MINOR@": "3",
 +        "@DNNL_VERSION_PATCH@": "0",
          "@DNNL_VERSION_HASH@": "N/A",
      },
      template = "include/oneapi/dnnl/dnnl_version.h.in",
-@@ -142,6 +144,7 @@ cc_library(
+@@ -142,6 +156,7 @@ cc_library(
          ],
          exclude = [
              "src/cpu/x64/**",
