@@ -47,7 +47,7 @@ index fd2c76d01..bd7bed837 100644
      }
  #endif
 -#if DNNL_CPU_THREADING_RUNTIME == DNNL_RUNTIME_THREADPOOL
--    if (verbose_has_profile_externals()) {
+-    if (get_verbose(verbose_t::profile_externals)) {
 -        acl_set_tp_benchmark_scheduler();
 -    } else {
 -        acl_set_tp_scheduler();
