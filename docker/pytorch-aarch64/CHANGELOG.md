@@ -10,6 +10,19 @@ where `YY` is the year, and `MM` the month of the increment.
 ### Added
 
 ### Changed
+ - Updated pytorch to version 2.1.0.
+ - Updated torchxla to version 2.1.0.
+ - Updated torchtext to version 0.16.0.
+ - Updated torchvision to version 0.16.0.
+ - Updated torchdata to version 0.7.0.
+ - Updated oneDNN to version 3.1.1.
+ - Updated the list/content of oneDNN patches for version 3.1.1:
+    - Remove the jit_unit_reorder patches as they were merged upstream;
+    - Updated content of onednn_acl_fixed_format patch;
+    - Updated content of the onednn_acl_remove_winograd patch.
+ - Pinned onnx package to version 1.15.0 to avoid
+   error in numpy due to unsupported method, support
+   stopped in numpy 1.23.4.
 
 ### Removed
 

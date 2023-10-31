@@ -14,40 +14,16 @@
  See the License for the specific language governing permissions and
  limitations under the License.
  *******************************************************************************
-diff --git a/src/common/matmul_pd.hpp b/src/common/matmul_pd.hpp
-index 4330ad938b..df16c5fcca 100644
---- a/src/common/matmul_pd.hpp
-+++ b/src/common/matmul_pd.hpp
-@@ -159,6 +159,19 @@ protected:
- 
-         return true;
-     }
-+
-+    // All implementations that do not support sparse inputs/outputs should
-+    // call this function.
-+    bool is_dense_data() {
-+#ifdef DNNL_EXPERIMENTAL_SPARSE
-+        for (auto md : {&src_md_, &weights_md_, &bias_md_, &dst_md_}) {
-+            if (memory_desc_wrapper(md).format_kind() == format_kind::sparse)
-+                return false;
-+        }
-+#endif
-+        return true;
-+    }
-+
- };
- 
- } // namespace impl
 diff --git a/src/cpu/aarch64/acl_convolution_utils.cpp b/src/cpu/aarch64/acl_convolution_utils.cpp
-index 37f8ecbc06..6b57374643 100644
+index 83a083c59..a3a203a76 100644
 --- a/src/cpu/aarch64/acl_convolution_utils.cpp
 +++ b/src/cpu/aarch64/acl_convolution_utils.cpp
 @@ -41,25 +41,23 @@ status_t acl_init_conf(acl_conv_conf_t &acp, memory_desc_t &src_md,
      const memory_desc_wrapper dst_d(&dst_md);
      const memory_desc_wrapper bia_d(&bias_md);
  
--    auto math_mode = get_fpmath_mode();
--    acp.fast_math = one_of(math_mode, fpmath_mode::bf16, fpmath_mode::any);
+-    acp.fast_math
+-            = one_of(attr.fpmath_mode_, fpmath_mode::bf16, fpmath_mode::any);
 -
      // Compute Library currently supports forward propagation only
      const prop_kind_t prop_kind = cd.prop_kind;
@@ -77,7 +53,7 @@ index 37f8ecbc06..6b57374643 100644
  
      // batch size
      const int mb = src_d.dims()[0];
-@@ -110,108 +108,143 @@ status_t acl_init_conf(acl_conv_conf_t &acp, memory_desc_t &src_md,
+@@ -110,111 +108,143 @@ status_t acl_init_conf(acl_conv_conf_t &acp, memory_desc_t &src_md,
  
      acp.with_bias = cd.bias_desc.format_kind != format_kind::undef;
  
@@ -222,12 +198,15 @@ index 37f8ecbc06..6b57374643 100644
  
 -    // Add quantization info to tensors
 -    if (acp.is_int8) {
--        const float *scales = attr.output_scales_.scales_;
--        acp.src_info.set_quantization_info(arm_compute::QuantizationInfo(1, 0));
--        acp.bia_info.set_quantization_info(arm_compute::QuantizationInfo(1, 0));
--        acp.wei_info.set_quantization_info(arm_compute::QuantizationInfo(1, 0));
--        acp.dst_info.set_quantization_info(
--                arm_compute::QuantizationInfo(1.0f / scales[0], 0));
+-        // TODO: Add runtime scales support. Creation time scales will be remove
+-        // in 3.0.
+-        // const float *scales = attr.output_scales_.scales_;
+-        //acp.src_info.set_quantization_info(arm_compute::QuantizationInfo(1, 0));
+-        //acp.bia_info.set_quantization_info(arm_compute::QuantizationInfo(1, 0));
+-        //acp.wei_info.set_quantization_info(arm_compute::QuantizationInfo(1, 0));
+-        //acp.dst_info.set_quantization_info(
+-        //       arm_compute::QuantizationInfo(1.0f / scales[0], 0));
+-        return status::unimplemented;
 +    // Are we allowed to cast down to bf16 or not?
 +    acp.fast_math
 +            = one_of(attr.fpmath_mode_, fpmath_mode::bf16, fpmath_mode::any);
@@ -496,29 +475,15 @@ index c5e507085f..a27df640fb 100644
          // clang-format on
  
          return status::success;
-@@ -89,12 +92,16 @@ struct acl_inner_product_fwd_t : public primitive_t {
-         DECLARE_COMMON_PD_T("acl", acl_inner_product_fwd_t);
- 
-         status_t init(engine_t *engine) {
--            const bool ok = is_fwd() && !has_zero_dim_memory()
--                    && expect_data_types(data_type::f32, data_type::f32,
--                            data_type::f32, data_type::f32, data_type::f32)
-+            using namespace data_type;
-+            const bool is_fp16_ok = expect_data_types(f16, f16, f16, f16, undef)
-+                && attr()->has_default_values(
-+                        primitive_attr_t::skip_mask_t::post_ops, f16);
-+            const bool is_fp32_ok = expect_data_types(f32, f32, f32, f32, undef)
-                     && attr()->has_default_values(
--                            primitive_attr_t::skip_mask_t::post_ops,
--                            data_type::f32)
-+                            primitive_attr_t::skip_mask_t::post_ops, f32);
-+            const bool ok = is_fwd() && !has_zero_dim_memory()
-+                    && utils::one_of(true, is_fp16_ok, is_fp32_ok)
+@@ -98,6 +98,7 @@ struct acl_inner_product_fwd_t : public primitive_t {
+                             primitive_attr_t::skip_mask_t::post_ops, f32);
+             const bool ok = is_fwd() && !has_zero_dim_memory()
+                     && utils::one_of(true, is_fp16_ok, is_fp32_ok)
 +                    && weights_md_.format_kind == format_kind::any
                      && set_default_params() == status::success;
  
              if (!ok) return status::unimplemented;
-@@ -121,88 +128,46 @@ struct acl_inner_product_fwd_t : public primitive_t {
+@@ -124,95 +125,46 @@ struct acl_inner_product_fwd_t : public primitive_t {
              ACL_CHECK_SUPPORT(
                      !(is_2d || is_4d), "ACL supports only 2d or 4d cases");
  
@@ -539,14 +504,11 @@ index c5e507085f..a27df640fb 100644
 -
 -            // Only NCHW or NHWC derivatives supported by ACL kernels
              using namespace format_tag;
--            auto src_tag = memory_desc_matches_one_of_tag(
--                    src_md_, nhwc, nchw, nc, cn);
+             auto src_tag
+                     = memory_desc_matches_one_of_tag(src_md_, nhwc, nchw, nc);
 -            auto wei_tag = memory_desc_matches_one_of_tag(
 -                    weights_md_, ohwi, oihw, oi, io);
--            auto dst_tag = memory_desc_matches_one_of_tag(dst_md_, nc, cn);
-+            auto src_tag
-+                    = memory_desc_matches_one_of_tag(src_md_, nhwc, nchw, nc);
-+            auto dst_tag = memory_desc_matches_one_of_tag(dst_md_, nc);
+             auto dst_tag = memory_desc_matches_one_of_tag(dst_md_, nc);
  
              ACL_CHECK_SUPPORT(
 -                    utils::one_of(format_tag::undef, src_tag, wei_tag, dst_tag),
@@ -558,8 +520,7 @@ index c5e507085f..a27df640fb 100644
  
 -            arm_compute::TensorShape src_shape, wei_shape;
 -            if (is_2d) {
--                src_shape = (src_tag == nc) ? arm_compute::TensorShape(ic, n)
--                                            : arm_compute::TensorShape(n, ic);
+-                src_shape = arm_compute::TensorShape(ic, n);
 -
 -                wei_shape = (wei_tag == io) ? arm_compute::TensorShape(oc, ic)
 -                                            : arm_compute::TensorShape(ic, oc);
@@ -577,44 +538,48 @@ index c5e507085f..a27df640fb 100644
 -            arm_compute::DataLayout src_layout = (src_tag == nhwc)
 -                    ? arm_compute::DataLayout::NHWC
 -                    : arm_compute::DataLayout::NCHW;
-+            const dim_t ic_total = IC_total();
-+            const dim_t n = MB();
-+            const dim_t oc = OC();
- 
+-
 -            arm_compute::DataLayout wei_layout = (wei_tag == ohwi)
 -                    ? arm_compute::DataLayout::NHWC
 -                    : arm_compute::DataLayout::NCHW;
+-
+-            auto acl_src_data_t
+-                    = acl_utils::get_acl_data_t(src_md()->data_type);
+-            aip.src_info = arm_compute::TensorInfo(
+-                    src_shape, 1, acl_src_data_t, src_layout);
+-            auto acl_wei_data_t
+-                    = acl_utils::get_acl_data_t(weights_md(0)->data_type);
+-
+-            aip.wei_info = arm_compute::TensorInfo(
+-                    wei_shape, 1, acl_wei_data_t, wei_layout);
++            const dim_t ic_total = IC_total();
++            const dim_t n = MB();
++            const dim_t oc = OC();
++
 +            aip.src_tensor_info = arm_compute::TensorInfo(
 +                    arm_compute::TensorShape(ic_total, n), 1,
 +                    acl_utils::get_acl_data_t(src_md()->data_type));
- 
--            aip.src_info = arm_compute::TensorInfo(
--                    src_shape, 1, arm_compute::DataType::F32, src_layout);
++
 +            // ACL requires the weights to be in 2D flattened shape
 +            aip.wei_tensor_info = arm_compute::TensorInfo(
 +                    arm_compute::TensorShape(oc, ic_total), 1,
 +                    acl_utils::get_acl_data_t(weights_md(0)->data_type));
  
--            aip.wei_info = arm_compute::TensorInfo(
--                    wei_shape, 1, arm_compute::DataType::F32, wei_layout);
--
--            aip.dst_info
--                    = arm_compute::TensorInfo(arm_compute::TensorShape(oc, n),
--                            1, arm_compute::DataType::F32);
-+            auto acl_dst_data_t
-+                    = acl_utils::get_acl_data_t(dst_md()->data_type);
+             auto acl_dst_data_t
+                     = acl_utils::get_acl_data_t(dst_md()->data_type);
+-            aip.dst_info = arm_compute::TensorInfo(
 +            aip.dst_tensor_info = arm_compute::TensorInfo(
-+                    arm_compute::TensorShape(oc, n), 1, acl_dst_data_t);
+                     arm_compute::TensorShape(oc, n), 1, acl_dst_data_t);
  
              aip.with_bias = desc()->bias_desc.format_kind != format_kind::undef;
+             auto acl_bia_data_t = aip.with_bias
+                     ? acl_utils::get_acl_data_t(weights_md(1)->data_type)
+                     : acl_dst_data_t;
 -            aip.bia_info = arm_compute::TensorInfo(aip.with_bias
-+            auto acl_bia_data_t = aip.with_bias
-+                    ? acl_utils::get_acl_data_t(weights_md(1)->data_type)
-+                    : acl_dst_data_t;
 +            aip.bia_tensor_info = arm_compute::TensorInfo(aip.with_bias
                              ? arm_compute::TensorShape(oc)
                              : arm_compute::TensorShape(),
-                     1, arm_compute::DataType::F32);
+                     1, acl_bia_data_t);
  
 -            aip.fc_info.weights_trained_layout = wei_layout;
 -            if (is_2d && wei_tag != src_tag) {
@@ -628,8 +593,8 @@ index c5e507085f..a27df640fb 100644
 -            }
 +            aip.fc_info.transpose_weights = false;
  
-             // Fast math mode
-             auto math_mode = get_fpmath_mode();
+             aip.fc_info.enable_fast_math = utils::one_of(
+                     attr()->fpmath_mode_, fpmath_mode::bf16, fpmath_mode::any);
 @@ -214,15 +179,103 @@ struct acl_inner_product_fwd_t : public primitive_t {
                      aip.fc_info.activation_info));
              aip.use_dst_acc = post_ops.has_sum();
@@ -960,29 +925,11 @@ index cdc942e995..832b1dbb68 100644
          // Configure GEMM
          acl_obj_->gemm.configure(&acl_obj_->src_tensor, &acl_obj_->wei_tensor,
                  nullptr, &acl_obj_->dst_tensor, amp.alpha, 0.0f, amp.gemm_info);
-@@ -72,12 +67,20 @@ struct acl_matmul_t : public primitive_t {
- 
-         status_t init(engine_t *engine) {
-             using smask_t = primitive_attr_t::skip_mask_t;
--            bool ok = src_md()->data_type == data_type::f32
--                    && weights_md()->data_type == data_type::f32
--                    && desc()->accum_data_type == data_type::f32
--                    && dst_md()->data_type == data_type::f32
--                    && platform::has_data_type_support(data_type::f32)
-+            const bool is_fp32_ok
-+                    = utils::everyone_is(data_type::f32, src_md()->data_type,
-+                              weights_md()->data_type, dst_md()->data_type,
-+                              desc()->accum_data_type)
-+                    && platform::has_data_type_support(data_type::f32);
-+            const bool is_fp16_ok
-+                    = utils::everyone_is(data_type::f16, src_md()->data_type,
-+                              weights_md()->data_type, dst_md()->data_type)
-+                    && platform::has_data_type_support(data_type::f16);
-+            bool ok = is_dense_data()
-+                    && utils::one_of(true, is_fp32_ok, is_fp16_ok)
-                     && !has_zero_dim_memory()
+@@ -84,6 +84,7 @@ struct acl_matmul_t : public primitive_t {
+             bool ok = is_dense_data()
+                     && utils::one_of(true, is_fp32_ok, is_fp16_ok)
+                     && !has_zero_dim_memory() && set_default_formats()
 +                    && weights_md_.format_kind == format_kind::any
-+                    && set_default_formats()
                      && attr()->has_default_values(
                              smask_t::oscale | smask_t::post_ops)
                      && attr_oscale_ok() && !has_runtime_dims_or_strides();
@@ -1011,7 +958,7 @@ index 679baec3a4..30bc2c1443 100644
      // ACL supports broadcast for 3D shapes, and 4D shapes
      // for e.g when ab in abcd is 1x1
      bool batch_ok = IMPLICATION(src_batch > 1, wei_batch == 1)
-@@ -53,44 +54,33 @@ status_t init_conf_matmul(acl_matmul_conf_t &amp, memory_desc_t &src_md,
+@@ -53,19 +53,19 @@ status_t init_conf_matmul(acl_matmul_conf_t &amp, memory_desc_t &src_md,
      bool with_bias = md.bias_desc.format_kind != format_kind::undef;
      ACL_CHECK_SUPPORT(with_bias, "ACL does not support bias for matmul");
  
@@ -1022,12 +969,10 @@ index 679baec3a4..30bc2c1443 100644
              src_md, abcd, abdc, abc, acb, ab, ba);
 -    auto wei_tag = memory_desc_matches_one_of_tag(
 -            wei_md, abcd, abdc, abc, acb, ab, ba);
--    auto dst_tag
--            = memory_desc_matches_one_of_tag(dst_md, abcd, abc, acb, ab, ba);
--    ACL_CHECK_SUPPORT(
+     auto dst_tag = memory_desc_matches_one_of_tag(dst_md, abcd, abc, ab, ba);
+     ACL_CHECK_SUPPORT(
 -            utils::one_of(format_tag::undef, src_tag, wei_tag, dst_tag),
-+    auto dst_tag = memory_desc_matches_one_of_tag(dst_md, abcd, abc, ab, ba);
-+    ACL_CHECK_SUPPORT(utils::one_of(format_tag::undef, src_tag, dst_tag),
++            utils::one_of(format_tag::undef, src_tag, dst_tag),
              "Format tag is undefined");
  
 -    // Transpose A (src) or B (wei)
@@ -1035,45 +980,34 @@ index 679baec3a4..30bc2c1443 100644
      amp.is_transA = helper.transA() == 'T';
 -    amp.is_transB = helper.transB() == 'T';
 +
-+    auto acl_src_data_t = acl_utils::get_acl_data_t(src_md.data_type);
-+    auto acl_wei_data_t = acl_utils::get_acl_data_t(wei_md.data_type);
-+    auto acl_dst_data_t = acl_utils::get_acl_data_t(dst_md.data_type);
-+
-     if (amp.is_transA)
+     auto acl_src_data_t = acl_utils::get_acl_data_t(src_md.data_type);
+     auto acl_wei_data_t = acl_utils::get_acl_data_t(wei_md.data_type);
+     auto acl_dst_data_t = acl_utils::get_acl_data_t(dst_md.data_type);
+@@ -74,21 +71,14 @@ status_t init_conf_matmul(acl_matmul_conf_t &amp, memory_desc_t &src_md,
          amp.src_acc_info = arm_compute::TensorInfo(
                  arm_compute::TensorShape(M, K, 1, src_batch), 1,
--                arm_compute::DataType::F32);
+                 acl_src_data_t);
 -    if (amp.is_transB)
 -        amp.wei_acc_info = arm_compute::TensorInfo(
--                arm_compute::TensorShape(K, N, wei_batch), 1,
--                arm_compute::DataType::F32);
--
--    amp.src_info = arm_compute::TensorInfo(
--            arm_compute::TensorShape(K, M, 1, src_batch), 1,
--            arm_compute::DataType::F32);
--    amp.wei_info
--            = arm_compute::TensorInfo(arm_compute::TensorShape(N, K, wei_batch),
--                    1, arm_compute::DataType::F32);
--    amp.dst_info = arm_compute::TensorInfo(
--            arm_compute::TensorShape(N, M, 1, dst_batch), 1,
--            arm_compute::DataType::F32);
--
--    // Fast-math mode
--    auto math_mode = get_fpmath_mode();
--    bool is_fastmath_enabled
--            = utils::one_of(math_mode, fpmath_mode::bf16, fpmath_mode::any);
--    amp.gemm_info.set_fast_math(is_fastmath_enabled);
-+                acl_src_data_t);
-+
-+    amp.src_tensor_info = arm_compute::TensorInfo(
-+            arm_compute::TensorShape(K, M, 1, src_batch), 1, acl_src_data_t);
-+    amp.wei_tensor_info = arm_compute::TensorInfo(
-+            arm_compute::TensorShape(N, K, wei_batch), 1, acl_wei_data_t);
-+    amp.dst_tensor_info = arm_compute::TensorInfo(
-+            arm_compute::TensorShape(N, M, 1, dst_batch), 1, acl_dst_data_t);
+-                arm_compute::TensorShape(K, N, wei_batch), 1, acl_wei_data_t);
  
+-    amp.src_info = arm_compute::TensorInfo(
++    amp.src_tensor_info = arm_compute::TensorInfo(
+             arm_compute::TensorShape(K, M, 1, src_batch), 1, acl_src_data_t);
+-    amp.wei_info = arm_compute::TensorInfo(
++    amp.wei_tensor_info = arm_compute::TensorInfo(
+             arm_compute::TensorShape(N, K, wei_batch), 1, acl_wei_data_t);
+-    amp.dst_info = arm_compute::TensorInfo(
++    amp.dst_tensor_info = arm_compute::TensorInfo(
+             arm_compute::TensorShape(N, M, 1, dst_batch), 1, acl_dst_data_t);
+ 
+-    bool is_fastmath_enabled = utils::one_of(
+-            attr.fpmath_mode_, fpmath_mode::bf16, fpmath_mode::any);
+-    amp.gemm_info.set_fast_math(is_fastmath_enabled);
+-
      // Set alpha (output scaling)
-     amp.alpha = attr.output_scales_.scales_[0];
+     // TODO: Add runtime scales support. Creation time scales will be remove
+     // in 3.0.
 @@ -98,10 +88,45 @@ status_t init_conf_matmul(acl_matmul_conf_t &amp, memory_desc_t &src_md,
      // Validate ACL transpose
      if (amp.is_transA)
