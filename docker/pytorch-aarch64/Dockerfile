@@ -260,12 +260,12 @@ ENV ONEDNN_BUILD="${onednn_opt}" \
 
 # Key version numbers
 ENV PY_VERSION="${default_py_version}" \
-    ONEDNN_VERSION="v2.7" \
-    TORCH_VERSION=2.0.0 \
-    TORCHXLA_VERSION=2.0.0 \
-    TORCHVISION_VERSION=0.15.1 \
-    TORCHDATA_VERSION=0.6.0 \
-    TORCHTEXT_VERSION=0.15.1 \
+    ONEDNN_VERSION="v3.1.1" \
+    TORCH_VERSION=2.1.0 \
+    TORCHXLA_VERSION=2.1.0 \
+    TORCHVISION_VERSION=0.16.0 \
+    TORCHDATA_VERSION=0.7.0 \
+    TORCHTEXT_VERSION=0.16.0 \
     BZL_VERSION="${bazel_version}"
 
 # Use a PACKAGE_DIR in userspace
@@ -349,7 +349,7 @@ COPY scripts/download-model.sh $MLCOMMONS_DIR/.
 
 # Install missing Python package dependencies required to run examples
 RUN pip install --no-cache-dir requests tqdm boto3 iopath sox unidecode inflect toml
-RUN pip install --no-cache-dir future onnx==1.8.1
+RUN pip install --no-cache-dir future onnx==1.15.0
 RUN pip install --no-cache-dir 'librosa==0.8.0'
 
 # Copy examples

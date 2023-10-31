@@ -91,7 +91,7 @@ index 3e56245faf..0398ab06b9 100644
  template <typename conv_obj_t, typename conv_pd_t, typename src_data_t,
 diff --git a/src/cpu/aarch64/acl_winograd_convolution.cpp b/src/cpu/aarch64/acl_winograd_convolution.cpp
 deleted file mode 100644
-index b4eb5989fb..0000000000
+index b4eb5989f..000000000
 --- a/src/cpu/aarch64/acl_winograd_convolution.cpp
 +++ /dev/null
 @@ -1,43 +0,0 @@
@@ -140,10 +140,10 @@ index b4eb5989fb..0000000000
 -} // namespace dnnl
 diff --git a/src/cpu/aarch64/acl_winograd_convolution.hpp b/src/cpu/aarch64/acl_winograd_convolution.hpp
 deleted file mode 100644
-index 215635fe3f..0000000000
+index 9a8f94af0..000000000
 --- a/src/cpu/aarch64/acl_winograd_convolution.hpp
 +++ /dev/null
-@@ -1,146 +0,0 @@
+@@ -1,149 +0,0 @@
 -/*******************************************************************************
 -* Copyright 2020-2022 Arm Ltd. and affiliates
 -*
@@ -223,15 +223,18 @@ index 215635fe3f..0000000000
 -                "wino:acl", acl_wino_convolution_fwd_t, USE_GLOBAL_SCRATCHPAD);
 -
 -        status_t init(engine_t *engine) {
+-            using namespace data_type;
+-            const bool is_fp16_ok = expect_data_types(f16, f16, f16, f16, undef)
+-                    && attr()->has_default_values(
+-                            primitive_attr_t::skip_mask_t::post_ops, f16);
+-            const bool is_fp32_ok = expect_data_types(f32, f32, f32, f32, undef)
+-                    && attr()->has_default_values(
+-                            primitive_attr_t::skip_mask_t::post_ops, f32);
 -            bool ok = is_fwd()
 -                    && utils::one_of(desc()->alg_kind,
 -                            alg_kind::convolution_auto,
 -                            alg_kind::convolution_winograd)
--                    && expect_data_types(data_type::f32, data_type::f32,
--                            data_type::f32, data_type::f32, data_type::f32)
--                    && attr()->has_default_values(
--                            primitive_attr_t::skip_mask_t::post_ops,
--                            data_type::f32)
+-                    && utils::one_of(true, is_fp16_ok, is_fp32_ok)
 -                    && !has_zero_dim_memory();
 -            if (!ok) return status::unimplemented;
 -
@@ -291,7 +294,7 @@ index 215635fe3f..0000000000
 -
 -#endif // CPU_AARCH64_ACL_WINOGRAD_CONVOLUTION_HPP
 diff --git a/src/cpu/cpu_convolution_list.cpp b/src/cpu/cpu_convolution_list.cpp
-index 4142dbc7e7..094c73aa36 100644
+index ba8454054..746c78ded 100644
 --- a/src/cpu/cpu_convolution_list.cpp
 +++ b/src/cpu/cpu_convolution_list.cpp
 @@ -65,7 +65,6 @@ using namespace dnnl::impl::cpu::x64;
@@ -302,7 +305,7 @@ index 4142dbc7e7..094c73aa36 100644
  #endif
  using namespace dnnl::impl::cpu::aarch64;
  #endif
-@@ -100,7 +99,6 @@ const std::map<pk_dt_impl_key_t, std::vector<impl_list_item_t>> &impl_list_map()
+@@ -104,7 +103,6 @@ const std::map<pk_dt_impl_key_t, std::vector<impl_list_item_t>> &impl_list_map()
              CPU_INSTANCE_SSE41(jit_sse41_1x1_convolution_fwd_t)
              CPU_INSTANCE_AVX2(jit_avx2_convolution_fwd_t)
              CPU_INSTANCE_SSE41(jit_sse41_convolution_fwd_t)
@@ -310,17 +313,27 @@ index 4142dbc7e7..094c73aa36 100644
              CPU_INSTANCE_AARCH64(jit_sve_512_dw_convolution_fwd_t)
              CPU_INSTANCE_AARCH64(jit_sve_512_1x1_convolution_fwd_f32_t)
              CPU_INSTANCE_AARCH64(jit_sve_512_convolution_fwd_t<f32>)
+@@ -185,7 +183,6 @@ const std::map<pk_dt_impl_key_t, std::vector<impl_list_item_t>> &impl_list_map()
+             CPU_INSTANCE_AVX2(brgemm_1x1_convolution_fwd_t<avx2_vnni_2>)
+             CPU_INSTANCE_AVX2(brgemm_convolution_fwd_t<avx2_vnni_2>)
+             CPU_INSTANCE_AVX2(brgemm_convolution_fwd_t<avx2_vnni_2, true>)
+-            CPU_INSTANCE_AARCH64_ACL(acl_wino_convolution_fwd_t)
+             CPU_INSTANCE_AARCH64_ACL(acl_indirect_gemm_convolution_fwd_t)
+             CPU_INSTANCE_AARCH64_ACL(acl_gemm_convolution_fwd_t<f16>)
+             CPU_INSTANCE(ref_convolution_fwd_t)
 diff --git a/tests/gtests/test_iface_wino_convolution.cpp b/tests/gtests/test_iface_wino_convolution.cpp
-index 03861b1de4..2235ceae36 100644
+index 9b79637eb..29602c133 100644
 --- a/tests/gtests/test_iface_wino_convolution.cpp
 +++ b/tests/gtests/test_iface_wino_convolution.cpp
-@@ -59,9 +59,6 @@ protected:
+@@ -58,11 +58,6 @@ protected:
+         input_f32.wino_supported = is_gpu || (is_cpu && has_avx512_core);
          input_f16.wino_supported = is_gpu;
-         input_int8.wino_supported = is_cpu && has_avx512_core;
          input_f32.backward_supported = is_cpu && impl::dnnl_thr_syncable();
 -#elif DNNL_AARCH64 && DNNL_AARCH64_USE_ACL
 -        const bool is_cpu = get_test_engine_kind() == engine::kind::cpu;
 -        input_f32.wino_supported = is_cpu;
- #endif
+-        input_f16.wino_supported = is_cpu;
+-#endif
  
  #else
+         const bool is_gpu = get_test_engine_kind() == engine::kind::gpu;
