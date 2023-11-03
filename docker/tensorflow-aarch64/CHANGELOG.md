@@ -10,6 +10,13 @@ where `YY` is the year, and `MM` the month of the increment.
 ### Added
 
 ### Changed
+ - Updated Tensorflow to version v2.14.0.
+ - Updated oneDNN to version v3.3.
+ - Updated list and content of oneDNN patches.
+    - Removed the oneDNN_acl fp32 to bf16 reorder patch,
+      as it was merged upstream in v3.3.
+    - Added appropriate `#cmakedefine01` for GEMM kernels,
+      required by oneDNN v3.3, to the mkl_acl.BUILD file.
 
 ### Removed
 
