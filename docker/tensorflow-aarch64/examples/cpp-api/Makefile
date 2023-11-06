@@ -19,7 +19,7 @@ ssd_resnet50_url = http://download.tensorflow.org/models/object_detection/tf2/20
 resnet50_url = https://tfhub.dev/tensorflow/resnet_50/classification/1\?tf-hub-format\=compressed
 inception_url = https://storage.googleapis.com/download.tensorflow.org/models/inception_v3_2016_08_28_frozen.pb.tar.gz
 
-cows_img_url = https://images.reference.com/amg-cms-reference-images/media/habitat-cow_9291b3a902721a26.jpg?width=740&height=420&fit=crop&format=pjpg
+cows_img_url = https://www.freeimageslive.co.uk/files/images010/cow-in-field.jpg
 guineapig_img_url = https://upload.wikimedia.org/wikipedia/commons/6/6a/Guinea_Pigs.jpg
 
 coco_labels_url = https://raw.githubusercontent.com/amikelive/coco-labels/master/coco-labels-paper.txt
