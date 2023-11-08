@@ -10,6 +10,17 @@ where `YY` is the year, and `MM` the month of the increment.
 ### Added
 
 ### Changed
+
+### Removed
+
+### Fixed
+
+## [r23.11] 2023-11-08
+https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--r23.11/docker/pytorch-aarch64
+
+### Added
+
+### Changed
  - Updated pytorch to version 2.1.0.
  - Updated torchxla to version 2.1.0.
  - Updated torchtext to version 0.16.0.
