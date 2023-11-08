@@ -10,6 +10,17 @@ where `YY` is the year, and `MM` the month of the increment.
 ### Added
 
 ### Changed
+
+### Removed
+
+### Fixed
+
+## [r23.11] 2023-11-08
+https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--r23.11/docker/tensorflow-aarch64
+
+### Added
+
+### Changed
  - Updated Tensorflow to version v2.14.0.
  - Updated oneDNN to version v3.3.
  - Updated list and content of oneDNN patches.
