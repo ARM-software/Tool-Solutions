@@ -209,7 +209,7 @@ RUN pip install --no-cache-dir --upgrade pip
 RUN pip install --no-cache-dir "setuptools>=41.0.0" six mock wheel cython==0.29.36
 
 # Install some  basic python packages needed for SciPy
-RUN pip install --no-cache-dir pybind11==2.6.2 pyangbind pythran
+RUN pip install --no-cache-dir pybind11[global]==2.6.2 pyangbind pythran
 
 # Install NumPy and SciPy
 RUN pip install --no-cache-dir numpy==1.25.2 scipy==1.10.1
