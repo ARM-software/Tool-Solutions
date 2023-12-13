@@ -47,28 +47,36 @@ if [[ $ONEDNN_BUILD ]]; then
   esac
 fi
 
+
+# Fix mldnn_matmul error
+curl https://github.com/pytorch/pytorch/commit/cdc8d709cb458d656d170569b4da3d8193e4a6a2.patch -o /tmp/mldnn_matmul_fix.patch
+patch -p1 < /tmp/mldnn_matmul_fix.patch
+
+patch -p1 < $PACKAGE_DIR/pytorch_dynamic_quantization.patch
+
+cd third_party/ideep
+# Checkout a version of ideep compatible with oneDNN v3.3 and pytorch v2.1.0
+git checkout d0c2278a5d6830edecb2cad0f8d2598331f65554
+
+patch -p1 < $PACKAGE_DIR/ideep_dynamic_quantization.patch
+
 # Update the oneDNN tag in third_party/ideep
-cd third_party/ideep/mkl-dnn
+cd mkl-dnn
 git checkout $ONEDNN_VERSION
 
 # Do not add C++11 CMake CXX flag when building with ACL and
 # rename test_api to test_api_dnnl so it does not clash with PyTorch test_api
 patch -p1 < $PACKAGE_DIR/onednn.patch
 
-# Remove unsupported winograd kernel
-patch -p1 < $PACKAGE_DIR/onednn_acl_remove_winograd.patch
+patch -p1 < $PACKAGE_DIR/onednn_dynamic_quantization.patch
 
-# Support for fixed format kernels
-patch -p1 < $PACKAGE_DIR/onednn_acl_fixed_format_kernels.patch
+patch -p1 < $PACKAGE_DIR/onednn_acl_reorder.patch
 
-# Support for depthwise convolution
-patch -p1 < $PACKAGE_DIR/onednn_acl_depthwise_convolution.patch
+patch -p1 < $PACKAGE_DIR/onednn_fp32_bf16_reorder.patch
 
-# Enable depthwise convolution with dilation
-patch -p1 < $PACKAGE_DIR/onednn_acl_depthwise_convolution_dilation.patch
+patch -p1 < $PACKAGE_DIR/onednn_acl_threadcap.patch
 
-# Support for jitted reordering to BF16
-patch -p1 < $PACKAGE_DIR/onednn_reorder_to_bf16.patch
+patch -p1 < $PACKAGE_DIR/onednn_acl_thread_local_scheduler.patch
 
 cd $PACKAGE_DIR/$src_repo
 
