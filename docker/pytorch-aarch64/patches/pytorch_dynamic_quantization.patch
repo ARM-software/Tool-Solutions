@@ -1,0 +1,32 @@
+ *******************************************************************************
+ Copyright 2023 Arm Limited and affiliates.
+ SPDX-License-Identifier: Apache-2.0
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+ *******************************************************************************
+
+diff --git a/aten/src/ATen/native/quantized/cpu/qlinear_dynamic.cpp b/aten/src/ATen/native/quantized/cpu/qlinear_dynamic.cpp
+index f871877073a..47b3094cdd5 100644
+--- a/aten/src/ATen/native/quantized/cpu/qlinear_dynamic.cpp
++++ b/aten/src/ATen/native/quantized/cpu/qlinear_dynamic.cpp
+@@ -530,8 +530,8 @@ at::Tensor PackedLinearWeightsOnednn::apply_dynamic_impl(
+   auto q_params = quant_utils::ChooseQuantizationParams(
+       /*min=*/x_min,
+       /*max=*/x_max,
+-      /*qmin=*/0,
+-      /*qmax=*/(1 << precision) - 1,
++      /*qmin=*/-127,
++      /*qmax=*/128, //(1 << precision) - 1,
+       /*preserve_sparsity=*/false,
+       /*force_scale_power_of_two=*/false,
+       /*reduce_range=*/reduce_range);

@@ -8,12 +8,20 @@ where `YY` is the year, and `MM` the month of the increment.
 ## [Unreleased]
 
 ### Added
+- ACL-based FP32 to BF16 reorders for select shapes
+- Support for dynamic quantisation
+- Parallelisation of depthwise convolution when batch size is greater than one and width is narrow
 
 ### Changed
+- Updated oneDNN to v3.3
+- Updated Compute Library to v23.08
+- Updated ideep to Git Hash: d0c2278
+- Refreshed oneDNN patches to be consistent with TensorFlow build.
 
 ### Removed
 
 ### Fixed
+- `nn.Linear.forward` error when `out_features` equals to 1
 
 ## [r23.11] 2023-11-08
 https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--r23.11/docker/pytorch-aarch64

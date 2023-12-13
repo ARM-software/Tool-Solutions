@@ -35,6 +35,13 @@ cd ${src_repo}
 
 git checkout $version
 
+wget https://review.mlplatform.org/changes/ml%2FComputeLibrary\~10775/revisions/3/patch\?zip -O patch.zip && unzip patch.zip
+sed '1,102d' 33266fd.diff > tmp.patch
+cat ../acl_fp32_bf16_reorder.patch tmp.patch > ../acl_fp32_bf16_reorder.patch
+patch -p1 < ../acl_fp32_bf16_reorder.patch
+
+patch -p1 < ../acl_dynamic_quantization.patch
+
 # Default to v8a if $acl_arch is unset.
 arch=${ACL_ARCH:-"arm64-v8a"}
 echo "Compute Library arch = ${arch}"
