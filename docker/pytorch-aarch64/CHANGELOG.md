@@ -8,6 +8,17 @@ where `YY` is the year, and `MM` the month of the increment.
 ## [Unreleased]
 
 ### Added
+
+### Changed
+
+### Removed
+
+### Fixed
+
+## [r23.12] 2023-12-15
+https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--r23.12/docker/pytorch-aarch64
+
+### Added
 - ACL-based FP32 to BF16 reorders for select shapes
 - Support for dynamic quantisation
 - Parallelisation of depthwise convolution when batch size is greater than one and width is narrow

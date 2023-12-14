@@ -8,6 +8,17 @@ where `YY` is the year, and `MM` the month of the increment.
 ## [Unreleased]
 
 ### Added
+
+### Changed
+
+### Removed
+
+### Fixed
+
+## [r23.12] 2023-12-15
+https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--r23.12/docker/tensorflow-aarch64
+
+### Added
  - ACL based reorder for fp32 to bf16 data type conversion.
 
 ### Changed
