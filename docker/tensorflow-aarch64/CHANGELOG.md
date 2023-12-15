@@ -9,6 +9,8 @@ where `YY` is the year, and `MM` the month of the increment.
 
 ### Added
 
+ - oneDNN patch to use indirect convolution only.
+
 ### Changed
 
 ### Removed

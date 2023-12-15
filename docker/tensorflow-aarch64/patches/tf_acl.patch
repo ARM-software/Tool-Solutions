@@ -28,10 +28,10 @@ index c89fb8c5461..f44262f3b75 100644
          "@org_tensorflow//tensorflow/tsl:windows": ["-DENABLE_ONEDNN_V3"],
          "//conditions:default": [],
 diff --git a/tensorflow/workspace2.bzl b/tensorflow/workspace2.bzl
-index 7e9faa558a4..759041daf67 100644
+index 7e9faa558a4..cb5093e18ed 100644
 --- a/tensorflow/workspace2.bzl
 +++ b/tensorflow/workspace2.bzl
-@@ -204,24 +204,20 @@ def _tf_repositories():
+@@ -204,24 +204,21 @@ def _tf_repositories():
          build_file = "//third_party/mkl_dnn:mkldnn_acl.BUILD",
          patch_file = [
              "//third_party/mkl_dnn:onednn_acl_threadcap.patch",
@@ -44,6 +44,7 @@ index 7e9faa558a4..759041daf67 100644
              "//third_party/mkl_dnn:onednn_acl_reorder.patch",
 +            "//third_party/mkl_dnn:onednn_acl_fp32_bf16_reorder.patch",
              "//third_party/mkl_dnn:onednn_acl_thread_local_scheduler.patch",
++            "//third_party/mkl_dnn:onednn_acl_use_indirect_conv.patch",
          ],
 -        sha256 = "a50993aa6265b799b040fe745e0010502f9f7103cc53a9525d59646aef006633",
 -        strip_prefix = "oneDNN-2.7.3",
@@ -62,7 +63,7 @@ index 7e9faa558a4..759041daf67 100644
          ],
          sha256 = "c4ca329a78da380163b2d86e91ba728349b6f0ee97d66e260a694ef37f0b0d93",
 diff --git a/third_party/mkl_dnn/mkldnn_acl.BUILD b/third_party/mkl_dnn/mkldnn_acl.BUILD
-index a1085427ec0..daff639aee7 100644
+index a1085427ec0..2023a134d0a 100644
 --- a/third_party/mkl_dnn/mkldnn_acl.BUILD
 +++ b/third_party/mkl_dnn/mkldnn_acl.BUILD
 @@ -61,6 +61,13 @@ _DNNL_RUNTIME_THREADPOOL = {

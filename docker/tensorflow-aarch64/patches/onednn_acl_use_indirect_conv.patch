@@ -1,0 +1,43 @@
+ *******************************************************************************
+ Copyright 2023 Arm Limited and affiliates.
+ SPDX-License-Identifier: Apache-2.0
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+ *******************************************************************************
+diff --git a/src/cpu/aarch64/acl_convolution_utils.cpp b/src/cpu/aarch64/acl_convolution_utils.cpp
+index 53b1e2c82..c9dec4a4c 100644
+--- a/src/cpu/aarch64/acl_convolution_utils.cpp
++++ b/src/cpu/aarch64/acl_convolution_utils.cpp
+@@ -307,22 +307,8 @@ status_t init_conf_indirect_gemm(acl_conv_conf_t &acp, memory_desc_t &src_md,
+         const primitive_attr_t &attr) {
+     if (weights_md.ndims != 4) return status::unimplemented;
+ 
+-    // Indirect is slower for small convolution kernels
+-    if (weights_md.dims[2] == 1 && weights_md.dims[3] == 1)
+-        return status::unimplemented;
+-
+     CHECK(acl_init_conf(acp, src_md, weights_md, dst_md, bias_md, cd, attr));
+
+-    // Indirect is slower than gemm for low thread counts, except for fast math
+-    if (dnnl_get_max_threads() < 28 && !acp.fast_math)
+-        return status::unimplemented;
+-
+-    // If we do not need to pad input channels for fast math mode then it would
+-    // be faster to run convolution with im2row instead of using indirect kernel
+-    int block_by = arm_compute::block_by(acp.weights_info.weight_format());
+-    int ic = src_md.dims[1];
+-    if (acp.fast_math && ic % block_by == 0) return status::unimplemented;
+-
+     // clang-format off
+     // NOTE: indirect convolution method supports only nhwc layout.
+     ACL_CHECK_VALID(arm_compute::NEGEMMConv2d::validate(
