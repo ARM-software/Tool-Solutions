@@ -8,16 +8,14 @@ Release versions of TensorFlow are available from: https://pypi.org/project/tens
 
 ## Contents
 * [Getting started with TensorFlow on AArch64](#getting-started-with-tensorflow-on-aarch64)
-   * [Downloading an image from Docker Hub](#downloading-an-image-from-docker-hub)
-   * [Running the Docker image](#running-the-docker-image)
+  * [Downloading an image from Docker Hub](#downloading-an-image-from-docker-hub)
+  * [Running the Docker image](#running-the-docker-image)
 * [Image contents](#image-contents)
-   * [Optimized backend for AArch64](#optimized-backend-for-aarch64)
-      * [oneDNN runtime flags](#onednn-runtime-flags)
-   * [Hardware support](#hardware-support)
-   * [Examples](#examples)
+  * [Optimized backend for AArch64](#optimized-backend-for-aarch64)
+    * [oneDNN runtime flags](#onednn-runtime-flags)
+  * [Hardware support](#hardware-support)
+  * [Examples](#examples)
 * [Build TensorFlow (2.x) for AArch64 using Docker](#build-tensorflow-2x-for-aarch64-using-docker)
-   * [Building a TensorFlow Serving image](#building-a-tensorflow-serving-image)
-      * [Running a simple example with TensorFlow Serving](#running-a-simple-example-with-tensorflow-serving)
 
 ## Getting started with TensorFlow on AArch64
 This [component](https://github.com/ARM-software/Tool-Solutions/tree/master/docker/tensorflow-aarch64) of [ARM-Software's](https://github.com/ARM-software) [Tool Solutions](https://github.com/ARM-software/Tool-Solutions) repository provides instructions to obtain, and scripts to build, a Docker image containing [TensorFlow](https://www.tensorflow.org/) and dependencies for the [Armv8-A architecture](https://developer.arm.com/architectures/cpu-architecture/a-profile), optionally with AArch64 specific optimizations via [Compute Library for the Arm® Architecture (ACL)](https://developer.arm.com/ip-products/processors/machine-learning/compute-library), as well as a selection of [examples and benchmarks](./examples/README.md).
@@ -58,7 +56,7 @@ where `<image name> `is the name of the image, i.e. `armswdev/tensorflow-arm-neo
 ## Image contents
 
   * OS: Ubuntu 22.04
-  * Compiler: GCC 11.3
+  * Compiler: Clang 17
   * Maths libraries: [OpenBLAS](https://www.openblas.net/) 0.3.20, used for NumPy's BLAS functionality
   * [oneDNN](https://github.com/oneapi-src/oneDNN) 3.2
     - ACL 23.05.1 provides optimized implementations on AArch64 for main oneDNN primitives
@@ -122,7 +120,7 @@ Use the `build.sh` script to build the image.
 
 This script implements a multi-stage build to minimize the size of the final image:
 
-  * Stage 1: 'base' image including Ubuntu with core packages and GCC
+  * Stage 1: 'base' image including Ubuntu with core packages and Clang 17
   * Stage 2: 'libs' image including essential tools and libraries such as Python and OpenBLAS
   * Stage 3: 'tools' image, including a Python3 virtual environment in userspace and a build of NumPy and SciPy against OpenBLAS, as well as other Python essentials
   * Stage 4: 'dev' image, including Bazel and TensorFlow and the source code

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # *******************************************************************************
-# Copyright 2021 Arm Limited and affiliates.
+# Copyright 2021-2024 Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -72,7 +72,7 @@ echo $target
 #   -mcpu  = Target processor, can include one or more feature modifiers.
 #   -mtune = Target processor for which the compiler should tune the performance of the code
 #   -march = Target architecture, can include  one or more feature modifiers
-# Note: further details can be found in the GCC documentation
+# Note: further details can be found in the LLVM documentation
 #
 # Eigen settings:
 #   eigen_l{1,2,3}_cache = Sets the L1, 2, 3 cache size used for Eigen's GEBP

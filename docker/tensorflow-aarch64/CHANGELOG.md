@@ -11,6 +11,8 @@ where `YY` is the year, and `MM` the month of the increment.
 
 ### Changed
 
+- Move to Clang 17 from GCC
+
 ### Removed
 
 ### Fixed
