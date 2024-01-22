@@ -1,5 +1,5 @@
  *******************************************************************************
- Copyright 2023 Arm Limited and affiliates.
+ Copyright 2023-2024 Arm Limited and affiliates.
  SPDX-License-Identifier: Apache-2.0
 
  Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,59 +14,40 @@
  See the License for the specific language governing permissions and
  limitations under the License.
  *******************************************************************************
-diff --git a/tensorflow/tsl/mkl/build_defs.bzl b/tensorflow/tsl/mkl/build_defs.bzl
-index c89fb8c5461..f44262f3b75 100644
---- a/tensorflow/tsl/mkl/build_defs.bzl
-+++ b/tensorflow/tsl/mkl/build_defs.bzl
-@@ -115,7 +115,7 @@ def onednn_v3_define():
-       An empty list of all other cases (include ARM builds).
-     """
-     return select({
--        "@org_tensorflow//tensorflow/tsl/mkl:build_with_mkl_aarch64": [],
-+        "@org_tensorflow//tensorflow/tsl/mkl:build_with_mkl_aarch64": ["-DENABLE_ONEDNN_V3"],
-         "@org_tensorflow//tensorflow/tsl:linux_x86_64": ["-DENABLE_ONEDNN_V3"],
-         "@org_tensorflow//tensorflow/tsl:windows": ["-DENABLE_ONEDNN_V3"],
-         "//conditions:default": [],
 diff --git a/tensorflow/workspace2.bzl b/tensorflow/workspace2.bzl
-index 7e9faa558a4..cb5093e18ed 100644
+index 056df85ffdb..619e1e0927e 100644
 --- a/tensorflow/workspace2.bzl
 +++ b/tensorflow/workspace2.bzl
-@@ -204,24 +204,21 @@ def _tf_repositories():
-         build_file = "//third_party/mkl_dnn:mkldnn_acl.BUILD",
-         patch_file = [
-             "//third_party/mkl_dnn:onednn_acl_threadcap.patch",
--            "//third_party/mkl_dnn:onednn_acl_remove_winograd.patch",
--            "//third_party/mkl_dnn:onednn_acl_fixed_format_kernels.patch",
--            "//third_party/mkl_dnn:onednn_acl_depthwise_convolution.patch",
--            "//third_party/mkl_dnn:onednn_acl_threadpool_scheduler.patch",
--            "//third_party/mkl_dnn:onednn_acl_reorder_padded.patch",
--            "//third_party/mkl_dnn:onednn_acl_reorder_update.patch",
+@@ -218,11 +218,11 @@ def _tf_repositories():
              "//third_party/mkl_dnn:onednn_acl_reorder.patch",
-+            "//third_party/mkl_dnn:onednn_acl_fp32_bf16_reorder.patch",
              "//third_party/mkl_dnn:onednn_acl_thread_local_scheduler.patch",
+             "//third_party/mkl_dnn:onednn_acl_fp32_bf16_reorder.patch",
+-            "//third_party/mkl_dnn:onednn_acl_bf16_capability_detection_for_ubuntu20.04.patch",
 +            "//third_party/mkl_dnn:onednn_acl_use_indirect_conv.patch",
          ],
--        sha256 = "a50993aa6265b799b040fe745e0010502f9f7103cc53a9525d59646aef006633",
--        strip_prefix = "oneDNN-2.7.3",
--        urls = tf_mirror_urls("https://github.com/oneapi-src/oneDNN/archive/v2.7.3.tar.gz"),
+-        sha256 = "2f76b407ef8893cca71340f88cd800019a1f14f8ac1bbdbb89a84be1370b52e3",
+-        strip_prefix = "oneDNN-3.2.1",
+-        urls = tf_mirror_urls("https://github.com/oneapi-src/oneDNN/archive/refs/tags/v3.2.1.tar.gz"),
 +        sha256 = "8d150a77025f38bff182aaef4dd643625563b2f311c635f86cf4b769b04d7b48",
 +        strip_prefix = "oneDNN-3.3",
 +        urls = tf_mirror_urls("https://github.com/oneapi-src/oneDNN/archive/refs/tags/v3.3.tar.gz"),
      )
-
+ 
      tf_http_archive(
-         name = "compute_library",
+@@ -230,6 +230,7 @@ def _tf_repositories():
          patch_file = [
              "//third_party/compute_library:compute_library.patch",
-+            "//third_party/compute_library:acl_fp32_bf16_reorder.patch",
              "//third_party/compute_library:acl_thread_local_scheduler.patch",
++            "//third_party/compute_library:acl_fp32_bf16_reorder.patch",
          ],
          sha256 = "c4ca329a78da380163b2d86e91ba728349b6f0ee97d66e260a694ef37f0b0d93",
+         strip_prefix = "ComputeLibrary-23.05.1",
+
 diff --git a/third_party/mkl_dnn/mkldnn_acl.BUILD b/third_party/mkl_dnn/mkldnn_acl.BUILD
-index a1085427ec0..2023a134d0a 100644
+index 0653bcb5523..93b1be4873b 100644
 --- a/third_party/mkl_dnn/mkldnn_acl.BUILD
 +++ b/third_party/mkl_dnn/mkldnn_acl.BUILD
-@@ -61,6 +61,13 @@ _DNNL_RUNTIME_THREADPOOL = {
+@@ -62,6 +62,12 @@ _DNNL_RUNTIME_THREADPOOL = {
      "#cmakedefine01 BUILD_XEHPG": "#define BUILD_XEHPG 0",
      "#cmakedefine01 BUILD_XEHPC": "#define BUILD_XEHPC 0",
      "#cmakedefine01 BUILD_XEHP": "#define BUILD_XEHP 0",
@@ -76,11 +57,10 @@ index a1085427ec0..2023a134d0a 100644
 +    "#cmakedefine01 BUILD_GEMM_SSE41": "#define BUILD_GEMM_SSE41 0",
 +    "#cmakedefine01 BUILD_GEMM_AVX2": "#define BUILD_GEMM_AVX2 0",
 +    "#cmakedefine01 BUILD_GEMM_AVX512": "#define BUILD_GEMM_AVX512 0",
-+    "#cmakedefine ONEDNN_BUILD_GRAPH": "#undef ONEDNN_BUILD_GRAPH",
  }
-
+ 
  _DNNL_RUNTIME_OMP = {
-@@ -108,6 +115,13 @@ _DNNL_RUNTIME_OMP = {
+@@ -110,6 +116,12 @@ _DNNL_RUNTIME_OMP = {
      "#cmakedefine01 BUILD_XEHPG": "#define BUILD_XEHPG 0",
      "#cmakedefine01 BUILD_XEHPC": "#define BUILD_XEHPC 0",
      "#cmakedefine01 BUILD_XEHP": "#define BUILD_XEHP 0",
@@ -90,28 +70,17 @@ index a1085427ec0..2023a134d0a 100644
 +    "#cmakedefine01 BUILD_GEMM_SSE41": "#define BUILD_GEMM_SSE41 0",
 +    "#cmakedefine01 BUILD_GEMM_AVX2": "#define BUILD_GEMM_AVX2 0",
 +    "#cmakedefine01 BUILD_GEMM_AVX512": "#define BUILD_GEMM_AVX512 0",
-+    "#cmakedefine ONEDNN_BUILD_GRAPH": "#undef ONEDNN_BUILD_GRAPH",
  }
-
+ 
  expand_template(
-@@ -124,9 +138,9 @@ expand_template(
-     name = "dnnl_version_h",
+@@ -127,8 +139,8 @@ expand_template(
      out = "include/oneapi/dnnl/dnnl_version.h",
      substitutions = {
--        "@DNNL_VERSION_MAJOR@": "2",
--        "@DNNL_VERSION_MINOR@": "7",
--        "@DNNL_VERSION_PATCH@": "3",
-+        "@DNNL_VERSION_MAJOR@": "3",
+         "@DNNL_VERSION_MAJOR@": "3",
+-        "@DNNL_VERSION_MINOR@": "2",
+-        "@DNNL_VERSION_PATCH@": "1",
 +        "@DNNL_VERSION_MINOR@": "3",
 +        "@DNNL_VERSION_PATCH@": "0",
          "@DNNL_VERSION_HASH@": "N/A",
      },
      template = "include/oneapi/dnnl/dnnl_version.h.in",
-@@ -142,6 +156,7 @@ cc_library(
-         ],
-         exclude = [
-             "src/cpu/x64/**",
-+            "src/cpu/rv64/**",
-         ],
-     ),
-     copts = select({

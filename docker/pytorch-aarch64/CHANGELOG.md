@@ -16,6 +16,7 @@ where `YY` is the year, and `MM` the month of the increment.
 ### Fixed
 
 ## [r24.01] 2024-01-23
+https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--r24.01/docker/pytorch-aarch64
 
 ### Added
 - ACL and oneDNN patches for in place sum
