@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # *******************************************************************************
-# Copyright 2020-2023 Arm Limited and affiliates.
+# Copyright 2020-2024 Arm Limited and affiliates.
 # Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -47,16 +47,11 @@ if [[ $ONEDNN_BUILD ]]; then
   esac
 fi
 
-
-# Fix mldnn_matmul error
-curl https://github.com/pytorch/pytorch/commit/cdc8d709cb458d656d170569b4da3d8193e4a6a2.patch -o /tmp/mldnn_matmul_fix.patch
-patch -p1 < /tmp/mldnn_matmul_fix.patch
-
 patch -p1 < $PACKAGE_DIR/pytorch_dynamic_quantization.patch
 
 cd third_party/ideep
-# Checkout a version of ideep compatible with oneDNN v3.3 and pytorch v2.1.0
-git checkout d0c2278a5d6830edecb2cad0f8d2598331f65554
+# Checkout a version of ideep compatible with oneDNN v3.3.4 and pytorch v2.2.0
+git checkout 087f41ae0d921e22c2d167e7d4723bb5beeda417
 
 patch -p1 < $PACKAGE_DIR/ideep_dynamic_quantization.patch
 
@@ -77,6 +72,8 @@ patch -p1 < $PACKAGE_DIR/onednn_fp32_bf16_reorder.patch
 patch -p1 < $PACKAGE_DIR/onednn_acl_threadcap.patch
 
 patch -p1 < $PACKAGE_DIR/onednn_acl_thread_local_scheduler.patch
+
+patch -p1 < $PACKAGE_DIR/onednn_in_place_sum.patch
 
 cd $PACKAGE_DIR/$src_repo
 

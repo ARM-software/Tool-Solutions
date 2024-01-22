@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # *******************************************************************************
-# Copyright 2020-2023 Arm Limited and affiliates.
+# Copyright 2020-2024 Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -41,6 +41,8 @@ cat ../acl_fp32_bf16_reorder.patch tmp.patch > ../acl_fp32_bf16_reorder.patch
 patch -p1 < ../acl_fp32_bf16_reorder.patch
 
 patch -p1 < ../acl_dynamic_quantization.patch
+
+patch -p1 < ../acl_in_place_sum.patch
 
 # Default to v8a if $acl_arch is unset.
 arch=${ACL_ARCH:-"arm64-v8a"}
