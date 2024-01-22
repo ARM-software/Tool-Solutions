@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # *******************************************************************************
-# Copyright 2020-2023 Arm Limited and affiliates.
+# Copyright 2020-2024 Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -230,7 +230,7 @@ if [[ $clean_build ]]; then
 fi
 
 # Set TensorFlow version
-tf_version="v2.14.0"
+tf_version="v2.15.0"
 
 # Add build-args to pass version numbers,
 extra_args="$extra_args \

@@ -1,5 +1,5 @@
 # *******************************************************************************
-# Copyright 2020-2023 Arm Limited and affiliates.
+# Copyright 2020-2024 Arm Limited and affiliates.
 # Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -169,6 +169,8 @@ ENV LD_LIBRARY_PATH=$OPENBLAS_DIR/lib:$LD_LIBRARY_PATH
 COPY scripts/build-acl.sh $PACKAGE_DIR/.
 COPY patches/acl_dynamic_quantization.patch $PACKAGE_DIR/.
 COPY patches/acl_fp32_bf16_reorder.patch $PACKAGE_DIR/.
+COPY patches/acl_in_place_sum.patch $PACKAGE_DIR/.
+
 RUN $PACKAGE_DIR/build-acl.sh
 ENV ACL_ROOT_DIR=$PROD_DIR/ComputeLibrary
 
@@ -262,8 +264,8 @@ ENV ONEDNN_BUILD="${onednn_opt}" \
 
 # Key version numbers
 ENV PY_VERSION="${default_py_version}" \
-    ONEDNN_VERSION="v3.3" \
-    TORCH_VERSION=2.1.0 \
+    ONEDNN_VERSION="v3.3.4" \
+    TORCH_VERSION=2.2.0-rc8 \
     TORCHXLA_VERSION=2.1.0 \
     TORCHVISION_VERSION=0.16.0 \
     TORCHDATA_VERSION=0.7.0 \
@@ -292,6 +294,7 @@ COPY patches/onednn_fp32_bf16_reorder.patch $PACKAGE_DIR/.
 COPY patches/onednn_dynamic_quantization.patch $PACKAGE_DIR/.
 COPY patches/ideep_dynamic_quantization.patch $PACKAGE_DIR/.
 COPY patches/pytorch_dynamic_quantization.patch $PACKAGE_DIR/.
+COPY patches/onednn_in_place_sum.patch $PACKAGE_DIR/.
 
 COPY scripts/build-torchvision.sh $PACKAGE_DIR/.
 COPY scripts/build-torchtext.sh $PACKAGE_DIR/.
@@ -309,10 +312,13 @@ RUN $PACKAGE_DIR/build-pytorch.sh
 ENV VENV_PACKAGE_DIR=$VENV_DIR/lib/python$PY_VERSION/site-packages
 # Build torchvision from source to workaround the undefined C++ symbols issues
 RUN $PACKAGE_DIR/build-torchvision.sh
+
+# Build torchdata from source because there is no wheel for v0.4.0
+# torchtext depends on torchdata, so we first build torchdata and then torchtext
+RUN $PACKAGE_DIR/build-torchdata.sh
+
 # Build torchtext from source to workaround the undefined symbol issue with the wheel
 RUN $PACKAGE_DIR/build-torchtext.sh
-# Build torchdata from source because there is no wheel for v0.4.0
-RUN $PACKAGE_DIR/build-torchdata.sh
 
 CMD ["bash", "-l"]
 

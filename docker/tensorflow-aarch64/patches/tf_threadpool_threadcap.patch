@@ -1,5 +1,5 @@
  *******************************************************************************
- Copyright 2023 Arm Limited and affiliates.
+ Copyright 2023-2024 Arm Limited and affiliates.
  SPDX-License-Identifier: Apache-2.0
 
  Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,25 +14,25 @@
  See the License for the specific language governing permissions and
  limitations under the License.
  *******************************************************************************
-diff --git a/tensorflow/tsl/platform/threadpool.cc b/tensorflow/tsl/platform/threadpool.cc
-index 271aa58c804..b4abf97a1f1 100644
---- a/tensorflow/tsl/platform/threadpool.cc
-+++ b/tensorflow/tsl/platform/threadpool.cc
+diff --git a/third_party/xla/third_party/tsl/tsl/platform/threadpool.cc b/third_party/xla/third_party/tsl/tsl/platform/threadpool.cc
+index 218226611b1..7e0b59ad7ac 100644
+--- a/third_party/xla/third_party/tsl/tsl/platform/threadpool.cc
++++ b/third_party/xla/third_party/tsl/tsl/platform/threadpool.cc
 @@ -27,6 +27,7 @@ limitations under the License.
- #include "tensorflow/tsl/platform/numa.h"
- #include "tensorflow/tsl/platform/setround.h"
- #include "tensorflow/tsl/platform/tracing.h"
+ #include "tsl/platform/numa.h"
+ #include "tsl/platform/setround.h"
+ #include "tsl/platform/tracing.h"
 +#include <thread>
-
+ 
  #ifdef TENSORFLOW_THREADSCALING_EXPERIMENTAL
  ABSL_FLAG(float, tensorflow_num_threads_scale_factor, 1.0,
 @@ -107,6 +108,10 @@ ThreadPool::ThreadPool(Env* env, const ThreadOptions& thread_options,
                         bool low_latency_hint, Eigen::Allocator* allocator) {
    CHECK_GE(num_threads, 1);
-
-+if(num_threads == std::thread::hardware_concurrency() && num_threads > 1){
-+  num_threads = num_threads - 1;
-+}
+ 
++  if(num_threads == std::thread::hardware_concurrency() && num_threads > 1){
++    num_threads = num_threads - 1;
++  }
 +
  #ifdef TENSORFLOW_THREADSCALING_EXPERIMENTAL
    CHECK_GT(absl::GetFlag(FLAGS_tensorflow_num_threads_scale_factor), 0);

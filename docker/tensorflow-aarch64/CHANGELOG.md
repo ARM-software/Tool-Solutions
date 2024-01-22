@@ -9,9 +9,20 @@ where `YY` is the year, and `MM` the month of the increment.
 
 ### Added
 
+### Changed
+
+### Removed
+
+### Fixed
+
+## [r24.01] 2034-01-23
+https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--r24.01/docker/tensorflow-aarch64
+
+### Added
  - oneDNN patch to use indirect convolution only.
 
 ### Changed
+ - Updated tensorflow to v2.15.0
 
 ### Removed
 
