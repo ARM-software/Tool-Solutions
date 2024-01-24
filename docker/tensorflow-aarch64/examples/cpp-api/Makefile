@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2021-2023 Arm Ltd. and affiliates.
+# Copyright 2021-2024 Arm Ltd. and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,6 +27,7 @@ imagenet_labels_url = https://storage.googleapis.com/download.tensorflow.org/dat
 
 TF_INCLUDE_DIR = /home/ubuntu/python3-venv/tensorflow/include
 TF_LIB_DIR     = /home/ubuntu/python3-venv/tensorflow/lib
+TF_INCLUDE_EXTERNAL_DIR = /home/ubuntu/python3-venv/lib/python$(PY_VERSION)/site-packages/tensorflow/include/external
 CV_INCLUDE_DIR = /opt/opencv/install/include/opencv4
 CV_LIB_DIR     = /opt/opencv/install/lib
 YAML_INCLUDE_DIR = /opt/yaml-cpp/include
@@ -42,6 +43,7 @@ detect_objects: models images labels
 	$(CC) $(CFLAGS) $(LDFLAGS) detect_objects.cc common.hpp \
 	  $(YAML_LIB_DIR)/libyaml-cpp.a -o detect_objects \
 	  -I $(TF_INCLUDE_DIR) -L $(TF_LIB_DIR) \
+	  -I $(TF_INCLUDE_EXTERNAL_DIR) \
 	  -I $(CV_INCLUDE_DIR) -L $(CV_LIB_DIR) \
 	  -I $(YAML_INCLUDE_DIR) \
 	  -ltensorflow_cc -ltensorflow_framework \
@@ -51,6 +53,7 @@ classify_image: models images labels
 	$(CC) $(CFLAGS) $(LDFLAGS) classify_image.cc common.hpp \
 	  $(YAML_LIB_DIR)/libyaml-cpp.a -o classify_image \
 	  -I $(TF_INCLUDE_DIR) -L $(TF_LIB_DIR) \
+	  -I $(TF_INCLUDE_EXTERNAL_DIR) \
 	  -I $(YAML_INCLUDE_DIR) \
 	  -ltensorflow_cc -ltensorflow_framework
 
@@ -58,6 +61,7 @@ inception_inference: models images labels
 	$(CC) $(CFLAGS) $(LDFLAGS) inception_inference.cc common.hpp \
 	  $(YAML_LIB_DIR)/libyaml-cpp.a -o inception_inference \
 	  -I $(TF_INCLUDE_DIR) -L $(TF_LIB_DIR) \
+	  -I $(TF_INCLUDE_EXTERNAL_DIR) \
 	  -I $(YAML_INCLUDE_DIR) \
 	  -ltensorflow_cc -ltensorflow_framework
 
