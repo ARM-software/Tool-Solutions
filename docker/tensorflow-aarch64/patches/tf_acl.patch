@@ -15,10 +15,14 @@
  limitations under the License.
  *******************************************************************************
 diff --git a/tensorflow/workspace2.bzl b/tensorflow/workspace2.bzl
-index 056df85ffdb..619e1e0927e 100644
+index 8601192edf7..6690fb379d8 100644
 --- a/tensorflow/workspace2.bzl
 +++ b/tensorflow/workspace2.bzl
-@@ -218,11 +218,11 @@ def _tf_repositories():
+@@ -206,15 +206,14 @@ def _tf_repositories():
+         name = "mkl_dnn_acl_compatible",
+         build_file = "//third_party/mkl_dnn:mkldnn_acl.BUILD",
+         patch_file = [
+-            "//third_party/mkl_dnn:onednn_acl_threadcap.patch",
              "//third_party/mkl_dnn:onednn_acl_reorder.patch",
              "//third_party/mkl_dnn:onednn_acl_thread_local_scheduler.patch",
              "//third_party/mkl_dnn:onednn_acl_fp32_bf16_reorder.patch",
@@ -34,7 +38,7 @@ index 056df85ffdb..619e1e0927e 100644
      )
  
      tf_http_archive(
-@@ -230,6 +230,7 @@ def _tf_repositories():
+@@ -222,6 +221,7 @@ def _tf_repositories():
          patch_file = [
              "//third_party/compute_library:compute_library.patch",
              "//third_party/compute_library:acl_thread_local_scheduler.patch",
@@ -42,7 +46,6 @@ index 056df85ffdb..619e1e0927e 100644
          ],
          sha256 = "c4ca329a78da380163b2d86e91ba728349b6f0ee97d66e260a694ef37f0b0d93",
          strip_prefix = "ComputeLibrary-23.05.1",
-
 diff --git a/third_party/mkl_dnn/mkldnn_acl.BUILD b/third_party/mkl_dnn/mkldnn_acl.BUILD
 index 0653bcb5523..93b1be4873b 100644
 --- a/third_party/mkl_dnn/mkldnn_acl.BUILD

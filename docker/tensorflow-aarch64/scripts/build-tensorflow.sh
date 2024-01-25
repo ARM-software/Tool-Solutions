@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # *******************************************************************************
-# Copyright 2020-2023 Arm Limited and affiliates.
+# Copyright 2020-2024 Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -90,7 +90,6 @@ if [[ $ONEDNN_BUILD ]]; then
         mv ../onednn_acl_reorder.patch ./third_party/mkl_dnn/.
         mv ../onednn_acl_fp32_bf16_reorder.patch ./third_party/mkl_dnn/.
         mv ../onednn_acl_thread_local_scheduler.patch ./third_party/mkl_dnn/.
-        mv ../onednn_acl_threadcap.patch ./third_party/mkl_dnn/.
         mv ../onednn_acl_use_indirect_conv.patch ./third_party/mkl_dnn/.
 
         ## Compute Library

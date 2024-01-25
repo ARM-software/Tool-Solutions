@@ -1,5 +1,5 @@
 # *******************************************************************************
-# Copyright 2020-2023 Arm Limited and affiliates.
+# Copyright 2020-2024 Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -285,7 +285,6 @@ ENV PATH="$PACKAGE_DIR/bazel:$PATH"
 COPY patches/tf_acl.patch $PACKAGE_DIR/.
 COPY patches/tf_threadpool_threadcap.patch $PACKAGE_DIR/.
 COPY patches/onednn_acl_thread_local_scheduler.patch $PACKAGE_DIR/.
-COPY patches/onednn_acl_threadcap.patch $PACKAGE_DIR/.
 COPY patches/onednn_acl_reorder.patch $PACKAGE_DIR/.
 COPY patches/onednn_acl_fp32_bf16_reorder.patch $PACKAGE_DIR/.
 COPY patches/onednn_acl_use_indirect_conv.patch $PACKAGE_DIR/.

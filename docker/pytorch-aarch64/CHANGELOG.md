@@ -27,6 +27,7 @@ https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--
 - Updated ideep to Git Hash: 087f41a
 
 ### Removed
+ - onednn_acl_threadcap.patch as it causes a regression
 
 ### Fixed
 
