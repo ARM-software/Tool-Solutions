@@ -69,8 +69,6 @@ patch -p1 < $PACKAGE_DIR/onednn_acl_reorder.patch
 
 patch -p1 < $PACKAGE_DIR/onednn_fp32_bf16_reorder.patch
 
-patch -p1 < $PACKAGE_DIR/onednn_acl_threadcap.patch
-
 patch -p1 < $PACKAGE_DIR/onednn_acl_thread_local_scheduler.patch
 
 patch -p1 < $PACKAGE_DIR/onednn_in_place_sum.patch

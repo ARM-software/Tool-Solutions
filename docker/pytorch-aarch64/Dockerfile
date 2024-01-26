@@ -287,7 +287,6 @@ ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 COPY scripts/build-pytorch.sh $PACKAGE_DIR/.
 COPY patches/onednn.patch $PACKAGE_DIR/.
 COPY patches/onednn_acl_reorder.patch $PACKAGE_DIR/.
-COPY patches/onednn_acl_threadcap.patch $PACKAGE_DIR/.
 COPY patches/onednn_acl_thread_local_scheduler.patch $PACKAGE_DIR/.
 COPY patches/torchvision.patch $PACKAGE_DIR/.
 COPY patches/onednn_fp32_bf16_reorder.patch $PACKAGE_DIR/.

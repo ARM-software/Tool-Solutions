@@ -25,6 +25,7 @@ https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--
  - Updated tensorflow to v2.15.0
 
 ### Removed
+ -  onednn_acl_threadcap.patch as it's not longer needed
 
 ### Fixed
 
