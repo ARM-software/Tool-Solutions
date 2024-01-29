@@ -70,6 +70,7 @@ RUN apt-get -y update && \
       locales \
       lsb-release \
       lvm2 \
+      lld \
       moreutils \
       net-tools \
       open-iscsi \
@@ -83,6 +84,7 @@ RUN apt-get -y update && \
       python${PY_VERSION}-venv \
       python3-pip \
       python3-openssl \
+      patchelf \
       rsync \
       rsyslog \
       snapd \
@@ -99,8 +101,7 @@ RUN apt-get -y update && \
       wget \
       xz-utils \
       zip \
-      zlib1g-dev \
-      patchelf
+      zlib1g-dev
 
 
 # Set default gcc, python and pip versions

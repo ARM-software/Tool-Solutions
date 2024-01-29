@@ -62,7 +62,7 @@ export TF_NEED_CLANG=0
 # Bazel build options
 config_flags=""
 compile_flags="--copt=-mtune=${TUNE} --copt=-march=${ARCH} --copt=-O3 --copt=-flax-vector-conversions --copt=-Wno-error=stringop-overflow"
-link_flags=""
+link_flags="--linkopt=-fuse-ld=lld --linkopt=-lm --linkopt=-Wl,--undefined-version"
 extra_flags="--verbose_failures -s"
 
 if [[ $BZL_RAM ]]; then extra_flags="$extra_flags --local_ram_resources=$BZL_RAM"; fi
