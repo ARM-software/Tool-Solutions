@@ -274,12 +274,10 @@ ENV VIRTUAL_ENV=/home/$DOCKER_USER/python3-venv
 COPY --chown=$DOCKER_USER:$DOCKER_USER --from=tensorflow-tools $VIRTUAL_ENV /home/$DOCKER_USER/python3-venv
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
-# Get Bazel binary for AArch64 using the latest Bazelisk release
-RUN mkdir -p $PACKAGE_DIR/bazel
-RUN bazelisk_url=$(curl -L -s https://api.github.com/repos/bazelbuild/bazelisk/releases/latest \
-    | grep -o -E "https://(.*)bazelisk-linux-arm64") && \
-    wget $bazelisk_url -O $PACKAGE_DIR/bazel/bazel
-RUN chmod a+x $PACKAGE_DIR/bazel/bazel
+# Get Bazel binary for AArch64 using Bazelisk
+RUN mkdir -p $PACKAGE_DIR/bazel \
+    && wget https://github.com/bazelbuild/bazelisk/releases/download/v1.19.0/bazelisk-linux-arm64 -O $PACKAGE_DIR/bazel/bazel \
+    && chmod a+x $PACKAGE_DIR/bazel/bazel
 ENV PATH="$PACKAGE_DIR/bazel:$PATH"
 
 # Build TensorFlow
