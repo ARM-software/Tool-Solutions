@@ -10,6 +10,7 @@ where `YY` is the year, and `MM` the month of the increment.
 ### Added
 
 ### Changed
+- Disabled layer norm fusions for aarch64
 
 ### Removed
 
