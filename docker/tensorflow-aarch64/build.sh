@@ -49,7 +49,7 @@ function print_usage_and_exit {
   echo "                                 * neoverse       - generic optimization for all Neoverse cores"
   echo "                                 * thunderx2t99   - optimize for Marvell ThunderX2."
   echo "                                 * custom         - use custom settings defined in cpu_info.sh"
-  echo "                                 GCC provides support for additional target cpu's refer to the gcc manual for details."
+  echo "                                 Clang provides support for additional target cpus, refer to the LLVM manual for details."
   echo "      --no-cache / --clean     Pull a new base image and build without using any cached images."
   echo "      --tag                    Specify a tag name for the image (default 'latest')."
   echo ""

@@ -32,8 +32,8 @@ cd ${src_repo}
 git checkout $version
 
 # Env vars used to avoid interactive elements of the build.
-export HOST_C_COMPILER=(which gcc)
-export HOST_CXX_COMPILER=(which g++)
+export HOST_C_COMPILER=(which clang)
+export HOST_CXX_COMPILER=(which clang++)
 export PYTHON_BIN_PATH=(which python)
 export USE_DEFAULT_PYTHON_LIB_PATH=1
 export TF_ENABLE_XLA=1
@@ -55,13 +55,14 @@ export TF_NEED_OPENCL_SYCL=0
 export TF_NEED_COMPUTECPP=0
 export TF_NEED_KAFKA=0
 export TF_NEED_TENSORRT=0
-export TF_NEED_CLANG=0
+export TF_NEED_CLANG=1
 
 ./configure
 
 # Bazel build options
 config_flags=""
-compile_flags="--copt=-mtune=${TUNE} --copt=-march=${ARCH} --copt=-O3 --copt=-flax-vector-conversions --copt=-Wno-error=stringop-overflow"
+compile_flags="--copt=-mtune=${TUNE} --copt=-march=${ARCH} --copt=-O3 \
+    --copt=-flax-vector-conversions --copt=-Wno-gnu-offsetof-extensions"
 link_flags="--linkopt=-fuse-ld=lld --linkopt=-lm --linkopt=-Wl,--undefined-version"
 extra_flags="--verbose_failures -s"
 

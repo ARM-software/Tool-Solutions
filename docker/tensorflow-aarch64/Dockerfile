@@ -103,10 +103,14 @@ RUN apt-get -y update && \
       zip \
       zlib1g-dev
 
+# Add clang 17
+RUN wget -qO- https://apt.llvm.org/llvm-snapshot.gpg.key | tee /etc/apt/trusted.gpg.d/apt.llvm.org.asc
+RUN add-apt-repository "deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-17 main"
+RUN apt-get install -y  --no-install-recommends llvm-17 clang-17 clang++-17 python3-dev libomp-17-dev lld-17
 
-# Set default gcc, python and pip versions
-RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 1 && \
-    update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-11 1 && \
+# Set default clang, python and pip versions
+RUN update-alternatives --install /usr/bin/clang clang /usr/bin/clang-17 1 && \
+    update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-17 1 && \
     update-alternatives --install /usr/bin/gfortran gfortran /usr/bin/gfortran-11 1 && \
     update-alternatives --install /usr/bin/python python /usr/bin/python3 1 && \
     update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 1
@@ -154,8 +158,8 @@ RUN mkdir -p $PACKAGE_DIR && \
     mkdir -p $PROD_DIR
 
 # Common compiler settings
-ENV CC=gcc \
-    CXX=g++ \
+ENV CC=clang \
+    CXX=clang++ \
     BASE_CFLAGS="-mcpu=${CPU} -march=${ARCH} -O3" \
     BASE_LDFLAGS=""
 
@@ -274,12 +278,10 @@ ENV VIRTUAL_ENV=/home/$DOCKER_USER/python3-venv
 COPY --chown=$DOCKER_USER:$DOCKER_USER --from=tensorflow-tools $VIRTUAL_ENV /home/$DOCKER_USER/python3-venv
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
-# Get Bazel binary for AArch64 using the latest Bazelisk release
-RUN mkdir -p $PACKAGE_DIR/bazel
-RUN bazelisk_url=$(curl -L -s https://api.github.com/repos/bazelbuild/bazelisk/releases/latest \
-    | grep -o -E "https://(.*)bazelisk-linux-arm64") && \
-    wget $bazelisk_url -O $PACKAGE_DIR/bazel/bazel
-RUN chmod a+x $PACKAGE_DIR/bazel/bazel
+# Get Bazel binary for AArch64 using Bazelisk
+RUN mkdir -p $PACKAGE_DIR/bazel \
+    && wget https://github.com/bazelbuild/bazelisk/releases/download/v1.19.0/bazelisk-linux-arm64 -O $PACKAGE_DIR/bazel/bazel \
+    && chmod a+x $PACKAGE_DIR/bazel/bazel
 ENV PATH="$PACKAGE_DIR/bazel:$PATH"
 
 # Build TensorFlow

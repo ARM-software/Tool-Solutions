@@ -12,6 +12,8 @@ where `YY` is the year, and `MM` the month of the increment.
 ### Changed
 - Disabled layer norm fusions for aarch64
 
+- Move to Clang 17 from GCC
+
 ### Removed
 
 ### Fixed
