@@ -73,6 +73,8 @@ patch -p1 < $PACKAGE_DIR/onednn_acl_thread_local_scheduler.patch
 
 patch -p1 < $PACKAGE_DIR/onednn_in_place_sum.patch
 
+patch -p1 < $PACKAGE_DIR/onednn_bf16_matmul_kernel.patch
+
 cd $PACKAGE_DIR/$src_repo
 
 if [[ $XLA_BUILD ]]; then

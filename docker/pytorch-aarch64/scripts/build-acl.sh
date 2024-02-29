@@ -44,6 +44,11 @@ patch -p1 < ../acl_dynamic_quantization.patch
 
 patch -p1 < ../acl_in_place_sum.patch
 
+wget https://review.mlplatform.org/changes/ml%2FComputeLibrary\~11169/revisions/3/patch\?zip -O acl_bf16bf16_matmul.patch.zip && unzip acl_bf16bf16_matmul.patch.zip
+sed "5233,5279d" abd3394.diff > tmp.patch
+cat tmp.patch ../acl_bf16_dispatch.patch > acl_bf16bf16_matmul.patch
+patch -p1 < acl_bf16bf16_matmul.patch
+
 # Default to v8a if $acl_arch is unset.
 arch=${ACL_ARCH:-"arm64-v8a"}
 echo "Compute Library arch = ${arch}"

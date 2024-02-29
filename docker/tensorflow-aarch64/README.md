@@ -57,7 +57,7 @@ where `<image name> `is the name of the image, i.e. `armswdev/tensorflow-arm-neo
 
   * OS: Ubuntu 22.04
   * Compiler: Clang 17
-  * Maths libraries: [OpenBLAS](https://www.openblas.net/) 0.3.20, used for NumPy's BLAS functionality
+  * Maths libraries: [OpenBLAS](https://www.openblas.net/) 0.3.26, used for NumPy's BLAS functionality
   * [oneDNN](https://github.com/oneapi-src/oneDNN) 3.2
     - ACL 23.05.1 provides optimized implementations on AArch64 for main oneDNN primitives
   * Python 3.10 environment containing:

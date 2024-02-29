@@ -10,9 +10,20 @@ where `YY` is the year, and `MM` the month of the increment.
 ### Added
 
 ### Changed
-- Disabled layer norm fusions for aarch64
 
-- Move to Clang 17 from GCC
+### Removed
+
+### Fixed
+
+## [r24.02] 2034-01-28
+https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--r24.02/docker/tensorflow-aarch64
+
+### Added
+
+### Changed
+ - Disabled layer norm fusions for aarch64
+
+ - Move to Clang 17 from GCC
 
 ### Removed
 

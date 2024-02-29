@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # *******************************************************************************
-# Copyright 2020-2021 Arm Limited and affiliates.
+# Copyright 2020-2024 Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,7 +22,7 @@ set -euo pipefail
 cd $PACKAGE_DIR
 readonly package=openblas
 readonly version=$OPENBLAS_VERSION
-readonly src_host="https://github.com/xianyi"
+readonly src_host="https://github.com/OpenMathLib"
 readonly src_repo="OpenBLAS"
 
 git clone ${src_host}/${src_repo}.git
