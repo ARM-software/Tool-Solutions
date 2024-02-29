@@ -140,7 +140,7 @@ ENV NP_MAKE="${njobs}" \
 
 # Key version numbers
 ENV ACL_VERSION="v23.08" \
-    OPENBLAS_VERSION=0.3.20 \
+    OPENBLAS_VERSION=0.3.26 \
     NINJA_VERSION=1.9.0
 
 # Package build parameters
@@ -170,6 +170,7 @@ COPY scripts/build-acl.sh $PACKAGE_DIR/.
 COPY patches/acl_dynamic_quantization.patch $PACKAGE_DIR/.
 COPY patches/acl_fp32_bf16_reorder.patch $PACKAGE_DIR/.
 COPY patches/acl_in_place_sum.patch $PACKAGE_DIR/.
+COPY patches/acl_bf16_dispatch.patch $PACKAGE_DIR/.
 
 RUN $PACKAGE_DIR/build-acl.sh
 ENV ACL_ROOT_DIR=$PROD_DIR/ComputeLibrary
@@ -294,6 +295,7 @@ COPY patches/onednn_dynamic_quantization.patch $PACKAGE_DIR/.
 COPY patches/ideep_dynamic_quantization.patch $PACKAGE_DIR/.
 COPY patches/pytorch_dynamic_quantization.patch $PACKAGE_DIR/.
 COPY patches/onednn_in_place_sum.patch $PACKAGE_DIR/.
+COPY patches/onednn_bf16_matmul_kernel.patch $PACKAGE_DIR/.
 
 COPY scripts/build-torchvision.sh $PACKAGE_DIR/.
 COPY scripts/build-torchtext.sh $PACKAGE_DIR/.
