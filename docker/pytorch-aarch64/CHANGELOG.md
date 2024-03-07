@@ -15,6 +15,18 @@ where `YY` is the year, and `MM` the month of the increment.
 
 ### Fixed
 
+## [r24.02.1] 2024-03-06
+https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--r24.02.1/docker/pytorch-aarch64
+
+### Added
+
+### Changed
+- Downgrade OpenBLAS version to v0.3.24
+
+### Removed
+
+### Fixed
+
 ## [r24.02] 2024-02-28
 https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--r24.02/docker/pytorch-aarch64
 

@@ -59,16 +59,16 @@ where `<image name>` is the name of the image, i.e. `armswdev/pytorch-arm-neover
 
   * OS: Ubuntu 22.04
   * Compiler: GCC 11.3
-  * Maths libraries: [OpenBLAS](https://www.openblas.net/) 0.3.20
-  * [oneDNN](https://github.com/oneapi-src/oneDNN) 2.7
+  * Maths libraries: [OpenBLAS](https://www.openblas.net/) 0.3.24
+  * [oneDNN](https://github.com/oneapi-src/oneDNN) 3.3.4
     - ACL 23.05, provides optimized implementations on AArch64 for main oneDNN primitives
   * Python 3.10 environment containing:
     - NumPy 1.25.2
     - SciPy 1.10.1
-    - PyTorch 2.0.0
-    - TorchVision 0.15.1
-    - TorchData 0.6.0
-    - TorchText 0.15.1
+    - PyTorch 2.2.0-rc8
+    - TorchVision 0.16.0
+    - TorchData 0.7.0
+    - TorchText 0.16.0
   * [Examples](./examples/README.md) that demonstrate how to run ML models
     - [MLCommons :tm:](https://mlcommons.org/en/) benchmarks
     - Python API examples

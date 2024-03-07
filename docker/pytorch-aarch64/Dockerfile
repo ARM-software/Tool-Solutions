@@ -140,7 +140,7 @@ ENV NP_MAKE="${njobs}" \
 
 # Key version numbers
 ENV ACL_VERSION="v23.08" \
-    OPENBLAS_VERSION=0.3.26 \
+    OPENBLAS_VERSION=0.3.24 \
     NINJA_VERSION=1.9.0
 
 # Package build parameters
