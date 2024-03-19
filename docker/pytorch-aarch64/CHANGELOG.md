@@ -8,10 +8,20 @@ where `YY` is the year, and `MM` the month of the increment.
 ## [Unreleased]
 
 ### Added
+- oneDNN patch for indirect conv enablement
+- torchaudio version 2.2.1
 
 ### Changed
+- Updated oneDNN version to v3.3.5
+- Updated pytorch version to v2.2.1
+- Updated torchvision version to v0.17.1
+- Updated torchdata version to v0.7.1
+- Updated torchtext version to v0.17.1
+- Updated ideep to pytorch-rls-v3.3.5
+- Updated build scripts for: torchdata, torchtext
 
 ### Removed
+- XLA option
 
 ### Fixed
 

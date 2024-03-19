@@ -1,7 +1,7 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 # *******************************************************************************
-# Copyright 2022 Arm Limited and affiliates.
+# Copyright 2022,2024 Arm Limited and affiliates.
 # Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -21,18 +21,21 @@
 set -euo pipefail
 
 cd $PACKAGE_DIR
-readonly package=torchdata
 readonly version=$TORCHDATA_VERSION
 readonly src_host=https://github.com/pytorch
 readonly src_repo=data
-readonly cppflags="-I$VENV_PACKAGE_DIR/pybind11/include"
+readonly num_cpus=$(nproc)
 
-# Clone Torchdata
-git clone ${src_host}/${src_repo}.git ${package}
-cd ${package}
+# Clone TorchData
+git clone ${src_host}/${src_repo}.git
+cd ${src_repo}
 git checkout v$version -b v$version
 git submodule sync
 git submodule update --init --recursive
 
-# Run Python build script
-CPPFLAGS=$cppflags python setup.py clean install
+# Building TorchData
+CXX_FLAGS="${BASE_CFLAGS}" LD_FLAGS="${BASE_LDFLAGS}" FORCE_CUDA=0 python setup.py bdist_wheel
+
+# Installing the TorchData python wheel via pip, dependencies are ignored as PyTorch is
+# a dependency, which would cause it to overwrite the locally build PyTorch
+pip install --no-deps $(ls -tr dist/*.whl | tail)

@@ -256,21 +256,19 @@ ARG onednn_opt
 ARG default_py_version
 ARG cpu
 ARG bazel_version
-ARG build_xla
 
 ENV ONEDNN_BUILD="${onednn_opt}" \
     NP_MAKE="${njobs}" \
-    CPU="${cpu}" \
-    XLA_BUILD="${build_xla}"
+    CPU="${cpu}"
 
 # Key version numbers
 ENV PY_VERSION="${default_py_version}" \
-    ONEDNN_VERSION="v3.3.4" \
-    TORCH_VERSION=2.2.0-rc8 \
-    TORCHXLA_VERSION=2.1.0 \
-    TORCHVISION_VERSION=0.16.0 \
-    TORCHDATA_VERSION=0.7.0 \
-    TORCHTEXT_VERSION=0.16.0 \
+    ONEDNN_VERSION="v3.3.5" \
+    TORCH_VERSION=2.2.1 \
+    TORCHVISION_VERSION=0.17.1 \
+    TORCHDATA_VERSION=0.7.1 \
+    TORCHTEXT_VERSION=0.17.1 \
+    TORCHAUDIO_VERSION=2.2.1 \
     BZL_VERSION="${bazel_version}"
 
 # Use a PACKAGE_DIR in userspace
@@ -290,6 +288,7 @@ COPY patches/onednn.patch $PACKAGE_DIR/.
 COPY patches/onednn_acl_reorder.patch $PACKAGE_DIR/.
 COPY patches/onednn_acl_thread_local_scheduler.patch $PACKAGE_DIR/.
 COPY patches/torchvision.patch $PACKAGE_DIR/.
+COPY patches/onednn_enable_indirect_conv.patch $PACKAGE_DIR/.
 COPY patches/onednn_fp32_bf16_reorder.patch $PACKAGE_DIR/.
 COPY patches/onednn_dynamic_quantization.patch $PACKAGE_DIR/.
 COPY patches/ideep_dynamic_quantization.patch $PACKAGE_DIR/.
@@ -300,6 +299,7 @@ COPY patches/onednn_bf16_matmul_kernel.patch $PACKAGE_DIR/.
 COPY scripts/build-torchvision.sh $PACKAGE_DIR/.
 COPY scripts/build-torchtext.sh $PACKAGE_DIR/.
 COPY scripts/build-torchdata.sh $PACKAGE_DIR/.
+COPY scripts/build-torchaudio.sh $PACKAGE_DIR/.
 
 # TODO: Switch to bazelisk for bazel installation
 # Get Bazel binary for AArch64
@@ -309,7 +309,7 @@ ENV PATH=$PACKAGE_DIR/bazel:$PATH
 
 RUN $PACKAGE_DIR/build-pytorch.sh
 
-# Install torchvision, torchdata and torchtext
+# Install torchvision, torchdata, torchtext and torchaudio
 ENV VENV_PACKAGE_DIR=$VENV_DIR/lib/python$PY_VERSION/site-packages
 # Build torchvision from source to workaround the undefined C++ symbols issues
 RUN $PACKAGE_DIR/build-torchvision.sh
@@ -320,6 +320,9 @@ RUN $PACKAGE_DIR/build-torchdata.sh
 
 # Build torchtext from source to workaround the undefined symbol issue with the wheel
 RUN $PACKAGE_DIR/build-torchtext.sh
+
+# Build torchaudio from source
+RUN $PACKAGE_DIR/build-torchaudio.sh
 
 CMD ["bash", "-l"]
 
