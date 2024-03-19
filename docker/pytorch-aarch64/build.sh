@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # *******************************************************************************
-# Copyright 2020-2023 Arm Limited and affiliates.
+# Copyright 2020-2024 Arm Limited and affiliates.
 # Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -31,13 +31,12 @@ function print_usage_and_exit {
   echo "      --onednn / --dnnl        Build and link to oneDNN / DNNL:"
   echo "                                 * reference    - use the C++ reference kernels throughout."
   echo "                                 * acl          - use Compute Library (default)."
-  echo "      --xla                    Build and install torch-xla wheel".
   echo "      --build-type             Type of build to perform:"
   echo "                                 * base       - build the basic portion of the image, OS and essential packages"
   echo "                                 * libs       - build image including maths libraries and Python3."
   echo "                                 * tools      - build image including Python3 venv, with numpy."
-  echo "                                 * dev        - build image including Bazel, PyTorch, and PyTorch XLA (if selected), with sources."
-  echo "                                 * pytorch    - build image including PyTorch and PyTorch XLA (if selected) builds, with benchmarks installed"
+  echo "                                 * dev        - build image including Bazel and PyTorch with sources."
+  echo "                                 * pytorch    - build image including PyTorch (if selected) builds, with benchmarks installed"
   echo "                                 * full       - build all images."
   echo "      --build-target           AArch64 CPU target:"
   echo "                                 * native       - optimize for the current host machine (default)."
