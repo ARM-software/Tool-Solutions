@@ -1,5 +1,5 @@
 # *******************************************************************************
-# Copyright 2021-2022 Arm Limited and affiliates.
+# Copyright 2021-2024 Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,55 +18,48 @@
 import sys
 import random
 import torch
-from transformers import DistilBertTokenizer, DistilBertForQuestionAnswering
+from transformers import AutoTokenizer, AutoModelForQuestionAnswering
 
-from utils import nlp_parser
 from utils import nlp
 
+import time
+
+import argparse
 
 def main():
     """
     Main function
     """
 
-    # Parse cmd line arguments
-    args = nlp_parser.parse_arguments()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-id", "--squadid",
+        help="ID of SQuAD record to use. A record will be picked at random if unset")
+    parser.add_argument("-s", "--subject",
+        help="Pick a SQuAD question on the given subject at random")
+    parser.add_argument("-t", "--text",
+        help="Filename of a user-specified text file to answer questions on. Note: SQuAD id is ignored if set.")
+    parser.add_argument("-q", "--question",
+        help="Question to ask about the user-provided text. Note: SQuAD id is ignored if set.")
+    parser.add_argument("--bert-large", action='store_true',
+        help="Use BERT large instead of DistilBERT")
+    parser.add_argument("--quantize", action='store_true',
+        help="Quantize the model to int8 using dynamic quantization")
+    parser.add_argument("--warmup", action='store_true',
+        help="Run warmup")
 
-    source = ""
-    subject = ""
+    args = vars(parser.parse_args())
+
+    source = args.get("text","")
+    subject = args.get("subject","")
     context = ""
-    question = ""
-    answer = ""
-    squadid = ""
-
-    if args:
-        if "text" in args:
-            if args["text"]:
-                source = args["text"]
-        if "subject" in args:
-            if args["subject"]:
-                subject = args["subject"]
-        if "context" in args:
-            if args["context"]:
-                context = args["context"]
-        if "question" in args:
-            if args["question"]:
-                question = args["question"]
-                clean_question = nlp.clean(question)
-        if "answer" in args:
-            if args["answer"]:
-                answer = args["answer"]
-        if "squadid" in args:
-            if args["squadid"]:
-                squadid = args["squadid"]
-    else:
-        sys.exit("Parser didn't return args correctly")
+    question = args.get("question","")
+    answer = args.get("answer","")
+    squadid = args.get("squadid","")
 
     # Setup the question, either from a specified SQuAD record
     # or from cmd line arguments.
     # If no question details are provided, a random
     # SQuAD example will be chosen.
-
     if question:
         if source:
             with open(source, "r") as text_file_handle:
@@ -75,7 +68,7 @@ def main():
             print("No text provided, searching SQuAD dev-2.0 dataset")
             squad_data = nlp.import_squad_data()
             squad_records = squad_data.loc[
-                squad_data["clean_question"] == clean_question
+                squad_data["clean_question"] == nlp.clean(question)
             ]
             if squad_records.empty:
                 sys.exit(
@@ -123,14 +116,21 @@ def main():
         question = squad_records["question"].iloc[i_record]
         answer = squad_records["answer"].iloc[i_record]
 
-    # DistilBERT question answering using pre-trained model.
-    token = DistilBertTokenizer.from_pretrained(
-        "distilbert-base-uncased", return_token_type_ids=True
-    )
+    if args["bert_large"]:
+        model_hf_path = "Graphcore/bert-large-uncased-squad"
+        model_name = "BERT Large"
+    else:
+        model_hf_path = "distilbert-base-uncased-distilled-squad"
+        model_name = "DistilBERT"
 
-    model = DistilBertForQuestionAnswering.from_pretrained(
-        "distilbert-base-uncased-distilled-squad"
-    )
+    token = AutoTokenizer.from_pretrained(model_hf_path, return_token_type_ids=True)
+    model = AutoModelForQuestionAnswering.from_pretrained(model_hf_path)
+
+    if args["quantize"]:
+        model = torch.ao.quantization.quantize_dynamic(
+            model,
+            {torch.nn.Linear},
+            dtype=torch.qint8)
 
     encoding = token.encode_plus(
         question,
@@ -142,11 +142,21 @@ def main():
         encoding["input_ids"],
         encoding["attention_mask"],
     )
+
+    if args["warmup"]:
+        model(
+            torch.tensor([input_ids]),
+            attention_mask=torch.tensor([attention_mask]),
+            return_dict=False,
+        )
+
+    start_time = time.time()
     start_scores, end_scores = model(
         torch.tensor([input_ids]),
         attention_mask=torch.tensor([attention_mask]),
         return_dict=False,
     )
+    end_time = time.time()
 
     answer_ids = input_ids[
         torch.argmax(start_scores) : torch.argmax(end_scores) + 1
@@ -157,14 +167,15 @@ def main():
     answer_tokens_to_string = token.convert_tokens_to_string(answer_tokens)
 
     # Display results
-    print("\nDistilBERT question answering example.")
+    print(f"\n{model_name} question answering example.")
     print("======================================")
     print("Reading from: ", subject, source)
     print("\nContext: ", context)
+    print(f"Inference time: {end_time - start_time}s")
     print("--")
     print("Question: ", question)
     print("Answer: ", answer_tokens_to_string)
-    print("Reference Answers: ", answer)
+    print("Reference Answer: ", answer)
 
 
 if __name__ == "__main__":

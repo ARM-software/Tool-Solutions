@@ -63,7 +63,7 @@ _Note: in PyTorch, in order to load the model from saved checkpoint, it is also 
 
 ### Question answering
 
-The script `answer_questions.py` demonstrates how to build a simple question answering system using the pre-trained DistilBERT model. The script can answer questions from the [Stanford Question Answering Dataset (SQuAD)](https://rajpurkar.github.io/SQuAD-explorer/), or can be provided with a user defined context and question.
+The script `answer_questions.py` demonstrates how to build a simple question answering system using the pre-trained DistilBERT model (default) or BERT LARGE model (using the `--bert-large` flag). The script can answer questions from the [Stanford Question Answering Dataset (SQuAD)](https://rajpurkar.github.io/SQuAD-explorer/), or can be provided with a user defined context and question.
 
 To run the script on a random entry from the SQuAD dev-v2.0 dataset call:
 
@@ -105,6 +105,16 @@ python answer_questions.py -t <context> -q <question>
 
 where `<context>` is the text file containing the text on which the `<question>` is based. If no text file is provided, `answer_questions.py` will search through the SQuAD dataset for the question and, if the question can be located, use the context associated with it.
 
+We can also quantize some of the layers of the models using the `--quantize` flag, which can make the model run several times faster
+```
+python answer_questions.py --quantize
+```
+See the section on [dynamic quantization](#dynamic-quantization) for more information.
+
+To remove the setup from the measured inference time, you can use the `--warmup` flag.
+This will run the model twice, and report the time of the second run.
+
+
 ### Torchtext Article Reading
 
 The script 'torchtext_example.py' shows the functionality of the 'torchtext' Pytorch library. The example reads an article and determines its genre out of 4 options: world, sports, business, or science & technology.
@@ -118,6 +128,46 @@ python torchtext_example.py axion.txt
 The example reads an excerpt from an article from https://news.northeastern.edu/2021/08/09/holy-grail-discovery-in-solid-state-physics-could-usher-in-new-technologies/, and correctly determines that it is a science & technology article.
 
 This script was built following the approach detailed in https://pytorch.org/tutorials/beginner/text_sentiment_ngrams_tutorial.html
+
+## Dynamic quantization
+
+Quantization reduces the precision of the inputs to your operators to speed up computation.
+Typically this takes us from the default float data type (32 bits) to an integer (8 bits).
+Currently dynamic quantization is supported (inputs are quantized at run time), and can be easily applied to a model using
+```python
+model = torch.ao.quantization.quantize_dynamic(
+    model,
+    {torch.nn.Linear},
+    dtype=torch.qint8)
+```
+Note that currently only the linear layer can be quantized, although for many models this layer contributes the largest runtime, so the overall speedup can still be large.
+
+`quantized_linear.py ` is a very simple example of the dynamic quantization of a single linear layer.
+It takes the 3 dimensions of the linear layer, and returns the runtime of the unquantized and quantized models along with the ratio.
+```
+python quantized_linear.py 384 1024 768
+```
+By running this you can see how the ratio unquantized/quantized time varies with number of threads and the size of the layer.
+| Threads\M=K=N | 256 | 512 | 1024 |
+|---------------|-----|-----|------|
+| 4             | 1.4 | 3.9 | 5.5  |
+| 8             | 1.2 | 3.0 | 5.1  |
+| 16            | 1.1 | 2.8 | 4.8  |
+
+The speedup is more pronounced for large linear layers and lower numbers of threads.
+
+To see the effect on a full model, you can run the `answer_questions.py` script from the earlier NLP example with the `--quantize` flag.
+```
+python answer_questions.py -id 56de16ca4396321400ee25c7 --quantize --bert-large
+```
+Again, the effect is most pronounced for fewer threads and larger layers/models (hence `--bert-large`), in such cases you can see up to ~3x speedup.
+
+| Threads | BERT Large speedup |
+|---------|--------------------|
+| 4       | 2.9                |
+| 8       | 2.4                |
+| 16      | 1.7                |
+Note that in the above data we used the `--warmup` flag to run the model once before timing.
 
 ## MLCommons :tm: benchmarks
 
