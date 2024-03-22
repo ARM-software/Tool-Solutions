@@ -10,6 +10,8 @@ where `YY` is the year, and `MM` the month of the increment.
 ### Added
 - oneDNN patch for indirect conv enablement
 - torchaudio version 2.2.1
+- Simple quantized example: `quantized_linear.py`
+- BERT Large and dynamic quantization flag to `answer_questions.py`
 
 ### Changed
 - Updated oneDNN version to v3.3.5
