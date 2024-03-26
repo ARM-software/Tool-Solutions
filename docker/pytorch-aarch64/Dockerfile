@@ -139,7 +139,7 @@ ENV NP_MAKE="${njobs}" \
     ACL_ARCH="${acl_arch}"
 
 # Key version numbers
-ENV ACL_VERSION="v23.08" \
+ENV ACL_VERSION="v24.02" \
     OPENBLAS_VERSION=0.3.24 \
     NINJA_VERSION=1.9.0
 
@@ -168,9 +168,9 @@ ENV LD_LIBRARY_PATH=$OPENBLAS_DIR/lib:$LD_LIBRARY_PATH
 # Build Arm Compute Library from source
 COPY scripts/build-acl.sh $PACKAGE_DIR/.
 COPY patches/acl_dynamic_quantization.patch $PACKAGE_DIR/.
-COPY patches/acl_fp32_bf16_reorder.patch $PACKAGE_DIR/.
 COPY patches/acl_in_place_sum.patch $PACKAGE_DIR/.
 COPY patches/acl_bf16_dispatch.patch $PACKAGE_DIR/.
+COPY patches/acl_parallelize_im2col.patch $PACKAGE_DIR/.
 
 RUN $PACKAGE_DIR/build-acl.sh
 ENV ACL_ROOT_DIR=$PROD_DIR/ComputeLibrary
@@ -295,6 +295,9 @@ COPY patches/ideep_dynamic_quantization.patch $PACKAGE_DIR/.
 COPY patches/pytorch_dynamic_quantization.patch $PACKAGE_DIR/.
 COPY patches/onednn_in_place_sum.patch $PACKAGE_DIR/.
 COPY patches/onednn_bf16_matmul_kernel.patch $PACKAGE_DIR/.
+COPY patches/onednn_update_conv2dinfo_constructor.patch $PACKAGE_DIR/.
+COPY patches/onednn_stop_linking_to_arm_core_library.patch $PACKAGE_DIR/.
+COPY patches/onednn_add_Acdb8a_and_Acdb4a_acl_reorders.patch $PACKAGE_DIR/.
 
 COPY scripts/build-torchvision.sh $PACKAGE_DIR/.
 COPY scripts/build-torchtext.sh $PACKAGE_DIR/.

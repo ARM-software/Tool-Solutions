@@ -68,13 +68,19 @@ patch -p1 < $PACKAGE_DIR/onednn_acl_reorder.patch
 
 patch -p1 < $PACKAGE_DIR/onednn_fp32_bf16_reorder.patch
 
+patch -p1 < $PACKAGE_DIR/onednn_add_Acdb8a_and_Acdb4a_acl_reorders.patch
+
+patch -p1 < $PACKAGE_DIR/onednn_bf16_matmul_kernel.patch
+
 patch -p1 < $PACKAGE_DIR/onednn_acl_thread_local_scheduler.patch
 
 patch -p1 < $PACKAGE_DIR/onednn_in_place_sum.patch
 
-patch -p1 < $PACKAGE_DIR/onednn_bf16_matmul_kernel.patch
+patch -p1 < $PACKAGE_DIR/onednn_update_conv2dinfo_constructor.patch
 
 patch -p1 < $PACKAGE_DIR/onednn_enable_indirect_conv.patch
+
+patch -p1 < $PACKAGE_DIR/onednn_stop_linking_to_arm_core_library.patch
 
 cd $PACKAGE_DIR/$src_repo
 

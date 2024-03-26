@@ -14,14 +14,20 @@ where `YY` is the year, and `MM` the month of the increment.
 ### Changed
 - Updated oneDNN version to v3.3.5
 - Updated pytorch version to v2.2.1
+- Updated Compute Libray to v24.02
 - Updated torchvision version to v0.17.1
 - Updated torchdata version to v0.7.1
 - Updated torchtext version to v0.17.1
 - Updated ideep to pytorch-rls-v3.3.5
 - Updated build scripts for: torchdata, torchtext
+- ACL patch for im2col parallelization
+- ACL patch which adds a new NEON fixed format hybrid kernel
+  with max height of 6 for accumulation and updates heuristics
+- Acdb8a/Acdb4a reorders
 
 ### Removed
 - XLA option
+- acl_fp32_bf16_reorder patch as it's in ACL v24.02
 
 ### Fixed
 
