@@ -285,17 +285,31 @@ RUN mkdir -p $PACKAGE_DIR/bazel \
 ENV PATH="$PACKAGE_DIR/bazel:$PATH"
 
 # Build TensorFlow
+# tensorflow patches
 COPY patches/tf_acl.patch $PACKAGE_DIR/.
 COPY patches/tf_threadpool_threadcap.patch $PACKAGE_DIR/.
 COPY patches/tf_disable_lnorm_fusions.patch $PACKAGE_DIR/.
+# oneDNN patches
 COPY patches/onednn_acl_thread_local_scheduler.patch $PACKAGE_DIR/.
 COPY patches/onednn_acl_reorder.patch $PACKAGE_DIR/.
 COPY patches/onednn_acl_fp32_bf16_reorder.patch $PACKAGE_DIR/.
-COPY patches/onednn_acl_use_indirect_conv.patch $PACKAGE_DIR/.
-COPY patches/acl_fp32_bf16_reorder.patch $PACKAGE_DIR/.
+COPY patches/onednn_acl_dynamic_quantization.patch $PACKAGE_DIR/.
+COPY patches/onednn_acl_in_place_sum.patch $PACKAGE_DIR/.
+COPY patches/onednn_acl_update_conv2dinfo_constructor.patch $PACKAGE_DIR/.
+COPY patches/onednn_acl_stop_linking_to_arm_core_library.patch $PACKAGE_DIR/.
+COPY patches/onednn_acl_add_Acdb8a_and_Acdb4a_acl_reorders.patch $PACKAGE_DIR/.
+# ACL patches
+COPY patches/acl_dynamic_quantization.patch $PACKAGE_DIR/.
+COPY patches/acl_in_place_sum.patch $PACKAGE_DIR/.
+COPY patches/acl_parallelize_im2col.patch $PACKAGE_DIR/.
+COPY patches/acl_thread_local_scheduler.patch $PACKAGE_DIR/.
+
 COPY scripts/build-tensorflow.sh $PACKAGE_DIR/.
 RUN $PACKAGE_DIR/build-tensorflow.sh
+
+# build tensorflow-addons
 COPY scripts/build-tensorflow-addons.sh $PACKAGE_DIR/.
+COPY patches/tf_addons_update.patch $PACKAGE_DIR/.
 RUN $PACKAGE_DIR/build-tensorflow-addons.sh
 
 CMD ["bash", "-l"]

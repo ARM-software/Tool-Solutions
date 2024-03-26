@@ -1,5 +1,5 @@
  *******************************************************************************
- Copyright 2023 Arm Limited and affiliates.
+ Copyright 2023-2024 Arm Limited and affiliates.
  SPDX-License-Identifier: Apache-2.0
 
  Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,7 +16,7 @@
  *******************************************************************************
 diff --git a/src/cpu/aarch64/acl_reorder.cpp b/src/cpu/aarch64/acl_reorder.cpp
 new file mode 100644
-index 000000000..061751b55
+index 00000000000..061751b5557
 --- /dev/null
 +++ b/src/cpu/aarch64/acl_reorder.cpp
 @@ -0,0 +1,52 @@
@@ -74,10 +74,10 @@ index 000000000..061751b55
 +} // namespace dnnl
 diff --git a/src/cpu/aarch64/acl_reorder.hpp b/src/cpu/aarch64/acl_reorder.hpp
 new file mode 100644
-index 0000000000..edbc38914d
+index 00000000000..7ff4c0274c4
 --- /dev/null
 +++ b/src/cpu/aarch64/acl_reorder.hpp
-@@ -0,0 +1,262 @@
+@@ -0,0 +1,270 @@
 +/*******************************************************************************
 +* Copyright 2023 Arm Ltd. and affiliates
 +*
@@ -96,10 +96,11 @@ index 0000000000..edbc38914d
 +#ifndef CPU_AARCH64_ACL_REORDER_HPP
 +#define CPU_AARCH64_ACL_REORDER_HPP
 +
-+#include "cpu/aarch64/acl_utils.hpp"
-+#include "cpu/reorder/cpu_reorder_pd.hpp"
 +#include "arm_compute/core/Types.h"
 +#include "common/utils.hpp"
++#include "cpu/aarch64/acl_utils.hpp"
++#include "cpu/aarch64/cpu_isa_traits.hpp"
++#include "cpu/reorder/cpu_reorder_pd.hpp"
 +
 +namespace dnnl {
 +namespace impl {
@@ -122,7 +123,8 @@ index 0000000000..edbc38914d
 +};
 +
 +struct acl_reorder_resource_t : public resource_t {
-+    acl_reorder_resource_t() : acl_obj_(utils::make_unique<acl_reorder_obj_t>()) {}
++    acl_reorder_resource_t()
++        : acl_obj_(utils::make_unique<acl_reorder_obj_t>()) {}
 +
 +    status_t configure(const acl_reorder_conf_t &app) {
 +        if (!acl_obj_) return status::out_of_memory;
@@ -164,10 +166,9 @@ index 0000000000..edbc38914d
 +                const memory_desc_t *dst_md) {
 +
 +            using namespace acl_utils;
-+            // using skip_mask_t = dnnl_primitive_attr::skip_mask_t;
 +
 +            bool ok = src_md->data_type
-+                            == dst_md->data_type // ACL only supports matching src/dst data types
++                            == dst_md->data_type // ACL reorder only supports matching src/dst data types
 +                    && utils::one_of(src_md->data_type,
 +                            data_type::f32) // Only supports f32 for now
 +                    && attr->has_default_values();
@@ -175,7 +176,7 @@ index 0000000000..edbc38914d
 +
 +            int mask = -1;
 +            bool is_set = false;
-+            // CHECK(attr->scales_.get(DNNL_ARG_DST, &mask, &is_set));
++            CHECK(attr->scales_.get(DNNL_ARG_DST, &mask, &is_set));
 +            const memory_desc_wrapper input_d(src_md);
 +            if (input_d.has_runtime_dims_or_strides() && is_set && mask > 0)
 +                return status::unimplemented;
@@ -189,97 +190,101 @@ index 0000000000..edbc38914d
 +                return status::unimplemented;
 +            }
 +
-+            const memory_desc_wrapper src_d(*src_md);
-+            const memory_desc_wrapper dst_d(*dst_md);
-+
-+            const int ndims = src_d.ndims();
-+
 +            auto src_tag = memory_desc_matches_one_of_tag(
-+                            *src_md, format_tag::ba, format_tag::cdba);
-+            ACL_CHECK_SUPPORT(
-+                            utils::one_of(format_tag::undef, src_tag),
-+                            "");
++                    *src_md, format_tag::ba, format_tag::cdba);
++            ACL_CHECK_SUPPORT(utils::one_of(format_tag::undef, src_tag),
++                    "Only ba and cdba source formats supported");
 +
 +            arm_compute::TensorShape acl_tensor_shape_in;
 +            arm_compute::TensorShape acl_tensor_shape_out;
++            const memory_desc_wrapper src_d(*src_md);
++            const int ndims = src_d.ndims();
 +            // Need even amount of dims in dim 0 for ACL kernel (eg mulitple of 8 rows when blocking by 8)
 +            int dim_0_rounded_up;
 +
 +            // Switch for 2 or 4 dim tensors
-+            switch(ndims)
-+            {
++            switch (ndims) {
 +                // Currently for Ab4a and Ab8a
 +                // No format_tag for these, have to deduce from stride
-+                case 2:
-+                    {
-+                        if(dst_md->dims[0] == 1 || dst_md->dims[1] == 1){
-+                            return status::unimplemented;
-+                        }
-+                        int dst_dim_1 = dst_md->dims[1];
-+                        int dst_dim_0_stride = dst_md->format_desc.blocking.strides[0];
-+                        int dst_dim_1_stride = dst_md->format_desc.blocking.strides[1];
-+                        // Interleave of 4 or 8 that stride for dim 1
-+                        if (dst_dim_1_stride != 4 && dst_dim_1_stride != 8){
-+                            return status::unimplemented;
-+                        }
-+                        // Check to ensure it's a blocking transpose
-+                        if (dst_dim_1 * dst_dim_1_stride != dst_dim_0_stride){
-+                            return status::unimplemented;
-+                        }
-+                        if(dst_dim_1_stride == 4){
-+                            // Set Dest WeightFormat
-+                            _pd->app_.dst_wf = arm_compute::WeightFormat::OHWIo4;
-+                            dim_0_rounded_up
-+                                    = utils::rnd_up(src_md->dims[0], 4);
-+                        } else {
-+                            // Set Dest WeightFormat
-+                            _pd->app_.dst_wf = arm_compute::WeightFormat::OHWIo8;
-+                            dim_0_rounded_up
-+                                    = utils::rnd_up(src_md->dims[0], 8);
-+                        }
-+                        acl_tensor_shape_in = arm_compute::TensorShape(src_md->dims[1], src_md->dims[0]);
-+                        acl_tensor_shape_out = arm_compute::TensorShape(src_md->dims[1], dim_0_rounded_up);
-+
-+                        break;
++                case 2: {
++                    if (dst_md->dims[0] == 1 || dst_md->dims[1] == 1) {
++                        return status::unimplemented;
 +                    }
-+                // Currently for Acdb4a and Acdb8a
-+                case 4:
-+                    { 
++                    int dst_dim_1 = dst_md->dims[1];
++                    int dst_dim_0_stride
++                            = dst_md->format_desc.blocking.strides[0];
++                    int dst_dim_1_stride
++                            = dst_md->format_desc.blocking.strides[1];
++                    // Interleave of 4 or 8 that stride for dim 1
++                    if (dst_dim_1_stride != 4 && dst_dim_1_stride != 8) {
++                        return status::unimplemented;
++                    }
++                    // Check to ensure it's a blocking transpose
++                    if (dst_dim_1 * dst_dim_1_stride != dst_dim_0_stride) {
++                        return status::unimplemented;
++                    }
++                    if (dst_dim_1_stride == 4) {
++                        // Set Dest WeightFormat
++                        _pd->app_.dst_wf = arm_compute::WeightFormat::OHWIo4;
++                        dim_0_rounded_up = utils::rnd_up(src_md->dims[0], 4);
++                        // Blocking for Ab8a only supported with SVE length 256
++                    } else if (dst_dim_1_stride == 8 && mayiuse(sve_256)) {
++                        // Set Dest WeightFormat
++                        _pd->app_.dst_wf = arm_compute::WeightFormat::OHWIo8;
++                        dim_0_rounded_up = utils::rnd_up(src_md->dims[0], 8);
++                    } else {
++                        return status::unimplemented;
++                    }
++                    acl_tensor_shape_in = arm_compute::TensorShape(
++                            src_md->dims[1], src_md->dims[0]);
++                    acl_tensor_shape_out = arm_compute::TensorShape(
++                            src_md->dims[1], dim_0_rounded_up);
 +
-+                        auto dst_tag = memory_desc_matches_one_of_tag(
++                    break;
++                }
++                // Currently supports Acdb4a and Acdb8a
++                case 4: {
++
++                    auto dst_tag = memory_desc_matches_one_of_tag(
 +                            *dst_md, format_tag::Acdb4a, format_tag::Acdb8a);
-+                        ACL_CHECK_SUPPORT(
-+                            utils::one_of(format_tag::undef, dst_tag),
-+                            "");
-+                        if(dst_tag == format_tag::Acdb4a){
-+                            // Set Dest WeightFormat
-+                            _pd->app_.dst_wf = arm_compute::WeightFormat::OHWIo4;
-+                            dim_0_rounded_up
-+                                    = utils::rnd_up(src_md->dims[0], 4);
-+                        }
-+                        else{
-+                            // Set Dest WeightFormat
-+                            _pd->app_.dst_wf = arm_compute::WeightFormat::OHWIo8;
-+                            dim_0_rounded_up
-+                                    = utils::rnd_up(src_md->dims[0], 8);
-+                        }
-+                        // Currently only supporting AxBx1x1 cases
-+                        if(dst_md->dims[2] != 1 || dst_md->dims[3] != 1){
-+                            return status::unimplemented;
-+                        }
-+                        if(dst_md->dims[0] == 1 || dst_md->dims[1] == 1){
-+                            return status::unimplemented;
-+                        }
-+                        acl_tensor_shape_in = arm_compute::TensorShape(src_md->dims[3], src_md->dims[2], src_md->dims[1], src_md->dims[0]);
-+                        acl_tensor_shape_out = arm_compute::TensorShape(src_md->dims[3], src_md->dims[2], src_md->dims[1], dim_0_rounded_up);
-+                        break;
++                    ACL_CHECK_SUPPORT(utils::one_of(format_tag::undef, dst_tag),
++                            "Only Acdb4a and Acdb8a dst format supported for "
++                            "4d tensors");
++
++                    if (dst_tag == format_tag::Acdb4a) {
++                        // Set Dest WeightFormat
++                        _pd->app_.dst_wf = arm_compute::WeightFormat::OHWIo4;
++                        dim_0_rounded_up = utils::rnd_up(src_md->dims[0], 4);
++                        // Blocking for Acdb8a only supported with SVE length 256
++                    } else if (dst_tag == format_tag::Acdb8a
++                            && mayiuse(sve_256)) {
++                        // Set Dest WeightFormat
++                        _pd->app_.dst_wf = arm_compute::WeightFormat::OHWIo8;
++                        dim_0_rounded_up = utils::rnd_up(src_md->dims[0], 8);
++                    } else {
++                        return status::unimplemented;
 +                    }
-+                default:
-+                    return status::unimplemented;
++                    // Currently only supporting AxBx1x1 cases
++                    if (dst_md->dims[2] != 1 || dst_md->dims[3] != 1) {
++                        return status::unimplemented;
++                    }
++
++                    if (dst_md->dims[0] == 1 || dst_md->dims[1] == 1) {
++                        return status::unimplemented;
++                    }
++
++                    acl_tensor_shape_in = arm_compute::TensorShape(
++                            src_md->dims[3], src_md->dims[2], src_md->dims[1],
++                            src_md->dims[0]);
++                    acl_tensor_shape_out = arm_compute::TensorShape(
++                            src_md->dims[3], src_md->dims[2], src_md->dims[1],
++                            dim_0_rounded_up);
++                    break;
++                }
++                default: return status::unimplemented;
 +            }
 +
 +            // Choose the data layout
-+            // bool is_nspc = utils::one_of(src_tag, format_tag::nhwc);
 +            const auto acl_layout = arm_compute::DataLayout::NCHW;
 +
 +            // Set Source WeightFormat
@@ -290,15 +295,19 @@ index 0000000000..edbc38914d
 +            const arm_compute::DataType acl_data_t
 +                    = acl_utils::get_acl_data_t(data_type);
 +            _pd->app_.src_info = arm_compute::TensorInfo(
-+                        acl_tensor_shape_in, 1, acl_data_t, acl_layout);
++                    acl_tensor_shape_in, 1, acl_data_t, acl_layout);
 +            _pd->app_.dst_info = arm_compute::TensorInfo(
-+                        acl_tensor_shape_out, 1, acl_data_t, acl_layout);
++                    acl_tensor_shape_out, 1, acl_data_t, acl_layout);
++
++            ACL_CHECK_VALID(arm_compute::NEReorderLayer::validate(
++                    &_pd->app_.src_info, &_pd->app_.dst_info, _pd->app_.src_wf,
++                    _pd->app_.dst_wf));
 +
 +            // Init scratch memory, not used so 0 in this implementation
 +            _pd->init_scratchpad_md();
 +
 +            return safe_ptr_assign(*reorder_pd, _pd);
-+        } // create 
++        } // create
 +
 +        friend dnnl::impl::impl_list_item_t;
 +        acl_reorder_conf_t app_;
@@ -331,7 +340,6 @@ index 0000000000..edbc38914d
 +    status_t execute_forward(const exec_ctx_t &ctx) const;
 +    const pd_t *pd() const { return (const pd_t *)primitive_t::pd().get(); }
 +
-+
 +}; // acl_reorder_fwd_t
 +
 +} // namespace aarch64
@@ -340,32 +348,80 @@ index 0000000000..edbc38914d
 +} // namespace dnnl
 +
 +#endif // CPU_AARCH64_ACL_REORDER_HPP
-diff --git a/src/cpu/reorder/cpu_reorder_regular_f32_f32.cpp b/src/cpu/reorder/cpu_reorder_regular_f32_f32.cpp
-index a4150b619..f4d6b4de3 100644
---- a/src/cpu/reorder/cpu_reorder_regular_f32_f32.cpp
-+++ b/src/cpu/reorder/cpu_reorder_regular_f32_f32.cpp
-@@ -16,6 +16,7 @@
- *******************************************************************************/
+diff --git a/src/cpu/reorder/cpu_reorder.hpp b/src/cpu/reorder/cpu_reorder.hpp
+index 565a737fecd..e8ccb35d42b 100644
+--- a/src/cpu/reorder/cpu_reorder.hpp
++++ b/src/cpu/reorder/cpu_reorder.hpp
+@@ -1,5 +1,6 @@
+ /*******************************************************************************
+ * Copyright 2020-2023 Intel Corporation
++* Copyright 2023 Arm Ltd. and affiliates
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+@@ -37,6 +38,10 @@
+ #include "cpu/aarch64/jit_uni_reorder.hpp"
+ #endif
  
- #include "cpu/reorder/cpu_reorder.hpp"
++#if DNNL_AARCH64 && DNNL_AARCH64_USE_ACL
 +#include "cpu/aarch64/acl_reorder.hpp"
++#endif
++
+ #include "cpu/rnn/rnn_reorders.hpp"
  
  namespace dnnl {
- namespace impl {
-@@ -28,6 +29,7 @@ const impl_list_map_t &regular_f32_f32_impl_list_map() {
-         // f32 -> f32
-         {{f32, f32, 0}, {
-             REG_FAST_DIRECT_COPY_F32_F32
-+            DNNL_AARCH64_ONLY(CPU_REORDER_INSTANCE(aarch64::acl_reorder_fwd_t))
- 
-             DNNL_X64_ONLY(CPU_REORDER_INSTANCE(x64::brgemm_matmul_matrix_B_reorder_t))
+diff --git a/src/cpu/reorder/cpu_reorder_regular_f32_f32.cpp b/src/cpu/reorder/cpu_reorder_regular_f32_f32.cpp
+index a4150b6199e..9a108905b6a 100644
+--- a/src/cpu/reorder/cpu_reorder_regular_f32_f32.cpp
++++ b/src/cpu/reorder/cpu_reorder_regular_f32_f32.cpp
+@@ -1,6 +1,7 @@
+ /*******************************************************************************
+ * Copyright 2020-2023 Intel Corporation
+ * Copyright 2022 FUJITSU LIMITED
++* Copyright 2023 Arm Ltd. and affiliates
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+@@ -33,6 +34,7 @@ const impl_list_map_t &regular_f32_f32_impl_list_map() {
              DNNL_X64_ONLY(CPU_REORDER_INSTANCE(x64::jit_blk_reorder_t))
-@@ -69,6 +71,8 @@ const impl_list_map_t &regular_f32_f32_impl_list_map() {
-             nullptr,
-         }},
-         {{f32, f32, 4}, {
-+
-+            DNNL_AARCH64_ONLY(CPU_REORDER_INSTANCE(aarch64::acl_reorder_fwd_t))
-             CPU_REORDER_INSTANCE(rnn_weights_reorder_t<f32, f32>)
+             DNNL_X64_ONLY(CPU_REORDER_INSTANCE(x64::jit_uni_reorder_t))
  
-             REG_FAST_DIRECT_COPY_F32_F32
++            DNNL_AARCH64_ACL_ONLY(CPU_REORDER_INSTANCE(aarch64::acl_reorder_fwd_t))
+             DNNL_AARCH64_ONLY(CPU_REORDER_INSTANCE(aarch64::jit_blk_reorder_t))
+             DNNL_AARCH64_ONLY(CPU_REORDER_INSTANCE(aarch64::jit_uni_reorder_t))
+             REG_SR(f32, any, f32, any, fmt_order::any, spec::reference)
+@@ -76,6 +78,7 @@ const impl_list_map_t &regular_f32_f32_impl_list_map() {
+             DNNL_X64_ONLY(CPU_REORDER_INSTANCE(x64::jit_blk_reorder_t))
+             DNNL_X64_ONLY(CPU_REORDER_INSTANCE(x64::jit_uni_reorder_t))
+ 
++            DNNL_AARCH64_ACL_ONLY(CPU_REORDER_INSTANCE(aarch64::acl_reorder_fwd_t))
+             DNNL_AARCH64_ONLY(CPU_REORDER_INSTANCE(aarch64::jit_blk_reorder_t))
+             DNNL_AARCH64_ONLY(CPU_REORDER_INSTANCE(aarch64::jit_uni_reorder_t))
+
+
+diff --git a/src/cpu/aarch64/acl_reorder.hpp b/src/cpu/aarch64/acl_reorder.hpp
+index 7ff4c0274c4..78cb0e4c4d3 100644
+--- a/src/cpu/aarch64/acl_reorder.hpp
++++ b/src/cpu/aarch64/acl_reorder.hpp
+@@ -102,11 +102,10 @@ struct acl_reorder_fwd_t : public primitive_t {
+                 return status::unimplemented;
+ 
+             // Create and check primitive descriptor
+-            auto _pd = new pd_t(attr, src_engine->kind(), src_md,
++            auto _pd = make_unique_pd<pd_t>(attr, src_engine->kind(), src_md,
+                     dst_engine->kind(), dst_md);
+             if (_pd == nullptr) return status::out_of_memory;
+             if (_pd->init(engine, src_engine, dst_engine) != status::success) {
+-                delete _pd;
+                 return status::unimplemented;
+             }
+ 
+@@ -226,7 +225,7 @@ struct acl_reorder_fwd_t : public primitive_t {
+             // Init scratch memory, not used so 0 in this implementation
+             _pd->init_scratchpad_md();
+ 
+-            return safe_ptr_assign(*reorder_pd, _pd);
++            return safe_ptr_assign(*reorder_pd, _pd.release());
+         } // create
+ 
+         friend dnnl::impl::impl_list_item_t;

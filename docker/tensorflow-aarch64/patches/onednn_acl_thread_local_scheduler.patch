@@ -1,5 +1,5 @@
  *******************************************************************************
- Copyright 2023 Arm Limited and affiliates.
+ Copyright 2023-2024 Arm Limited and affiliates.
  SPDX-License-Identifier: Apache-2.0
 
  Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,7 +15,7 @@
  limitations under the License.
  *******************************************************************************
 diff --git a/src/cpu/aarch64/acl_thread.cpp b/src/cpu/aarch64/acl_thread.cpp
-index fd2c76d01..bd7bed837 100644
+index 1b098629ab..34e92a0fbf 100644
 --- a/src/cpu/aarch64/acl_thread.cpp
 +++ b/src/cpu/aarch64/acl_thread.cpp
 @@ -55,14 +55,17 @@ void acl_set_benchmark_scheduler_default() {
@@ -58,7 +58,7 @@ index fd2c76d01..bd7bed837 100644
  
  } // namespace acl_thread_utils
 diff --git a/src/cpu/aarch64/acl_thread.hpp b/src/cpu/aarch64/acl_thread.hpp
-index f073376e6..654a2aa5d 100644
+index f073376e63..654a2aa5d7 100644
 --- a/src/cpu/aarch64/acl_thread.hpp
 +++ b/src/cpu/aarch64/acl_thread.hpp
 @@ -40,7 +40,7 @@ void acl_set_benchmark_scheduler_default();
@@ -71,7 +71,7 @@ index f073376e6..654a2aa5d 100644
  // Swap BenchmarkScheduler for custom scheduler builds (i.e. ThreadPoolScheduler) for DNNL_VERBOSE=profile,profile_externals
  void acl_set_tp_benchmark_scheduler();
 diff --git a/src/cpu/aarch64/acl_threadpool_scheduler.cpp b/src/cpu/aarch64/acl_threadpool_scheduler.cpp
-index 439ca862e..6656c37a5 100644
+index 439ca862e4..6656c37a55 100644
 --- a/src/cpu/aarch64/acl_threadpool_scheduler.cpp
 +++ b/src/cpu/aarch64/acl_threadpool_scheduler.cpp
 @@ -102,8 +102,6 @@ void ThreadpoolScheduler::schedule_op(ICPPKernel *kernel, const Hints &hints,
@@ -84,7 +84,7 @@ index 439ca862e..6656c37a5 100644
              = std::min(static_cast<unsigned int>(_num_threads),
                      static_cast<unsigned int>(workloads.size()));
 diff --git a/src/cpu/cpu_engine.cpp b/src/cpu/cpu_engine.cpp
-index 0bfec3871..7207b2b60 100644
+index 0bfec38716..7207b2b606 100644
 --- a/src/cpu/cpu_engine.cpp
 +++ b/src/cpu/cpu_engine.cpp
 @@ -47,6 +47,7 @@ status_t cpu_engine_t::create_stream(stream_t **stream, unsigned flags) {
