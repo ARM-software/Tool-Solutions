@@ -35,19 +35,19 @@ cd ${src_repo}
 
 git checkout $version
 
-wget https://review.mlplatform.org/changes/ml%2FComputeLibrary\~10775/revisions/3/patch\?zip -O patch.zip && unzip patch.zip
-sed '1,102d' 33266fd.diff > tmp.patch
-cat ../acl_fp32_bf16_reorder.patch tmp.patch > ../acl_fp32_bf16_reorder.patch
-patch -p1 < ../acl_fp32_bf16_reorder.patch
-
 patch -p1 < ../acl_dynamic_quantization.patch
-
 patch -p1 < ../acl_in_place_sum.patch
 
 wget https://review.mlplatform.org/changes/ml%2FComputeLibrary\~11169/revisions/3/patch\?zip -O acl_bf16bf16_matmul.patch.zip && unzip acl_bf16bf16_matmul.patch.zip
 sed "5233,5279d" abd3394.diff > tmp.patch
 cat tmp.patch ../acl_bf16_dispatch.patch > acl_bf16bf16_matmul.patch
 patch -p1 < acl_bf16bf16_matmul.patch
+
+patch -p1 < ../acl_parallelize_im2col.patch
+
+wget https://review.mlplatform.org/changes/ml%2FComputeLibrary~11354/revisions/2/patch?zip -O acl_a64_ffhybrid_fp32bf16fp32_mmla_6x16.patch.zip && unzip acl_a64_ffhybrid_fp32bf16fp32_mmla_6x16.patch.zip
+mv 7d9cc43.diff acl_a64_ffhybrid_fp32bf16fp32_mmla_6x16.patch
+patch -p1 < acl_a64_ffhybrid_fp32bf16fp32_mmla_6x16.patch
 
 # Default to v8a if $acl_arch is unset.
 arch=${ACL_ARCH:-"arm64-v8a"}

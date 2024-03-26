@@ -14,14 +14,13 @@
  See the License for the specific language governing permissions and
  limitations under the License.
  *******************************************************************************
-
 diff --git a/arm_compute/function_info/GEMMInfo.h b/arm_compute/function_info/GEMMInfo.h
-index daaf86243a..41a7057a18 100644
+index a827c79fd..88e6366ff 100644
 --- a/arm_compute/function_info/GEMMInfo.h
 +++ b/arm_compute/function_info/GEMMInfo.h
-@@ -81,7 +81,8 @@ public:
+@@ -85,7 +85,8 @@ public:
+           _pretranspose_B(false),
            _activation_info(),
-           _post_ops(),
            _fixed_format(false),
 -          _weight_format(arm_compute::WeightFormat::UNSPECIFIED)
 +          _weight_format(arm_compute::WeightFormat::UNSPECIFIED),
@@ -29,18 +28,17 @@ index daaf86243a..41a7057a18 100644
      {
      }
      /** Constructor
-@@ -106,7 +107,7 @@ public:
-     GEMMInfo(bool is_a_reshaped, bool is_b_reshaped, bool reshape_b_only_on_first_run, int depth_output_gemm3d = 0, bool reinterpret_input_as_3d = false, bool retain_internal_weights = false,
-              GEMMLowpOutputStageInfo gemmlowp_output_stage = GEMMLowpOutputStageInfo(), bool fp_mixed_precision = false, bool fast_math = false, bool broadcast_bias = false,
-              const ActivationLayerInfo &activation_info = ActivationLayerInfo(), const experimental::PostOpList<ITensorInfo *> &post_ops = experimental::PostOpList<ITensorInfo *>(),
--             bool fixed_format = false, arm_compute::WeightFormat weight_format = arm_compute::WeightFormat::UNSPECIFIED) noexcept
-+             bool fixed_format = false, arm_compute::WeightFormat weight_format = arm_compute::WeightFormat::UNSPECIFIED, bool accumulate = false) noexcept
+@@ -120,6 +121,7 @@ public:
+              const ActivationLayerInfo &activation_info         = ActivationLayerInfo(),
+              bool                       fixed_format            = false,
+              arm_compute::WeightFormat  weight_format           = arm_compute::WeightFormat::UNSPECIFIED,
++             bool                       accumulate              = false,
+              bool                       pretranspose_B          = false) noexcept
          : _is_a_reshaped(is_a_reshaped),
            _is_b_reshaped(is_b_reshaped),
-           _reshape_b_only_on_first_run(reshape_b_only_on_first_run),
-@@ -122,7 +123,8 @@ public:
+@@ -135,7 +137,8 @@ public:
+           _pretranspose_B(pretranspose_B),
            _activation_info(activation_info),
-           _post_ops(post_ops),
            _fixed_format(fixed_format),
 -          _weight_format(weight_format)
 +          _weight_format(weight_format),
@@ -48,7 +46,7 @@ index daaf86243a..41a7057a18 100644
      {
      }
      /** Flag which specifies if the matrix A has been reshaped
-@@ -296,6 +298,11 @@ public:
+@@ -295,6 +298,11 @@ public:
          return _fixed_format;
      }
  
@@ -60,7 +58,7 @@ index daaf86243a..41a7057a18 100644
      /** Set fixed-format flag
       *
       * @param[in] fixed_format sets whether or not to use fixed-format kernels
-@@ -305,6 +312,10 @@ public:
+@@ -304,6 +312,10 @@ public:
          _fixed_format = fixed_format;
      }
  
@@ -71,16 +69,16 @@ index daaf86243a..41a7057a18 100644
      arm_compute::WeightFormat weight_format() const
      {
          return _weight_format;
-@@ -336,6 +347,7 @@ private:
-     experimental::PostOpList<ITensorInfo *> _post_ops;
-     bool                                    _fixed_format;
-     arm_compute::WeightFormat               _weight_format;
-+    bool                                    _accumulate;
+@@ -334,6 +346,7 @@ private:
+     ActivationLayerInfo       _activation_info;
+     bool                      _fixed_format;
+     arm_compute::WeightFormat _weight_format;
++    bool                      _accumulate;
  };
  } //namespace arm_compute
- #endif /* ACL_ARM_COMPUTE_FUNCTION_INFO_GEMMINFO */
+ #endif // ACL_ARM_COMPUTE_FUNCTION_INFO_GEMMINFO_H
 diff --git a/src/core/NEON/kernels/arm_gemm/gemm_fp32.cpp b/src/core/NEON/kernels/arm_gemm/gemm_fp32.cpp
-index 44a7bb894a..c6c9a15330 100644
+index 44a7bb894..c6c9a1533 100644
 --- a/src/core/NEON/kernels/arm_gemm/gemm_fp32.cpp
 +++ b/src/core/NEON/kernels/arm_gemm/gemm_fp32.cpp
 @@ -292,14 +292,14 @@ GemmImplementation<float, float>::with_estimate(
@@ -101,7 +99,7 @@ index 44a7bb894a..c6c9a15330 100644
      [](const GemmArgs &args) { return new GemmHybrid<cls_a64_smallK_hybrid_fp32_mla_6x4, float, float>(args); }
  },
 diff --git a/src/core/NEON/kernels/arm_gemm/gemm_hybrid_indirect.hpp b/src/core/NEON/kernels/arm_gemm/gemm_hybrid_indirect.hpp
-index 1780375c44..203c59888c 100644
+index 1780375c4..203c59888 100644
 --- a/src/core/NEON/kernels/arm_gemm/gemm_hybrid_indirect.hpp
 +++ b/src/core/NEON/kernels/arm_gemm/gemm_hybrid_indirect.hpp
 @@ -530,7 +530,7 @@ public:
@@ -132,7 +130,7 @@ index 1780375c44..203c59888c 100644
                                   _os, _col_bias+(multi * _args._Nsize), n0);
                  }
 diff --git a/src/core/NEON/kernels/arm_gemm/gemm_int8.cpp b/src/core/NEON/kernels/arm_gemm/gemm_int8.cpp
-index fd20e53f60..02f093753a 100644
+index fd20e53f6..02f093753 100644
 --- a/src/core/NEON/kernels/arm_gemm/gemm_int8.cpp
 +++ b/src/core/NEON/kernels/arm_gemm/gemm_int8.cpp
 @@ -128,14 +128,14 @@ GemmImplementation<int8_t, int32_t>::with_estimate(
@@ -153,7 +151,7 @@ index fd20e53f60..02f093753a 100644
      [](const GemmArgs &args) { return new GemmHybrid<cls_a64_smallK_hybrid_s8s32_dot_6x4, int8_t, int32_t>(args); }
  },
 diff --git a/src/core/NEON/kernels/arm_gemm/gemm_interleaved.hpp b/src/core/NEON/kernels/arm_gemm/gemm_interleaved.hpp
-index e3f3588f28..c094f2d1ce 100644
+index ccf8f4d65..79d891776 100644
 --- a/src/core/NEON/kernels/arm_gemm/gemm_interleaved.hpp
 +++ b/src/core/NEON/kernels/arm_gemm/gemm_interleaved.hpp
 @@ -423,6 +423,7 @@ class GemmInterleaved : public GemmCommon<To, Tr> {
@@ -182,7 +180,7 @@ index e3f3588f28..c094f2d1ce 100644
                        _k_block(get_k_block_size(args)), _x_block(get_x_block_size(args)), _Mround(roundup(args._Msize, strategy::out_height())),
                        _os() { }
  
-@@ -889,7 +890,7 @@ public:
+@@ -896,7 +897,7 @@ public:
                              // Only do bias on the first pass
                              ((first_pass && this->_bias) ? this->_bias + (multi * this->_bias_multi_stride) : nullptr),
                              // Only do activation on the last pass, and accumulation on any non-first pass.
@@ -191,7 +189,7 @@ index e3f3588f28..c094f2d1ce 100644
                              // Pass in quantization parameters for requantizing kernels (others will ignore)
                              _os, col_bias + (multi * _Nsize),
                              // Accumulation buffer
-@@ -1037,7 +1038,7 @@ public:
+@@ -1044,7 +1045,7 @@ public:
                              // Only do bias on the first pass
                              ((first_pass && this->_bias) ? this->_bias + (current.multi() * this->_bias_multi_stride) : nullptr),
                              // Only do activation on the last pass, and accumulation on any non-first pass.
@@ -201,7 +199,7 @@ index e3f3588f28..c094f2d1ce 100644
                              _os, col_bias + (current.multi() * _Nsize),
                              // Accumulation buffer
 diff --git a/src/core/NEON/kernels/arm_gemm/gemm_uint8.cpp b/src/core/NEON/kernels/arm_gemm/gemm_uint8.cpp
-index af5cfbbf2b..921a4cd688 100644
+index af5cfbbf2..921a4cd68 100644
 --- a/src/core/NEON/kernels/arm_gemm/gemm_uint8.cpp
 +++ b/src/core/NEON/kernels/arm_gemm/gemm_uint8.cpp
 @@ -94,14 +94,14 @@ GemmImplementation<uint8_t, uint32_t>::with_estimate(
@@ -222,7 +220,7 @@ index af5cfbbf2b..921a4cd688 100644
      [](const GemmArgs &args) { return new GemmHybrid<cls_a64_smallK_hybrid_u8u32_dot_6x4, uint8_t, uint32_t>(args); }
  },
 diff --git a/src/core/NEON/kernels/arm_gemm/gemv_pretransposed.hpp b/src/core/NEON/kernels/arm_gemm/gemv_pretransposed.hpp
-index 86b33d081f..36f30425f4 100644
+index 86b33d081..36f30425f 100644
 --- a/src/core/NEON/kernels/arm_gemm/gemv_pretransposed.hpp
 +++ b/src/core/NEON/kernels/arm_gemm/gemv_pretransposed.hpp
 @@ -180,7 +180,7 @@ public:
@@ -235,99 +233,104 @@ index 86b33d081f..36f30425f4 100644
                  }
              }
 diff --git a/src/cpu/kernels/assembly/arm_gemm.hpp b/src/cpu/kernels/assembly/arm_gemm.hpp
-index eba3f7a064..b703c13a92 100644
+index d8156ed54..941fed0ba 100644
 --- a/src/cpu/kernels/assembly/arm_gemm.hpp
 +++ b/src/cpu/kernels/assembly/arm_gemm.hpp
-@@ -154,14 +154,16 @@ public:
+@@ -155,6 +155,7 @@ public:
      int               _maxthreads;
      bool              _fixed_format;
      bool              _fast_mode;
 +    bool              _accumulate;
      const GemmConfig *_cfg;
  
-     GemmArgs(const CPUInfo *ci, unsigned int M, unsigned int N,
-              unsigned int K, unsigned int Ksections, unsigned int nbatches,
-              unsigned int nmulti, bool indirect_input, Activation act, const int maxthreads,
--             bool fixed_format = false, bool fast_mode = false, const GemmConfig *cfg = nullptr)
-+             bool fixed_format = false, bool fast_mode = false, bool accumulate = false,
-+             const GemmConfig *cfg = nullptr)
-         : _ci(ci), _Msize(M), _Nsize(N), _Ksize(K), _Ksections(Ksections), _nbatches(nbatches), _nmulti(nmulti), _indirect_input(indirect_input), _act(act), _maxthreads(maxthreads),
--          _fixed_format(fixed_format), _fast_mode(fast_mode), _cfg(cfg)
-+          _fixed_format(fixed_format), _fast_mode(fast_mode), _accumulate(accumulate), _cfg(cfg)
+     GemmArgs(const CPUInfo    *ci,
+@@ -169,6 +170,7 @@ public:
+              const int         maxthreads,
+              bool              fixed_format = false,
+              bool              fast_mode    = false,
++             bool              accumulate   = false,
+              const GemmConfig *cfg          = nullptr)
+         : _ci(ci),
+           _Msize(M),
+@@ -182,6 +184,7 @@ public:
+           _maxthreads(maxthreads),
+           _fixed_format(fixed_format),
+           _fast_mode(fast_mode),
++          _accumulate(accumulate),
+           _cfg(cfg)
      {
      }
- };
 diff --git a/src/cpu/operators/CpuGemm.cpp b/src/cpu/operators/CpuGemm.cpp
-index 34b845928d..164f55170a 100644
+index e035de013..f66936214 100644
 --- a/src/cpu/operators/CpuGemm.cpp
 +++ b/src/cpu/operators/CpuGemm.cpp
-@@ -52,6 +52,7 @@ cpu::AsmGemmInfo init_assembly_metadata(const GEMMInfo &info)
+@@ -53,6 +53,7 @@ cpu::AsmGemmInfo init_assembly_metadata(const GEMMInfo &info)
      asm_info.fast_mode               = info.fast_math();
      asm_info.fixed_format            = info.fixed_format();
      asm_info.weight_format           = info.weight_format();
 +    asm_info.accumulate              = info.accumulate();
+     asm_info.transpose_b =
+         info.pretranspose_B(); // The "pretranspose_B" flag here is not the same as the pretranspose_B_array method. The flag here signals to pretranspose_B_array method if we want to perform additional transpose on B before the pretranspose_B_array method
  
-     return asm_info;
- }
-@@ -138,7 +139,7 @@ void CpuGemm::configure(const ITensorInfo *a, const ITensorInfo *b, const ITenso
+@@ -196,7 +197,7 @@ void CpuGemm::configure(const ITensorInfo *a,
      }
  
      // Configure matrix addition kernel
--    if(_run_addition)
-+    if(_run_addition && !gemm_info.accumulate())
+-    if (_run_addition)
++    if (_run_addition && !gemm_info.accumulate())
      {
          _ma_kernel = std::make_unique<cpu::kernels::CpuGemmMatrixAdditionKernel>();
          _ma_kernel->configure(c, d, beta);
 diff --git a/src/cpu/operators/internal/CpuGemmAssemblyDispatch.cpp b/src/cpu/operators/internal/CpuGemmAssemblyDispatch.cpp
-index e6e6311ab1..dafbb5dd08 100644
+index 7308aedf2..92203da6e 100644
 --- a/src/cpu/operators/internal/CpuGemmAssemblyDispatch.cpp
 +++ b/src/cpu/operators/internal/CpuGemmAssemblyDispatch.cpp
-@@ -633,7 +633,8 @@ void create_arm_gemm(std::unique_ptr<CpuGemmAssemblyDispatch::IFallback> &arm_ge
- 
+@@ -768,7 +768,8 @@ void create_arm_gemm(std::unique_ptr<CpuGemmAssemblyDispatch::IFallback> &arm_ge
      arm_gemm::GemmConfig cfg;
      cfg.weight_format = assembly_utils::map_to_arm_gemm_weight_format(info.weight_format);
--    arm_gemm::GemmArgs args(&ci, p.M, p.N, p.K, p.sections, p.batches, p.multis, p.indirect, activation, num_threads, info.fixed_format, info.fast_mode, &cfg);
-+    arm_gemm::GemmArgs args(&ci, p.M, p.N, p.K, p.sections, p.batches, p.multis, p.indirect, activation, num_threads, info.fixed_format, info.fast_mode, false, &cfg);
+     arm_gemm::GemmArgs args(&ci, p.M, p.N, p.K, p.sections, p.batches, p.multis, p.indirect, activation, num_threads,
+-                            info.fixed_format, info.fast_mode, &cfg);
++                            info.fixed_format, info.fast_mode, false, &cfg);
 +    args._accumulate = info.accumulate;
  
      // Create arm_gemm fallback
      auto fallback = std::make_unique<Fallback<TypeInput, TypeOutput>>();
-@@ -654,7 +655,7 @@ void create_arm_gemm_dequant(std::unique_ptr<CpuGemmAssemblyDispatch::IFallback>
- 
+@@ -794,7 +795,7 @@ void create_arm_gemm_dequant(std::unique_ptr<CpuGemmAssemblyDispatch::IFallback>
      arm_gemm::GemmConfig cfg;
      cfg.weight_format = assembly_utils::map_to_arm_gemm_weight_format(info.weight_format);
--    arm_gemm::GemmArgs args(&ci, p.M, p.N, p.K, p.sections, p.batches, p.multis, p.indirect, activation, num_threads, info.fixed_format, info.fast_mode, &cfg);
-+    arm_gemm::GemmArgs args(&ci, p.M, p.N, p.K, p.sections, p.batches, p.multis, p.indirect, activation, num_threads, info.fixed_format, info.fast_mode, false, &cfg);
+     arm_gemm::GemmArgs args(&ci, p.M, p.N, p.K, p.sections, p.batches, p.multis, p.indirect, activation, num_threads,
+-                            info.fixed_format, info.fast_mode, &cfg);
++                            info.fixed_format, info.fast_mode, false, &cfg);
  
      // Create arm_gemm fallback
      auto fallback = std::make_unique<Fallback<TypeInput, TypeOutput, arm_gemm::DequantizeFloat>>();
-@@ -684,7 +685,7 @@ void create_arm_gemm_quant(std::unique_ptr<CpuGemmAssemblyDispatch::IFallback> &
- 
+@@ -829,7 +830,7 @@ void create_arm_gemm_quant(std::unique_ptr<CpuGemmAssemblyDispatch::IFallback> &
      arm_gemm::GemmConfig cfg;
      cfg.weight_format = assembly_utils::map_to_arm_gemm_weight_format(info.weight_format);
--    arm_gemm::GemmArgs args(&ci, p.M, p.N, p.K, p.sections, p.batches, p.multis, p.indirect, activation, num_threads, info.fixed_format, info.fast_mode, &cfg);
-+    arm_gemm::GemmArgs args(&ci, p.M, p.N, p.K, p.sections, p.batches, p.multis, p.indirect, activation, num_threads, info.fixed_format, info.fast_mode, false, &cfg);
+     arm_gemm::GemmArgs args(&ci, p.M, p.N, p.K, p.sections, p.batches, p.multis, p.indirect, activation, num_threads,
+-                            info.fixed_format, info.fast_mode, &cfg);
++                            info.fixed_format, info.fast_mode, false, &cfg);
  
      // Create arm_gemm fallback
      auto fallback = std::make_unique<Fallback<TypeInput, TypeOutput, arm_gemm::Requantize32>>();
-@@ -737,7 +738,7 @@ Status CpuGemmAssemblyDispatch::has_opt_impl(arm_compute::WeightFormat &expected
-     arm_gemm::GemmConfig cfg;
+@@ -884,7 +885,7 @@ Status CpuGemmAssemblyDispatch::has_opt_impl(arm_compute::WeightFormat &expected
      cfg.weight_format                           = assembly_utils::map_to_arm_gemm_weight_format(info.weight_format);
      arm_gemm::WeightFormat arm_gemm_expected_wf = assembly_utils::map_to_arm_gemm_weight_format(expected_weight_format);
--    arm_gemm::GemmArgs     args(&ci, p.M, p.N, p.K, p.sections, p.batches, p.multis, p.indirect, act, num_threads, info.fixed_format, info.fast_mode, &cfg);
-+    arm_gemm::GemmArgs     args(&ci, p.M, p.N, p.K, p.sections, p.batches, p.multis, p.indirect, act, num_threads, info.fixed_format, info.fast_mode, false, &cfg);
-     switch(a->data_type())
+     arm_gemm::GemmArgs     args(&ci, p.M, p.N, p.K, p.sections, p.batches, p.multis, p.indirect, act, num_threads,
+-                                info.fixed_format, info.fast_mode, &cfg);
++                                info.fixed_format, info.fast_mode, false, &cfg);
+     // TODO: Incorporate info.transpose_b COMPMID-6595
+     switch (a->data_type())
      {
-         case DataType::F32:
 diff --git a/src/cpu/operators/internal/CpuGemmAssemblyDispatch.h b/src/cpu/operators/internal/CpuGemmAssemblyDispatch.h
-index ceb7a3f775..4d12df6df9 100644
+index 671a222fe..b3ba603bf 100644
 --- a/src/cpu/operators/internal/CpuGemmAssemblyDispatch.h
 +++ b/src/cpu/operators/internal/CpuGemmAssemblyDispatch.h
-@@ -56,6 +56,7 @@ struct AsmGemmInfo
-     bool                      fixed_format{ false };
-     arm_compute::WeightFormat weight_format{ arm_compute::WeightFormat::UNSPECIFIED };
-     bool                      reshape_b_only_on_first_run{ true };
-+    bool                      accumulate{ false };
- };
- 
- /** Assembly kernel glue */
+@@ -57,6 +57,7 @@ struct AsmGemmInfo
+     bool                      fixed_format{false};
+     arm_compute::WeightFormat weight_format{arm_compute::WeightFormat::UNSPECIFIED};
+     bool                      reshape_b_only_on_first_run{true};
++    bool                      accumulate{false};
+     /** Whether we want to perform an additional transpose of b before passing it to gemm or pretranspose_B_array
+      * @note This transpose b operation is also considered a form of "reshape" or "transform", so should be counted for
+      *       by the reshape_b_only_on_first_run flag

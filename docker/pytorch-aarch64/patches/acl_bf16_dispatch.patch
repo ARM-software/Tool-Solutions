@@ -14,24 +14,17 @@
  See the License for the specific language governing permissions and
  limitations under the License.
  *******************************************************************************
-
 diff --git a/src/cpu/operators/internal/CpuGemmAssemblyDispatch.cpp b/src/cpu/operators/internal/CpuGemmAssemblyDispatch.cpp
-index 3069d6b54..6a2c567c8 100644
+index 92203da6e..592b81bec 100644
 --- a/src/cpu/operators/internal/CpuGemmAssemblyDispatch.cpp
 +++ b/src/cpu/operators/internal/CpuGemmAssemblyDispatch.cpp
-@@ -1,5 +1,5 @@
- /*
-- * Copyright (c) 2018-2023 Arm Limited.
-+ * Copyright (c) 2018-2024 Arm Limited.
-  *
-  * SPDX-License-Identifier: MIT
-  *
-@@ -739,8 +739,15 @@ Status CpuGemmAssemblyDispatch::has_opt_impl(arm_compute::WeightFormat &expected
+@@ -929,9 +929,15 @@ Status CpuGemmAssemblyDispatch::has_opt_impl(arm_compute::WeightFormat &expected
  #if defined(ARM_COMPUTE_ENABLE_BF16)
          case DataType::BFLOAT16:
          {
--            ARM_COMPUTE_RETURN_ERROR_ON_MSG(!(arm_gemm::has_opt_gemm<bfloat16, float, arm_gemm::Nothing>(arm_gemm_expected_wf, args, {})),
--                                            "We could not find an optimized kernel for BFLOAT16 input and F32 output");
+-            ARM_COMPUTE_RETURN_ERROR_ON_MSG(
+-                !(arm_gemm::has_opt_gemm<bfloat16, float, arm_gemm::Nothing>(arm_gemm_expected_wf, args, {})),
+-                "We could not find an optimized kernel for BFLOAT16 input and F32 output");
 +            if (d->data_type() == DataType::BFLOAT16) {
 +                ARM_COMPUTE_RETURN_ERROR_ON_MSG(
 +                    !(arm_gemm::has_opt_gemm<bfloat16, bfloat16, arm_gemm::Nothing>(arm_gemm_expected_wf, args, {})),
@@ -44,17 +37,18 @@ index 3069d6b54..6a2c567c8 100644
              break;
          }
  #endif /* defined(ARM_COMPUTE_ENABLE_BF16) */
-@@ -789,7 +796,8 @@ Status CpuGemmAssemblyDispatch::validate(const ITensorInfo *a, const ITensorInfo
-     }
-     ARM_COMPUTE_RETURN_ERROR_ON_MSG(a->data_type() == DataType::F32 && d->data_type() != DataType::F32, "Only F32 output supported for F32 input");
-     ARM_COMPUTE_RETURN_ERROR_ON_MSG(a->data_type() == DataType::F16 && d->data_type() != DataType::F16, "Only F16 output supported for F16 input");
--    ARM_COMPUTE_RETURN_ERROR_ON_MSG(a->data_type() == DataType::BFLOAT16 && d->data_type() != DataType::F32, "Only F32 output supported for BFLOAT16 input");
+@@ -987,8 +993,8 @@ Status CpuGemmAssemblyDispatch::validate(
+                                     "Only F32 output supported for F32 input");
+     ARM_COMPUTE_RETURN_ERROR_ON_MSG(a->data_type() == DataType::F16 && d->data_type() != DataType::F16,
+                                     "Only F16 output supported for F16 input");
+-    ARM_COMPUTE_RETURN_ERROR_ON_MSG(a->data_type() == DataType::BFLOAT16 && d->data_type() != DataType::F32,
+-                                    "Only F32 output supported for BFLOAT16 input");
 +    ARM_COMPUTE_RETURN_ERROR_ON_MSG(a->data_type() == DataType::BFLOAT16 && (d->data_type() != DataType::F32 && d->data_type() != DataType::BFLOAT16),
 +                                    "Only F32/BFLOAT16 output supported for BFLOAT16 input");
-     ARM_COMPUTE_RETURN_ERROR_ON_MSG(a->data_type() == DataType::U8 && d->data_type() != DataType::U32, "Only U32 output supported for U8 input");
-     ARM_COMPUTE_RETURN_ERROR_ON_MSG(a->data_type() == DataType::S8 && d->data_type() != DataType::S32, "Only S32 output supported for S8 input");
-     ARM_COMPUTE_RETURN_ERROR_ON_MSG(a->data_type() == DataType::QASYMM8 && (d->data_type() != DataType::QASYMM8 && d->data_type() != DataType::S32),
-@@ -855,7 +863,11 @@ void CpuGemmAssemblyDispatch::configure(const ITensorInfo *a, const ITensorInfo
+     ARM_COMPUTE_RETURN_ERROR_ON_MSG(a->data_type() == DataType::U8 && d->data_type() != DataType::U32,
+                                     "Only U32 output supported for U8 input");
+     ARM_COMPUTE_RETURN_ERROR_ON_MSG(a->data_type() == DataType::S8 && d->data_type() != DataType::S32,
+@@ -1063,7 +1069,11 @@ void CpuGemmAssemblyDispatch::configure(
  #endif /* __aarch64__ */
  #if defined(ARM_COMPUTE_ENABLE_BF16)
          case DataType::BFLOAT16:
@@ -67,5 +61,3 @@ index 3069d6b54..6a2c567c8 100644
              break;
  #endif /* defined(ARM_COMPUTE_ENABLE_BF16) */
  #ifdef __ARM_FEATURE_FP16_VECTOR_ARITHMETIC
---
-2.25.1
