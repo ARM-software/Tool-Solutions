@@ -56,6 +56,7 @@ export TF_NEED_COMPUTECPP=0
 export TF_NEED_KAFKA=0
 export TF_NEED_TENSORRT=0
 export TF_NEED_CLANG=1
+export TF_PYTHON_VERSION=$PY_VERSION
 
 ./configure
 
@@ -85,20 +86,28 @@ if [[ $ONEDNN_BUILD ]]; then
         else
             tf_backend_desc="oneDNN + Compute Library (OpenMP runtime)."
         fi
-
+        # tensorflow patches
         patch -p1 < ../tf_acl.patch
         patch -p1 < ../tf_threadpool_threadcap.patch
         patch -p1 < ../tf_disable_lnorm_fusions.patch
+        # oneDNN patches
         mv ../onednn_acl_reorder.patch ./third_party/mkl_dnn/.
         mv ../onednn_acl_fp32_bf16_reorder.patch ./third_party/mkl_dnn/.
         mv ../onednn_acl_thread_local_scheduler.patch ./third_party/mkl_dnn/.
-        mv ../onednn_acl_use_indirect_conv.patch ./third_party/mkl_dnn/.
-
-        ## Compute Library
-        # Adds ACL f32 to bf16 reorder
-        wget https://review.mlplatform.org/changes/ml%2FComputeLibrary\~10775/revisions/3/patch\?zip -O patch.zip && unzip patch.zip
-        sed '1,102d' 33266fd.diff > tmp.patch
-        cat ../acl_fp32_bf16_reorder.patch tmp.patch > ./third_party/compute_library/acl_fp32_bf16_reorder.patch
+        mv ../onednn_acl_dynamic_quantization.patch ./third_party/mkl_dnn/.
+        mv ../onednn_acl_in_place_sum.patch ./third_party/mkl_dnn/.
+        mv ../onednn_acl_update_conv2dinfo_constructor.patch ./third_party/mkl_dnn/.
+        mv ../onednn_acl_stop_linking_to_arm_core_library.patch ./third_party/mkl_dnn/.
+        mv ../onednn_acl_add_Acdb8a_and_Acdb4a_acl_reorders.patch ./third_party/mkl_dnn/.
+        # ACL patches
+        mv ../acl_thread_local_scheduler.patch ./third_party/compute_library/.
+        mv ../acl_dynamic_quantization.patch ./third_party/compute_library/.
+        mv ../acl_in_place_sum.patch ./third_party/compute_library/.
+        mv ../acl_parallelize_im2col.patch ./third_party/compute_library/.
+        
+        wget https://review.mlplatform.org/changes/ml%2FComputeLibrary~11354/revisions/2/patch?zip -O acl_a64_ffhybrid_fp32bf16fp32_mmla_6x16.patch.zip && unzip acl_a64_ffhybrid_fp32bf16fp32_mmla_6x16.patch.zip
+        mv 7d9cc43.diff acl_a64_ffhybrid_fp32bf16fp32_mmla_6x16.patch
+        mv acl_a64_ffhybrid_fp32bf16fp32_mmla_6x16.patch ./third_party/compute_library/.
     fi
 else
     tf_backend_desc="Eigen."

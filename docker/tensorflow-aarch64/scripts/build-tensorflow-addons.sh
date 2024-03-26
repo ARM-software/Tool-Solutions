@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # *******************************************************************************
-# Copyright 2022 Arm Limited and affiliates.
+# Copyright 2022-2024 Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,13 +22,16 @@ set -euo pipefail
 
 cd $PACKAGE_DIR
 readonly package=tensorflow-addons
-readonly version=master
+readonly version="3380b3ccf906f20dbef49c05906e6b6dabf479cf"
 readonly src_host=https://github.com/tensorflow
 readonly src_repo=addons
 
 git clone ${src_host}/${src_repo}.git
 cd ${src_repo}
 git checkout $version
+
+# Make tf-addons compatible with TF v2.16
+patch -p1 < ../tf_addons_update.patch
 
 python ./configure.py
 
