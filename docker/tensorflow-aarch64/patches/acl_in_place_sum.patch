@@ -15,7 +15,7 @@
  limitations under the License.
  *******************************************************************************
 diff --git a/arm_compute/function_info/GEMMInfo.h b/arm_compute/function_info/GEMMInfo.h
-index a827c79fd..88e6366ff 100644
+index a827c79fd..b3088ddab 100644
 --- a/arm_compute/function_info/GEMMInfo.h
 +++ b/arm_compute/function_info/GEMMInfo.h
 @@ -85,7 +85,8 @@ public:
@@ -28,14 +28,16 @@ index a827c79fd..88e6366ff 100644
      {
      }
      /** Constructor
-@@ -120,6 +121,7 @@ public:
+@@ -120,7 +121,8 @@ public:
               const ActivationLayerInfo &activation_info         = ActivationLayerInfo(),
               bool                       fixed_format            = false,
               arm_compute::WeightFormat  weight_format           = arm_compute::WeightFormat::UNSPECIFIED,
-+             bool                       accumulate              = false,
-              bool                       pretranspose_B          = false) noexcept
+-             bool                       pretranspose_B          = false) noexcept
++             bool                       pretranspose_B          = false,
++             bool                       accumulate              = false) noexcept
          : _is_a_reshaped(is_a_reshaped),
            _is_b_reshaped(is_b_reshaped),
+           _reshape_b_only_on_first_run(reshape_b_only_on_first_run),
 @@ -135,7 +137,8 @@ public:
            _pretranspose_B(pretranspose_B),
            _activation_info(activation_info),
@@ -323,14 +325,14 @@ index 7308aedf2..92203da6e 100644
      switch (a->data_type())
      {
 diff --git a/src/cpu/operators/internal/CpuGemmAssemblyDispatch.h b/src/cpu/operators/internal/CpuGemmAssemblyDispatch.h
-index 671a222fe..b3ba603bf 100644
+index 671a222fe..057430414 100644
 --- a/src/cpu/operators/internal/CpuGemmAssemblyDispatch.h
 +++ b/src/cpu/operators/internal/CpuGemmAssemblyDispatch.h
-@@ -57,6 +57,7 @@ struct AsmGemmInfo
-     bool                      fixed_format{false};
-     arm_compute::WeightFormat weight_format{arm_compute::WeightFormat::UNSPECIFIED};
-     bool                      reshape_b_only_on_first_run{true};
-+    bool                      accumulate{false};
-     /** Whether we want to perform an additional transpose of b before passing it to gemm or pretranspose_B_array
-      * @note This transpose b operation is also considered a form of "reshape" or "transform", so should be counted for
-      *       by the reshape_b_only_on_first_run flag
+@@ -64,6 +64,7 @@ struct AsmGemmInfo
+      *       fixed format kernels do not accept weights (B) with any prior transformations
+      */
+     bool transpose_b{false};
++    bool accumulate{false};
+ };
+ 
+ /** Assembly kernel glue */

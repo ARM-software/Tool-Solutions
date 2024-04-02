@@ -30,9 +30,6 @@ git clone ${src_host}/${src_repo}.git
 cd ${src_repo}
 git checkout $version
 
-# Make tf-addons compatible with TF v2.16
-patch -p1 < ../tf_addons_update.patch
-
 python ./configure.py
 
 bazel build build_pip_pkg
