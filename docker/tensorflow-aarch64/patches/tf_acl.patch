@@ -15,10 +15,10 @@
  limitations under the License.
  *******************************************************************************
 diff --git a/tensorflow/workspace2.bzl b/tensorflow/workspace2.bzl
-index 9e15c75c183..ba71bbea9bf 100644
+index 8601192edf7..c8d8808342b 100644
 --- a/tensorflow/workspace2.bzl
 +++ b/tensorflow/workspace2.bzl
-@@ -214,16 +214,19 @@ def _tf_repositories():
+@@ -206,15 +206,19 @@ def _tf_repositories():
          name = "mkl_dnn_acl_compatible",
          build_file = "//third_party/mkl_dnn:mkldnn_acl.BUILD",
          patch_file = [
@@ -27,7 +27,7 @@ index 9e15c75c183..ba71bbea9bf 100644
              "//third_party/mkl_dnn:onednn_acl_thread_local_scheduler.patch",
              "//third_party/mkl_dnn:onednn_acl_fp32_bf16_reorder.patch",
 -            "//third_party/mkl_dnn:onednn_acl_bf16_capability_detection_for_ubuntu20.04.patch",
-             "//third_party/mkl_dnn:onednn_acl_indirect_conv.patch",
++            "//third_party/mkl_dnn:onednn_acl_indirect_conv.patch",
 +            "//third_party/mkl_dnn:onednn_acl_dynamic_quantization.patch",
 +            "//third_party/mkl_dnn:onednn_acl_in_place_sum.patch",
 +            "//third_party/mkl_dnn:onednn_acl_update_conv2dinfo_constructor.patch",
@@ -43,7 +43,7 @@ index 9e15c75c183..ba71bbea9bf 100644
      )
  
      tf_http_archive(
-@@ -231,10 +234,14 @@ def _tf_repositories():
+@@ -222,10 +226,14 @@ def _tf_repositories():
          patch_file = [
              "//third_party/compute_library:compute_library.patch",
              "//third_party/compute_library:acl_thread_local_scheduler.patch",
@@ -62,7 +62,7 @@ index 9e15c75c183..ba71bbea9bf 100644
  
      tf_http_archive(
 diff --git a/third_party/mkl_dnn/mkldnn_acl.BUILD b/third_party/mkl_dnn/mkldnn_acl.BUILD
-index 0653bcb5523..d5416d8f172 100644
+index 0653bcb5523..c9edeec674b 100644
 --- a/third_party/mkl_dnn/mkldnn_acl.BUILD
 +++ b/third_party/mkl_dnn/mkldnn_acl.BUILD
 @@ -62,6 +62,12 @@ _DNNL_RUNTIME_THREADPOOL = {
@@ -91,14 +91,3 @@ index 0653bcb5523..d5416d8f172 100644
  }
  
  expand_template(
-@@ -127,8 +139,8 @@ expand_template(
-     out = "include/oneapi/dnnl/dnnl_version.h",
-     substitutions = {
-         "@DNNL_VERSION_MAJOR@": "3",
--        "@DNNL_VERSION_MINOR@": "2",
--        "@DNNL_VERSION_PATCH@": "1",
-+        "@DNNL_VERSION_MINOR@": "3",
-+        "@DNNL_VERSION_PATCH@": "5",
-         "@DNNL_VERSION_HASH@": "N/A",
-     },
-     template = "include/oneapi/dnnl/dnnl_version.h.in",
