@@ -312,19 +312,19 @@ ENV PATH=$PACKAGE_DIR/bazel:$PATH
 
 RUN $PACKAGE_DIR/build-pytorch.sh
 
-# Install torchvision, torchdata, torchtext and torchaudio
+# Install TorchVision, TorchData, TorchText and TorchAudio
 ENV VENV_PACKAGE_DIR=$VENV_DIR/lib/python$PY_VERSION/site-packages
-# Build torchvision from source to workaround the undefined C++ symbols issues
+# Build TorchVision from source to workaround the undefined C++ symbols issues
 RUN $PACKAGE_DIR/build-torchvision.sh
 
-# Build torchdata from source because there is no wheel for v0.4.0
-# torchtext depends on torchdata, so we first build torchdata and then torchtext
+# Build TorchData from source because there is no wheel for v0.4.0
+# TorchText depends on TorchData, so we first build TorchData and then TorchText
 RUN $PACKAGE_DIR/build-torchdata.sh
 
-# Build torchtext from source to workaround the undefined symbol issue with the wheel
+# Build TorchText from source to workaround the undefined symbol issue with the wheel
 RUN $PACKAGE_DIR/build-torchtext.sh
 
-# Build torchaudio from source
+# Build TorchAudio from source
 RUN $PACKAGE_DIR/build-torchaudio.sh
 
 CMD ["bash", "-l"]
