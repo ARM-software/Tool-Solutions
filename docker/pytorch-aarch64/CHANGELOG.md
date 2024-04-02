@@ -9,19 +9,19 @@ where `YY` is the year, and `MM` the month of the increment.
 
 ### Added
 - oneDNN patch for indirect conv enablement
-- torchaudio version 2.2.1
+- TorchAudio version 2.2.1
 - Simple quantized example: `quantized_linear.py`
 - BERT Large and dynamic quantization flag to `answer_questions.py`
 
 ### Changed
 - Updated oneDNN version to v3.3.5
-- Updated pytorch version to v2.2.1
+- Updated PyTorch version to v2.2.1
 - Updated Compute Libray to v24.02
-- Updated torchvision version to v0.17.1
-- Updated torchdata version to v0.7.1
-- Updated torchtext version to v0.17.1
+- Updated TorchVision version to v0.17.1
+- Updated TorchData version to v0.7.1
+- Updated TorchText version to v0.17.1
 - Updated ideep to pytorch-rls-v3.3.5
-- Updated build scripts for: torchdata, torchtext
+- Updated build scripts for: TorchData, TorchText
 - ACL patch for im2col parallelization
 - ACL patch which adds a new NEON fixed format hybrid kernel
   with max height of 6 for accumulation and updates heuristics
