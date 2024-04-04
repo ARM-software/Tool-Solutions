@@ -8,6 +8,17 @@ where `YY` is the year, and `MM` the month of the increment.
 ## [Unreleased]
 
 ### Added
+
+### Changed
+
+### Removed
+
+### Fixed
+
+## [r24.03] 2024-04-04
+https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--r24.03/docker/tensorflow-aarch64
+
+### Added
 - ACL patch for im2col parallelization
 - ACL patch which adds a new NEON fixed format hybrid kernel
   with max height of 6 for accumulation and updates heuristics
