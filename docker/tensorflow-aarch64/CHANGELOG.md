@@ -22,20 +22,18 @@ https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--
 - ACL patch for im2col parallelization
 - ACL patch which adds a new NEON fixed format hybrid kernel
   with max height of 6 for accumulation and updates heuristics
-- A patch to TF-addons to make it compatibe with TF 2.16
 - Acdb8a/Acdb4a reorders
 - Some ACL/oneDNN patches which are part of the torch build:
   - [onednn]_acl_dynamic_quantization.patch
   - [onednn]_acl_in_place_sum.patch
 
 ### Changed
-- Updated Tensorflow to v2.16.1
+- Updated Tensorflow to v2.15.1
 - Updated oneDNN to v3.3.5
 - Updated Compute Library to v24.02
 - Updated existing patches to be compatible with the new versions
 
 ### Removed
-- onednn_acl_use_indirect_conv as it's in TFv2.16
 - acl_fp32_bf16_reorder patch as it's in ACL v24.02
 
 ### Fixed
