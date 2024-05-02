@@ -77,6 +77,7 @@ RUN apt-get -y update && \
       openjdk-8-jdk \
       openssl \
       pciutils \
+      pkg-config \
       policykit-1 \
       python${PY_VERSION} \
       python${PY_VERSION}-dev \
@@ -310,6 +311,7 @@ RUN $PACKAGE_DIR/build-tensorflow.sh
 
 # build tensorflow-addons
 COPY scripts/build-tensorflow-addons.sh $PACKAGE_DIR/.
+COPY patches/tf_addons_update.patch $PACKAGE_DIR/.
 RUN $PACKAGE_DIR/build-tensorflow-addons.sh
 
 CMD ["bash", "-l"]
