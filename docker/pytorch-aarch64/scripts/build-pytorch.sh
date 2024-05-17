@@ -49,9 +49,13 @@ fi
 
 patch -p1 < $PACKAGE_DIR/pytorch_dynamic_quantization.patch
 
+# Apply https://github.com/pytorch/pytorch/pull/122616 to make torch 2.3.0 backwards
+# compatible with torchdata
+wget https://patch-diff.githubusercontent.com/raw/pytorch/pytorch/pull/122616.patch -O torch2.3_bc_torchdata.patch
+patch -p1 < torch2.3_bc_torchdata.patch
+
 cd third_party/ideep
-# Checkout a version of ideep compatible with oneDNN v3.3.5 and pytorch v2.2.1
-git checkout pytorch-rls-v3.3.5
+git checkout 55ca0191687aaf19aca5cdb7881c791e3bea442b
 patch -p1 < $PACKAGE_DIR/ideep_dynamic_quantization.patch
 
 # Update the oneDNN tag in third_party/ideep
@@ -61,26 +65,7 @@ git checkout $ONEDNN_VERSION
 # Do not add C++11 CMake CXX flag when building with ACL and
 # rename test_api to test_api_dnnl so it does not clash with PyTorch test_api
 patch -p1 < $PACKAGE_DIR/onednn.patch
-
-patch -p1 < $PACKAGE_DIR/onednn_dynamic_quantization.patch
-
-patch -p1 < $PACKAGE_DIR/onednn_acl_reorder.patch
-
-patch -p1 < $PACKAGE_DIR/onednn_fp32_bf16_reorder.patch
-
-patch -p1 < $PACKAGE_DIR/onednn_add_Acdb8a_and_Acdb4a_acl_reorders.patch
-
-patch -p1 < $PACKAGE_DIR/onednn_bf16_matmul_kernel.patch
-
 patch -p1 < $PACKAGE_DIR/onednn_acl_thread_local_scheduler.patch
-
-patch -p1 < $PACKAGE_DIR/onednn_in_place_sum.patch
-
-patch -p1 < $PACKAGE_DIR/onednn_update_conv2dinfo_constructor.patch
-
-patch -p1 < $PACKAGE_DIR/onednn_enable_indirect_conv.patch
-
-patch -p1 < $PACKAGE_DIR/onednn_stop_linking_to_arm_core_library.patch
 
 cd $PACKAGE_DIR/$src_repo
 

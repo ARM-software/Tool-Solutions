@@ -139,7 +139,7 @@ ENV NP_MAKE="${njobs}" \
     ACL_ARCH="${acl_arch}"
 
 # Key version numbers
-ENV ACL_VERSION="v24.02" \
+ENV ACL_VERSION="4c3f716371da92977d4a998fe5c89dee04ddbced" \
     OPENBLAS_VERSION=0.3.27 \
     NINJA_VERSION=1.9.0
 
@@ -167,10 +167,6 @@ ENV LD_LIBRARY_PATH=$OPENBLAS_DIR/lib:$LD_LIBRARY_PATH
 
 # Build Arm Compute Library from source
 COPY scripts/build-acl.sh $PACKAGE_DIR/.
-COPY patches/acl_dynamic_quantization.patch $PACKAGE_DIR/.
-COPY patches/acl_in_place_sum.patch $PACKAGE_DIR/.
-COPY patches/acl_bf16_dispatch.patch $PACKAGE_DIR/.
-COPY patches/acl_parallelize_im2col.patch $PACKAGE_DIR/.
 
 RUN $PACKAGE_DIR/build-acl.sh
 ENV ACL_ROOT_DIR=$PROD_DIR/ComputeLibrary
@@ -263,11 +259,11 @@ ENV ONEDNN_BUILD="${onednn_opt}" \
 
 # Key version numbers
 ENV PY_VERSION="${default_py_version}" \
-    ONEDNN_VERSION="v3.3.5" \
-    TORCH_VERSION=2.2.1 \
+    ONEDNN_VERSION="ecda5fa99b6b4b922d16d8377761d3adb50bfa01" \
+    TORCH_VERSION=2.3.0 \
     TORCHVISION_VERSION=0.17.1 \
     TORCHDATA_VERSION=0.7.1 \
-    TORCHTEXT_VERSION=0.17.1 \
+    TORCHTEXT_VERSION=0.18.0 \
     TORCHAUDIO_VERSION=2.2.1 \
     BZL_VERSION="${bazel_version}"
 
@@ -285,19 +281,10 @@ ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 # Build PyTorch
 COPY scripts/build-pytorch.sh $PACKAGE_DIR/.
 COPY patches/onednn.patch $PACKAGE_DIR/.
-COPY patches/onednn_acl_reorder.patch $PACKAGE_DIR/.
 COPY patches/onednn_acl_thread_local_scheduler.patch $PACKAGE_DIR/.
 COPY patches/torchvision.patch $PACKAGE_DIR/.
-COPY patches/onednn_enable_indirect_conv.patch $PACKAGE_DIR/.
-COPY patches/onednn_fp32_bf16_reorder.patch $PACKAGE_DIR/.
-COPY patches/onednn_dynamic_quantization.patch $PACKAGE_DIR/.
 COPY patches/ideep_dynamic_quantization.patch $PACKAGE_DIR/.
 COPY patches/pytorch_dynamic_quantization.patch $PACKAGE_DIR/.
-COPY patches/onednn_in_place_sum.patch $PACKAGE_DIR/.
-COPY patches/onednn_bf16_matmul_kernel.patch $PACKAGE_DIR/.
-COPY patches/onednn_update_conv2dinfo_constructor.patch $PACKAGE_DIR/.
-COPY patches/onednn_stop_linking_to_arm_core_library.patch $PACKAGE_DIR/.
-COPY patches/onednn_add_Acdb8a_and_Acdb4a_acl_reorders.patch $PACKAGE_DIR/.
 
 COPY scripts/build-torchvision.sh $PACKAGE_DIR/.
 COPY scripts/build-torchtext.sh $PACKAGE_DIR/.

@@ -10,8 +10,29 @@ where `YY` is the year, and `MM` the month of the increment.
 ### Added
 
 ### Changed
+- Updated PyTorch to v2.3.0
+- Updated ideep to Git Hash: 55ca019
+- Updated oneDNN to Git Hash: ecda5fa, which includes among other things:
+    - Removing fall through to oneDNN reference implementation for depthwise convolution when padding greater than kernel
+- Updated ACL to Git Hash: 4c3f716
+- Updated torchtext to v0.18.0
 
 ### Removed
+- All patches that were merged upstream:
+  - acl_bf16_dispatch.patch
+  - acl_dynamic_quantization.patch
+  - acl_in_place_sum.patch
+  - acl_parallelize_im2col.patch
+  - onednn_acl_fp32_bf16_reorder.patch
+  - onednn_acl_reorder.patch
+  - onednn_add_Acdb8a_and_Acdb4a_acl_reorders.patch
+  - onednn_bf16_matmul_kernel.patch
+  - onednn_dynamic_quantization.patch
+  - onednn_enable_indirect_conv.patch
+  - onednn_fp32_bf16_reorder.patch
+  - onednn_in_place_sum.patch
+  - onednn_stop_linking_to_arm_core_library.patch
+  - onednn_update_conv2dinfo_constructor.patch
 
 ### Fixed
 
