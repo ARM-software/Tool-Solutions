@@ -10,12 +10,24 @@ where `YY` is the year, and `MM` the month of the increment.
 ### Added
 
 ### Changed
+
+### Removed
+
+### Fixed
+
+## [r24.05] 2024-05-28
+https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--r24.05/docker/pytorch-aarch64
+
+### Added
+
+### Changed
 - Updated PyTorch to v2.3.0
 - Updated ideep to Git Hash: 55ca019
 - Updated oneDNN to Git Hash: ecda5fa, which includes among other things:
     - Removing fall through to oneDNN reference implementation for depthwise convolution when padding greater than kernel
 - Updated ACL to Git Hash: 4c3f716
 - Updated torchtext to v0.18.0
+- Updated OpenBLAS to v0.3.27
 
 ### Removed
 - All patches that were merged upstream:
