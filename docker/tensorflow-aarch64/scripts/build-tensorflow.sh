@@ -72,20 +72,12 @@ if [[ $NP_MAKE ]]; then extra_flags="$extra_flags --jobs=$NP_MAKE"; fi
 
 if [[ $ONEDNN_BUILD ]]; then
     echo "$ONEDNN_BUILD build for $TF_VERSION"
-    if [[ $ONEDNN_BUILD == 'acl_threadpool' ]]; then
-        config_flags="$config_flags --config=mkl_aarch64_threadpool"
-    else
-        config_flags="$config_flags --config=mkl_aarch64"
-    fi
+    config_flags="$config_flags --config=mkl_aarch64_threadpool"
     if [[ $ONEDNN_BUILD == 'reference' ]]; then
         tf_backend_desc="oneDNN - reference."
         sed -i '/DNNL_AARCH64_USE_ACL/d' ./third_party/mkl_dnn/mkldnn_acl.BUILD
     else
-        if [[ $ONEDNN_BUILD == 'acl_threadpool' ]]; then
-            tf_backend_desc="oneDNN + Compute Library (threadpool runtime)."
-        else
-            tf_backend_desc="oneDNN + Compute Library (OpenMP runtime)."
-        fi
+        tf_backend_desc="oneDNN + Compute Library (threadpool runtime)."
         # tensorflow patches
         patch -p1 < ../tf_acl.patch
         patch -p1 < ../tf_threadpool_threadcap.patch

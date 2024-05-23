@@ -31,8 +31,7 @@ function print_usage_and_exit {
   echo "      --bazel_memory_limit     Set a memory limit for Bazel build."
   echo "      --onednn / --dnnl        Build and link to oneDNN / DNNL:"
   echo "                                 * reference      - use the C++ reference kernels throughout."
-  echo "                                 * acl            - use Compute Library (default)."
-  echo "                                 * acl_threadpool - use Compute Library with threadpool."
+  echo "                                 * acl_threadpool - use Compute Library with threadpool (default)."
   echo "      --build-type             Type of build to perform:"
   echo "                                 * base           - build the basic portion of the image, OS and essential packages."
   echo "                                 * libs           - build image including maths libraries and Python3."
@@ -171,22 +170,18 @@ do
             onednn="reference"
             shift
             ;;
-          acl )
-            onednn="acl"
-            shift
-            ;;
           acl_threadpool )
             onednn="acl_threadpool"
             shift
             ;;
           * )
-            echo "Defaulting to oneDNN-ACL build."
+            echo "Defaulting to ACL threadpool."
             echo "Note: support for oneDNN builds with OpenBLAS or ArmPL is now deprecated."
-            onednn="acl"
+            onednn="acl_threadpool"
             ;;
         esac
       else
-        onednn="acl"
+        onednn="acl_threadpool"
       fi
       ;;
 
@@ -230,7 +225,7 @@ if [[ $clean_build ]]; then
 fi
 
 # Set TensorFlow version
-tf_version="v2.15.1"
+tf_version="v2.16.1"
 
 # Add build-args to pass version numbers,
 extra_args="$extra_args \

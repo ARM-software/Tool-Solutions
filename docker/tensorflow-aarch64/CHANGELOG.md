@@ -15,6 +15,21 @@ where `YY` is the year, and `MM` the month of the increment.
 
 ### Fixed
 
+## [r24.05] 2024-05-28
+https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--r24.05/docker/tensorflow-aarch64
+
+### Added
+- A patch to TF-addons (to make it compatible with TF 2.16)  docker/tensorflow-aarch64/patches/tf_addons_update.patch
+
+### Changed
+- Updated Tensorflow to v2.16.1
+- The default for  --onednn  is now  acl_threadpool.
+
+### Removed
+- Removed support for the  --onednn acl  option which builds tensorflow with ComputeLibrary and OpenMP.
+
+### Fixed
+
 ## [r24.03] 2024-04-04
 https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--r24.03/docker/tensorflow-aarch64
 
