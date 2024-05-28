@@ -222,6 +222,10 @@ RUN pip install --no-cache-dir grpcio tensorflow-io pytest
 RUN pip install --no-cache-dir ck==1.55.5 absl-py pycocotools pillow==8.2.0
 RUN pip install --no-cache-dir transformers pandas
 
+# Install the backwards-compatible tf-keras package as Keras 3 (requirement
+# for tensorflow v2.16) is not yet supported in transformers
+RUN pip install --no-cache-dir tf-keras==2.16.0
+
 # Install OpenCV into our venv (needed for MLCommons benchmarks)
 RUN pip install --no-cache-dir opencv-python-headless==4.8.0.74
 
@@ -288,7 +292,6 @@ ENV PATH="$PACKAGE_DIR/bazel:$PATH"
 # Build TensorFlow
 # tensorflow patches
 COPY patches/tf_acl.patch $PACKAGE_DIR/.
-COPY patches/tf_threadpool_threadcap.patch $PACKAGE_DIR/.
 COPY patches/tf_disable_lnorm_fusions.patch $PACKAGE_DIR/.
 # oneDNN patches
 COPY patches/onednn_acl_indirect_conv.patch $PACKAGE_DIR/.
