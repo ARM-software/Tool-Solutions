@@ -80,7 +80,6 @@ if [[ $ONEDNN_BUILD ]]; then
         tf_backend_desc="oneDNN + Compute Library (threadpool runtime)."
         # tensorflow patches
         patch -p1 < ../tf_acl.patch
-        patch -p1 < ../tf_threadpool_threadcap.patch
         patch -p1 < ../tf_disable_lnorm_fusions.patch
         # oneDNN patches
         mv ../onednn_acl_indirect_conv.patch ./third_party/mkl_dnn/.

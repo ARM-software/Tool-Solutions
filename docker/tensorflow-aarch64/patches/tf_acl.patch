@@ -15,10 +15,10 @@
  limitations under the License.
  *******************************************************************************
 diff --git a/tensorflow/workspace2.bzl b/tensorflow/workspace2.bzl
-index 8601192edf7..c8d8808342b 100644
+index 9e15c75c183..ba71bbea9bf 100644
 --- a/tensorflow/workspace2.bzl
 +++ b/tensorflow/workspace2.bzl
-@@ -206,15 +206,19 @@ def _tf_repositories():
+@@ -214,16 +214,19 @@ def _tf_repositories():
          name = "mkl_dnn_acl_compatible",
          build_file = "//third_party/mkl_dnn:mkldnn_acl.BUILD",
          patch_file = [
@@ -27,7 +27,7 @@ index 8601192edf7..c8d8808342b 100644
              "//third_party/mkl_dnn:onednn_acl_thread_local_scheduler.patch",
              "//third_party/mkl_dnn:onednn_acl_fp32_bf16_reorder.patch",
 -            "//third_party/mkl_dnn:onednn_acl_bf16_capability_detection_for_ubuntu20.04.patch",
-+            "//third_party/mkl_dnn:onednn_acl_indirect_conv.patch",
+             "//third_party/mkl_dnn:onednn_acl_indirect_conv.patch",
 +            "//third_party/mkl_dnn:onednn_acl_dynamic_quantization.patch",
 +            "//third_party/mkl_dnn:onednn_acl_in_place_sum.patch",
 +            "//third_party/mkl_dnn:onednn_acl_update_conv2dinfo_constructor.patch",
@@ -43,7 +43,7 @@ index 8601192edf7..c8d8808342b 100644
      )
  
      tf_http_archive(
-@@ -222,10 +226,14 @@ def _tf_repositories():
+@@ -231,10 +234,14 @@ def _tf_repositories():
          patch_file = [
              "//third_party/compute_library:compute_library.patch",
              "//third_party/compute_library:acl_thread_local_scheduler.patch",
