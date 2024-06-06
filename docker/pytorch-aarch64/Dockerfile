@@ -259,7 +259,7 @@ ENV ONEDNN_BUILD="${onednn_opt}" \
 
 # Key version numbers
 ENV PY_VERSION="${default_py_version}" \
-    ONEDNN_VERSION="4f2360e1c8" \
+    ONEDNN_VERSION="eb013e386e47d021b2ab169500ce6ab1147142e1" \
     TORCH_VERSION=2.3.0 \
     TORCHVISION_VERSION=0.17.1 \
     TORCHDATA_VERSION=0.7.1 \
