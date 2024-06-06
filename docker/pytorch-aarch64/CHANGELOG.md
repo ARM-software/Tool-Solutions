@@ -23,7 +23,7 @@ https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--
 ### Changed
 - Updated PyTorch to v2.3.0
 - Updated ideep to Git Hash: 55ca019
-- Updated oneDNN to Git Hash: ecda5fa, which includes among other things:
+- Updated oneDNN to Git Hash: eb013e3, which includes among other things:
     - Removing fall through to oneDNN reference implementation for depthwise convolution when padding greater than kernel
 - Updated ACL to Git Hash: 4c3f716
 - Updated torchtext to v0.18.0
@@ -40,7 +40,6 @@ https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--
   - onednn_add_Acdb8a_and_Acdb4a_acl_reorders.patch
   - onednn_bf16_matmul_kernel.patch
   - onednn_dynamic_quantization.patch
-  - onednn_enable_indirect_conv.patch
   - onednn_fp32_bf16_reorder.patch
   - onednn_in_place_sum.patch
   - onednn_stop_linking_to_arm_core_library.patch

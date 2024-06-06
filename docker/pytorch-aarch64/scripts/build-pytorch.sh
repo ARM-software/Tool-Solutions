@@ -66,6 +66,10 @@ git checkout $ONEDNN_VERSION
 # rename test_api to test_api_dnnl so it does not clash with PyTorch test_api
 patch -p1 < $PACKAGE_DIR/onednn.patch
 patch -p1 < $PACKAGE_DIR/onednn_acl_thread_local_scheduler.patch
+wget -O onednn_enable_indirect_conv.patch https://patch-diff.githubusercontent.com/raw/oneapi-src/oneDNN/pull/1948.patch
+patch -p1 < onednn_enable_indirect_conv.patch
+wget -O onednn_enable_acl_indirect_conv_for_bf16.patch https://patch-diff.githubusercontent.com/raw/oneapi-src/oneDNN/pull/1933.patch
+patch -p1 < onednn_enable_acl_indirect_conv_for_bf16.patch
 
 cd $PACKAGE_DIR/$src_repo
 
