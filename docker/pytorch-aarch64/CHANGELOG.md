@@ -8,8 +8,11 @@ where `YY` is the year, and `MM` the month of the increment.
 ## [Unreleased]
 
 ### Added
+- ACL and oneDNN patches to enable PyTorch static quantization for convolution.
+- ACL patch for mixed sign GEMM support
 
 ### Changed
+- Update ACL to Git hash: c2237ec
 
 ### Removed
 

@@ -23,6 +23,18 @@ The file [resnet_v1-50.yml](resnet_v1-50.yml) provides, in [YAML format](https:/
 - `source`: URL from where to download saved checkpoint
 - `labels`: URL from where to download labels for the model.
 
+### Statically Quantized Convolution
+
+The script [static_quantize_conv.py](static_quantize_conv.py) demostrates Pytorch static quantization using the Post-Training Quantisation (PTQ) method with FX Graph Mode that automatically quantizes modules.
+
+To run inference on an image call:
+
+```
+python static_quantize_conv.py
+```
+
+This example outputs the execution time of an F32 single convolution model and the output of the same model, but then statically quantized. It also prints the Mean Square Error (MSE) between the results of the F32 model and the int8 model. With this example, we demonstrate that although the difference in performance can be pretty big, the difference between the L2 error result can be relatively small.
+
 ### Object detection
 
 The script [detect_objects.py](detect_object.py) demonstrates how to run inference using different models. Currently supported models are the SSD-ResNet-34 and RetinaNet (also known as ResNext50).

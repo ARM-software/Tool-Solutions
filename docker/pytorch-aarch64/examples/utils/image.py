@@ -34,7 +34,7 @@ import cv2
 from . import common
 
 
-def _download_image(image_loc):
+def download_image(image_loc):
     """
     Download image to file
     :param image_loc: URL or path for the image
@@ -82,7 +82,7 @@ def _preprocess_image_for_classification(image_url, model_descriptor):
     :param model_descriptor: Parsed yaml file describing model
     :returns: Preprocessed image for image classification
     """
-    image_file = _download_image(image_url)
+    image_file = download_image(image_url)
 
     input_image = Image.open(image_file)
     preprocess = transforms.Compose(
@@ -108,7 +108,7 @@ def _preprocess_image_for_detection(image_url, model_descriptor):
     :param model_descriptor: Parsed yaml file describing model
     :returns: Preprocess image for object detection
     """
-    image_file = _download_image(image_url)
+    image_file = download_image(image_url)
 
     input_image = cv2.imread(image_file)
 
