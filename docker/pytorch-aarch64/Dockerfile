@@ -288,8 +288,8 @@ COPY patches/torchvision.patch $PACKAGE_DIR/.
 COPY patches/ideep_dynamic_quantization.patch $PACKAGE_DIR/.
 COPY patches/ideep_static_quantization.patch $PACKAGE_DIR/.
 COPY patches/pytorch_dynamic_quantization.patch $PACKAGE_DIR/.
-COPY patches/pytorch_gelu.patch $PACKAGE_DIR/.
 COPY patches/pytorch_static_quantization.patch $PACKAGE_DIR/.
+COPY patches/pytorch_gelu.patch $PACKAGE_DIR/.
 
 COPY scripts/build-torchvision.sh $PACKAGE_DIR/.
 COPY scripts/build-torchtext.sh $PACKAGE_DIR/.
