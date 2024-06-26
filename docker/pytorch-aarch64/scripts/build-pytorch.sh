@@ -49,6 +49,7 @@ fi
 
 patch -p1 < $PACKAGE_DIR/pytorch_dynamic_quantization.patch
 patch -p1 < $PACKAGE_DIR/pytorch_gelu.patch
+patch --ignore-whitespace -p1 < $PACKAGE_DIR/pytorch_static_quantization.patch
 
 # Apply https://github.com/pytorch/pytorch/pull/122616 to make torch 2.3.0 backwards
 # compatible with torchdata
@@ -58,6 +59,7 @@ patch -p1 < torch2.3_bc_torchdata.patch
 cd third_party/ideep
 git checkout 55ca0191687aaf19aca5cdb7881c791e3bea442b
 patch -p1 < $PACKAGE_DIR/ideep_dynamic_quantization.patch
+patch -p1 < $PACKAGE_DIR/ideep_static_quantization.patch
 
 # Update the oneDNN tag in third_party/ideep
 cd mkl-dnn
@@ -71,6 +73,7 @@ wget -O onednn_enable_indirect_conv.patch https://patch-diff.githubusercontent.c
 patch -p1 < onednn_enable_indirect_conv.patch
 wget -O onednn_enable_acl_indirect_conv_for_bf16.patch https://patch-diff.githubusercontent.com/raw/oneapi-src/oneDNN/pull/1933.patch
 patch -p1 < onednn_enable_acl_indirect_conv_for_bf16.patch
+patch -p1 < $PACKAGE_DIR/onednn_static_quantization.patch
 
 cd $PACKAGE_DIR/$src_repo
 

@@ -29,11 +29,15 @@ readonly num_cpus=$(nproc)
 
 install_dir=$PROD_DIR/$package
 
-# Clone oneDNN
+# Clone ACL
 [[ ! -d ${src_repo} ]] && git clone ${src_host}/${src_repo}.git
 cd ${src_repo}
 
 git checkout $version
+
+# Patch ACL
+wget -O patch.zip https://eu-gerrit-1.euhpc.arm.com/changes/VisualCompute%2FComputeLibrary~633455/revisions/29/patch?zip && unzip patch.zip && patch -p1 < ./7271dfa.diff
+patch -p1 < ../acl_static_quantization.patch
 
 # Default to v8a if $acl_arch is unset.
 arch=${ACL_ARCH:-"arm64-v8a"}
