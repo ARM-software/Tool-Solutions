@@ -207,7 +207,7 @@ ENV PATH="/home/$DOCKER_USER/.cargo/bin:${PATH}"
 
 # Install some basic python packages needed for NumPy
 RUN pip install --no-cache-dir --upgrade pip
-RUN pip install --no-cache-dir "setuptools>=41.0.0" six mock wheel cython==0.29.36
+RUN pip install --no-cache-dir "setuptools>=41.0.0" six mock wheel cython
 
 # Install some  basic python packages needed for SciPy
 RUN pip install --no-cache-dir pybind11[global]==2.6.2 pyangbind pythran
