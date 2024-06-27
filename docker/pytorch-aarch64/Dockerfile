@@ -168,6 +168,7 @@ ENV LD_LIBRARY_PATH=$OPENBLAS_DIR/lib:$LD_LIBRARY_PATH
 # Build Arm Compute Library from source
 COPY scripts/build-acl.sh $PACKAGE_DIR/.
 COPY patches/acl_static_quantization.patch $PACKAGE_DIR/.
+COPY patches/acl_stateless_matmul.patch $PACKAGE_DIR/.
 
 RUN $PACKAGE_DIR/build-acl.sh
 ENV ACL_ROOT_DIR=$PROD_DIR/ComputeLibrary
@@ -260,7 +261,7 @@ ENV ONEDNN_BUILD="${onednn_opt}" \
 
 # Key version numbers
 ENV PY_VERSION="${default_py_version}" \
-    ONEDNN_VERSION="eb013e386e47d021b2ab169500ce6ab1147142e1" \
+    ONEDNN_VERSION=v3.5 \
     TORCH_VERSION=2.3.0 \
     TORCHVISION_VERSION=0.17.1 \
     TORCHDATA_VERSION=0.7.1 \
@@ -290,6 +291,8 @@ COPY patches/ideep_static_quantization.patch $PACKAGE_DIR/.
 COPY patches/pytorch_dynamic_quantization.patch $PACKAGE_DIR/.
 COPY patches/pytorch_static_quantization.patch $PACKAGE_DIR/.
 COPY patches/pytorch_gelu.patch $PACKAGE_DIR/.
+
+COPY patches/onednn_stateless_matmul.patch $PACKAGE_DIR/.
 
 COPY scripts/build-torchvision.sh $PACKAGE_DIR/.
 COPY scripts/build-torchtext.sh $PACKAGE_DIR/.

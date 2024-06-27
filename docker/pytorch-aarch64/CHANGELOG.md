@@ -10,9 +10,12 @@ where `YY` is the year, and `MM` the month of the increment.
 ### Added
 - ACL and oneDNN patches to enable PyTorch static quantization for convolution.
 - ACL patch for mixed sign GEMM support
+- Modified oneDNN to v3.5
 
 ### Changed
 - Update ACL to Git hash: c2237ec
+- Added stateless matmul APIs to ACL and oneDNN
+- Added .gitignore
 
 ### Removed
 
