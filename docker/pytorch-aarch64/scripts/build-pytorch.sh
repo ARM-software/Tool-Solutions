@@ -49,6 +49,7 @@ fi
 
 patch -p1 < $PACKAGE_DIR/pytorch_dynamic_quantization.patch
 patch --ignore-whitespace -p1 < $PACKAGE_DIR/pytorch_static_quantization.patch
+patch -p1 < $PACKAGE_DIR/pytorch_gelu.patch
 
 # Apply https://github.com/pytorch/pytorch/pull/122616 to make torch 2.3.0 backwards
 # compatible with torchdata
