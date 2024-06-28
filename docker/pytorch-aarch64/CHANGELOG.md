@@ -8,9 +8,21 @@ where `YY` is the year, and `MM` the month of the increment.
 ## [Unreleased]
 
 ### Added
+
+### Changed
+
+### Removed
+
+### Fixed
+
+## [r24.07] 2024-07-01
+https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--r24.07/docker/pytorch-aarch64
+
+### Added
 - ACL and oneDNN patches to enable PyTorch static quantization for convolution.
 - ACL patch for mixed sign GEMM support
 - Modified oneDNN to v3.5
+- oneDNN patch for tanh based GELU on aarch64
 
 ### Changed
 - Update ACL to Git hash: c2237ec
@@ -18,8 +30,7 @@ where `YY` is the year, and `MM` the month of the increment.
 - Added .gitignore
 
 ### Removed
-
-### Fixed
+- Removed fixed cython versions in Dockerfile
 
 ## [r24.06] 2024-06-01
 https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--r24.06/docker/pytorch-aarch64

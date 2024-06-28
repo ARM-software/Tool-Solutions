@@ -15,6 +15,12 @@ where `YY` is the year, and `MM` the month of the increment.
 
 ### Fixed
 
+## [r24.07] 2024-07-01
+https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--r24.07/docker/tensorflow-aarch64
+
+### Removed
+- Removed fixed cython versions in Dockerfile
+
 ## [r24.06] 2024-06-01
 https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--r24.06/docker/tensorflow-aarch64
 
