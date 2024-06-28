@@ -1,0 +1,16 @@
+ROM_LOAD 0x00000000 0x00010000
+{
+  ROM_EXEC +0x0
+  {
+    startup.o(BOOT, +FIRST)
+    * (+RO)
+  }
+  
+  RAM_EXEC 0x04000000 0x10000
+  {
+    * (+RW, +ZI)
+  }
+  
+  ARM_LIB_STACKHEAP 0x04010000 ALIGN 64 EMPTY 0x10000
+  {}
+}
