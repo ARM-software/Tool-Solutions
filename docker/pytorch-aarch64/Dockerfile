@@ -360,7 +360,7 @@ COPY scripts/download-model.sh $MLCOMMONS_DIR/.
 # Install missing Python package dependencies required to run examples
 RUN pip install --no-cache-dir requests tqdm boto3 iopath sox unidecode inflect toml
 RUN pip install --no-cache-dir future onnx==1.15.0
-RUN pip install --no-cache-dir 'librosa==0.8.0'
+RUN pip install --no-cache-dir 'librosa==0.10.0'
 
 # Copy examples
 ENV EXAMPLE_DIR=/home/$DOCKER_USER/examples
