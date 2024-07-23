@@ -36,7 +36,6 @@ cd ${src_repo}
 git checkout $version
 
 # Patch ACL
-wget -O patch.zip https://eu-gerrit-1.euhpc.arm.com/changes/VisualCompute%2FComputeLibrary~633455/revisions/29/patch?zip && unzip patch.zip && patch -p1 < ./7271dfa.diff
 patch -p1 < ../acl_static_quantization.patch
 patch -p1 < ../acl_stateless_matmul.patch
 
