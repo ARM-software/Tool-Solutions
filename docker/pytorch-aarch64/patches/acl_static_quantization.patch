@@ -329,45 +329,6 @@ index 8bbb877c1..fa034e812 100644
  };
 
  template<typename strategy, typename To, typename Tr, typename OutputStage=Nothing>
-diff --git a/src/core/NEON/kernels/arm_gemm/gemm_hybrid_quantized_inline.hpp b/src/core/NEON/kernels/arm_gemm/gemm_hybrid_quantized_inline.hpp
-index 820b54202..d044bb8a9 100644
---- a/src/core/NEON/kernels/arm_gemm/gemm_hybrid_quantized_inline.hpp
-+++ b/src/core/NEON/kernels/arm_gemm/gemm_hybrid_quantized_inline.hpp
-@@ -1,5 +1,5 @@
- /*
-- * Copyright (c) 2017-2019,2021 Arm Limited.
-+ * Copyright (c) 2017-2019,2021,2024 Arm Limited.
-  *
-  * SPDX-License-Identifier: MIT
-  *
-@@ -264,6 +264,27 @@ public:
-         _qp.bias = bias;
-         _qp.bias_multi_stride = bias_multi_stride;
-     }
-+
-+    void update_quantization_parameters(const Requantize32 &re) override {
-+        if (std::is_same<OutputStage, Requantize32>::value) {
-+            Requantize32 *qp = reinterpret_cast<Requantize32 *>(&_os);
-+            qp->bias = re.bias;
-+            qp->a_offset = re.a_offset;
-+            qp->b_offset = re.b_offset;
-+            qp->c_offset = re.c_offset;
-+            qp->per_layer_left_shift = re.per_layer_left_shift;
-+            qp->per_layer_right_shift = re.per_layer_right_shift;
-+            qp->per_layer_mul = re.per_layer_mul;
-+            qp->per_channel_requant = re.per_channel_requant;
-+            qp->per_channel_left_shifts = re.per_channel_left_shifts;
-+            qp->per_channel_right_shifts = re.per_channel_right_shifts;
-+            qp->per_channel_muls = re.per_channel_muls;
-+            qp->minval = re.minval;
-+            qp->maxval = re.maxval;
-+            qp->is_dynamic = re.is_dynamic;
-+            _n_block = compute_n_block(_args, _os);
-+        }
-+    }
- };
-
- } // namespace arm_gemm
 diff --git a/src/core/NEON/kernels/arm_gemm/gemm_interleaved.hpp b/src/core/NEON/kernels/arm_gemm/gemm_interleaved.hpp
 index 5214a71cc..25570a5f6 100644
 --- a/src/core/NEON/kernels/arm_gemm/gemm_interleaved.hpp
