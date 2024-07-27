@@ -60,6 +60,7 @@ cd third_party/ideep
 git checkout 55ca0191687aaf19aca5cdb7881c791e3bea442b
 patch -p1 < $PACKAGE_DIR/ideep_dynamic_quantization.patch
 patch -p1 < $PACKAGE_DIR/ideep_static_quantization.patch
+patch -p1 < $PACKAGE_DIR/ideep_remove_matmul_primitive_caching.patch
 
 # Update the oneDNN tag in third_party/ideep
 cd mkl-dnn
