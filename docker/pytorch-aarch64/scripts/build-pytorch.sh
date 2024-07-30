@@ -47,6 +47,7 @@ if [[ $ONEDNN_BUILD ]]; then
   esac
 fi
 
+patch -p1 < $PACKAGE_DIR/pytorch_embedding_lookup_sve_concept.patch
 patch -p1 < $PACKAGE_DIR/pytorch_dynamic_quantization.patch
 patch --ignore-whitespace -p1 < $PACKAGE_DIR/pytorch_static_quantization.patch
 patch -p1 < $PACKAGE_DIR/pytorch_gelu.patch
