@@ -289,9 +289,11 @@ COPY patches/torchvision.patch $PACKAGE_DIR/.
 COPY patches/ideep_dynamic_quantization.patch $PACKAGE_DIR/.
 COPY patches/ideep_static_quantization.patch $PACKAGE_DIR/.
 COPY patches/ideep_remove_matmul_primitive_caching.patch $PACKAGE_DIR/.
+COPY patches/ideep_pd_cache_modes.patch $PACKAGE_DIR/.
 COPY patches/pytorch_dynamic_quantization.patch $PACKAGE_DIR/.
 COPY patches/pytorch_static_quantization.patch $PACKAGE_DIR/.
 COPY patches/pytorch_gelu.patch $PACKAGE_DIR/.
+COPY patches/pytorch_bf32_matmul.patch $PACKAGE_DIR/.
 
 COPY patches/onednn_stateless_matmul.patch $PACKAGE_DIR/.
 
