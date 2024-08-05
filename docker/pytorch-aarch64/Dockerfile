@@ -97,7 +97,8 @@ RUN apt-get -y update && \
       wget \
       xz-utils \
       zip \
-      zlib1g-dev
+      zlib1g-dev \
+      google-perftools
 
 # Set default gcc, python and pip versions
 RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 1 && \
