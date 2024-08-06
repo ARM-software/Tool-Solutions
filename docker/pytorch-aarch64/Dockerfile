@@ -295,7 +295,7 @@ COPY patches/pytorch_dynamic_quantization.patch $PACKAGE_DIR/.
 COPY patches/pytorch_static_quantization.patch $PACKAGE_DIR/.
 COPY patches/pytorch_gelu.patch $PACKAGE_DIR/.
 COPY patches/pytorch_bf32_matmul.patch $PACKAGE_DIR/.
-
+COPY patches/pytorch_embedding_lookup_sve_concept.patch $PACKAGE_DIR/.
 COPY patches/onednn_stateless_matmul.patch $PACKAGE_DIR/.
 
 COPY scripts/build-torchvision.sh $PACKAGE_DIR/.
