@@ -174,3 +174,12 @@ It is possible to choose a specific build target using the `--build-target` flag
   * custom       - apply a custom set of architecture and tuning flags, as defined in [cpu_info.sh](cpu_info.sh).
 
 In addition to the Dockerfile, please refer to the files in the `scripts/` and `patches/` directories to see how the software is built.
+
+# General optimization guidelines
+
+## PyTorch runtime flags
+
+We recommend running with the following run time flags and using tcmalloc to handle memory allocations in PyTorch for better performance.
+
+* IDEEP_CACHE_MATMUL_REORDERS=1   - Caches reordered weight tensors. This increases performance but also increases memory usage. LRU_CACHE_CAPACITY should be set to a meaningful amount for this cache to be effective.
+* LRU_CACHE_CAPACITY=<cache size> - Number of objects to cache in the LRU cache

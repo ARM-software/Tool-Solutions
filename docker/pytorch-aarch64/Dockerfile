@@ -284,6 +284,7 @@ COPY patches/onednn.patch $PACKAGE_DIR/.
 COPY patches/onednn_acl_thread_local_scheduler.patch $PACKAGE_DIR/.
 COPY patches/torchvision.patch $PACKAGE_DIR/.
 COPY patches/ideep_dynamic_quantization.patch $PACKAGE_DIR/.
+COPY patches/ideep_cache_reorders.patch $PACKAGE_DIR/.
 COPY patches/pytorch_dynamic_quantization.patch $PACKAGE_DIR/.
 
 COPY scripts/build-torchvision.sh $PACKAGE_DIR/.
