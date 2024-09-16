@@ -83,7 +83,7 @@ index a302ae0..3db1861 100755
          return "NCHW"
  
 -    def load(self, model_path, inputs=None, outputs=None):
--        self.model = torch.load(model_path, map_location=lambda storage, loc: storage)
+-        self.model = torch.load(model_path)
 +    def load(self, model_path, profile=None, inputs=None, outputs=None):
 +        self.profile = profile
 +        if profile == "resnet50-pytorch":
