@@ -37,27 +37,18 @@ This example outputs the execution time of an F32 single convolution model and t
 
 ### Object detection
 
-The script [detect_objects.py](detect_object.py) demonstrates how to run inference using different models. Currently supported models are the SSD-ResNet-34 and RetinaNet (also known as ResNext50).
+The script [detect_objects.py](detect_object.py) demonstrates how to run object detection using SSD-ResNet-34.
 
 The SSD-ResNet-34 model is trained from the Common Object in Context (COCO) image dataset. This is a multiscale SSD (Single Shot Detection) model based on the ResNet-34 backbone network that performs object detection.
 
-RetinaNet is trained on the OpenImages dataset. It is a one-stage object detection model that is based on the ResNet-50 backbone network.
-
 To run inference with SSD-ResNet-34 on example image call:
-
 ```
 python detect_objects.py -m ./ssd_resnet34.yml -i https://raw.githubusercontent.com/zhreshold/mxnet-ssd/master/data/demo/street.jpg
 ```
 
-And similarly for RetinaNet:
-
-```
-python detect_objects.py -m ./retinanet.yml -i https://raw.githubusercontent.com/zhreshold/mxnet-ssd/master/data/demo/street.jpg
-```
-
 Where `-m` sets the configuration file (see below) that describes the model, and `-i` sets the URL, or filename, of the image in which you want to detect objects. The output of the script will list what object the model detected and with what confidence. It will also draw bounding boxes around those objects in a new image.
 
-The files [ssd_resnet34.yml](ssd_resnet34.yml) and [retinanet.yml](retinanet.yml) provide, in [YAML format](https://docs.ansible.com/ansible/latest/reference_appendices/YAMLSyntax.html) information about the models:
+[ssd_resnet34.yml](ssd_resnet34.yml) provides, in [YAML format](https://docs.ansible.com/ansible/latest/reference_appendices/YAMLSyntax.html) information about the model:
 - `name`: Name of the model used for inference
 - `script`: Script to download the Python model class and put it in the `PYTHONPATH`
 - `class`: Name of the Python model class to import
@@ -126,21 +117,6 @@ See the section on [dynamic quantization](#dynamic-quantization) for more inform
 To remove the setup from the measured inference time, you can use the `--warmup` flag.
 This will run the model twice, and report the time of the second run.
 
-
-### Torchtext Article Reading
-
-The script 'torchtext_example.py' shows the functionality of the 'torchtext' Pytorch library. The example reads an article and determines its genre out of 4 options: world, sports, business, or science & technology.
-
-To run the script:
-
-```
-python torchtext_example.py axion.txt
-```
-
-The example reads an excerpt from an article from https://news.northeastern.edu/2021/08/09/holy-grail-discovery-in-solid-state-physics-could-usher-in-new-technologies/, and correctly determines that it is a science & technology article.
-
-This script was built following the approach detailed in https://pytorch.org/tutorials/beginner/text_sentiment_ngrams_tutorial.html
-
 ## Dynamic quantization
 
 Quantization reduces the precision of the inputs to your operators to speed up computation.
@@ -181,73 +157,35 @@ Again, the effect is most pronounced for fewer threads and larger layers/models 
 | 16      | 1.7                |
 Note that in the above data we used the `--warmup` flag to run the model once before timing.
 
-## MLCommons :tm: benchmarks
+## General optimization guidelines
 
-### Vision
+There are several flags which typically improve the performance of PyTorch.
 
-To run the image classification and object detection benchmarks, first download the datasets and models using the scripts provided in the `$HOME/examples/MLCommons` directory of the final image.
+### General flags
 
-  * `download-dataset.sh` downloads the ImageNet min-validation dataset using CK to `${HOME}/CK-TOOLS/` and additionally downloads the openimages dataset. Select option 1: for the val-min ImageNet dataset.
-  * `download-model.sh` downloads the ResNet50 and RetinaNet models.
+`DNNL_DEFAULT_FPMATH_MODE`: setting the environment variable `DNNL_DEFAULT_FPMATH_MODE` to `BF16` or `ANY` will instruct ACL to dispatch fp32 workloads to bfloat16 kernels where hardware support permits. _Note: this may introduce a drop in accuracy._
 
-The environment variables `DATA_DIR` and `MODEL_DIR` will need to be set to the location of the downloaded dataset and model in each case.
+You can use `tcmalloc` to handle memory allocation in PyTorch, which often leads to better performance
+`LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libtcmalloc.so.4`
 
-#### Image classification
+You can control the number of threads with `OMP_NUM_THREADS`, smaller models may perform better with fewer threads.
 
-To run ResNet50 on ImageNet min-validation dataset for image classification, set `DATA_DIR` to the location of the downloaded dataset and `MODEL_DIR` to the location of the downloaded model.
+### Compiled mode flags
 
+* TORCHINDUCTOR_CPP_WRAPPER=1  - Reduces Python overhead within the graph for torch.compile
+* TORCHINDUCTOR_FREEZING=1     - Freezing will attempt to inline weights as constants in optimization
+
+e.g.
 ```
-export DATA_DIR=${HOME}/CK-TOOLS/dataset-imagenet-ilsvrc2012-val-min
-export MODEL_DIR=${HOME}/examples/MLCommons/inference/vision/classification_and_detection
-```
-
-From `$HOME/examples/MLCommons/inference/vision/classification_and_detection` use the `run_local.sh` to start the benchmark.
-
-```
-./run_local.sh pytorch resnet50 cpu
+LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libtcmalloc.so.4  TORCHINDUCTOR_CPP_WRAPPER=1  TORCHINDUCTOR_FREEZING=1  OMP_NUM_THREADS=16  python <your_model_script>.py
 ```
 
-To run RetinaNet on the openimages validation dataset for image classification, set `DATA_DIR` to the location of the downloaded dataset and `MODEL_DIR` to the location of the downloaded model.
+### Eager mode flags
 
+* IDEEP_CACHE_MATMUL_REORDERS=1   - Caches reordered weight tensors. This increases performance but also increases memory usage. LRU_CACHE_CAPACITY should be set to a meaningful amount for this cache to be effective.
+* LRU_CACHE_CAPACITY=<cache size> - Number of objects to cache in the LRU cache
+
+e.g.
 ```
-export DATA_DIR=${HOME}/CK-TOOLS/openimages-val
-export MODEL_DIR=${HOME}/examples/MLCommons/inference/vision/classification_and_detection
-```
-
-From `$HOME/examples/MLCommons/inference/vision/classification_and_detection` use the `run_local.sh` to start the benchmark.
-
-```
-./run_local.sh pytorch retinanet cpu
-```
-
-_Note: you can use `ONEDNN_VERBOSE=1` to verify the build uses oneDNN when running the benchmarks._
-
-Please refer to [MLCommons, Inference](https://github.com/mlcommons/inference/tree/master/vision/classification_and_detection) for further details.
-
-### BERT
-
-The BERT NLP benchmarks are not built by default, due to the size of the datasets downloaded during the build. From within the container, the benchmarks can be built as follows:
-
-```
-cd $HOME/examples/MLCommons/inference/language/bert
-make setup
-```
-
-To run BERT for PyTorch, use `run.py`, located in `$HOME/examples/MLCommons/inference/languages/bert`, as follows:
-
-```
-python run.py --backend=pytorch --scenario SingleStream
-```
-
-For details of additional options use `-h`:
-
-```
-python run.py -h
-```
-
-In order to reduce the runtime, for the purposes of confirming that it runs as expected, in `$HOME/examples/MLCommons/inference/language/bert/user.conf` add:
-
-```
-*.*.min_query_count = 1
-*.*.performance_sample_count_override = 1
+LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libtcmalloc.so.4  IDEEP_CACHE_MATMUL_REORDERS=1 LRU_CACHE_CAPACITY=256 DNNL_DEFAULT_FPMATH_MODE=BF16 python <your_model_script>.py
 ```
