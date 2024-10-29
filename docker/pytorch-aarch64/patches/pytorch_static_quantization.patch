@@ -1,0 +1,466 @@
+ *******************************************************************************
+ Copyright 2024 Arm Limited and affiliates.
+ SPDX-License-Identifier: Apache-2.0
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+ *******************************************************************************
+
+diff --git a/aten/src/ATen/native/mkldnn/Conv.cpp b/aten/src/ATen/native/mkldnn/Conv.cpp
+index b5e53732a47..a4db9501635 100644
+--- a/aten/src/ATen/native/mkldnn/Conv.cpp
++++ b/aten/src/ATen/native/mkldnn/Conv.cpp
+@@ -329,7 +329,8 @@ Tensor mkldnn_convolution(
+     IntArrayRef stride,
+     IntArrayRef dilation,
+     int64_t groups) {
+-  bool use_channels_last = mkldnn_conv_use_channels_last(input_t, weight_t);
++  //bool use_channels_last = mkldnn_conv_use_channels_last(input_t, weight_t);
++  bool use_channels_last = true;
+   return _mkldnn_convolution(
+       input_t,
+       weight_t,
+diff --git a/aten/src/ATen/native/quantized/cpu/qconv.cpp b/aten/src/ATen/native/quantized/cpu/qconv.cpp
+index 9112fdd7f25..09eb7a90e5d 100644
+--- a/aten/src/ATen/native/quantized/cpu/qconv.cpp
++++ b/aten/src/ATen/native/quantized/cpu/qconv.cpp
+@@ -1165,13 +1165,12 @@ at::Tensor PackedConvWeightsOnednn<kSpatialDim>::apply_impl(
+   ConvDimChecks<kSpatialDim>(
+       act.ndimension(), stride().size(), padding().size(),
+       output_padding().size(), dilation().size(), func_name, transpose());
+-  TORCH_CHECK(act.scalar_type() == c10::ScalarType::QUInt8,
+-      func_name, " (ONEDNN): data type of input should be QUint8.");
+-
++  TORCH_CHECK(act.scalar_type() == c10::ScalarType::QUInt8 || act.scalar_type() == c10::ScalarType::QInt8,
++      func_name, " (ONEDNN): data type of input should be QUint8 or QInt8.");
+   // src
+   auto act_contig = act.contiguous(kSpatialDim == 2 ? c10::MemoryFormat::ChannelsLast : c10::MemoryFormat::ChannelsLast3d);
+   auto src_dims = act_contig.sizes().vec();
+-  auto src_data_type = dnnl::memory::data_type::u8;
++  auto src_data_type = act.scalar_type() == c10::ScalarType::QUInt8 ? dnnl::memory::data_type::u8 : dnnl::memory::data_type::s8;
+   auto src_desc = ideep::tensor::desc(src_dims, src_data_type,
+       kSpatialDim == 2 ? ideep::format_tag::nhwc : ideep::format_tag::ndhwc);
+   ideep::tensor src(src_desc, act_contig.data_ptr());
+@@ -1213,7 +1212,7 @@ at::Tensor PackedConvWeightsOnednn<kSpatialDim>::apply_impl(
+   at::Tensor output = at::_empty_affine_quantized(
+       dst_dims,
+       device(c10::kCPU)
+-          .dtype(c10::kQUInt8)
++          .dtype(act.scalar_type() == c10::ScalarType::QUInt8 ? c10::kQUInt8 : c10::kQInt8)
+           .memory_format(kSpatialDim == 2 ?
+               c10::MemoryFormat::ChannelsLast :
+               c10::MemoryFormat::ChannelsLast3d),
+@@ -1233,7 +1232,8 @@ at::Tensor PackedConvWeightsOnednn<kSpatialDim>::apply_impl(
+     // When fused with sum, the dst tensor will share the data ptr as the accum tensor.
+     dst.init(dst_desc, accum_contig.data_ptr());
+   } else {
+-    dst = ideep::tensor({dst_dims, ideep::tensor::data_type::u8, {output.strides().cbegin(), output.strides().cend()}},
++    auto dst_data_type = act.scalar_type() == c10::ScalarType::QUInt8 ? ideep::tensor::data_type::u8 : ideep::tensor::data_type::s8;
++    dst = ideep::tensor({dst_dims, dst_data_type, {output.strides().cbegin(), output.strides().cend()}},
+                       output.data_ptr());
+   }
+
+@@ -1274,6 +1274,7 @@ at::Tensor PackedConvWeightsOnednn<kSpatialDim>::apply_impl(
+   }
+   const auto& b = with_bias ? bias_.value() : ideep::tensor();
+   int num_threads = at::get_num_threads();
++  auto allowp_kind = act.scalar_type() == c10::ScalarType::QUInt8 ? ideep::u8s8 : ideep::s8s8;
+   if (transpose()) {
+     // Primitive cache is initialized when called for the first time
+     // and won't be updated afterwards.
+@@ -1288,7 +1289,7 @@ at::Tensor PackedConvWeightsOnednn<kSpatialDim>::apply_impl(
+             src_zero_points, dst_zero_points, op_attr,
+             dnnl::algorithm::deconvolution_direct,
+             dnnl::prop_kind::forward_inference,
+-            ideep::u8s8, ideep::engine::cpu_engine());
++            allowp_kind, ideep::engine::cpu_engine());
+         get_deconv_cache() = DeconvPrimitiveCache(cache_key, params);
+         auto expected_weight_desc = ideep::tensor::desc(params.pd.weights_desc(), groups());
+         weights = weights.reorder_if_differ_in(expected_weight_desc);
+@@ -1306,7 +1307,7 @@ at::Tensor PackedConvWeightsOnednn<kSpatialDim>::apply_impl(
+           src_zero_points, dst_zero_points, op_attr,
+           dnnl::algorithm::deconvolution_direct,
+           dnnl::prop_kind::forward_inference,
+-          ideep::u8s8, ideep::engine::cpu_engine());
++          allowp_kind, ideep::engine::cpu_engine());
+     }
+   } else {  // not transposed
+     PrimitiveCacheKey cache_key = std::make_tuple(
+@@ -1320,7 +1321,7 @@ at::Tensor PackedConvWeightsOnednn<kSpatialDim>::apply_impl(
+             src_zero_points, dst_zero_points,
+             op_attr, dnnl::algorithm::convolution_direct,
+             dnnl::prop_kind::forward_inference,
+-            ideep::u8s8, ideep::engine::cpu_engine());
++            allowp_kind, ideep::engine::cpu_engine());
+         get_conv_cache() = ConvPrimitiveCache(cache_key, params);
+         auto expected_weight_desc = ideep::tensor::desc(params.pd.weights_desc(), groups());
+         weights = weights.reorder_if_differ_in(expected_weight_desc);
+@@ -1337,7 +1338,7 @@ at::Tensor PackedConvWeightsOnednn<kSpatialDim>::apply_impl(
+           src_zero_points, dst_zero_points, op_attr,
+           dnnl::algorithm::convolution_direct,
+           dnnl::prop_kind::forward_inference,
+-          ideep::u8s8, ideep::engine::cpu_engine());
++          allowp_kind, ideep::engine::cpu_engine());
+     }
+   }
+   if (has_accum) {
+diff --git a/aten/src/ATen/native/quantized/cpu/qconv_prepack.cpp b/aten/src/ATen/native/quantized/cpu/qconv_prepack.cpp
+index 6f996691c09..555be5a3312 100644
+--- a/aten/src/ATen/native/quantized/cpu/qconv_prepack.cpp
++++ b/aten/src/ATen/native/quantized/cpu/qconv_prepack.cpp
+@@ -467,7 +467,8 @@ c10::intrusive_ptr<ConvPackedParamsBase<kSpatialDim>> PackedConvWeightsOnednn<
+     TORCH_CHECK(
+         bias_vec.size(0) == output_channels,
+         "bias should have K elements: " + std::to_string(output_channels));
+-    auto bias_desc = ideep::tensor::desc(bias.value().sizes().vec(), dnnl::memory::data_type::f32);
++    auto bias_type = bias_vec.scalar_type() == c10::ScalarType::Float ? dnnl::memory::data_type::f32 : dnnl::memory::data_type::s32;
++    auto bias_desc = ideep::tensor::desc(bias.value().sizes().vec(), bias_type);
+     ideep::tensor packed_bias;
+     packed_bias.init(bias_desc, bias.value().data_ptr());
+     onednn_bias = c10::optional<ideep::tensor>(packed_bias);
+diff --git a/aten/src/ATen/native/quantized/cpu/qlinear.cpp b/aten/src/ATen/native/quantized/cpu/qlinear.cpp
+index d31a28b6bec..114851cd252 100644
+--- a/aten/src/ATen/native/quantized/cpu/qlinear.cpp
++++ b/aten/src/ATen/native/quantized/cpu/qlinear.cpp
+@@ -788,8 +788,8 @@ at::Tensor PackedLinearWeightsOnednn::apply_impl(
+   TORCH_CHECK(
+       dim != 0,
+       "qlinear (ONEDNN): input dim should be at least 1, but got 0");
+-  TORCH_CHECK(input.scalar_type() == c10::ScalarType::QUInt8,
+-      "qlinear (ONEDNN): data type of input should be QUint8.");
++  TORCH_CHECK(input.scalar_type() == c10::ScalarType::QUInt8 || input.scalar_type() == c10::ScalarType::QInt8,
++      "qlinear (ONEDNN): data type of input should be QUint8 or QInt8.");
+
+   auto input_contig = input.expect_contiguous();
+   auto& w = *(weight_.get());
+diff --git a/torch/ao/nn/quantized/modules/conv.py b/torch/ao/nn/quantized/modules/conv.py
+index 22a11014375..f5bd5585175 100644
+--- a/torch/ao/nn/quantized/modules/conv.py
++++ b/torch/ao/nn/quantized/modules/conv.py
+@@ -74,11 +74,12 @@ class _ConvNd(WeightedQuantizedModule):
+             weight_shape + list(kernel_size),
+             scale=1, zero_point=0, dtype=torch.qint8,
+             **{k: v for k, v in factory_kwargs.items() if k != 'dtype'})
+-        bias_float = (
+-            torch.zeros(out_channels, dtype=torch.float,
+-                        **{k: v for k, v in factory_kwargs.items() if k != 'dtype'}) if bias else None)
+
+-        self.set_weight_bias(qweight, bias_float)
++        qbias = torch._empty_affine_quantized(
++            out_channels, scale=1, zero_point=0, dtype=torch.qint32,
++            **{k: v for k, v in factory_kwargs.items() if k != 'dtype'})
++
++        self.set_weight_bias(qweight, qbias)
+         self.scale = 1.0
+         self.zero_point = 0
+
+@@ -262,7 +263,8 @@ class _ConvNd(WeightedQuantizedModule):
+             device=ref_qconv.weight.device,
+             dtype=ref_qconv.weight.dtype)
+         qweight = ref_qconv.get_quantized_weight()
+-        qconv.set_weight_bias(qweight, ref_qconv.bias)
++        qbias = ref_qconv.get_quantized_bias()
++        qconv.set_weight_bias(qweight, qbias)
+         qconv.scale = float(output_scale)
+         qconv.zero_point = int(output_zero_point)
+         return qconv
+diff --git a/torch/ao/nn/quantized/reference/modules/conv.py b/torch/ao/nn/quantized/reference/modules/conv.py
+index 910223056fb..6ad1748e454 100644
+--- a/torch/ao/nn/quantized/reference/modules/conv.py
++++ b/torch/ao/nn/quantized/reference/modules/conv.py
+@@ -17,7 +17,7 @@ class _ConvNd(torch.nn.modules.conv._ConvNd, ReferenceQuantizedModule):
+     _IS_REFERENCE = True
+
+     @staticmethod
+-    def from_float(cls, float_conv, weight_qparams):
++    def from_float(cls, float_conv, weight_qparams, bias_qparams = None):
+         qref_conv = cls(
+             float_conv.in_channels,
+             float_conv.out_channels,
+@@ -30,7 +30,8 @@ class _ConvNd(torch.nn.modules.conv._ConvNd, ReferenceQuantizedModule):
+             float_conv.padding_mode,
+             device=float_conv.weight.device,
+             dtype=float_conv.weight.dtype,
+-            weight_qparams=weight_qparams)
++            weight_qparams=weight_qparams,
++            bias_qparams=bias_qparams)
+         qref_conv.weight = torch.nn.Parameter(float_conv.weight.detach())
+         if float_conv.bias is not None:
+             qref_conv.bias = torch.nn.Parameter(float_conv.bias.detach())
+@@ -85,11 +86,13 @@ class Conv2d(_ConvNd, nn.Conv2d):
+                  padding_mode='zeros',
+                  device=None,
+                  dtype=None,
+-                 weight_qparams: Optional[Dict[str, Any]] = None):
++                 weight_qparams: Optional[Dict[str, Any]] = None,
++                 bias_qparams: Optional[Dict[str, Any]] = None):
+         nn.Conv2d.__init__(
+             self, in_channels, out_channels, kernel_size, stride, padding, dilation,
+             groups, bias, padding_mode, device, dtype)
+         self._init_weight_qparams(weight_qparams, device)
++        self._init_bias_qparams(bias_qparams, device)
+
+     def forward(self, x: torch.Tensor) -> torch.Tensor:
+         """
+@@ -112,8 +115,8 @@ class Conv2d(_ConvNd, nn.Conv2d):
+         return "QuantizedConv2d(Reference)"
+
+     @classmethod
+-    def from_float(cls, float_conv, weight_qparams):
+-        return _ConvNd.from_float(cls, float_conv, weight_qparams)
++    def from_float(cls, float_conv, weight_qparams, bias_qparams = None):
++        return _ConvNd.from_float(cls, float_conv, weight_qparams, bias_qparams)
+
+ class Conv3d(_ConvNd, nn.Conv3d):
+     def __init__(self, in_channels, out_channels, kernel_size, stride=1,
+diff --git a/torch/ao/nn/quantized/reference/modules/linear.py b/torch/ao/nn/quantized/reference/modules/linear.py
+index 378fe0eb6ee..370f39da55b 100644
+--- a/torch/ao/nn/quantized/reference/modules/linear.py
++++ b/torch/ao/nn/quantized/reference/modules/linear.py
+@@ -23,9 +23,11 @@ class Linear(nn.Linear, ReferenceQuantizedModule):
+             bias_: bool = True,
+             device: Optional[torch.device] = None,
+             dtype: Optional[torch.dtype] = None,
+-            weight_qparams: Optional[Dict[str, Any]] = None):
++            weight_qparams: Optional[Dict[str, Any]] = None,
++            bias_qparams: Optional[Dict[str, Any]] = None):
+         super().__init__(in_features, out_features, bias_, device, dtype)
+         self._init_weight_qparams(weight_qparams, device)
++        self._init_bias_qparams(bias_qparams, device)
+
+     def _get_name(self):
+         return "QuantizedLinear(Reference)"
+@@ -46,11 +48,11 @@ class Linear(nn.Linear, ReferenceQuantizedModule):
+         return result
+
+     @classmethod
+-    def from_float(cls, float_linear, weight_qparams):
++    def from_float(cls, float_linear, weight_qparams, bias_qparams = None):
+         qref_linear = Linear(
+             float_linear.in_features, float_linear.out_features,
+             float_linear.bias is not None, device=float_linear.weight.device,
+-            dtype=float_linear.weight.dtype, weight_qparams=weight_qparams)
++            dtype=float_linear.weight.dtype, weight_qparams=weight_qparams, bias_qparams=bias_qparams)
+         qref_linear.weight = torch.nn.Parameter(float_linear.weight.detach())
+         if float_linear.bias is not None:
+             qref_linear.bias = torch.nn.Parameter(float_linear.bias.detach())
+diff --git a/torch/ao/nn/quantized/reference/modules/utils.py b/torch/ao/nn/quantized/reference/modules/utils.py
+index 2c1f52cdf88..e9ac1d5c91a 100644
+--- a/torch/ao/nn/quantized/reference/modules/utils.py
++++ b/torch/ao/nn/quantized/reference/modules/utils.py
+@@ -6,6 +6,15 @@ __all__ = [
+ ]
+
+ class ReferenceQuantizedModule(torch.nn.Module):
++    def _init_bias_qparams(self, bias_qparams, device):
++        if bias_qparams is None:
++            bias_qparams = torch.tensor(1, dtype=torch.float, device=device)
++
++        b_scale_tensor = bias_qparams.clone().detach() \
++            if isinstance(bias_qparams, torch.Tensor) \
++            else torch.tesnor(bias_qparams, dtype=torch.float, device=device)
++        self.register_buffer("bias_scale", b_scale_tensor)
++
+     def _init_weight_qparams(self, weight_qparams, device):
+         if weight_qparams is None:
+             weight_qparams = {
+@@ -110,6 +119,9 @@ class ReferenceQuantizedModule(torch.nn.Module):
+                 self.weight_zero_point,
+                 self.weight_axis_int)
+
++    def get_quantized_bias(self):
++        return torch.quantize_per_tensor(self.bias, self.bias_scale, torch.tensor(0, dtype=torch.int), torch.qint32)
++
+     def _save_to_state_dict(self, destination, prefix, keep_vars):
+         super()._save_to_state_dict(destination, prefix, keep_vars)
+         _save_weight_qparams(
+diff --git a/torch/ao/quantization/fx/convert.py b/torch/ao/quantization/fx/convert.py
+index 589aa6df2e8..228eafe2fa1 100644
+--- a/torch/ao/quantization/fx/convert.py
++++ b/torch/ao/quantization/fx/convert.py
+@@ -317,7 +317,7 @@ def _replace_observer_with_quantize_dequantize_node(
+         node: Node,
+         modules: Dict[str, torch.nn.Module],
+         node_name_to_scope: Dict[str, Tuple[str, type]],
+-        node_name_to_qconfig: Dict[str, QConfigAny]) -> None:
++        node_name_to_qconfig: Dict[str, QConfigAny]) -> Dict[Node, Tuple[float, int]]:
+     """ Replace activation_post_process module call node with quantize and
+     dequantize node
+
+@@ -340,7 +340,7 @@ def _replace_observer_with_quantize_dequantize_node(
+         with graph.inserting_before(node):
+             node.replace_all_uses_with(node.args[0])
+             graph.erase_node(node)
+-        return
++        return None
+
+     # otherwise, we can convert the activation_post_process module call to quantize/dequantize node
+     dtype = activation_post_process.dtype  # type: ignore[attr-defined]
+@@ -392,6 +392,8 @@ def _replace_observer_with_quantize_dequantize_node(
+             dequantized_node = graph.call_method("dequantize", args=(quantized_node,))
+             node.replace_all_uses_with(dequantized_node)
+             graph.erase_node(node)
++
++            return {dequantized_node: (scale, zero_point)}
+     elif is_dynamic:
+
+         # uint8/int8/fp16 dynamic quantization branch
+@@ -413,6 +415,8 @@ def _replace_observer_with_quantize_dequantize_node(
+             dequantized_node = graph.call_method("dequantize", args=(quantized_node,))
+             node.replace_all_uses_with(dequantized_node)
+             graph.erase_node(node)
++
++            return None
+     elif dtype == torch.float16:
+         node_type = "call_method"
+         quantize_op = "to"  # type: ignore[assignment]
+@@ -430,6 +434,8 @@ def _replace_observer_with_quantize_dequantize_node(
+             node.replace_all_uses_with(dequantized_node)
+             graph.erase_node(node)
+
++            return None
++
+     # should not reach since we have checks in the beginning to make sure the
+     # activation_post_process is supported
+
+@@ -658,6 +664,7 @@ def convert_weighted_module(
+         backend_config: BackendConfig,
+         is_decomposed: bool = False,
+         is_reference: bool = False,
++        activation_qparams: Tuple[float, int] = None,
+ ) -> None:
+     """ Convert a weighted module to reference quantized module in the model
+     If the QConfig of a QAT module is not set, the module will still be converted to
+@@ -770,6 +777,8 @@ def convert_weighted_module(
+
+         wq_or_wq_dict.update(get_qparam_dict(weight_post_process))
+
++    weights_qparam_scale = wq_or_wq_dict["scale"][0]
++    bias_qparam_scale = weights_qparam_scale * activation_qparams[0]
+     # We use the same reference module for all modes of quantization: static, dynamic, weight_only
+     # root_module_to_quantized_reference_module: module mapping from root (floating point) module class
+     # to quantized reference module class, e.g. nn.Conv2d to nn.quantized._reference.Conv2d
+@@ -778,7 +787,7 @@ def convert_weighted_module(
+     assert (
+         ref_qmodule_cls is not None
+     ), f"No reference quantized module class configured for {type_before_parametrizations(float_module)}"
+-    ref_qmodule = ref_qmodule_cls.from_float(float_module, wq_or_wq_dict)  # type: ignore[attr-defined]
++    ref_qmodule = ref_qmodule_cls.from_float(float_module, wq_or_wq_dict, bias_qparam_scale)  # type: ignore[attr-defined]
+     if fused_module is not None:
+         fused_module[0] = ref_qmodule  # type: ignore[operator]
+     else:
+@@ -1020,6 +1029,7 @@ def convert(
+     qat_module_classes = get_qat_module_classes(backend_config)
+     fused_module_classes = get_fused_module_classes(backend_config)
+     statically_quantized_custom_module_nodes: Set[Node] = set()
++    dequantized_node_scale : Dict[Node, Tuple[float, int]] = dict()
+
+     for node in list(model.graph.nodes):
+         if node.op == 'placeholder':
+@@ -1065,9 +1075,12 @@ def convert(
+                             model, node, modules, node_name_to_scope,
+                             node_name_to_qconfig)
+                     else:
+-                        _replace_observer_with_quantize_dequantize_node(
++                        dequantized_node_map = _replace_observer_with_quantize_dequantize_node(
+                             model, node, modules, node_name_to_scope,
+                             node_name_to_qconfig)
++                        for dequantized_node in dequantized_node_map.keys():
++                            assert dequantized_node not in dequantized_node_scale
++                            dequantized_node_scale[dequantized_node] = dequantized_node_map[dequantized_node]
+             elif isinstance(mod, DeQuantStub):
+                 _replace_observer_or_dequant_stub_with_dequantize_node(node, model.graph)
+             elif _is_observed_standalone_module(mod):
+@@ -1082,9 +1095,13 @@ def convert(
+                 if type_before_parametrizations(mod) in fused_module_classes and \
+                    type_before_parametrizations(mod[0]) not in root_module_classes:  # type: ignore[index]
+                     continue
++                prev_node = node.prev
++                activation_qparams = None
++                if prev_node in dequantized_node_scale:
++                    activation_qparams = (dequantized_node_scale[prev_node][0], dequantized_node_scale[prev_node][1])
+                 convert_weighted_module(
+                     node, modules, observed_node_names, node_name_to_qconfig, backend_config,
+-                    is_decomposed, is_reference)
++                    is_decomposed, is_reference, activation_qparams)
+             elif type_before_parametrizations(mod) in custom_module_classes:
+                 convert_custom_module(
+                     node, model.graph, modules, custom_module_class_mapping,
+diff --git a/torch/ao/quantization/fx/qconfig_mapping_utils.py b/torch/ao/quantization/fx/qconfig_mapping_utils.py
+index 0b906a1777d..df8e3edc67d 100644
+--- a/torch/ao/quantization/fx/qconfig_mapping_utils.py
++++ b/torch/ao/quantization/fx/qconfig_mapping_utils.py
+@@ -232,7 +232,6 @@ def _is_qconfig_supported_by_dtype_configs(qconfig: QConfig, dtype_configs: List
+             is_dynamic = False
+         input_dtype = dtype_config.input_dtype or torch.float
+         weight_dtype = dtype_config.weight_dtype or torch.float
+-        bias_dtype = dtype_config.bias_dtype or torch.float
+         output_dtype = dtype_config.output_dtype or torch.float
+         qconfig_activation_dtype, qconfig_weight_dtype, qconfig_input_act_is_dynamic = \
+             get_qconfig_dtypes(qconfig)
+@@ -251,8 +250,8 @@ def _is_qconfig_supported_by_dtype_configs(qconfig: QConfig, dtype_configs: List
+         else:
+             is_match = input_dtype == qconfig_activation_dtype and \
+                 output_dtype == qconfig_activation_dtype and \
+-                weight_dtype == qconfig_weight_dtype and \
+-                bias_dtype == qconfig_bias_dtype
++                weight_dtype == qconfig_weight_dtype
++                # FIXME: should we check for bias data type too
+         if is_match:
+             return True
+     return False
+diff --git a/torch/csrc/jit/passes/onnx/unpack_quantized_weights.cpp b/torch/csrc/jit/passes/onnx/unpack_quantized_weights.cpp
+index 9270028b988..00c57afd475 100644
+--- a/torch/csrc/jit/passes/onnx/unpack_quantized_weights.cpp
++++ b/torch/csrc/jit/passes/onnx/unpack_quantized_weights.cpp
+@@ -222,14 +222,14 @@ std::vector<Node*> CreateQuantizedWeights(
+ }
+
+ Node* CreateQuantizedBias(
+-    std::vector<float> data,
++    std::vector<int> data,
+     std::shared_ptr<Graph>& graph,
+     std::vector<int64_t> shapes) {
+   Node* const_node_1 = graph->create(prim::Constant);
+   auto const_bias =
+-      at::from_blob(data.data(), c10::IntArrayRef(shapes), at::kFloat)
++      at::from_blob(data.data(), c10::IntArrayRef(shapes), at::kInt)
+           .to(at::kCPU);
+-  auto options = c10::TensorOptions().dtype(at::kFloat).device(at::kCPU);
++  auto options = c10::TensorOptions().dtype(at::kInt).device(at::kCPU);
+   at::Tensor const_bias_copy = at::empty(c10::IntArrayRef(shapes), options);
+   const_bias_copy.copy_(const_bias);
+   const_node_1->t_(Symbol::attr("value"), const_bias_copy);
+@@ -581,8 +581,8 @@ void unpackQuantizedWeightsHelper(
+       c2_bias->insertBefore(qlinear_node);
+       qlinear_node->insertInput(2, c2_bias->output());
+     } else {
+-      std::vector<float> bias_values(original_bias.numel());
+-      auto bias_data = original_bias.const_data_ptr<float>();
++      std::vector<int> bias_values(original_bias.numel());
++      auto bias_data = original_bias.const_data_ptr<int>();
+       for (const auto i : c10::irange(original_bias.numel())) {
+         bias_values[i] = bias_data[i];
+       }
+diff --git a/torch/onnx/symbolic_helper.py b/torch/onnx/symbolic_helper.py
+index c8b55c7dec9..e21bcfa8005 100644
+--- a/torch/onnx/symbolic_helper.py
++++ b/torch/onnx/symbolic_helper.py
+@@ -1667,7 +1667,7 @@ def quantize_helper(
+         _type_utils.JitScalarType.UINT8,
+         _type_utils.JitScalarType.INT8,
+     }:
+-        zero_point = g.op("Cast", zero_point, to_i=_C_onnx.TensorProtoDataType.UINT8)
++        zero_point = g.op("Cast", zero_point, to_i=_C_onnx.TensorProtoDataType.INT8)
+     output = g.op(
+         "QuantizeLinear",
+         tensor,

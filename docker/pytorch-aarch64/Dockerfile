@@ -97,7 +97,8 @@ RUN apt-get -y update && \
       wget \
       xz-utils \
       zip \
-      zlib1g-dev
+      zlib1g-dev \
+      google-perftools
 
 # Set default gcc, python and pip versions
 RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 1 && \
@@ -139,7 +140,7 @@ ENV NP_MAKE="${njobs}" \
     ACL_ARCH="${acl_arch}"
 
 # Key version numbers
-ENV ACL_VERSION="4c3f716371da92977d4a998fe5c89dee04ddbced" \
+ENV ACL_VERSION="c2237ec4094c7824f8f7e61bc89504d01c5b59ff" \
     OPENBLAS_VERSION=0.3.27 \
     NINJA_VERSION=1.9.0
 
@@ -167,6 +168,8 @@ ENV LD_LIBRARY_PATH=$OPENBLAS_DIR/lib:$LD_LIBRARY_PATH
 
 # Build Arm Compute Library from source
 COPY scripts/build-acl.sh $PACKAGE_DIR/.
+COPY patches/acl_static_quantization.patch $PACKAGE_DIR/.
+COPY patches/acl_stateless_matmul.patch $PACKAGE_DIR/.
 
 RUN $PACKAGE_DIR/build-acl.sh
 ENV ACL_ROOT_DIR=$PROD_DIR/ComputeLibrary
@@ -207,7 +210,7 @@ ENV PATH="/home/$DOCKER_USER/.cargo/bin:${PATH}"
 
 # Install some basic python packages needed for NumPy
 RUN pip install --no-cache-dir --upgrade pip
-RUN pip install --no-cache-dir "setuptools>=41.0.0" six mock wheel cython==0.29.36
+RUN pip install --no-cache-dir "setuptools>=41.0.0" six mock wheel cython
 
 # Install some  basic python packages needed for SciPy
 RUN pip install --no-cache-dir pybind11[global]==2.6.2 pyangbind pythran
@@ -259,7 +262,7 @@ ENV ONEDNN_BUILD="${onednn_opt}" \
 
 # Key version numbers
 ENV PY_VERSION="${default_py_version}" \
-    ONEDNN_VERSION="eb013e386e47d021b2ab169500ce6ab1147142e1" \
+    ONEDNN_VERSION=v3.5 \
     TORCH_VERSION=2.3.0 \
     TORCHVISION_VERSION=0.17.1 \
     TORCHDATA_VERSION=0.7.1 \
@@ -282,10 +285,19 @@ ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 COPY scripts/build-pytorch.sh $PACKAGE_DIR/.
 COPY patches/onednn.patch $PACKAGE_DIR/.
 COPY patches/onednn_acl_thread_local_scheduler.patch $PACKAGE_DIR/.
+COPY patches/onednn_static_quantization.patch $PACKAGE_DIR/.
 COPY patches/torchvision.patch $PACKAGE_DIR/.
 COPY patches/ideep_dynamic_quantization.patch $PACKAGE_DIR/.
 COPY patches/ideep_cache_reorders.patch $PACKAGE_DIR/.
+COPY patches/ideep_static_quantization.patch $PACKAGE_DIR/.
+COPY patches/ideep_remove_matmul_primitive_caching.patch $PACKAGE_DIR/.
+COPY patches/ideep_pd_cache_modes.patch $PACKAGE_DIR/.
 COPY patches/pytorch_dynamic_quantization.patch $PACKAGE_DIR/.
+COPY patches/pytorch_static_quantization.patch $PACKAGE_DIR/.
+COPY patches/pytorch_gelu.patch $PACKAGE_DIR/.
+COPY patches/pytorch_bf32_matmul.patch $PACKAGE_DIR/.
+COPY patches/pytorch_embedding_lookup_sve_concept.patch $PACKAGE_DIR/.
+COPY patches/onednn_stateless_matmul.patch $PACKAGE_DIR/.
 
 COPY scripts/build-torchvision.sh $PACKAGE_DIR/.
 COPY scripts/build-torchtext.sh $PACKAGE_DIR/.
@@ -353,7 +365,7 @@ COPY scripts/download-model.sh $MLCOMMONS_DIR/.
 # Install missing Python package dependencies required to run examples
 RUN pip install --no-cache-dir requests tqdm boto3 iopath sox unidecode inflect toml
 RUN pip install --no-cache-dir future onnx==1.15.0
-RUN pip install --no-cache-dir 'librosa==0.8.0'
+RUN pip install --no-cache-dir 'librosa==0.10.0'
 
 # Copy examples
 ENV EXAMPLE_DIR=/home/$DOCKER_USER/examples

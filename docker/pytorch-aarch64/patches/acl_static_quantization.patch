@@ -1,0 +1,746 @@
+*******************************************************************************
+ Copyright 2024 Arm Limited and affiliates.
+ SPDX-License-Identifier: Apache-2.0
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+ *******************************************************************************
+
+diff --git a/examples/neon_gemm_qasymm8_signed.cpp b/examples/neon_gemm_qasymm8_signed.cpp
+new file mode 100644
+index 000000000..59666a786
+--- /dev/null
++++ b/examples/neon_gemm_qasymm8_signed.cpp
+@@ -0,0 +1,249 @@
++/*
++ * Copyright (c) 2020-2021,2024 Arm Limited.
++ *
++ * SPDX-License-Identifier: MIT
++ *
++ * Permission is hereby granted, free of charge, to any person obtaining a copy
++ * of this software and associated documentation files (the "Software"), to
++ * deal in the Software without restriction, including without limitation the
++ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
++ * sell copies of the Software, and to permit persons to whom the Software is
++ * furnished to do so, subject to the following conditions:
++ *
++ * The above copyright notice and this permission notice shall be included in all
++ * copies or substantial portions of the Software.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
++ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
++ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
++ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
++ * SOFTWARE.
++ */
++#include "arm_compute/core/Types.h"
++#include "arm_compute/core/utils/quantization/AsymmHelpers.h"
++#include "arm_compute/core/WindowIterator.h"
++#include "arm_compute/runtime/NEON/NEFunctions.h"
++#include "arm_compute/runtime/NEON/NEScheduler.h"
++
++#include "support/ToolchainSupport.h"
++#include "utils/Utils.h"
++
++#include <cstdlib>
++#include <stdlib.h>
++
++using namespace arm_compute;
++using namespace utils;
++
++// Find min and max value in a float array
++void find_min_max(int size, const float *data, float *min, float *max)
++{
++    *min = *max = data[0];
++    for (int i = 0; i < size; i++)
++    {
++        const float val = data[i];
++        *min            = std::min(*min, val);
++        *max            = std::max(*max, val);
++    }
++}
++
++// Return reasonable quantisation parameters to use for an array of floats
++// based on min and max values
++QuantizationInfo choose_quantization_params(float min, float max)
++{
++    // Extend the [min,max] interval to contain 0 so we can represent it exactly
++    min = std::min(min, 0.f);
++    max = std::max(max, 0.f);
++
++    // Set the quantized min and max in float values
++    const float qmin = -128;
++    const float qmax = 127;
++
++    // Determine the scale
++    const float scale = (max - min) / (qmax - qmin);
++
++    // Determine the zero-point; using affine equation val = (qval-zerop) * scale
++    const float zero_point_real = qmin - min / scale;
++
++    // But we need to nudge the zero_point to an integer (exact quantized value)
++    std::int8_t zero_point_nudged = 0;
++    if (zero_point_real < qmin)
++    {
++        zero_point_nudged = qmin;
++    }
++    else if (zero_point_real > qmax)
++    {
++        zero_point_nudged = qmax;
++    }
++    else
++    {
++        zero_point_nudged = static_cast<std::int8_t>(support::cpp11::round(zero_point_real));
++    }
++
++    QuantizationInfo qinfo = QuantizationInfo(scale, zero_point_nudged);
++    return qinfo;
++}
++
++void invert_qinfo_offset(Tensor &t)
++{
++    QuantizationInfo qinfo = t.info()->quantization_info();
++    t.info()->set_quantization_info(QuantizationInfo(qinfo.scale()[0], -qinfo.offset()[0], qinfo.is_dynamic()));
++}
++
++int main(int argc, char **argv)
++{
++    Tensor src1;
++    Tensor src2;
++    Tensor dst0;
++    Tensor q_src1;
++    Tensor q_src2;
++    Tensor q_dst0;
++    Tensor q_res;
++    Tensor q_res_output;
++    size_t M = 4;
++    size_t N = 4;
++    size_t K = 4;
++
++    // Parse args
++    if (argc < 3) /* case default matrix sizes */
++    {
++        // Print help
++        std::cout << "Usage: ./build/neon_gemm_qasymm8_signed M N K\n";
++        std::cout << "Too few or no inputs provided. Using default M=4, N=4, K=4\n\n";
++    }
++    else /* case M N K arguments provided */
++    {
++        M = strtol(argv[1], nullptr, 10);
++        N = strtol(argv[2], nullptr, 10);
++        K = strtol(argv[3], nullptr, 10);
++    }
++
++    /*** Floating point matrix multiplication ***/
++
++    // Initialise input matrices
++    NEGEMM fgemm{};
++
++    src1.allocator()->init(TensorInfo(TensorShape(K, M), 1, DataType::F32));
++    src2.allocator()->init(TensorInfo(TensorShape(N, K), 1, DataType::F32));
++    dst0.allocator()->init(TensorInfo(TensorShape(N, M), 1, DataType::F32));
++    fgemm.configure(&src1, &src2, nullptr, &dst0, 1, 0);
++
++    // Allocate matrices
++    src1.allocator()->allocate();
++    src2.allocator()->allocate();
++    dst0.allocator()->allocate();
++
++    // Fill in tensors, by default fill in with known data - for easy testing
++    auto *src1_ptr = reinterpret_cast<float *>(src1.buffer());
++    auto *src2_ptr = reinterpret_cast<float *>(src2.buffer());
++    auto *dst0_ptr = reinterpret_cast<float *>(dst0.buffer());
++
++    // Fill in with random values
++    fill_random_tensor(src1, -1.f, 1.f);
++    fill_random_tensor(src2, -1.f, 1.f);
++
++    // Run single precision gemm and print result
++    fgemm.run();
++
++#if ARM_COMPUTE_DEBUG_ENABLED
++    std::cout << "Result matrix:\n";
++    src1.print(std::cout);
++    src2.print(std::cout);
++    dst0.print(std::cout);
++#endif // ARM_COMPUTE_DEBUG_ENABLED
++
++    /*** Quantised asymmetric 8bit matrix multiplication ***/
++
++    // Start by finding the quantisation parameters for each set of values
++    float src1_min;
++    float src1_max;
++    float src2_min;
++    float src2_max;
++    float dst0_min;
++    float dst0_max;
++
++    find_min_max(M * K, src1_ptr, &src1_min, &src1_max);
++    find_min_max(K * N, src2_ptr, &src2_min, &src2_max);
++    find_min_max(M * N, dst0_ptr, &dst0_min, &dst0_max);
++
++    const QuantizationInfo src1_qinfo = choose_quantization_params(src1_min, src1_max);
++    const QuantizationInfo src2_qinfo = choose_quantization_params(src2_min, src2_max);
++    const QuantizationInfo dst0_qinfo = choose_quantization_params(dst0_min, dst0_max);
++
++    std::cout << "Matrix 1: min=" << src1_min << ", max=" << src1_max << ", ";
++    std::cout << "QuantisationInfo(" << src1_qinfo.scale()[0] << ", " << src1_qinfo.offset()[0] << ")\n";
++    std::cout << "Matrix 2: min=" << src2_min << ", max=" << src2_max << ", ";
++    std::cout << "QuantisationInfo(" << src2_qinfo.scale()[0] << ", " << src2_qinfo.offset()[0] << ")\n";
++    std::cout << "Result  : min=" << dst0_min << ", max=" << dst0_max << ", ";
++    std::cout << "QuantisationInfo(" << dst0_qinfo.scale()[0] << ", " << dst0_qinfo.offset()[0] << ")\n";
++
++    // We now have the quantisation info and can configure the quantised tensors
++    q_src1.allocator()->init(TensorInfo(TensorShape(K, M), 1, DataType::QASYMM8_SIGNED, src1_qinfo));
++    q_src2.allocator()->init(TensorInfo(TensorShape(N, K), 1, DataType::QASYMM8_SIGNED, src2_qinfo));
++    q_dst0.allocator()->init(TensorInfo(TensorShape(N, M), 1, DataType::QASYMM8_SIGNED, dst0_qinfo));
++
++    // In this approach we use the QuantizationLayer construct to perform quantization
++    NEQuantizationLayer q1;
++    NEQuantizationLayer q2;
++    NEQuantizationLayer q3;
++    q1.configure(&src1, &q_src1);
++    q2.configure(&src2, &q_src2);
++    q3.configure(&dst0, &q_dst0);
++
++    // Allocate all tensors
++    q_src1.allocator()->allocate();
++    q_src2.allocator()->allocate();
++    q_dst0.allocator()->allocate();
++
++    // Run quantization layers (quantizes values of each tensor)
++    q1.run();
++    q2.run();
++    q3.run();
++
++    // Configure low precision gemm and initialise result tensor (pre-output)
++    NEGEMMLowpMatrixMultiplyCore qgemm;
++    q_res.allocator()->init(TensorInfo(TensorShape(N, M), 1, DataType::QASYMM8_SIGNED, dst0_qinfo));
++    q_res.allocator()->allocate();
++
++    invert_qinfo_offset(q_src1);
++    invert_qinfo_offset(q_src2);
++
++    // Configure output stage after computing shift and multiplier parameters
++    int   output_multiplier;
++    int   output_shift;
++    float multiplier = (src1_qinfo.uniform().scale * src2_qinfo.uniform().scale) / dst0_qinfo.uniform().scale;
++    quantization::calculate_quantized_multiplier_less_than_one(multiplier, &output_multiplier, &output_shift);
++    std::cout << "(q_multiplier, q_shift) = (" << output_multiplier << ", " << output_shift << ")\n\n";
++
++    GEMMLowpOutputStageInfo info;
++    info.type                = GEMMLowpOutputStageType::QUANTIZE_DOWN_FIXEDPOINT;
++    info.gemmlowp_multiplier = output_multiplier;
++    info.gemmlowp_shift      = output_shift;
++    info.gemmlowp_offset     = dst0_qinfo.uniform().offset;
++    info.gemmlowp_min_bound  = -128;
++    info.gemmlowp_max_bound  = 127;
++    info.output_data_type    = DataType::QASYMM8_SIGNED;
++    GEMMInfo gemm_info = GEMMInfo(false, false, true, 2, false, false, info, false, false, false, ActivationLayerInfo(),
++                                  false, arm_compute::WeightFormat::UNSPECIFIED, false);
++    qgemm.configure(&q_src1, &q_src2, nullptr, &q_res, gemm_info);
++
++    std::cout << "(q_multiplier, q_shift) = (" << info.gemmlowp_multiplier << ", " << info.gemmlowp_shift
++              << ") dst0_qinfo.uniform().offset = " << dst0_qinfo.uniform().offset << "\n\n";
++
++    // Run low precision matrix multiply kernel
++    qgemm.run();
++    std::cout << "\nTest Executed!\n";
++#if ARM_COMPUTE_DEBUG_ENABLED
++    // Print quantized source matrices
++    std::cout << "Quantized matrices:\n";
++    q_src1.print(std::cout);
++    q_src2.print(std::cout);
++    // Print result matrix in int32 form - before output stage processing
++    std::cout << "Lowp GEMM output:\n";
++    q_res.print(std::cout);
++    // Expected result
++    std::cout << "Expected result:\n";
++    q_dst0.print(std::cout);
++#endif // ARM_COMPUTE_DEBUG_ENABLED
++}
+diff --git a/src/core/NEON/kernels/arm_gemm/gemm_hybrid_indirect.hpp b/src/core/NEON/kernels/arm_gemm/gemm_hybrid_indirect.hpp
+index 8bbb877c1..fa034e812 100644
+--- a/src/core/NEON/kernels/arm_gemm/gemm_hybrid_indirect.hpp
++++ b/src/core/NEON/kernels/arm_gemm/gemm_hybrid_indirect.hpp
+@@ -276,8 +276,8 @@ class GemmHybridIndirect : public GemmCommon<To, Tw, Tr> {
+     const unsigned int _rounded_Ksize;
+
+     /* Blocking info */
++    unsigned int _n_block;
+     const unsigned int _k_block;
+-    const unsigned int _n_block;
+     const unsigned int _Mround;
+
+     /* Pretransposed buffer. */
+@@ -389,7 +389,7 @@ public:
+     GemmHybridIndirect(const GemmArgs &args, const OutputStage &os)
+               : _args(args), _os(os), _Ktotal(get_ktotal(args)),
+                 _rounded_Ksize(roundup(args._Ksize, strategy::k_unroll())),
+-                _k_block(compute_k_block(args)), _n_block(compute_n_block(args, os)),
++                _n_block(compute_n_block(args, os)), _k_block(compute_k_block(args)),
+                 _Mround(roundup(args._Msize, strategy::out_height())),
+                 _window_range(iceildiv(args._Msize, strategy::out_height()), args._nbatches,
+                               iceildiv(args._Nsize, _n_block), args._nmulti)
+@@ -403,7 +403,7 @@ public:
+     GemmHybridIndirect(const GemmArgs &args)
+               : _args(args), _Ktotal(get_ktotal(args)),
+                 _rounded_Ksize(roundup(args._Ksize, strategy::k_unroll())),
+-                _k_block(compute_k_block(args)), _n_block(compute_n_block(args)),
++                _n_block(compute_n_block(args)), _k_block(compute_k_block(args)),
+                 _Mround(roundup(args._Msize, strategy::out_height())),
+                 _window_range(iceildiv(args._Msize, strategy::out_height()), args._nbatches,
+                               iceildiv(args._Nsize, _n_block), args._nmulti)
+@@ -832,6 +832,26 @@ public:
+
+         return c;
+     }
++
++    void update_quantization_parameters(const Requantize32 &re) override {
++        if (std::is_same<OutputStage, Requantize32>::value) {
++            Requantize32 *qp = reinterpret_cast<Requantize32 *>(&_os);
++            qp->bias = re.bias;
++            qp->a_offset = re.a_offset;
++            qp->b_offset = re.b_offset;
++            qp->c_offset = re.c_offset;
++            qp->per_layer_left_shift = re.per_layer_left_shift;
++            qp->per_layer_right_shift = re.per_layer_right_shift;
++            qp->per_layer_mul = re.per_layer_mul;
++            qp->per_channel_requant = re.per_channel_requant;
++            qp->per_channel_left_shifts = re.per_channel_left_shifts;
++            qp->per_channel_right_shifts = re.per_channel_right_shifts;
++            qp->per_channel_muls = re.per_channel_muls;
++            qp->minval = re.minval;
++            qp->maxval = re.maxval;
++            _n_block = compute_n_block(_args, _os);
++        }
++    }
+ };
+
+ template<typename strategy, typename To, typename Tr, typename OutputStage=Nothing>
+diff --git a/src/core/NEON/kernels/arm_gemm/gemm_interleaved.hpp b/src/core/NEON/kernels/arm_gemm/gemm_interleaved.hpp
+index 5214a71cc..25570a5f6 100644
+--- a/src/core/NEON/kernels/arm_gemm/gemm_interleaved.hpp
++++ b/src/core/NEON/kernels/arm_gemm/gemm_interleaved.hpp
+@@ -1362,6 +1362,26 @@ public:
+
+         return c;
+     }
++
++
++    void update_quantization_parameters(const Requantize32 &re) override {
++        if (std::is_same<OutputStage, Requantize32>::value) {
++            Requantize32 *qp = reinterpret_cast<Requantize32 *>(&_os);
++            qp->bias = re.bias;
++            qp->a_offset = re.a_offset;
++            qp->b_offset = re.b_offset;
++            qp->c_offset = re.c_offset;
++            qp->per_layer_left_shift = re.per_layer_left_shift;
++            qp->per_layer_right_shift = re.per_layer_right_shift;
++            qp->per_layer_mul = re.per_layer_mul;
++            qp->per_channel_requant = re.per_channel_requant;
++            qp->per_channel_left_shifts = re.per_channel_left_shifts;
++            qp->per_channel_right_shifts = re.per_channel_right_shifts;
++            qp->per_channel_muls = re.per_channel_muls;
++            qp->minval = re.minval;
++            qp->maxval = re.maxval;
++        }
++    }
+ };
+
+ // Aliases for the variations
+diff --git a/src/cpu/kernels/CpuGemmLowpOffsetContributionKernel.cpp b/src/cpu/kernels/CpuGemmLowpOffsetContributionKernel.cpp
+index 2a76a5958..eb6ccfb37 100644
+--- a/src/cpu/kernels/CpuGemmLowpOffsetContributionKernel.cpp
++++ b/src/cpu/kernels/CpuGemmLowpOffsetContributionKernel.cpp
+@@ -51,7 +51,8 @@ Status validate_arguments(const ITensorInfo *mm_result,
+                           int32_t            a_offset,
+                           int32_t            b_offset)
+ {
+-    ARM_COMPUTE_RETURN_ERROR_ON_DATA_TYPE_CHANNEL_NOT_IN(mm_result, 1, DataType::S32, DataType::F32);
++    ARM_COMPUTE_RETURN_ERROR_ON_DATA_TYPE_CHANNEL_NOT_IN(mm_result, 1, DataType::QASYMM8, DataType::QASYMM8_SIGNED,
++                                                         DataType::S32, DataType::F32);
+
+     // We run if the offset is nonzero or a sum col has been provided, we need
+     // the second option in case the QuantizationInfo is dynamic
+diff --git a/src/cpu/kernels/CpuWeightsReshapeKernel.cpp b/src/cpu/kernels/CpuWeightsReshapeKernel.cpp
+index 297ba6382..f8e9d123b 100644
+--- a/src/cpu/kernels/CpuWeightsReshapeKernel.cpp
++++ b/src/cpu/kernels/CpuWeightsReshapeKernel.cpp
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (c) 2017-2021 Arm Limited.
++ * Copyright (c) 2017-2021,2024 Arm Limited.
+  *
+  * SPDX-License-Identifier: MIT
+  *
+@@ -72,7 +72,10 @@ Status validate_arguments(const ITensorInfo *src, const ITensorInfo *biases, con
+         ARM_COMPUTE_RETURN_ERROR_ON_MISMATCHING_DIMENSIONS(dst->tensor_shape(),
+                                                            get_output_shape(src, biases != nullptr));
+         ARM_COMPUTE_RETURN_ERROR_ON_MISMATCHING_DATA_TYPES(src, dst);
+-        ARM_COMPUTE_RETURN_ERROR_ON_MISMATCHING_QUANTIZATION_INFO(src, dst);
++        if (!src->quantization_info().is_dynamic())
++        {
++            ARM_COMPUTE_RETURN_ERROR_ON_MISMATCHING_QUANTIZATION_INFO(src, dst);
++        }
+     }
+
+     return Status{};
+diff --git a/src/cpu/kernels/assembly/gemm_common.hpp b/src/cpu/kernels/assembly/gemm_common.hpp
+index 6c25d0757..dc6183413 100644
+--- a/src/cpu/kernels/assembly/gemm_common.hpp
++++ b/src/cpu/kernels/assembly/gemm_common.hpp
+@@ -35,6 +35,7 @@ namespace arm_gemm
+ {
+ // Avoid circular dependency with arm_gemm.hpp
+ struct GemmConfig;
++struct Requantize32;
+
+ // Abstract class for the GEMM/GEMV functions.
+ //
+@@ -160,6 +161,12 @@ public:
+     {
+     }
+
++    /*** "Quantization update" interface (optional) ***/
++    /* Update quantization parameters ar run time */
++    virtual void update_quantization_parameters(const Requantize32 &)
++    {
++    }
++
+     /*** Convolution interface (optional) ***/
+     /* Set the convolution parameters. */
+     virtual void set_convolution_parameters(ConvolutionParameters)
+diff --git a/src/cpu/operators/CpuGemmConv2d.cpp b/src/cpu/operators/CpuGemmConv2d.cpp
+index 55d950ff4..feb4a0ee7 100644
+--- a/src/cpu/operators/CpuGemmConv2d.cpp
++++ b/src/cpu/operators/CpuGemmConv2d.cpp
+@@ -227,7 +227,11 @@ CpuGemmConv2d::CpuGemmConv2d()
+       _is_prepared(false),
+       _wt_method(WeightTransformMethod::ReshapeThenTranspose),
+       _run_wt(true),
+-      _aux_mem(AuxTensorIdx::Count)
++      _aux_mem(AuxTensorIdx::Count),
++      _retain_internal_weights(false),
++      _min_activation(0),
++      _max_activation(0),
++      _gemm_info{}
+ {
+ }
+ CpuGemmConv2d::~CpuGemmConv2d() = default;
+@@ -275,27 +279,28 @@ void CpuGemmConv2d::configure_mm(const ITensorInfo         *src,
+         PixelValue type_min{};
+         PixelValue type_max{};
+         std::tie(type_min, type_max) = get_min_max(data_type);
+-        int32_t min_activation       = type_min.get<int32_t>();
+-        int32_t max_activation       = type_max.get<int32_t>();
++        _min_activation              = type_min.get<int32_t>();
++        _max_activation              = type_max.get<int32_t>();
+
+         if (supported_acts.count(act_info.activation()) != 0)
+         {
+-            std::tie(min_activation, max_activation) = get_quantized_activation_min_max(act_info, data_type, uoqinfo);
++            std::tie(_min_activation, _max_activation) = get_quantized_activation_min_max(act_info, data_type, uoqinfo);
+         }
+
+         GEMMLowpOutputStageInfo output_info;
+         output_info.type                     = GEMMLowpOutputStageType::QUANTIZE_DOWN_FIXEDPOINT;
+         output_info.gemmlowp_offset          = uoqinfo.offset;
+-        output_info.gemmlowp_min_bound       = min_activation;
+-        output_info.gemmlowp_max_bound       = max_activation;
++        output_info.gemmlowp_min_bound       = _min_activation;
++        output_info.gemmlowp_max_bound       = _max_activation;
+         output_info.is_quantized_per_channel = (tmp_weights.data_type() == DataType::QSYMM8_PER_CHANNEL);
+         quantization::calculate_quantized_multipliers(iqinfo, wqinfo, oqinfo, output_info);
+
++        _gemm_info =
++            GEMMInfo(false, false, true, gemm_3d_depth, _skip_im2col, false, output_info, false, enable_fast_math,
++                     false, act_info, fixed_format, weight_format, false /* pretranspose_B. TODO: COMPMID-6596 */);
++
+         _mm_gemmlowp = std::make_unique<CpuGemmLowpMatrixMultiplyCore>();
+-        _mm_gemmlowp->configure(&tmp_src, &tmp_weights, biases, dst,
+-                                GEMMInfo(false, false, true, gemm_3d_depth, _skip_im2col, false, output_info, false,
+-                                         enable_fast_math, false, act_info, fixed_format, weight_format,
+-                                         false /* pretranspose_B. TODO: COMPMID-6596 */));
++        _mm_gemmlowp->configure(&tmp_src, &tmp_weights, biases, dst, _gemm_info);
+
+         auto mm_mem_req = _mm_gemmlowp->workspace();
+         for (unsigned int cont = 0; cont < mm_mem_req.size(); ++cont)
+@@ -445,10 +450,11 @@ void CpuGemmConv2d::configure(const ITensorInfo         *src,
+     const unsigned int kernel_width  = weights->dimension(idx_width);
+     const unsigned int kernel_height = weights->dimension(idx_height);
+
+-    _is_prepared  = weights_info.retain_internal_weights();
+-    _is_quantized = is_data_type_quantized_asymmetric(src->data_type());
+-    _data_layout  = data_layout;
+-    _skip_im2col  = (data_layout == DataLayout::NHWC && kernel_width == 1 && kernel_height == 1 &&
++    _retain_internal_weights = weights_info.retain_internal_weights();
++    _is_prepared             = _retain_internal_weights;
++    _is_quantized            = is_data_type_quantized_asymmetric(src->data_type());
++    _data_layout             = data_layout;
++    _skip_im2col             = (data_layout == DataLayout::NHWC && kernel_width == 1 && kernel_height == 1 &&
+                     conv_info.stride().first == 1 && conv_info.stride().second == 1);
+
+     const ITensorInfo *gemm_input_to_use  = src;
+@@ -796,12 +802,46 @@ Status CpuGemmConv2d::validate(const ITensorInfo         *src,
+
+ void CpuGemmConv2d::run(ITensorPack &tensors)
+ {
+-    prepare(tensors);
+-
+     auto src               = tensors.get_const_tensor(ACL_SRC_0);
+     auto dst               = tensors.get_tensor(ACL_DST);
+     auto gemm_input_to_use = src;
+
++    if (_is_quantized && src->info()->quantization_info().is_dynamic())
++    {
++        auto       wei = tensors.get_const_tensor(TensorType::ACL_SRC_1);
++        TensorInfo tmp_src{*src->info()};
++        TensorInfo tmp_weights{*wei->info()};
++
++        const QuantizationInfo iqinfo = src->info()->quantization_info();
++        const QuantizationInfo wqinfo = wei->info()->quantization_info();
++        const QuantizationInfo oqinfo = (dst->info()->total_size() == 0) ? iqinfo : dst->info()->quantization_info();
++        const UniformQuantizationInfo uiqinfo   = iqinfo.uniform();
++        const UniformQuantizationInfo uoqinfo   = oqinfo.uniform();
++        const DataType                data_type = src->info()->data_type();
++
++        if (!is_data_type_quantized_per_channel(tmp_weights.data_type()))
++        {
++            const UniformQuantizationInfo uwqinfo = wqinfo.uniform();
++            tmp_weights.set_quantization_info(QuantizationInfo(uwqinfo.scale, -uwqinfo.offset));
++        }
++
++        GEMMLowpOutputStageInfo output_info;
++        output_info.type                     = GEMMLowpOutputStageType::QUANTIZE_DOWN_FIXEDPOINT;
++        output_info.gemmlowp_offset          = uoqinfo.offset;
++        output_info.gemmlowp_min_bound       = _min_activation;
++        output_info.gemmlowp_max_bound       = _max_activation;
++        output_info.is_quantized_per_channel = (tmp_weights.data_type() == DataType::QSYMM8_PER_CHANNEL);
++        quantization::calculate_quantized_multipliers(iqinfo, wqinfo, oqinfo, output_info);
++
++        // maybe it is needed to run prepare again
++        _is_prepared = _retain_internal_weights;
++
++        _mm_gemmlowp->update_quantization_parameters(output_info, src->info()->quantization_info(),
++                                                     wei->info()->quantization_info(), _is_prepared);
++    }
++
++    prepare(tensors);
++
+     CpuAuxTensorHandler im2col_output(offset_int_vec(Im2ColOutput), _im2col_output, tensors, false);
+     CpuAuxTensorHandler gemm_output(offset_int_vec(GemmOutput), _gemm_output, tensors, false);
+
+@@ -868,6 +908,16 @@ void CpuGemmConv2d::run(ITensorPack &tensors)
+         gemm_pack.add_const_tensor(TensorType::ACL_SRC_1, reshaped_wei.get());
+     }
+
++    if (_is_quantized && src->info()->quantization_info().is_dynamic())
++    {
++        auto _src = gemm_pack.get_const_tensor(ACL_SRC_0);
++        auto _wei = gemm_pack.get_const_tensor(TensorType::ACL_SRC_1);
++        auto wei  = tensors.get_const_tensor(TensorType::ACL_SRC_1);
++
++        _src->info()->set_quantization_info(src->info()->quantization_info());
++        _wei->info()->set_quantization_info(wei->info()->quantization_info());
++    }
++
+     // Runs CpuGemm or CpuGemmLowpMatrixMultiplyCore functions
+     _is_quantized ? _mm_gemmlowp->run(gemm_pack) : _mm_gemm->run(gemm_pack);
+
+diff --git a/src/cpu/operators/CpuGemmConv2d.h b/src/cpu/operators/CpuGemmConv2d.h
+index ae5023a71..e0882ed79 100644
+--- a/src/cpu/operators/CpuGemmConv2d.h
++++ b/src/cpu/operators/CpuGemmConv2d.h
+@@ -293,6 +293,11 @@ private:
+     bool                  _is_prepared;
+     WeightTransformMethod _wt_method;
+     bool                  _run_wt;
++    bool                  _retain_internal_weights;
++    int32_t               _min_activation;
++    int32_t               _max_activation;
++
++    GEMMInfo _gemm_info;
+
+     experimental::MemoryRequirements _aux_mem{Count};
+ };
+diff --git a/src/cpu/operators/CpuGemmLowpMatrixMultiplyCore.cpp b/src/cpu/operators/CpuGemmLowpMatrixMultiplyCore.cpp
+index f3396fbb5..41d10c522 100644
+--- a/src/cpu/operators/CpuGemmLowpMatrixMultiplyCore.cpp
++++ b/src/cpu/operators/CpuGemmLowpMatrixMultiplyCore.cpp
+@@ -614,7 +614,6 @@ void CpuGemmLowpMatrixMultiplyCore::run(ITensorPack &tensors)
+     if (_asm_glue->is_configured())
+     {
+         ITensorPack asm_glue_tensors = tensors;
+-        auto        output_to_use    = (_fuse_output_stage ? mm_result_s32.get() : dst);
+         if (is_data_type_quantized_asymmetric(a_to_use->info()->data_type()) &&
+             _gemm_info.gemmlowp_output_stage().type == GEMMLowpOutputStageType::QUANTIZE_DOWN_FIXEDPOINT)
+         {
+@@ -625,6 +624,7 @@ void CpuGemmLowpMatrixMultiplyCore::run(ITensorPack &tensors)
+         }
+         else
+         {
++            auto output_to_use = (_fuse_output_stage ? mm_result_s32.get() : dst);
+             asm_glue_tensors.add_const_tensor(TensorType::ACL_SRC_0, a_to_use);
+             asm_glue_tensors.add_const_tensor(TensorType::ACL_SRC_1, b);
+             asm_glue_tensors.add_tensor(TensorType::ACL_DST, output_to_use);
+@@ -775,5 +775,25 @@ experimental::MemoryRequirements CpuGemmLowpMatrixMultiplyCore::workspace() cons
+ {
+     return _aux_mem;
+ }
++
++void CpuGemmLowpMatrixMultiplyCore::update_quantization_parameters(const GEMMLowpOutputStageInfo &output_info,
++                                                                   const QuantizationInfo        &a,
++                                                                   const QuantizationInfo        &b,
++                                                                   const bool                     is_prepared)
++{
++    auto lowp_os                     = _gemm_info.gemmlowp_output_stage();
++    lowp_os.gemmlowp_offset          = output_info.gemmlowp_offset;
++    lowp_os.gemmlowp_min_bound       = output_info.gemmlowp_min_bound;
++    lowp_os.gemmlowp_max_bound       = output_info.gemmlowp_max_bound;
++    lowp_os.is_quantized_per_channel = output_info.is_quantized_per_channel;
++    lowp_os.output_data_type         = output_info.output_data_type;
++    lowp_os.gemmlowp_multipliers     = output_info.gemmlowp_multipliers;
++    lowp_os.gemmlowp_shifts          = output_info.gemmlowp_shifts;
++    lowp_os.gemmlowp_multiplier      = output_info.gemmlowp_multiplier;
++    lowp_os.gemmlowp_shift           = output_info.gemmlowp_shift;
++    _gemm_info.set_gemmlowp_output_stage(lowp_os);
++    _asm_glue->update_quantization_parameters(output_info, a, b, is_prepared, false);
++    _is_prepared = is_prepared;
++}
+ } // namespace cpu
+ } // namespace arm_compute
+diff --git a/src/cpu/operators/CpuGemmLowpMatrixMultiplyCore.h b/src/cpu/operators/CpuGemmLowpMatrixMultiplyCore.h
+index 11fe6f9ef..e35576bb8 100644
+--- a/src/cpu/operators/CpuGemmLowpMatrixMultiplyCore.h
++++ b/src/cpu/operators/CpuGemmLowpMatrixMultiplyCore.h
+@@ -133,6 +133,10 @@ public:
+     void                             run(ITensorPack &tensors) override;
+     void                             prepare(ITensorPack &tensors) override;
+     experimental::MemoryRequirements workspace() const override;
++    void                             update_quantization_parameters(const GEMMLowpOutputStageInfo &output_info,
++                                                                    const QuantizationInfo        &a,
++                                                                    const QuantizationInfo        &b,
++                                                                    const bool                     is_prepared);
+
+ private:
+     enum AuxTensorIdx
+diff --git a/src/cpu/operators/internal/CpuGemmAssemblyDispatch.cpp b/src/cpu/operators/internal/CpuGemmAssemblyDispatch.cpp
+index 9eb1ca033..39b8a75a4 100644
+--- a/src/cpu/operators/internal/CpuGemmAssemblyDispatch.cpp
++++ b/src/cpu/operators/internal/CpuGemmAssemblyDispatch.cpp
+@@ -218,6 +218,37 @@ public:
+         return wf != arm_compute::WeightFormat::UNSPECIFIED && wf != arm_compute::WeightFormat::ANY;
+     }
+
++    void update_quantization_parameters(const GEMMLowpOutputStageInfo &output_info,
++                                        const QuantizationInfo        &a,
++                                        const QuantizationInfo        &b,
++                                        const bool                     is_prepared,
++                                        const bool                     negated_offsets) override
++    {
++        const int32_t negation = negated_offsets ? 1 : -1;
++        const int32_t a_offset = -a.uniform().offset * negation;
++        const int32_t b_offset = -b.uniform().offset * negation;
++
++        arm_gemm::Requantize32 gemm_requant_info{};
++        if (output_info.gemmlowp_shifts.size() > 1)
++        {
++            const auto requantize_data =
++                this->set_requantize_data(output_info.gemmlowp_multipliers, output_info.gemmlowp_shifts);
++            gemm_requant_info = arm_gemm::Requantize32(
++                nullptr, 0, a_offset, b_offset, output_info.gemmlowp_offset,
++                (std::get<0>(requantize_data)) ? std::get<1>(requantize_data) : nullptr, std::get<2>(requantize_data),
++                std::get<3>(requantize_data), output_info.gemmlowp_min_bound, output_info.gemmlowp_max_bound);
++        }
++        else
++        {
++            gemm_requant_info = arm_gemm::Requantize32(nullptr, 0, a_offset, b_offset, output_info.gemmlowp_offset,
++                                                       -output_info.gemmlowp_shift, output_info.gemmlowp_multiplier,
++                                                       output_info.gemmlowp_min_bound, output_info.gemmlowp_max_bound);
++        }
++
++        _gemm_kernel_asm->update_quantization_parameters(gemm_requant_info);
++        _is_prepared = is_prepared;
++    }
++
+ private:
+     enum AuxTensorIdx
+     {
+@@ -1150,5 +1180,14 @@ experimental::MemoryRequirements CpuGemmAssemblyDispatch::workspace() const
+     ARM_COMPUTE_ERROR_ON(_arm_gemm == nullptr);
+     return _arm_gemm->workspace();
+ }
++
++void CpuGemmAssemblyDispatch::update_quantization_parameters(const GEMMLowpOutputStageInfo &output_info,
++                                                             const QuantizationInfo        &a,
++                                                             const QuantizationInfo        &b,
++                                                             const bool                     is_prepared,
++                                                             const bool                     negated_offsets)
++{
++    _arm_gemm->update_quantization_parameters(output_info, a, b, is_prepared, negated_offsets);
++}
+ } // namespace cpu
+ } // namespace arm_compute
+diff --git a/src/cpu/operators/internal/CpuGemmAssemblyDispatch.h b/src/cpu/operators/internal/CpuGemmAssemblyDispatch.h
+index 44c5c189a..0b6f22d45 100644
+--- a/src/cpu/operators/internal/CpuGemmAssemblyDispatch.h
++++ b/src/cpu/operators/internal/CpuGemmAssemblyDispatch.h
+@@ -28,6 +28,7 @@
+
+ #include "src/core/common/Macros.h"
+ #include "src/cpu/ICpuOperator.h"
++#include "src/cpu/kernels/assembly/arm_gemm.hpp"
+
+ namespace arm_compute
+ {
+@@ -81,12 +82,17 @@ public:
+     class IFallback
+     {
+     public:
+-        virtual void                             run(ITensorPack &tensors)     = 0;
+-        virtual void                             prepare(ITensorPack &tensors) = 0;
+-        virtual experimental::MemoryRequirements workspace() const             = 0;
+-        virtual bool                             is_configured() const         = 0;
+-        virtual bool                             isVarWeightsKernel() const    = 0;
+-        virtual ~IFallback()                                                   = default;
++        virtual void                             run(ITensorPack &tensors)                  = 0;
++        virtual void                             prepare(ITensorPack &tensors)              = 0;
++        virtual experimental::MemoryRequirements workspace() const                          = 0;
++        virtual bool                             is_configured() const                      = 0;
++        virtual bool                             isVarWeightsKernel() const                 = 0;
++        virtual void                             update_quantization_parameters(const GEMMLowpOutputStageInfo &,
++                                                                                const QuantizationInfo &,
++                                                                                const QuantizationInfo &,
++                                                                                const bool,
++                                                                                const bool) = 0;
++        virtual ~IFallback()                                                                = default;
+     };
+
+ public:
+@@ -185,6 +191,12 @@ public:
+         return _arm_gemm && _arm_gemm->isVarWeightsKernel();
+     }
+
++    void update_quantization_parameters(const GEMMLowpOutputStageInfo &output_info,
++                                        const QuantizationInfo        &a,
++                                        const QuantizationInfo        &b,
++                                        const bool                     is_prepared,
++                                        const bool                     negated_offsets);
++
+     // Inherited methods overridden:
+     void                             prepare(ITensorPack &tensors) override;
+     void                             run(ITensorPack &tensors) override;
+--
+2.25.1

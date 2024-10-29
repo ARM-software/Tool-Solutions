@@ -47,7 +47,11 @@ if [[ $ONEDNN_BUILD ]]; then
   esac
 fi
 
+patch -p1 < $PACKAGE_DIR/pytorch_embedding_lookup_sve_concept.patch
 patch -p1 < $PACKAGE_DIR/pytorch_dynamic_quantization.patch
+patch --ignore-whitespace -p1 < $PACKAGE_DIR/pytorch_static_quantization.patch
+patch -p1 < $PACKAGE_DIR/pytorch_gelu.patch
+patch -p1 < $PACKAGE_DIR/pytorch_bf32_matmul.patch
 
 # Apply https://github.com/pytorch/pytorch/pull/122616 to make torch 2.3.0 backwards
 # compatible with torchdata
@@ -58,6 +62,9 @@ cd third_party/ideep
 git checkout 55ca0191687aaf19aca5cdb7881c791e3bea442b
 patch -p1 < $PACKAGE_DIR/ideep_dynamic_quantization.patch
 patch -p1 < $PACKAGE_DIR/ideep_cache_reorders.patch
+patch -p1 < $PACKAGE_DIR/ideep_static_quantization.patch
+patch -p1 < $PACKAGE_DIR/ideep_remove_matmul_primitive_caching.patch
+patch -p1 < $PACKAGE_DIR/ideep_pd_cache_modes.patch
 
 # Update the oneDNN tag in third_party/ideep
 cd mkl-dnn
@@ -67,10 +74,8 @@ git checkout $ONEDNN_VERSION
 # rename test_api to test_api_dnnl so it does not clash with PyTorch test_api
 patch -p1 < $PACKAGE_DIR/onednn.patch
 patch -p1 < $PACKAGE_DIR/onednn_acl_thread_local_scheduler.patch
-wget -O onednn_enable_indirect_conv.patch https://patch-diff.githubusercontent.com/raw/oneapi-src/oneDNN/pull/1948.patch
-patch -p1 < onednn_enable_indirect_conv.patch
-wget -O onednn_enable_acl_indirect_conv_for_bf16.patch https://patch-diff.githubusercontent.com/raw/oneapi-src/oneDNN/pull/1933.patch
-patch -p1 < onednn_enable_acl_indirect_conv_for_bf16.patch
+patch -p1 < $PACKAGE_DIR/onednn_static_quantization.patch
+patch -p1 < $PACKAGE_DIR/onednn_stateless_matmul.patch
 
 cd $PACKAGE_DIR/$src_repo
 

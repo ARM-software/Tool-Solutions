@@ -29,11 +29,15 @@ readonly num_cpus=$(nproc)
 
 install_dir=$PROD_DIR/$package
 
-# Clone oneDNN
+# Clone ACL
 [[ ! -d ${src_repo} ]] && git clone ${src_host}/${src_repo}.git
 cd ${src_repo}
 
 git checkout $version
+
+# Patch ACL
+patch -p1 < ../acl_static_quantization.patch
+patch -p1 < ../acl_stateless_matmul.patch
 
 # Default to v8a if $acl_arch is unset.
 arch=${ACL_ARCH:-"arm64-v8a"}
