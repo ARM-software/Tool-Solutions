@@ -15,6 +15,35 @@ where `YY` is the year, and `MM` the month of the increment.
 
 ### Fixed
 
+### [r24.11] 2024-11-01
+https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--r24.11/docker/pytorch-aarch64
+
+### Added
+
+### Changed
+Updated Pytorch to 2.5.0
+Updated oneDNN to v3.6
+Updated torchvision to 0.19.1
+Updated torchdata to 0.8.0
+Updated torchaudio to 2.4.1
+Updated openblas to 0.3.28
+Updated MLCommons to 4.1
+
+### Removed
+docker/pytorch-aarch64/patches/acl_stateless_matmul.patch
+docker/pytorch-aarch64/patches/onednn_stateless_matmul.patch
+docker/pytorch-aarch64/patches/acl_static_quantization.patch
+docker/pytorch-aarch64/patches/pytorch_bf32_matmul.patch
+docker/pytorch-aarch64/patches/ideep_dynamic_quantization.patch
+docker/pytorch-aarch64/patches/pytorch_dynamic_quantization.patch
+docker/pytorch-aarch64/patches/pytorch_gelu.patch
+docker/pytorch-aarch64/patches/mlcommons_bert.patch
+docker/pytorch-aarch64/patches/mlcommons_numpy_array.patch
+docker/pytorch-aarch64/patches/mlcommons_rnnt.patch
+docker/pytorch-aarch64/patches/onednn_acl_thread_local_scheduler.patch
+docker/pytorch-aarch64/patches/Onednn.patch
+docker/pytorch-aarch64/patches/ideep_pd_cache_modes.patch
+
 ## [r24.08] 2024-08-05
 https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--r24.08/docker/pytorch-aarch64
 

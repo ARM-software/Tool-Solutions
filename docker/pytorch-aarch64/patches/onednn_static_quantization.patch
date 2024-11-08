@@ -16,15 +16,15 @@
  *******************************************************************************
 
 diff --git a/src/cpu/aarch64/acl_convolution_utils.cpp b/src/cpu/aarch64/acl_convolution_utils.cpp
-index de18f6d348..0da5ed956a 100644
+index c62ed1ce90..af42643841 100644
 --- a/src/cpu/aarch64/acl_convolution_utils.cpp
 +++ b/src/cpu/aarch64/acl_convolution_utils.cpp
-@@ -65,8 +65,13 @@ status_t acl_init_conf(acl_conv_conf_t &acp, memory_desc_t &src_md,
-                               everyone_is(data_type::f16, src_d.data_type(),
+@@ -62,8 +62,13 @@ status_t acl_init_conf(acl_conv_conf_t &acp, memory_desc_t &src_md,
+                               everyone_is(data_type::f32, src_d.data_type(),
                                        wei_d.data_type(), dst_d.data_type()),
-                               everyone_is(data_type::bf16, src_d.data_type(),
+                               everyone_is(data_type::f16, src_d.data_type(),
 -                                      wei_d.data_type(), dst_d.data_type())),
--            " src, dst and wei must be fp16, bf16 or fp32");
+-            " src, dst and wei must be fp16 or fp32");
 +                                      wei_d.data_type(), dst_d.data_type()),
 +                              everyone_is(data_type::s8, src_d.data_type(),
 +                                      wei_d.data_type(), dst_d.data_type()),
@@ -32,10 +32,10 @@ index de18f6d348..0da5ed956a 100644
 +                                       dst_d.data_type())
 +                                      && wei_d.data_type() == data_type::s8)),
 +            " src, dst and wei must be s8, u8, bf16, fp16 or fp32");
+
      // batch size
      const int mb = src_d.dims()[0];
-
-@@ -164,8 +169,11 @@ status_t acl_init_conf(acl_conv_conf_t &acp, memory_desc_t &src_md,
+@@ -162,8 +167,11 @@ status_t acl_init_conf(acl_conv_conf_t &acp, memory_desc_t &src_md,
      const auto acl_layout = is_nhwc ? arm_compute::DataLayout::NHWC
                                      : arm_compute::DataLayout::NCHW;
 
@@ -48,7 +48,7 @@ index de18f6d348..0da5ed956a 100644
 
      // clang-format off
      acp.src_tensor_info = arm_compute::TensorInfo(
-@@ -179,8 +187,9 @@ status_t acl_init_conf(acl_conv_conf_t &acp, memory_desc_t &src_md,
+@@ -177,8 +185,9 @@ status_t acl_init_conf(acl_conv_conf_t &acp, memory_desc_t &src_md,
              is_nhwc ? arm_compute::TensorShape(ic, kw, kh, oc) :
              arm_compute::TensorShape(kw, kh, ic, oc),
              1,
@@ -59,7 +59,7 @@ index de18f6d348..0da5ed956a 100644
      if(is_depthwise) {
         // We need to set that values are not constant so that we
         // we can update them in-place in ACL
-@@ -198,10 +207,17 @@ status_t acl_init_conf(acl_conv_conf_t &acp, memory_desc_t &src_md,
+@@ -196,10 +205,17 @@ status_t acl_init_conf(acl_conv_conf_t &acp, memory_desc_t &src_md,
              acp.with_bias ? arm_compute::TensorShape(oc)
                            : arm_compute::TensorShape(),
              1,
@@ -78,7 +78,7 @@ index de18f6d348..0da5ed956a 100644
      // ACL Winograd is not prepared for fixed format kernels
      if (acp.alg_winograd) {
          const bool is_1d = ndims == 3;
-@@ -216,7 +232,7 @@ status_t acl_init_conf(acl_conv_conf_t &acp, memory_desc_t &src_md,
+@@ -214,7 +230,7 @@ status_t acl_init_conf(acl_conv_conf_t &acp, memory_desc_t &src_md,
      // Are we allowed to cast down to bf16 or not?
      acp.fast_math
              = one_of(attr.fpmath_.mode_, fpmath_mode::bf16, fpmath_mode::any);
@@ -180,10 +180,10 @@ index efae57f0b2..adfa62f878 100644
      }
 
 diff --git a/src/cpu/cpu_convolution_list.cpp b/src/cpu/cpu_convolution_list.cpp
-index 67a0093cde..4ec8eb369f 100644
+index dcdddedfac..ae6e321901 100644
 --- a/src/cpu/cpu_convolution_list.cpp
 +++ b/src/cpu/cpu_convolution_list.cpp
-@@ -614,6 +614,7 @@ const std::map<pk_dt_impl_key_t, std::vector<impl_list_item_t>> &impl_list_map()
+@@ -613,6 +613,7 @@ const std::map<pk_dt_impl_key_t, std::vector<impl_list_item_t>> &impl_list_map()
              nullptr,
          }},
          {{forward, u8, s8, u8}, {
@@ -193,3 +193,4 @@ index 67a0093cde..4ec8eb369f 100644
              CPU_INSTANCE_AMX(brgemm_1x1_convolution_fwd_t<avx512_core_amx>)
 --
 2.25.1
+

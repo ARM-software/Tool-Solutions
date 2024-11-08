@@ -19,8 +19,7 @@ diff --git a/CMakeLists.txt b/CMakeLists.txt
 index b74bf4536f4..4e095388a75 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -232,7 +232,7 @@ option(USE_MAGMA "Use MAGMA" ON)
- option(USE_METAL "Use Metal for Caffe2 iOS build" ON)
+@@ -271,5 +271,5 @@ option(USE_MAGMA "Use MAGMA" ON)
  option(USE_PYTORCH_METAL "Use Metal for PyTorch iOS build" OFF)
  option(USE_PYTORCH_METAL_EXPORT "Export Metal models on MacOSX desktop" OFF)
 -option(USE_NATIVE_ARCH "Use -march=native" OFF)

@@ -35,10 +35,6 @@ cd ${src_repo}
 
 git checkout $version
 
-# Patch ACL
-patch -p1 < ../acl_static_quantization.patch
-patch -p1 < ../acl_stateless_matmul.patch
-
 # Default to v8a if $acl_arch is unset.
 arch=${ACL_ARCH:-"arm64-v8a"}
 echo "Compute Library arch = ${arch}"

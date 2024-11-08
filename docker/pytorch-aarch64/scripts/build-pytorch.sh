@@ -48,10 +48,6 @@ if [[ $ONEDNN_BUILD ]]; then
 fi
 
 patch -p1 < $PACKAGE_DIR/pytorch_embedding_lookup_sve_concept.patch
-patch -p1 < $PACKAGE_DIR/pytorch_dynamic_quantization.patch
-patch --ignore-whitespace -p1 < $PACKAGE_DIR/pytorch_static_quantization.patch
-patch -p1 < $PACKAGE_DIR/pytorch_gelu.patch
-patch -p1 < $PACKAGE_DIR/pytorch_bf32_matmul.patch
 
 # Apply https://github.com/pytorch/pytorch/pull/122616 to make torch 2.3.0 backwards
 # compatible with torchdata
@@ -59,22 +55,11 @@ wget https://patch-diff.githubusercontent.com/raw/pytorch/pytorch/pull/122616.pa
 patch -p1 < torch2.3_bc_torchdata.patch
 
 cd third_party/ideep
-git checkout 55ca0191687aaf19aca5cdb7881c791e3bea442b
-patch -p1 < $PACKAGE_DIR/ideep_dynamic_quantization.patch
-patch -p1 < $PACKAGE_DIR/ideep_static_quantization.patch
 patch -p1 < $PACKAGE_DIR/ideep_remove_matmul_primitive_caching.patch
-patch -p1 < $PACKAGE_DIR/ideep_pd_cache_modes.patch
 
 # Update the oneDNN tag in third_party/ideep
 cd mkl-dnn
 git checkout $ONEDNN_VERSION
-
-# Do not add C++11 CMake CXX flag when building with ACL and
-# rename test_api to test_api_dnnl so it does not clash with PyTorch test_api
-patch -p1 < $PACKAGE_DIR/onednn.patch
-patch -p1 < $PACKAGE_DIR/onednn_acl_thread_local_scheduler.patch
-patch -p1 < $PACKAGE_DIR/onednn_static_quantization.patch
-patch -p1 < $PACKAGE_DIR/onednn_stateless_matmul.patch
 
 cd $PACKAGE_DIR/$src_repo
 
