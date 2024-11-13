@@ -1,7 +1,7 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 # *******************************************************************************
-# Copyright 2020-2024 Arm Limited and affiliates.
+# Copyright 2024 Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,24 +17,17 @@
 # limitations under the License.
 # *******************************************************************************
 
-set -euo pipefail
+help_str="dockerize.sh takes a PyTorch wheel as the first and only argument. It \
+installs the wheel inside a Docker container with examples and requirements."
+if [ "$#" -ne 1 ]; then
+    echo $help_str
+    exit 1
+fi
 
-cd $PACKAGE_DIR
-readonly package=openblas
-readonly version=$OPENBLAS_VERSION
-readonly src_host="https://github.com/OpenMathLib"
-readonly src_repo="OpenBLAS"
+if ! [ -e "$1" ]; then
+    echo "I couldn't find a wheel at $1"
+    echo $help_str
+    exit 1
+fi
 
-git clone ${src_host}/${src_repo}.git
-cd ${src_repo}
-git checkout v$version -b v$version
-
-install_dir=$PROD_DIR/$package
-
-export CFLAGS="-O3"
-extra_args="USE_OPENMP=1"
-[[ ${BLAS_CPU} ]] && extra_args="$extra_args TARGET=${blas_cpu}"
-[[ ${BLAS_NCORES} ]] && extra_args="$extra_args NUM_THREADS=${blas_ncores}"
-
-make -j $NP_MAKE $extra_args
-make -j $NP_MAKE $extra_args PREFIX=$install_dir install
+docker build -t pytorch-aarch64 --build-arg TORCH_WHEEL=$1 . && docker run --rm -it pytorch-aarch64
