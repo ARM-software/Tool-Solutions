@@ -16,7 +16,8 @@
 # limitations under the License.
 # *******************************************************************************
 
-FROM ubuntu:22.04
+ARG DOCKER_IMAGE_MIRROR=""
+FROM ${DOCKER_IMAGE_MIRROR}ubuntu:22.04
 
 ARG TORCH_WHEEL
 ENV TORCH_WHEEL $TORCH_WHEEL
