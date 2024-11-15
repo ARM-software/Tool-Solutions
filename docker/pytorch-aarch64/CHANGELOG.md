@@ -5,8 +5,8 @@ docker/pytorch-aarch64 will be noted in this log.
 Monthly increments are tagged `tensorflow-pytorch-aarch64--rYY.MM`,
 where `YY` is the year, and `MM` the month of the increment.
 
-### [r24.11] 2024-11-01
-https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--r24.11/docker/pytorch-aarch64
+### [r24.11] 2024-11-15
+https://github.com/ARM-software/Tool-Solutions/tree/pytorch-aarch64--r24.11/docker/pytorch-aarch64
 
 ### Added
 - Optimizations for dynamic and static quantization
