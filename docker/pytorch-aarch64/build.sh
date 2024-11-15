@@ -25,6 +25,15 @@ if ! [[ $* == *--force* ]] && ([ -d pytorch ] || [ -d builder ] || [ -d ComputeL
     exit 1
 fi
 
-./get-source.sh
+build_log=build-$(git rev-parse --short=7 HEAD)-$(date --iso-8601=seconds).log
 
-./build-wheel.sh
+./get-source.sh |& tee $build_log
+
+./build-wheel.sh |& tee $build_log
+
+wheel_name=$(grep -o "torch-.*.whl" $build_log | tail -n 1)
+
+docker build -t toolsolutions-pytorch:latest \
+    --build-arg TORCH_WHEEL=results/$wheel_name \
+    --build-arg DOCKER_IMAGE_MIRROR \
+    .
