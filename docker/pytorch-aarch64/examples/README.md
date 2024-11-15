@@ -172,8 +172,8 @@ You can control the number of threads with `OMP_NUM_THREADS`, smaller models may
 
 ### Compiled mode flags
 
-* TORCHINDUCTOR_CPP_WRAPPER=1  - Reduces Python overhead within the graph for torch.compile
-* TORCHINDUCTOR_FREEZING=1     - Freezing will attempt to inline weights as constants in optimization
+* `TORCHINDUCTOR_CPP_WRAPPER=1`  - Reduces Python overhead within the graph for torch.compile
+* `TORCHINDUCTOR_FREEZING=1`     - Freezing will attempt to inline weights as constants in optimization
 
 e.g.
 ```
@@ -182,8 +182,8 @@ LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libtcmalloc.so.4  TORCHINDUCTOR_CPP_WRAPPE
 
 ### Eager mode flags
 
-* IDEEP_CACHE_MATMUL_REORDERS=1   - Caches reordered weight tensors. This increases performance but also increases memory usage. LRU_CACHE_CAPACITY should be set to a meaningful amount for this cache to be effective.
-* LRU_CACHE_CAPACITY=<cache size> - Number of objects to cache in the LRU cache
+* `IDEEP_CACHE_MATMUL_REORDERS=1`   - Caches reordered weight tensors. This increases performance but also increases memory usage. `LRU_CACHE_CAPACITY` should be set to a meaningful amount for this cache to be effective.
+* `LRU_CACHE_CAPACITY=<cache size>` - Number of objects to cache in the LRU cache
 
 e.g.
 ```
