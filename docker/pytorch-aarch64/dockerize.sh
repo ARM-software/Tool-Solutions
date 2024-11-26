@@ -30,4 +30,8 @@ if ! [ -e "$1" ]; then
     exit 1
 fi
 
-docker build -t pytorch-aarch64 --build-arg TORCH_WHEEL=$1 . && docker run --rm -it pytorch-aarch64
+docker build -t toolsolutions-pytorch:latest  \
+    --build-arg TORCH_WHEEL=$1 \
+    --build-arg DOCKER_IMAGE_MIRROR \
+    .
+docker run --rm -it toolsolutions-pytorch:latest

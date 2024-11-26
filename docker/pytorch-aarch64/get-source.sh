@@ -56,7 +56,7 @@ function apply-gerrit-patch {
     repo_url=$(echo "$1" | sed 's#/c/#/#' | cut -d'+' -f1)
     # e.g. refs/changes/18/12818/1 Note that where the middle number is the last 2 digits of the patch number
     refname=$(echo "$1" | awk -F'/' '{print "refs/changes/" substr($(NF-1),length($(NF-1))-1,2) "/" $(NF-1) "/" $(NF)}')
-    git fetch $repo_url $refname && git cherry-pick FETCH_HEAD
+    git fetch $repo_url $refname && git cherry-pick --no-commit FETCH_HEAD
 }
 
 git-shallow-clone https://github.com/pytorch/builder.git $BUILDER_HASH
