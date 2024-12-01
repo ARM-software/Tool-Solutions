@@ -1,0 +1,60 @@
+component FVP_STM
+{
+    properties
+    {
+        version = "0.0";
+        description = "ARM platform for STM";
+    }
+
+    includes
+    {
+        #define STM_AXI_BASE        0x28000000ULL
+        #define STM_APB_BASE        0x20100000ULL 
+        #define UART0_BASE          0x40004000
+    }
+
+    resources
+    {
+        PARAMETER { description("RAM Fill Pattern 1"), default(0x0), type(uint32_t) } ram_fill_pattern_1;
+        PARAMETER { description("RAM Fill Pattern 2"), default(0x0), type(uint32_t) } ram_fill_pattern_2;
+    }
+
+    composition
+    {
+        ram          : RAMDevice(fill1=ram_fill_pattern_1, fill2=ram_fill_pattern_2);
+        cpu          : ARMCortexA57x4CT("PERIPHBASE"=0x2C000000,
+                                        "cpu0.semihosting-heap_base".default   = 0x00000000,
+                                        "cpu0.semihosting-heap_limit".default  = 0xff000000,
+                                        "cpu0.semihosting-stack_limit".default = 0xff000000,
+                                        "cpu0.semihosting-stack_base".default  = 0xffff0000);
+        uart0        : PL011_Uart(revision="r1p5");
+        stm          : STM500();
+        telnetterminal0 : TelnetTerminal();
+        busdecoder   : PVBusDecoder;
+        masterclock  : MasterClock;
+        clk100Mhz    : ClockDivider("mul"=100000000, "div" =1);
+    }
+
+    connection
+    {
+        // Clock
+        masterclock.clk_out => clk100Mhz.clk_in;
+        clk100Mhz.clk_out => cpu.clk_in;
+
+        // RAM
+        // All transaction go to memory by default
+        busdecoder.pvbus_m_range[0x00000000..0xffffFFFF] => ram.pvbus;
+
+        // STM
+        busdecoder.pvbus_m_range[STM_AXI_BASE..STM_AXI_BASE+0x3FFF] => stm.AXI[STM_AXI_BASE..STM_AXI_BASE+0x3FFF];
+        busdecoder.pvbus_m_range[STM_APB_BASE..STM_APB_BASE+0x3FFF] => stm.DebugAPB;
+
+        // CPU
+        cpu.pvbus_m0 => busdecoder.pvbus_s;
+
+        // UART
+        busdecoder.pvbus_m_range[UART0_BASE..UART0_BASE+0xFFF] => uart0.pvbus;
+        clk100Mhz.clk_out => uart0.clk_in_ref;
+        uart0.serial_out => telnetterminal0.serial;
+    }
+}
