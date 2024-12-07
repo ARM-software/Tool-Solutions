@@ -46,7 +46,7 @@ weighted_int8_dtype_config = DTypeConfig(
     input_dtype=torch.qint8,
     output_dtype=torch.qint8,
     weight_dtype=torch.qint8,
-    bias_dtype=torch.qint32)
+    bias_dtype=torch.float32)
 
 # For quantizing convolution
 conv2d_config = BackendPatternConfig(torch.nn.Conv2d) \
