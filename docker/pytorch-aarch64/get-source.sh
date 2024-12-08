@@ -92,8 +92,8 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
             git fetch origin $ONEDNN_HASH && git clean -f && git checkout -f FETCH_HEAD
             apply-github-patch https://github.com/oneapi-src/oneDNN/pull/2194 c22f4ae50002ef0a93bfe1895684f36abd92517d # src: cpu: aarch64: lowp_matmul: Make weights constant
             # Two commits from one PR
-            apply-github-patch https://github.com/oneapi-src/oneDNN/pull/2198 6a77e84feb442964c91a0101d58fe1473566b185 # src: cpu: aarch64: Enable matmul static quantisation.
-            apply-github-patch https://github.com/oneapi-src/oneDNN/pull/2198 efad4f6582c13823d81c78130ab80db57b1381eb # src: cpu: aarch64: Enable convolution static quantisation.
+            apply-github-patch https://github.com/oneapi-src/oneDNN/pull/2212 6a77e84feb442964c91a0101d58fe1473566b185 # src: cpu: aarch64: Enable matmul static quantisation.
+            apply-github-patch https://github.com/oneapi-src/oneDNN/pull/2212 efad4f6582c13823d81c78130ab80db57b1381eb # src: cpu: aarch64: Enable convolution static quantisation.
 
             apply-github-patch https://github.com/oneapi-src/oneDNN/pull/2212 0358abf98dd6c5221a0c40ea47f0a23a1e6cf28e # src: cpu: aarch64: lowp_matmul: Make weights constant
             apply-github-patch https://github.com/oneapi-src/oneDNN/pull/2218 f913679c5576d4753ea105f44baf4825f202bc8f # src: cpu: aarch64: Re-enable ACL indirect conv for BF16
