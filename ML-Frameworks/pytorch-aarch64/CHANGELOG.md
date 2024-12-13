@@ -5,7 +5,18 @@ docker/pytorch-aarch64 will be noted in this log.
 Monthly increments are tagged `tensorflow-pytorch-aarch64--rYY.MM`,
 where `YY` is the year, and `MM` the month of the increment.
 
-### [r24.11] 2024-11-15
+## [unreleased]
+
+### Added
+
+### Changed
+- Updates apply-github-patch to make it more tollerant of upstream changes.
+
+### Removed
+
+### Fixed
+
+## [r24.11] 2024-11-15
 https://github.com/ARM-software/Tool-Solutions/tree/pytorch-aarch64--r24.11/docker/pytorch-aarch64
 
 ### Added
@@ -15,11 +26,11 @@ https://github.com/ARM-software/Tool-Solutions/tree/pytorch-aarch64--r24.11/dock
 
 ### Changed
 - Now tracking close to the main of the whole stack
-  - Updated ComputeLibrary to 24.11.dev-fa7806d
-  - Updated oneDNN to 3.7.dev-dd33e126
-  - Updated ideep to 3.7.dev-77d4b35
-  - Updated PyTorch to 2.6.dev-3179eb1
-  - Updated openblas to 0.3.28
+- Updated ComputeLibrary to 24.11.dev-fa7806d
+- Updated oneDNN to 3.7.dev-dd33e126
+- Updated iDeep to 3.7.dev-77d4b35
+- Updated PyTorch to 2.6.dev-3179eb1
+- Updated OpenBLAS to 0.3.28
 
 ### Removed
 - Removed MLCommons examples and patches
@@ -38,12 +49,6 @@ https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--
 - PoC SVE implementation for embedding_lookup_idx
 - Relaxed precision float32 matmul fixes
 - Patch to remove matmul primitive caching in ideep
-
-### Changed
-
-### Removed
-
-### Fixed
 
 ## [r24.07] 2024-07-01
 https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--r24.07/docker/pytorch-aarch64
