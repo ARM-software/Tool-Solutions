@@ -44,9 +44,24 @@ function git-shallow-clone {
 
 function apply-github-patch {
     # Apply a specific commit from a specific GitHub PR
-    # $1 is PR url, $2 is commit hash
+    # $1 is the repo url, $2 is the PR number, and $3 is commit hash
     set -u
-    curl -L $1/commits/$2.patch | git apply
+
+    # Look in the PR first
+    curl --silent -L $1/pull/$2/commits/$3.patch -o $3.patch
+
+    # If the PR has been updated, the commit may no longer be there and the .patch will be empty.
+    # Look in the full repo instead.
+    # If it can't be found, this time curl will error
+    if [[ ! -s $3.patch ]]; then
+       >&2 echo "Commit $2 not found in PR $1. Checking the full repository..."
+       curl --silent --fail -L $1/commit/$3.patch -o $3.patch
+    fi
+
+    # Apply the patch and tidy up.
+    patch -p1 < $3.patch
+    rm $3.patch
+    return 0
 }
 
 function apply-gerrit-patch {
@@ -62,7 +77,7 @@ function apply-gerrit-patch {
 git-shallow-clone https://github.com/pytorch/builder.git $BUILDER_HASH
 (
     cd builder
-    apply-github-patch https://github.com/pytorch/builder/pull/2028 509c944589524708ae83634c9999117ababa7d0f # Enable AArch64 CI scripts to be used for local dev
+    apply-github-patch https://github.com/pytorch/builder 2028 509c944589524708ae83634c9999117ababa7d0f # Enable AArch64 CI scripts to be used for local dev
 
     # Speed up the build by parallelizing. We could try to upstream this, but we would need to handle other platforms too
     # --ignore=1 so that we can have a core coordinating jobs
@@ -75,28 +90,28 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
     # Bump OpenBLAS version. Note that install_openblas.sh has to be rerun in the PyTorch builder Docker container
     sed -i -e 's/v0.3.25/v0.3.28/g' .ci/docker/common/install_openblas.sh
 
-    apply-github-patch https://github.com/pytorch/pytorch/pull/139887 eff3c11b1a31f725b50020ce32f6eddba17b5a94 # Use s8s8s8 for qlinear on aarch64 instead of u8s8u8 with mkl-dnn
-    apply-github-patch https://github.com/pytorch/pytorch/pull/139753 16d397416abc44005fc66e377d4d15a0d6131a32 # Add SVE implementation for 8 bit quantized embedding bag on aarch64
-    apply-github-patch https://github.com/pytorch/pytorch/pull/136850 6d5aaff8434203f870d76d840158d6989ddd61d0 # Enable XNNPACK for quantized add
-    apply-github-patch https://github.com/pytorch/pytorch/pull/140233 6d0b4448bfe3771e076e5c7758333f98810605c4 # Enables static quantization for aarch64
-    apply-github-patch https://github.com/pytorch/pytorch/pull/135058 511af4efb5c008a75a196c525a7ad546a9915fd0 # Pass ideep:lowp_kind to matmul_forward::compute on cache misses
+    apply-github-patch https://github.com/pytorch/pytorch 139887 eff3c11b1a31f725b50020ce32f6eddba17b5a94 # Use s8s8s8 for qlinear on aarch64 instead of u8s8u8 with mkl-dnn
+    apply-github-patch https://github.com/pytorch/pytorch 139753 16d397416abc44005fc66e377d4d15a0d6131a32 # Add SVE implementation for 8 bit quantized embedding bag on aarch64
+    apply-github-patch https://github.com/pytorch/pytorch 136850 6d5aaff8434203f870d76d840158d6989ddd61d0 # Enable XNNPACK for quantized add
+    apply-github-patch https://github.com/pytorch/pytorch 140233 6d0b4448bfe3771e076e5c7758333f98810605c4 # Enables static quantization for aarch64
+    apply-github-patch https://github.com/pytorch/pytorch 135058 511af4efb5c008a75a196c525a7ad546a9915fd0 # Pass ideep:lowp_kind to matmul_forward::compute on cache misses
     git submodule sync
     git submodule update --init --checkout --force --recursive --jobs=$(nproc)
     (
         cd third_party/ideep
         git fetch origin $IDEEP_HASH && git clean -f && git checkout -f FETCH_HEAD
-        apply-github-patch https://github.com/intel/ideep/pull/331 39e2de117c7470e7a8f8171603dd05d40b6943e1 # Cache reorder tensors
-        apply-github-patch https://github.com/intel/ideep/pull/341 120bf1920cc126f3ee28c20a93b0013799b74339 # Include hash of weights in the key of the primitive cache for aarch64 lowp gemm
+        apply-github-patch https://github.com/intel/ideep 331 39e2de117c7470e7a8f8171603dd05d40b6943e1 # Cache reorder tensors
+        apply-github-patch https://github.com/intel/ideep 341 120bf1920cc126f3ee28c20a93b0013799b74339 # Include hash of weights in the key of the primitive cache for aarch64 lowp gemm
         (
             cd mkl-dnn
             git fetch origin $ONEDNN_HASH && git clean -f && git checkout -f FETCH_HEAD
-            apply-github-patch https://github.com/oneapi-src/oneDNN/pull/2194 c22f4ae50002ef0a93bfe1895684f36abd92517d # src: cpu: aarch64: lowp_matmul: Make weights constant
+            apply-github-patch https://github.com/oneapi-src/oneDNN 2194 c22f4ae50002ef0a93bfe1895684f36abd92517d # src: cpu: aarch64: lowp_matmul: Make weights constant
             # Two commits from one PR
-            apply-github-patch https://github.com/oneapi-src/oneDNN/pull/2212 6a77e84feb442964c91a0101d58fe1473566b185 # src: cpu: aarch64: Enable matmul static quantisation.
-            apply-github-patch https://github.com/oneapi-src/oneDNN/pull/2212 efad4f6582c13823d81c78130ab80db57b1381eb # src: cpu: aarch64: Enable convolution static quantisation.
+            apply-github-patch https://github.com/oneapi-src/oneDNN 2212 6a77e84feb442964c91a0101d58fe1473566b185 # src: cpu: aarch64: Enable matmul static quantisation.
+            apply-github-patch https://github.com/oneapi-src/oneDNN 2212 efad4f6582c13823d81c78130ab80db57b1381eb # src: cpu: aarch64: Enable convolution static quantisation.
 
-            apply-github-patch https://github.com/oneapi-src/oneDNN/pull/2212 0358abf98dd6c5221a0c40ea47f0a23a1e6cf28e # src: cpu: aarch64: lowp_matmul: Make weights constant
-            apply-github-patch https://github.com/oneapi-src/oneDNN/pull/2218 f913679c5576d4753ea105f44baf4825f202bc8f # src: cpu: aarch64: Re-enable ACL indirect conv for BF16
+            apply-github-patch https://github.com/oneapi-src/oneDNN 2212 0358abf98dd6c5221a0c40ea47f0a23a1e6cf28e # src: cpu: aarch64: lowp_matmul: Make weights constant
+            apply-github-patch https://github.com/oneapi-src/oneDNN 2218 f913679c5576d4753ea105f44baf4825f202bc8f # src: cpu: aarch64: Re-enable ACL indirect conv for BF16
 
         )
     )
