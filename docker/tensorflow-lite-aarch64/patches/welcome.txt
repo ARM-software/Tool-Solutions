@@ -1,7 +1,0 @@
-================================================================================
-TensorFlow Lite for AArch64
-Built using:
- https://github.com/ARM-software/Tool-Solutions
-For more details, see:
- https://github.com/ARM-software/Tool-Solutions/blob/master/docker/tensorflow-lite-aarch64/README.md
-================================================================================
