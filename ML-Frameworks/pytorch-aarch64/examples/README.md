@@ -159,9 +159,11 @@ Note that in the above data we used the `--warmup` flag to run the model once be
 
 ## General optimization guidelines
 
-There are several flags which typically improve the performance of PyTorch.
+### Weight prepacking
+Linear layers calling ACL matmuls reorder weights during runtime by default. These reorders can be eliminated by calling `pack_linear_weights` as shown in `pack_linear_weights.py`. This improves the performance of any models calling a linear layer multiple times.
 
 ### General flags
+There are several flags which typically improve the performance of PyTorch.
 
 `DNNL_DEFAULT_FPMATH_MODE`: setting the environment variable `DNNL_DEFAULT_FPMATH_MODE` to `BF16` or `ANY` will instruct ACL to dispatch fp32 workloads to bfloat16 kernels where hardware support permits. _Note: this may introduce a drop in accuracy._
 

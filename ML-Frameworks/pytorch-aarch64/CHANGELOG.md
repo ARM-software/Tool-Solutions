@@ -28,6 +28,7 @@ where `YY` is the year, and `MM` the month of the increment.
 -- torchaudio updated to 2.6.0.dev20241218.
 - Updates build environment to manylinux2_28_aarch64.
   Note: this updates the GCC version from 10 to 11 with performance improvements of 5-10% in many cases.
+- Add examples/pack_linear_weights.py.
 
 ### Removed
 
