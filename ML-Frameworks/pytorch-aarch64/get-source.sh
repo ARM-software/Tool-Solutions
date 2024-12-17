@@ -19,11 +19,10 @@
 
 set -eux -o pipefail
 
-BUILDER_HASH=0015a521f4c1c003f6739be4d72bf503304fbf76 # From main
-PYTORCH_HASH=3179eb15ae2ed08266392897ea18a498f91f8ba1 # From viable/strict
+PYTORCH_HASH=fda43c98d1bc82eeb493f6e79a1fd5f1636474a5 # From viable/strict
 IDEEP_HASH=77d4b35c685eecfc8f32ced5381052483bdc3b1d   # From ideep_pytorch
-ONEDNN_HASH=dd33e126c3607f25e14a8adb62c1eb0acc49488c  # From main
-ACL_HASH=fa7806db5a2a9bf5c49b0ff3017cb9e8519dd440     # From main
+ONEDNN_HASH=316287183e2503a9db2d975dd04359728aabceb2 # From main
+ACL_HASH=6acccf1730b48c9a22155998fc4b2e0752472148     # From main
 
 function git-shallow-clone {
     (
@@ -74,16 +73,6 @@ function apply-gerrit-patch {
     git fetch $repo_url $refname && git cherry-pick --no-commit FETCH_HEAD
 }
 
-git-shallow-clone https://github.com/pytorch/builder.git $BUILDER_HASH
-(
-    cd builder
-    apply-github-patch https://github.com/pytorch/builder 2028 509c944589524708ae83634c9999117ababa7d0f # Enable AArch64 CI scripts to be used for local dev
-
-    # Speed up the build by parallelizing. We could try to upstream this, but we would need to handle other platforms too
-    # --ignore=1 so that we can have a core coordinating jobs
-    sed -i -e 's/MAX_JOBS=5/MAX_JOBS=$(nproc --ignore=1)/g' aarch64_linux/aarch64_wheel_ci_build.py
-)
-
 git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
 (
     cd pytorch
@@ -95,6 +84,7 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
     apply-github-patch https://github.com/pytorch/pytorch 136850 6d5aaff8434203f870d76d840158d6989ddd61d0 # Enable XNNPACK for quantized add
     apply-github-patch https://github.com/pytorch/pytorch 140233 6d0b4448bfe3771e076e5c7758333f98810605c4 # Enables static quantization for aarch64
     apply-github-patch https://github.com/pytorch/pytorch 135058 511af4efb5c008a75a196c525a7ad546a9915fd0 # Pass ideep:lowp_kind to matmul_forward::compute on cache misses
+    apply-github-patch https://github.com/pytorch/pytorch 143190 bdb74e24bfc70240fd2260dd7613246d7972fac1 # Enable AArch64 CI scripts to be used for local dev
     git submodule sync
     git submodule update --init --checkout --force --recursive --jobs=$(nproc)
     (
@@ -109,9 +99,7 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
             # Two commits from one PR
             apply-github-patch https://github.com/oneapi-src/oneDNN 2212 6a77e84feb442964c91a0101d58fe1473566b185 # src: cpu: aarch64: Enable matmul static quantisation.
             apply-github-patch https://github.com/oneapi-src/oneDNN 2212 efad4f6582c13823d81c78130ab80db57b1381eb # src: cpu: aarch64: Enable convolution static quantisation.
-
             apply-github-patch https://github.com/oneapi-src/oneDNN 2212 0358abf98dd6c5221a0c40ea47f0a23a1e6cf28e # src: cpu: aarch64: lowp_matmul: Make weights constant
-            apply-github-patch https://github.com/oneapi-src/oneDNN 2218 f913679c5576d4753ea105f44baf4825f202bc8f # src: cpu: aarch64: Re-enable ACL indirect conv for BF16
 
         )
     )
