@@ -11,6 +11,7 @@ where `YY` is the year, and `MM` the month of the increment.
 
 ### Changed
 - Updates apply-github-patch to make it more tollerant of upstream changes.
+- Removed the dependency on pytorch/builder and use pytorch/.ci scripts for building pytorch.
 
 ### Removed
 
