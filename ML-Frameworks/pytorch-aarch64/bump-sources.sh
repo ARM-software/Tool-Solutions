@@ -27,11 +27,6 @@ function git-bump {
 }
 
 (
-    cd builder
-    git-bump main
-)
-
-(
     cd pytorch
     git-bump viable/strict
 
@@ -53,7 +48,6 @@ function git-bump {
 )
 
 echo "Put this into your get-sources.sh file"
-echo BUILDER_HASH=$(cd builder && git rev-parse HEAD)
 echo PYTORCH_HASH=$(cd pytorch && git rev-parse HEAD)
 echo IDEEP_HASH=$(cd pytorch/third_party/ideep && git rev-parse HEAD)
 echo ONEDNN_HASH=$(cd pytorch/third_party/ideep/mkl-dnn && git rev-parse HEAD)
