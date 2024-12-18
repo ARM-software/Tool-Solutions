@@ -90,6 +90,10 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
     apply-github-patch https://github.com/pytorch/pytorch 139387 e5e5d29d6bab882540e36e44a3a75bd187fcbb62 # Add prepacking for linear weights
     apply-github-patch https://github.com/pytorch/pytorch 139387 19423aaa1af154e1d47d8acf1e677dff727da5aa # Add prepacking for linear weights
     apply-github-patch https://github.com/pytorch/pytorch 140159 10d3e48f6172f18e36ba568e2760f39b31a13e1d # cpu: aarch64: enable gemm-bf16f32
+    apply-github-patch https://github.com/pytorch/pytorch 134124 1c0ef38138d8621ab4a044860404fbf01c7504a6 # [ARM][feat]: Add 4 bit dynamic quantization matmuls & KleidiAI Backend
+    apply-github-patch https://github.com/pytorch/pytorch 134124 80d263f5343806d3169f5c180f23cfe975264bdf # [ARM][feat]: Add 4 bit dynamic quantization matmuls & KleidiAI Backend
+    apply-github-patch https://github.com/pytorch/pytorch 134124 3c10c2b55eecd2f9316b845ff697519639601527 # [ARM][feat]: Add 4 bit dynamic quantization matmuls & KleidiAI Backend
+    apply-github-patch https://github.com/pytorch/pytorch 134124 6d178afd7d82d2ed12b7734e7e2b350a2d332e1c # [ARM][feat]: Add 4 bit dynamic quantization matmuls & KleidiAI Backend
 
     git submodule sync
     git submodule update --init --checkout --force --recursive --jobs=$(nproc)
