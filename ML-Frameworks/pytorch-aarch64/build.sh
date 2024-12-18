@@ -31,9 +31,14 @@ build_log=build-$(git rev-parse --short=7 HEAD)-$(date --iso-8601=seconds).log
 
 ./build-wheel.sh |& tee $build_log
 
-wheel_name=$(grep -o "torch-.*.whl" $build_log | tail -n 1)
+./build-torch-ao-wheel.sh |& tee $build_log
+
+torch_wheel_name=$(grep -o "torch-.*.whl" $build_log | tail -n 1)
+
+torch_ao_wheel_name=$(grep -o "torchao-.*.whl" $build_log | tail -n 1)
 
 docker build -t toolsolutions-pytorch:latest \
-    --build-arg TORCH_WHEEL=results/$wheel_name \
+    --build-arg TORCH_WHEEL=results/$torch_wheel_name \
     --build-arg DOCKER_IMAGE_MIRROR \
+    --build-arg TORCH_AO_WHEEL=ao/dist/$torch_ao_wheel_name \
     .

@@ -17,15 +17,15 @@
 # limitations under the License.
 # *******************************************************************************
 
-help_str="dockerize.sh takes a PyTorch wheel as the first and only argument. It \
+help_str="dockerize.sh takes a PyTorch wheel as the first argument and ao wheel as second argument. It \
 installs the wheel inside a Docker container with examples and requirements."
-if [ "$#" -ne 1 ]; then
+if [ "$#" -ne 2 ]; then
     echo $help_str
     exit 1
 fi
 
-if ! [ -e "$1" ]; then
-    echo "I couldn't find a wheel at $1"
+if ! [ -e "$1" ] || ! [ -e "$2" ]; then
+    echo "I couldn't find a wheel at $1 or $2"
     echo $help_str
     exit 1
 fi
@@ -33,5 +33,6 @@ fi
 docker build -t toolsolutions-pytorch:latest  \
     --build-arg TORCH_WHEEL=$1 \
     --build-arg DOCKER_IMAGE_MIRROR \
+    --build-arg TORCH_AO_WHEEL=$2 \
     .
 docker run --rm -it toolsolutions-pytorch:latest

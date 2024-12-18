@@ -22,6 +22,9 @@ FROM ${DOCKER_IMAGE_MIRROR}ubuntu:22.04
 ARG TORCH_WHEEL
 ENV TORCH_WHEEL $TORCH_WHEEL
 
+ARG TORCH_AO_WHEEL
+ENV TORCH_AO_WHEEL $TORCH_AO_WHEEL
+
 # TODO make sure Openblas is 0.3.28
 # And mlcommons is 4.1
 RUN if ! [ "$(arch)" = "aarch64" ] ; then exit 1; fi
@@ -65,6 +68,10 @@ RUN pip install -r requirements.txt
 RUN test -n "$TORCH_WHEEL"
 COPY $TORCH_WHEEL /home/$DOCKER_USER/
 
+# Check TORCH_AO_WHEEL was set and copy
+RUN test -n "$TORCH_AO_WHEEL"
+COPY $TORCH_AO_WHEEL /home/$DOCKER_USER/
+
 # Install our dev build of torch alongside fixed nightly builds of torchaudio
 # and torchvision (following instructions from
 # https://pytorch.org/get-started/locally/ for torch*) torch is a prereq of
@@ -80,6 +87,9 @@ RUN pip install "$(basename "$TORCH_WHEEL")" \
     torchvision==0.22.0.dev20241218 \
     --extra-index-url https://download.pytorch.org/whl/nightly/cpu \
     && rm "$(basename "$TORCH_WHEEL")"
+
+RUN pip install "$(basename "$TORCH_AO_WHEEL")" \
+    && rm "$(basename "$TORCH_AO_WHEEL")"
 
 COPY examples/ /home/$DOCKER_USER/
 

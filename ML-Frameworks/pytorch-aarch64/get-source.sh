@@ -23,6 +23,7 @@ PYTORCH_HASH=8d4926e30a944320adf434016129cb6788eff79b  # From viable/strict
 IDEEP_HASH=e026f3b0318087fe19e2b062e8edf55bfe7a522c    # From ideep_pytorch
 ONEDNN_HASH=0fd3b73a25d11106e141ddefd19fcacc74f8bbfe   # From main
 ACL_HASH=6acccf1730b48c9a22155998fc4b2e0752472148      # From main
+TORCH_AO_HASH="2e032c6b0de960dee554dcb08126ace718b14c6d" # From main
 
 function git-shallow-clone {
     (
@@ -122,4 +123,10 @@ git-shallow-clone https://review.mlplatform.org/ml/ComputeLibrary $ACL_HASH
     apply-gerrit-patch https://review.mlplatform.org/c/ml/ComputeLibrary/+/12819/1 # fix: Do not skip prepare stage after updating quantization parameters
     apply-gerrit-patch https://review.mlplatform.org/c/ml/ComputeLibrary/+/12820/3 # fix: Do not skip MatrixBReduction in prepare for dynamic offsets
     apply-gerrit-patch https://review.mlplatform.org/c/ml/ComputeLibrary/+/12904/2 # fix: incorrect scheduling hint heuristic for GEMMs
+)
+
+git-shallow-clone https://github.com/pytorch/ao.git $TORCH_AO_HASH
+(
+    cd ao
+    apply-github-patch https://github.com/pytorch/ao.git 1447 738d7f2c5a48367822f2bf9d538160d19f02341e # [Feat]: Add support for kleidiai quantization schemes
 )
