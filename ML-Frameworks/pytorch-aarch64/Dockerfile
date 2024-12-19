@@ -75,9 +75,9 @@ COPY $TORCH_WHEEL /home/$DOCKER_USER/
 # to match the git commit date, so that it is compatibile with the other built
 # torch* nightly builds
 RUN pip install "$(basename "$TORCH_WHEEL")" \
-    torchaudio==2.5.0.dev20241104 \
+    torchaudio==2.6.0.dev20241218 \
     torchdata~=0.7.1 \
-    torchvision==0.20.0.dev20241104 \
+    torchvision==0.22.0.dev20241218 \
     --extra-index-url https://download.pytorch.org/whl/nightly/cpu \
     && rm "$(basename "$TORCH_WHEEL")"
 

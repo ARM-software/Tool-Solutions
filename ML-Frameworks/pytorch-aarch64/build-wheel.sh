@@ -26,7 +26,7 @@ PYTHON_VERSION="3.10"
 
 # Transition to pytorch/manylinux2_28_aarch64-builder once
 # https://github.com/pytorch/pytorch/pull/137696 goes in
-IMAGE_NAME="pytorch/manylinuxaarch64-builder:cpu-aarch64-3a2ab9584f6ce69bf9730c822fd08375c592bf38"
+IMAGE_NAME="pytorch/manylinux2_28_aarch64-builder:cpu-aarch64-a040006da76a51c4f660331e9abd3affe5a4bd81"
 TORCH_BUILD_CONTAINER_ID_FILE="${PWD}/.torch_build_container_id"
 
 # Output dir for PyTorch wheel and other artifacts
@@ -74,6 +74,7 @@ if ! docker container inspect $TORCH_BUILD_CONTAINER >/dev/null 2>&1 ; then
     docker exec -t $TORCH_BUILD_CONTAINER bash -c "$PYTORCH_ROOT/.ci/aarch64_linux/aarch64_ci_setup.sh"
     docker exec -t $TORCH_BUILD_CONTAINER bash -c "python${PYTHON_VERSION} -m venv $TEST_VENV"
     docker exec -t $TORCH_BUILD_CONTAINER bash -c "source $TEST_VENV/bin/activate && pip install -r $PYTORCH_ROOT/.ci/docker/requirements-ci.txt && pip install ninja==1.10.0.post1"
+    docker exec -t $TORCH_BUILD_CONTAINER bash -c "yum install -y tbb tbb-devel"
 
     docker exec -t $TORCH_BUILD_CONTAINER bash /pytorch/.ci/docker/common/install_openblas.sh
 
