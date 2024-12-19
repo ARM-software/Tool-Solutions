@@ -8,10 +8,26 @@ where `YY` is the year, and `MM` the month of the increment.
 ## [unreleased]
 
 ### Added
+- Adds libtbb to Docker to support parallel sort optimisations.
 
 ### Changed
 - Updates apply-github-patch to make it more tollerant of upstream changes.
 - Removed the dependency on pytorch/builder and use pytorch/.ci scripts for building pytorch.
+- Updates hashes for:
+-- PyTorch, to 8d4926e30a944320adf434016129cb6788eff79b (from viable/strict branch);
+-- iDeep, to e026f3b0318087fe19e2b062e8edf55bfe7a522c (from ideep_pytorch branch);
+-- oneDNN, to 0fd3b73a25d11106e141ddefd19fcacc74f8bbfe (from main branch);
+-- Arm Compute Library, to 6acccf1730b48c9a22155998fc4b2e0752472148 (from main branch).
+- Adds work-in-progress PyTorch PRs:
+-- 142391 8373846f441381a56e7abd905af84102aa52fc7b - parallelize sort;
+-- 139387 e5e5d29d6bab882540e36e44a3a75bd187fcbb62 - Add prepacking for linear weights;
+-- 139387 19423aaa1af154e1d47d8acf1e677dff727da5aa - Add prepacking for linear weights;
+-- 140159 9463c3261f57c42a952f1ba95633833cb1c561fc - cpu: aarch64: enable gemm-bf16f32.
+- Updates PyTorch dependencies:
+-- torchvision updated to 0.22.0.dev20241218;
+-- torchaudio updated to 2.6.0.dev20241218.
+- Updates build environment to manylinux2_28_aarch64.
+  Note: this updates the GCC version from 10 to 11 with performance improvements of 5-10% in many cases.
 
 ### Removed
 
