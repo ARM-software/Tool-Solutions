@@ -22,6 +22,9 @@ FROM ${DOCKER_IMAGE_MIRROR}ubuntu:22.04
 ARG TORCH_WHEEL
 ENV TORCH_WHEEL $TORCH_WHEEL
 
+ARG TORCH_AO_WHEEL
+ENV TORCH_AO_WHEEL $TORCH_AO_WHEEL
+
 # TODO make sure Openblas is 0.3.28
 # And mlcommons is 4.1
 RUN if ! [ "$(arch)" = "aarch64" ] ; then exit 1; fi
@@ -35,6 +38,8 @@ RUN apt-get update && apt-get install -y \
     sudo \
     # includes tcmalloc, which can speed up some models, see README.md for more details
     google-perftools \
+    # Git
+    git \
     && rm -rf /var/lib/apt/lists/*
 
 # DOCKER_USER for the Docker user
@@ -52,6 +57,7 @@ RUN chown $DOCKER_USER:$DOCKER_USER /home/$DOCKER_USER/.bash_profile
 # Add welcome message to warn about dev quality
 COPY welcome.txt /home/$DOCKER_USER/.
 RUN echo '[ ! -z "$TERM" -a -r /home/$DOCKER_USER/welcome.txt ] && cat /home/$DOCKER_USER/welcome.txt' >> /etc/bash.bashrc
+RUN echo 'export PATH="$HOME/.local/bin:$PATH"' >>  /etc/bash.bashrc
 
 # Move to userland
 WORKDIR /home/$DOCKER_USER
@@ -64,6 +70,10 @@ RUN pip install -r requirements.txt
 # Check TORCH_WHEEL was set and copy
 RUN test -n "$TORCH_WHEEL"
 COPY $TORCH_WHEEL /home/$DOCKER_USER/
+
+# Check TORCH_AO_WHEEL was set and copy
+RUN test -n "$TORCH_AO_WHEEL"
+COPY $TORCH_AO_WHEEL /home/$DOCKER_USER/
 
 # Install our dev build of torch alongside fixed nightly builds of torchaudio
 # and torchvision (following instructions from
@@ -78,9 +88,21 @@ RUN pip install "$(basename "$TORCH_WHEEL")" \
     torchaudio==2.6.0.dev20241218 \
     torchdata~=0.7.1 \
     torchvision==0.22.0.dev20241218 \
+    torchtune==0.5.0.dev20241218 \
     --extra-index-url https://download.pytorch.org/whl/nightly/cpu \
     && rm "$(basename "$TORCH_WHEEL")"
 
+RUN pip install  --force-reinstall "$(basename "$TORCH_AO_WHEEL")" && rm "$(basename "$TORCH_AO_WHEEL")"
+
+# Setup Examples
 COPY examples/ /home/$DOCKER_USER/
+
+# Llm examples depends on torchchat
+RUN sudo mkdir -p /home/ubuntu/gen_ai_utils/ && \
+    cd /home/ubuntu/gen_ai_utils/ && \
+    sudo git clone https://github.com/pytorch/torchchat.git -b main && \
+    cd torchchat && \
+    sudo git config --global --add safe.directory /home/ubuntu/gen_ai_utils/torchchat && \
+    sudo git checkout 90749d280bbc116fcc121a1eda1b60f1dba5b675
 
 CMD ["bash", "-l"]

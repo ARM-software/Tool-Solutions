@@ -189,3 +189,70 @@ e.g.
 ```
 LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libtcmalloc.so.4  IDEEP_CACHE_MATMUL_REORDERS=1 LRU_CACHE_CAPACITY=256 DNNL_DEFAULT_FPMATH_MODE=BF16 python <your_model_script>.py
 ```
+
+## Generative AI
+
+### 4 bit Dynamic Quantization
+
+Tool-Solutions leverage 4-bit dynamic weight quantization to accelerate GenAI workloads. Specifically, the weights are statically quantized to 4 bits, while the input is dynamically quantized to 8 bits. By combining this with specialized [KleidiAI](https://git.gitlab.arm.com/kleidi/kleidiai) kernels, we achieve nearly significant speedup in Large Language Models (LLMs).
+
+_Note: Model repo access might be required to run certain certain models correctly._
+
+To access the protected models run
+```
+huggingface-cli login --token @hf_token
+```
+
+### Text Generation
+
+### Torchchat
+The script [torchchat_llm_text_gen.py](torchchat_llm_text_gen.py) demonstrates how to run llm inference using the Llama2 7B model via torchchat. It leverages the 4 bit dynamic quantization speedups and can supports multiple vision and text  models.
+
+To run infernece using torchchat call:
+
+```
+LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libtcmalloc.so.4  TORCHINDUCTOR_CPP_WRAPPER=1  TORCHINDUCTOR_FREEZING=1  OMP_NUM_THREADS=16 python torchchat_llm_text_gen.py --compile
+```
+
+#### Command-Line Options
+
+`--quant-config`
+  Description: Path to the model quantization config.
+
+`--max-new-tokens`
+  Description: Max new tokens to generate.
+
+`--compile`
+  Description: Whether to compile the model (default: `False`).
+
+`--model`
+  Description: Model alias. (Default: `"llama2"`  )
+
+`--prompt`
+  Description: Input prompt for model generation.
+
+### Transformers
+The script [transformers_llm_text_gen.py](transformers_llm_text_gen.py) demonstrates how to generate text using Llama2 7B model via Transformers. It leverages the 4 bit dynamic quantization speedups and can supports vast number of text  models.
+
+To run infernece using torchchat call:
+
+```
+LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libtcmalloc.so.4  TORCHINDUCTOR_CPP_WRAPPER=1  TORCHINDUCTOR_FREEZING=1  OMP_NUM_THREADS=16 python transformers_llm_text_gen.py --compile
+```
+
+#### Command-Line Options
+
+`--quant-config`
+  Description: Path to the model quantization config.
+
+`--max-new-tokens`
+  Description: Max new tokens to generate.
+
+`--compile`
+  Description: Whether to compile the model (default: `False`).
+
+`--model`
+  Description: Local Path to model repo or huggingface model id. (Default: `"meta-llama/Llama-2-7b-hf"`  )
+
+`--prompt`
+  Description: Input prompt for model generation.
