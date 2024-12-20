@@ -1,4 +1,4 @@
-# ML Tool Solutions
+# Tool Solutions
 
 > [!WARNING]
 > This contains software which is
@@ -8,7 +8,7 @@
 > - DO NOT USE IN PRODUCTION
 > - FOR EVALUATION ONLY
 
-The ML [Tool Solutions](https://github.com/ARM-software/Tool-Solutions) repository provides scripts to build a wheel and a Docker image containing a complete ML framework stack, including dependencies, for the [Armv8-A architecture](https://developer.arm.com/architectures/cpu-architecture/a-profile), as well as a selection of examples and benchmarks.
+This ML [Tool Solutions](https://github.com/ARM-software/Tool-Solutions) repository provides scripts to build a wheel and a Docker image containing a complete ML framework stack, including dependencies, for the [Armv8-A architecture](https://developer.arm.com/architectures/cpu-architecture/a-profile), as well as a selection of examples and benchmarks.
 
 ## Table of Contents
 Here is a list of all the contents of this repository with short descriptions:
