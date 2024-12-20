@@ -31,3 +31,6 @@ export MY_COLOUR="\001\e[0;49;36m\002"
 
 PS1="$MY_COLOUR$MY_PROMPT\001\e[m\002 \W> \[\033[00m\]"
 export PS1
+
+# Add local bin to PATH
+export PATH="$HOME/.local/bin:$PATH"

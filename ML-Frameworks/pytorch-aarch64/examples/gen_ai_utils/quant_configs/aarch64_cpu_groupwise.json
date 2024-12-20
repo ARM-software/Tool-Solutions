@@ -1,0 +1,12 @@
+{
+    "executor": {
+        "accelerator": "cpu"
+    },
+    "precision": {
+        "dtype": "fp32"
+    },
+    "linear:int4": {
+        "groupsize": 32,
+        "scheme": "symmetric_groupwise"
+    }
+}

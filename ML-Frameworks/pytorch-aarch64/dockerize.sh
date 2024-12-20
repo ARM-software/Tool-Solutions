@@ -17,7 +17,7 @@
 # limitations under the License.
 # *******************************************************************************
 
-help_str="dockerize.sh takes a PyTorch wheel as the first argument and ao wheel as second argument. It \
+help_str="dockerize.sh takes a PyTorch wheel as the first argument and an ao wheel as second argument. It \
 installs the wheel inside a Docker container with examples and requirements."
 if [ "$#" -ne 2 ]; then
     echo $help_str

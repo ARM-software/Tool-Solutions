@@ -23,7 +23,7 @@ PYTORCH_HASH=8d4926e30a944320adf434016129cb6788eff79b  # From viable/strict
 IDEEP_HASH=e026f3b0318087fe19e2b062e8edf55bfe7a522c    # From ideep_pytorch
 ONEDNN_HASH=0fd3b73a25d11106e141ddefd19fcacc74f8bbfe   # From main
 ACL_HASH=6acccf1730b48c9a22155998fc4b2e0752472148      # From main
-TORCH_AO_HASH="2e032c6b0de960dee554dcb08126ace718b14c6d" # From main
+TORCH_AO_HASH=2e032c6b0de960dee554dcb08126ace718b14c6d # From main
 
 function git-shallow-clone {
     (
@@ -38,7 +38,7 @@ function git-shallow-clone {
         git fetch --recurse-submodules=no origin $2
         # We do a force checkout + clean to overwrite previous patches
         git checkout -f $2
-        git clean -f
+        git clean -fd
     )
 }
 
@@ -74,9 +74,25 @@ function apply-gerrit-patch {
     git fetch $repo_url $refname && git cherry-pick --no-commit FETCH_HEAD
 }
 
+function setup_submodule() {
+    local original_dir=$(pwd)
+    rm -rf "$2"
+    git clone $1 $2
+    cd $2
+    git checkout $3
+    cd $original_dir
+}
+
+function reset_submodule() {
+    if [ -d "$1" ]; then
+        rm -rf "$1"
+    fi
+}
+
 git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
 (
     cd pytorch
+
     # Bump OpenBLAS version. Note that install_openblas.sh has to be rerun in the PyTorch builder Docker container
     sed -i -e 's/v0.3.25/v0.3.28/g' .ci/docker/common/install_openblas.sh
 
@@ -91,10 +107,14 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
     apply-github-patch https://github.com/pytorch/pytorch 139387 e5e5d29d6bab882540e36e44a3a75bd187fcbb62 # Add prepacking for linear weights
     apply-github-patch https://github.com/pytorch/pytorch 139387 19423aaa1af154e1d47d8acf1e677dff727da5aa # Add prepacking for linear weights
     apply-github-patch https://github.com/pytorch/pytorch 140159 10d3e48f6172f18e36ba568e2760f39b31a13e1d # cpu: aarch64: enable gemm-bf16f32
+
+    # Submodules needs to be handled manually for patches that adds submodules
+    reset_submodule third_party/kleidiai
     apply-github-patch https://github.com/pytorch/pytorch 134124 1c0ef38138d8621ab4a044860404fbf01c7504a6 # [ARM][feat]: Add 4 bit dynamic quantization matmuls & KleidiAI Backend
     apply-github-patch https://github.com/pytorch/pytorch 134124 80d263f5343806d3169f5c180f23cfe975264bdf # [ARM][feat]: Add 4 bit dynamic quantization matmuls & KleidiAI Backend
     apply-github-patch https://github.com/pytorch/pytorch 134124 3c10c2b55eecd2f9316b845ff697519639601527 # [ARM][feat]: Add 4 bit dynamic quantization matmuls & KleidiAI Backend
     apply-github-patch https://github.com/pytorch/pytorch 134124 6d178afd7d82d2ed12b7734e7e2b350a2d332e1c # [ARM][feat]: Add 4 bit dynamic quantization matmuls & KleidiAI Backend
+    setup_submodule https://git.gitlab.arm.com/kleidi/kleidiai.git third_party/kleidiai 202603f38a9df9d2ded89f12b41ded621c71d4ea
 
     git submodule sync
     git submodule update --init --checkout --force --recursive --jobs=$(nproc)
@@ -128,5 +148,5 @@ git-shallow-clone https://review.mlplatform.org/ml/ComputeLibrary $ACL_HASH
 git-shallow-clone https://github.com/pytorch/ao.git $TORCH_AO_HASH
 (
     cd ao
-    apply-github-patch https://github.com/pytorch/ao.git 1447 738d7f2c5a48367822f2bf9d538160d19f02341e # [Feat]: Add support for kleidiai quantization schemes
+    git fetch https://github.com/pytorch/ao pull/1447/head && git cherry-pick FETCH_HEAD # [Feat]: Add support for kleidiai quantization schemes
 )

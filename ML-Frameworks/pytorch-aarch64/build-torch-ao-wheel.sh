@@ -26,7 +26,7 @@ PYTHON_VERSION="3.10"
 
 # Transition to pytorch/manylinux2_28_aarch64-builder once
 # https://github.com/pytorch/pytorch/pull/137696 goes in
-IMAGE_NAME="pytorch/manylinuxaarch64-builder:cpu-aarch64-main"
+IMAGE_NAME="pytorch/manylinux2_28_aarch64-builder:cpu-aarch64-a040006da76a51c4f660331e9abd3affe5a4bd81"
 TORCH_BUILD_CONTAINER_ID_FILE="${PWD}/.torch_ao_build_container_id"
 
 TEST_VENV=aarch64_env_test_torch_ao

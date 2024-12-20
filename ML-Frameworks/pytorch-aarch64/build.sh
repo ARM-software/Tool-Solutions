@@ -31,9 +31,9 @@ build_log=build-$(git rev-parse --short=7 HEAD)-$(date --iso-8601=seconds).log
 
 ./build-wheel.sh |& tee $build_log
 
-./build-torch-ao-wheel.sh |& tee $build_log
-
 torch_wheel_name=$(grep -o "torch-.*.whl" $build_log | tail -n 1)
+
+./build-torch-ao-wheel.sh |& tee $build_log
 
 torch_ao_wheel_name=$(grep -o "torchao-.*.whl" $build_log | tail -n 1)
 

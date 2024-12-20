@@ -5,7 +5,7 @@ certifi==2024.8.30
 charset-normalizer~=3.4.0
 filelock~=3.16.1
 fsspec==2024.9.0
-huggingface-hub~=0.25.2
+huggingface_hub==0.27.0
 idna~=3.10
 Jinja2~=3.1.4
 MarkupSafe~=3.0.1
@@ -31,3 +31,6 @@ transformers==4.39.1 # Pinned to version which is known not to have regression d
 typing_extensions~=4.12.2
 tzdata==2024.2
 urllib3~=2.2.3
+sentencepiece==0.2.0 # Torchchat
+tomli==2.2.1 # Torchchat
+protobuf==5.29.2 # GenAI models dependency
