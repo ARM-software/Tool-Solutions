@@ -8,9 +8,32 @@ where `YY` is the year, and `MM` the month of the increment.
 ## [unreleased]
 
 ### Added
-- Adds libtbb to Docker to support parallel sort optimisations.
 
 ### Changed
+
+### Removed
+
+### Fixed
+
+
+## [r24.12] 2024-12-20
+
+### Added
+- Adds torchao.
+- Adds work-in-progress PyTorch PRs:
+-- 142391 8373846f441381a56e7abd905af84102aa52fc7b - parallelize sort;
+-- 139387 e5e5d29d6bab882540e36e44a3a75bd187fcbb62 - Add prepacking for linear weights;
+-- 139387 19423aaa1af154e1d47d8acf1e677dff727da5aa - Add prepacking for linear weights;
+-- 140159 9463c3261f57c42a952f1ba95633833cb1c561fc - cpu: aarch64: enable gemm-bf16f32.
+-- 134124 1c0ef38138d8621ab4a044860404fbf01c7504a6
+          80d263f5343806d3169f5c180f23cfe975264bdf
+          3c10c2b55eecd2f9316b845ff697519639601527
+          6d178afd7d82d2ed12b7734e7e2b350a2d332e1c - 4 bit dynamic quantization matmuls & KleidiAI Backend.
+- Adds libtbb to Docker to support parallel sort optimisations.
+- Adds 4bit LLM Torchchat and Transformers examples.
+
+### Changed
+- Renames `docker` folder to `ML-Frameworks` as part of the removal of legacy content from the repo.
 - Updates apply-github-patch to make it more tollerant of upstream changes.
 - Removed the dependency on pytorch/builder and use pytorch/.ci scripts for building pytorch.
 - Updates hashes for:
@@ -18,11 +41,6 @@ where `YY` is the year, and `MM` the month of the increment.
 -- iDeep, to e026f3b0318087fe19e2b062e8edf55bfe7a522c (from ideep_pytorch branch);
 -- oneDNN, to 0fd3b73a25d11106e141ddefd19fcacc74f8bbfe (from main branch);
 -- Arm Compute Library, to 6acccf1730b48c9a22155998fc4b2e0752472148 (from main branch).
-- Adds work-in-progress PyTorch PRs:
--- 142391 8373846f441381a56e7abd905af84102aa52fc7b - parallelize sort;
--- 139387 e5e5d29d6bab882540e36e44a3a75bd187fcbb62 - Add prepacking for linear weights;
--- 139387 19423aaa1af154e1d47d8acf1e677dff727da5aa - Add prepacking for linear weights;
--- 140159 9463c3261f57c42a952f1ba95633833cb1c561fc - cpu: aarch64: enable gemm-bf16f32.
 - Updates PyTorch dependencies:
 -- torchvision updated to 0.22.0.dev20241218;
 -- torchaudio updated to 2.6.0.dev20241218.
