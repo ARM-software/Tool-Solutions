@@ -164,7 +164,7 @@ class Model:
             )
             # the script for preparing files to run
             runpy.run_path(script_path, run_name="__main__")
-            self._model = torch.load(model_name, map_location="cpu")
+            self._model = torch.load(model_name, map_location="cpu", weights_only=False)
 
         else:
             assert (
