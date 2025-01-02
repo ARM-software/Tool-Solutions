@@ -100,13 +100,13 @@ nlp.print_squad_questions(subject="Normans")
 
 will print all the SQuAD entries on Normans - the context, questions, reference answers and IDs.
 
-It is also possible to supply a question, and context, to `answer_questions.py` directly at the command line using the flags `-t` and `-q`, for example:
+It is also possible to supply a context file and question directly to `answer_questions.py` using the flags `-t` and `-q`, for example:
 
 ```
-python answer_questions.py -t <context> -q <question>
+python answer_questions.py -t README.md -q "What does this folder contain?"
 ```
 
-where `<context>` is the text file containing the text on which the `<question>` is based. If no text file is provided, `answer_questions.py` will search through the SQuAD dataset for the question and, if the question can be located, use the context associated with it.
+If no context file is provided, `answer_questions.py` will search through the SQuAD dataset for the question and, if the question can be located, use the context associated with it.
 
 We can also quantize some of the layers of the models using the `--quantize` flag, which can make the model run several times faster
 ```
