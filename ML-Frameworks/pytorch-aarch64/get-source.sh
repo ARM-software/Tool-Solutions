@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # *******************************************************************************
-# Copyright 2024 Arm Limited and affiliates.
+# Copyright 2024-2025 Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -96,7 +96,7 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
     # Bump OpenBLAS version. Note that install_openblas.sh has to be rerun in the PyTorch builder Docker container
     sed -i -e 's/v0.3.25/v0.3.28/g' .ci/docker/common/install_openblas.sh
 
-    apply-github-patch https://github.com/pytorch/pytorch 143190 bdb74e24bfc70240fd2260dd7613246d7972fac1 # Enable AArch64 CI scripts to be used for local dev
+    apply-github-patch https://github.com/pytorch/pytorch 143190 f424c67660f45bfeaceb9bebfafc7e22638746c4 # Enable AArch64 CI scripts to be used for local dev
 
     apply-github-patch https://github.com/pytorch/pytorch 139887 eff3c11b1a31f725b50020ce32f6eddba17b5a94 # Use s8s8s8 for qlinear on aarch64 instead of u8s8u8 with mkl-dnn
     apply-github-patch https://github.com/pytorch/pytorch 139753 16d397416abc44005fc66e377d4d15a0d6131a32 # Add SVE implementation for 8 bit quantized embedding bag on aarch64
