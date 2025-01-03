@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # *******************************************************************************
-# Copyright 2024 Arm Limited and affiliates.
+# Copyright 2024-2025 Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,15 +19,24 @@
 
 set -eux -o pipefail
 
-# Bail out if sources are already there
-if ! [[ $* == *--force* ]] && ([ -d pytorch ] || [ -d builder ] || [ -d ComputeLibrary ]) ; then
-    echo "You appear to have sources already (pytorch/builder/ComputeLibrary), rerun with --force to overrite sources or run ./build-wheel.sh if you want to build your existing sources."
-    exit 1
-fi
-
 build_log=build-$(git rev-parse --short=7 HEAD)-$(date --iso-8601=seconds).log
 
-./get-source.sh |& tee $build_log
+# Bail out if sources are already there
+if [ -d pytorch ] || [ -d builder ] || [ -d ComputeLibrary ] ; then
+    echo "You appear to have sources already (pytorch/builder/ComputeLibrary)" \
+        |& tee $build_log
+
+    if ! ([[ $* == *--force* ]] || [[ $* == *--use-existing-sources* ]]) ; then
+        >2& echo "rerun with --force to overwrite sources or with" \
+                 "--use-existing-sources to build your existing sources." \
+            |& tee $build_log
+        exit 1
+    fi
+fi
+
+if ! [[ $* == *--use-existing-sources* ]]; then
+    ./get-source.sh |& tee $build_log
+fi
 
 ./build-wheel.sh |& tee $build_log
 
