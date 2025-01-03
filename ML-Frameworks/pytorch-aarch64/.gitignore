@@ -1,6 +1,6 @@
 ComputeLibrary/
 pytorch/
-builder/
 results/
+ao/
 *.whl
-.torch_build_container_id
+.*_build_container_id
