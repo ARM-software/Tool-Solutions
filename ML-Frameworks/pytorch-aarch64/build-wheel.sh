@@ -1,7 +1,7 @@
 # #!/bin/bash
 
 # *******************************************************************************
-# Copyright 2024 Arm Limited and affiliates.
+# Copyright 2024-2025 Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,9 +24,8 @@ set -eux -o pipefail
 
 PYTHON_VERSION="3.10"
 
-# Transition to pytorch/manylinux2_28_aarch64-builder once
-# https://github.com/pytorch/pytorch/pull/137696 goes in
-IMAGE_NAME="pytorch/manylinux2_28_aarch64-builder:cpu-aarch64-a040006da76a51c4f660331e9abd3affe5a4bd81"
+# Specify DOCKER_IMAGE_MIRROR if you want to use a mirror of hub.docker.com
+IMAGE_NAME="${DOCKER_IMAGE_MIRROR}pytorch/manylinux2_28_aarch64-builder:cpu-aarch64-a040006da76a51c4f660331e9abd3affe5a4bd81"
 TORCH_BUILD_CONTAINER_ID_FILE="${PWD}/.torch_build_container_id"
 
 # Output dir for PyTorch wheel and other artifacts
