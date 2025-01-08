@@ -1,5 +1,5 @@
 # *******************************************************************************
-# Copyright 2020-2024 Arm Limited and affiliates.
+# Copyright 2020-2025 Arm Limited and affiliates.
 # Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -16,6 +16,7 @@
 # limitations under the License.
 # *******************************************************************************
 
+# Specify DOCKER_IMAGE_MIRROR if you want to use a mirror of hub.docker.com
 ARG DOCKER_IMAGE_MIRROR=""
 FROM ${DOCKER_IMAGE_MIRROR}ubuntu:22.04
 
