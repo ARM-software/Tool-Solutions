@@ -1,5 +1,4 @@
 ComputeLibrary/
 pytorch/
-builder/
-.torch_build_container_id
-*.torch_ao_build_container_id
+*.whl
+.*_build_container_id
