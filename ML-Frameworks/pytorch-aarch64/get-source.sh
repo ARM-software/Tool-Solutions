@@ -148,5 +148,5 @@ git-shallow-clone https://review.mlplatform.org/ml/ComputeLibrary $ACL_HASH
 git-shallow-clone https://github.com/pytorch/ao.git $TORCH_AO_HASH
 (
     cd ao
-    git fetch https://github.com/pytorch/ao pull/1447/head && git cherry-pick FETCH_HEAD # [Feat]: Add support for kleidiai quantization schemes
+    apply-github-patch https://github.com/pytorch/ao 1447 2a18e60401c79a5ca514dbcd8207daf5fa9f832d # [Feat]: Add support for kleidiai quantization schemes
 )
