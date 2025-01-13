@@ -32,7 +32,7 @@ set -eux -o pipefail
 PYTHON_VERSION="3.10"
 
 # Specify DOCKER_IMAGE_MIRROR if you want to use a mirror of hub.docker.com
-IMAGE_NAME="${DOCKER_IMAGE_MIRROR}pytorch/manylinux2_28_aarch64-builder:cpu-aarch64-a040006da76a51c4f660331e9abd3affe5a4bd81"
+IMAGE_NAME="${DOCKER_IMAGE_MIRROR:-}pytorch/manylinux2_28_aarch64-builder:cpu-aarch64-a040006da76a51c4f660331e9abd3affe5a4bd81"
 TORCH_BUILD_CONTAINER_ID_FILE="${PWD}/.torch_build_container_id"
 
 # Output dir for PyTorch wheel and other artifacts
