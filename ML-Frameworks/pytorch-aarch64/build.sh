@@ -19,32 +19,34 @@
 
 set -eux -o pipefail
 
-build_log=build-$(git rev-parse --short=7 HEAD)-$(date --iso-8601=seconds).log
+# exec redirects all output from now on into a file and stdout
+build_log=build-$(git rev-parse --short=7 HEAD)-$(date '+%Y-%m-%dT%H-%M-%S').log
+exec &> >(tee -a $build_log)
 
 # Bail out if sources are already there
 if [ -d pytorch ] || [ -d builder ] || [ -d ComputeLibrary ] ; then
     echo "You appear to have sources already (pytorch/builder/ComputeLibrary)" \
-        |& tee $build_log
 
     if ! ([[ $* == *--force* ]] || [[ $* == *--use-existing-sources* ]]) ; then
         >2& echo "rerun with --force to overwrite sources or with" \
-                 "--use-existing-sources to build your existing sources." \
-            |& tee $build_log
+                 "--use-existing-sources to build your existing sources."
         exit 1
     fi
 fi
 
 if ! [[ $* == *--use-existing-sources* ]]; then
-    ./get-source.sh |& tee $build_log
+    ./get-source.sh
 fi
 
-./build-wheel.sh |& tee $build_log
+./build-wheel.sh
 
-torch_wheel_name=$(grep -o "torch-.*.whl" $build_log | tail -n 1)
+# Use the second to last match, otherwise grep finds itself
+torch_wheel_name=$(grep -o "torch-.*.whl" $build_log | head -n -1 | tail -n 1)
 
-./build-torch-ao-wheel.sh |& tee $build_log
+./build-torch-ao-wheel.sh
 
-torch_ao_wheel_name=$(grep -o "torchao-.*.whl" $build_log | tail -n 1)
+# Use the second to last match, otherwise grep finds itself
+torch_ao_wheel_name=$(grep -o "torchao-.*.whl" $build_log | head -n -1 | tail -n 1)
 
 docker build -t toolsolutions-pytorch:latest \
     --build-arg TORCH_WHEEL=results/$torch_wheel_name \

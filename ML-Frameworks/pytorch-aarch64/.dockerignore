@@ -1,4 +1,4 @@
 ComputeLibrary/
 pytorch/
-*.whl
+*.log
 .*_build_container_id
