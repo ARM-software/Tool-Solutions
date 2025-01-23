@@ -19,11 +19,12 @@
 
 set -eux -o pipefail
 
-PYTORCH_HASH=8d4926e30a944320adf434016129cb6788eff79b  # From viable/strict
-IDEEP_HASH=e026f3b0318087fe19e2b062e8edf55bfe7a522c    # From ideep_pytorch
-ONEDNN_HASH=0fd3b73a25d11106e141ddefd19fcacc74f8bbfe   # From main
-ACL_HASH=6acccf1730b48c9a22155998fc4b2e0752472148      # From main
-TORCH_AO_HASH=2e032c6b0de960dee554dcb08126ace718b14c6d # From main
+PYTORCH_HASH=62ce3e6e84df516fdd5310d5095fa01251806f1d   # From viable/strict
+IDEEP_HASH=9873ffca18467b07f4fb6cbbd8742dc7c6588b72     # From ideep_pytorch
+ONEDNN_HASH=283cf3783c28c231308f13cf2c6a0247517f934f    # From main
+ACL_HASH=d9be9625ca86ebefcd171d049273d2ee295737a0       # From main
+TORCH_AO_HASH=e1cb44ab84eee0a3573bb161d65c18661dc4a307  # From main
+
 
 function git-shallow-clone {
     (
@@ -101,7 +102,6 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
     apply-github-patch https://github.com/pytorch/pytorch 139887 eff3c11b1a31f725b50020ce32f6eddba17b5a94 # Use s8s8s8 for qlinear on aarch64 instead of u8s8u8 with mkl-dnn
     apply-github-patch https://github.com/pytorch/pytorch 139753 16d397416abc44005fc66e377d4d15a0d6131a32 # Add SVE implementation for 8 bit quantized embedding bag on aarch64
     apply-github-patch https://github.com/pytorch/pytorch 136850 6d5aaff8434203f870d76d840158d6989ddd61d0 # Enable XNNPACK for quantized add
-    apply-github-patch https://github.com/pytorch/pytorch 140233 6d0b4448bfe3771e076e5c7758333f98810605c4 # Enables static quantization for aarch64
     apply-github-patch https://github.com/pytorch/pytorch 135058 511af4efb5c008a75a196c525a7ad546a9915fd0 # Pass ideep:lowp_kind to matmul_forward::compute on cache misses
     apply-github-patch https://github.com/pytorch/pytorch 142391 8373846f441381a56e7abd905af84102aa52fc7b # parallelize sort
     apply-github-patch https://github.com/pytorch/pytorch 139387 e5e5d29d6bab882540e36e44a3a75bd187fcbb62 # Add prepacking for linear weights
@@ -109,11 +109,6 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
     apply-github-patch https://github.com/pytorch/pytorch 140159 10d3e48f6172f18e36ba568e2760f39b31a13e1d # cpu: aarch64: enable gemm-bf16f32
 
     # Submodules needs to be handled manually for patches that adds submodules
-    reset_submodule third_party/kleidiai
-    apply-github-patch https://github.com/pytorch/pytorch 134124 1c0ef38138d8621ab4a044860404fbf01c7504a6 # [ARM][feat]: Add 4 bit dynamic quantization matmuls & KleidiAI Backend
-    apply-github-patch https://github.com/pytorch/pytorch 134124 80d263f5343806d3169f5c180f23cfe975264bdf # [ARM][feat]: Add 4 bit dynamic quantization matmuls & KleidiAI Backend
-    apply-github-patch https://github.com/pytorch/pytorch 134124 3c10c2b55eecd2f9316b845ff697519639601527 # [ARM][feat]: Add 4 bit dynamic quantization matmuls & KleidiAI Backend
-    apply-github-patch https://github.com/pytorch/pytorch 134124 6d178afd7d82d2ed12b7734e7e2b350a2d332e1c # [ARM][feat]: Add 4 bit dynamic quantization matmuls & KleidiAI Backend
     setup_submodule https://git.gitlab.arm.com/kleidi/kleidiai.git third_party/kleidiai 202603f38a9df9d2ded89f12b41ded621c71d4ea
 
     git submodule sync
@@ -127,10 +122,7 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
             cd mkl-dnn
             git fetch origin $ONEDNN_HASH && git clean -f && git checkout -f FETCH_HEAD
             apply-github-patch https://github.com/oneapi-src/oneDNN 2194 c22f4ae50002ef0a93bfe1895684f36abd92517d # src: cpu: aarch64: lowp_matmul: Make weights constant
-            # Multiple commits from one PR
-            apply-github-patch https://github.com/oneapi-src/oneDNN 2212 6a77e84feb442964c91a0101d58fe1473566b185 # src: cpu: aarch64: Enable matmul static quantisation.
-            apply-github-patch https://github.com/oneapi-src/oneDNN 2212 efad4f6582c13823d81c78130ab80db57b1381eb # src: cpu: aarch64: Enable convolution static quantisation.
-            apply-github-patch https://github.com/oneapi-src/oneDNN 2212 0358abf98dd6c5221a0c40ea47f0a23a1e6cf28e # src: cpu: aarch64: lowp_matmul: Make weights constant
+            apply-github-patch https://github.com/oneapi-src/oneDNN 2212 3e4904106682369d9661350b97fc316e0a0edcbf # src: cpu: aarch64: lowp_matmul: Make weights constant
 
         )
     )
@@ -142,11 +134,10 @@ git-shallow-clone https://review.mlplatform.org/ml/ComputeLibrary $ACL_HASH
     apply-gerrit-patch https://review.mlplatform.org/c/ml/ComputeLibrary/+/12818/1 # perf: Improve gemm_interleaved 2D vs 1D blocking heuristic
     apply-gerrit-patch https://review.mlplatform.org/c/ml/ComputeLibrary/+/12819/1 # fix: Do not skip prepare stage after updating quantization parameters
     apply-gerrit-patch https://review.mlplatform.org/c/ml/ComputeLibrary/+/12820/3 # fix: Do not skip MatrixBReduction in prepare for dynamic offsets
-    apply-gerrit-patch https://review.mlplatform.org/c/ml/ComputeLibrary/+/12904/2 # fix: incorrect scheduling hint heuristic for GEMMs
 )
 
 git-shallow-clone https://github.com/pytorch/ao.git $TORCH_AO_HASH
 (
     cd ao
-    apply-github-patch https://github.com/pytorch/ao 1447 2a18e60401c79a5ca514dbcd8207daf5fa9f832d # [Feat]: Add support for kleidiai quantization schemes
+    apply-github-patch https://github.com/pytorch/ao 1447 983215d4bc78759b278a757a3a69b50229c987c1 # [Feat]: Add support for kleidiai quantization schemes
 )
