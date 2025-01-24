@@ -10,8 +10,14 @@ where `YY` is the year, and `MM` the month of the increment.
 ### Added
 
 ### Changed
-
+ - Updates hashes for:
+   - PyTorch to 8d4926e30a944320adf434016129cb6788eff79b, from viable/strict
+   - ideep to e026f3b0318087fe19e2b062e8edf55bfe7a522c, from ideep_pytorch
+   - oneDNN to 0fd3b73a25d11106e141ddefd19fcacc74f8bbfe, from main
+   - Arm Compute Library to 6acccf1730b48c9a22155998fc4b2e0752472148. from main
+   - Torchao to 2e032c6b0de960dee554dcb08126ace718b14c6d, from main
 ### Removed
+ - Removes patches that are now merged upstream.
 
 ### Fixed
 
