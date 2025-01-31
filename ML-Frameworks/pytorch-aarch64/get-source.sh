@@ -107,6 +107,7 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
     apply-github-patch https://github.com/pytorch/pytorch 139387 e5e5d29d6bab882540e36e44a3a75bd187fcbb62 # Add prepacking for linear weights
     apply-github-patch https://github.com/pytorch/pytorch 139387 19423aaa1af154e1d47d8acf1e677dff727da5aa # Add prepacking for linear weights
     apply-github-patch https://github.com/pytorch/pytorch 140159 10d3e48f6172f18e36ba568e2760f39b31a13e1d # cpu: aarch64: enable gemm-bf16f32
+    apply-github-patch https://github.com/pytorch/pytorch 145942 3d05899222da2b93ed3d4c88c382d318e68eeec6 # Enable fast qlinear_dynamic path for AArch64 through Arm Compute Library directly
 
     # Submodules needs to be handled manually for patches that adds submodules
     setup_submodule https://git.gitlab.arm.com/kleidi/kleidiai.git third_party/kleidiai 202603f38a9df9d2ded89f12b41ded621c71d4ea
