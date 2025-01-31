@@ -8,6 +8,8 @@ where `YY` is the year, and `MM` the month of the increment.
 ## [unreleased]
 
 ### Added
+  - Adds work-in-progress PyTorch PRs:
+    - 145942 3d05899222da2b93ed3d4c88c382d318e68eeec6 - Enable qlinear_dynamic path for AArch64 through Arm Compute Library directly.
 
 ### Changed
  - Updates hashes for:
