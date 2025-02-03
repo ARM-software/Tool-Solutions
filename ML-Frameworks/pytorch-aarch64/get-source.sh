@@ -18,7 +18,6 @@
 # *******************************************************************************
 
 set -eux -o pipefail
-
 PYTORCH_HASH=62ce3e6e84df516fdd5310d5095fa01251806f1d   # From viable/strict
 IDEEP_HASH=9873ffca18467b07f4fb6cbbd8742dc7c6588b72     # From ideep_pytorch
 ONEDNN_HASH=283cf3783c28c231308f13cf2c6a0247517f934f    # From main
@@ -99,10 +98,9 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
 
     apply-github-patch https://github.com/pytorch/pytorch 143190 f424c67660f45bfeaceb9bebfafc7e22638746c4 # Enable AArch64 CI scripts to be used for local dev
 
+    apply-github-patch https://github.com/pytorch/pytorch 145486 bd314eef0cb371607e714b3519f5564938490f4a # feat: add SVE dispatch for non-FBGEMM qembeddingbag (fixes illigal instruction failures on N1)
     apply-github-patch https://github.com/pytorch/pytorch 139887 eff3c11b1a31f725b50020ce32f6eddba17b5a94 # Use s8s8s8 for qlinear on aarch64 instead of u8s8u8 with mkl-dnn
-    apply-github-patch https://github.com/pytorch/pytorch 139753 16d397416abc44005fc66e377d4d15a0d6131a32 # Add SVE implementation for 8 bit quantized embedding bag on aarch64
     apply-github-patch https://github.com/pytorch/pytorch 136850 6d5aaff8434203f870d76d840158d6989ddd61d0 # Enable XNNPACK for quantized add
-    apply-github-patch https://github.com/pytorch/pytorch 135058 511af4efb5c008a75a196c525a7ad546a9915fd0 # Pass ideep:lowp_kind to matmul_forward::compute on cache misses
     apply-github-patch https://github.com/pytorch/pytorch 142391 8373846f441381a56e7abd905af84102aa52fc7b # parallelize sort
     apply-github-patch https://github.com/pytorch/pytorch 139387 e5e5d29d6bab882540e36e44a3a75bd187fcbb62 # Add prepacking for linear weights
     apply-github-patch https://github.com/pytorch/pytorch 139387 19423aaa1af154e1d47d8acf1e677dff727da5aa # Add prepacking for linear weights

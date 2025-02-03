@@ -25,12 +25,14 @@ requests~=2.32.3
 safetensors~=0.4.5
 six~=1.16.0
 sympy~=1.13.1
-tokenizers==0.15.* # This pin is required due to the transformers pin
+tokenizers~=0.21.0    # This pin is required due to the transformers pin
 tqdm~=4.66.5
-transformers==4.39.1 # Pinned to version which is known not to have regression due to SDPA changes
+transformers~=4.48.2  # NOTE: Updating transformers delivers improved performance for many workload.
+                      #       However users may still experience performance regressions for some workloads with this build at present due to SDPA changes.
+#transformers==4.39.1 #       Please use version 4.39.1 to avoid any regressions due to SDPA changes.
 typing_extensions~=4.12.2
 tzdata==2024.2
 urllib3~=2.2.3
-sentencepiece==0.2.0 # Torchchat
-tomli==2.2.1 # Torchchat
-protobuf==5.29.2 # GenAI models dependency
+sentencepiece==0.2.0  # Torchchat
+tomli==2.2.1          # Torchchat
+protobuf==5.29.2      # GenAI models dependency
