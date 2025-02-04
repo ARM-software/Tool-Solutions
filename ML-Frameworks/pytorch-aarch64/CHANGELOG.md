@@ -8,21 +8,26 @@ where `YY` is the year, and `MM` the month of the increment.
 ## [unreleased]
 
 ### Added
-  - Adds work-in-progress PyTorch PRs:
-    - 145942 3d05899222da2b93ed3d4c88c382d318e68eeec6 - Enable qlinear_dynamic path for AArch64 through Arm Compute Library directly.
+- Adds work-in-progress PyTorch PRs:
+  - 145942 3d05899222da2b93ed3d4c88c382d318e68eeec6 - Enable qlinear_dynamic path for AArch64 through Arm Compute Library directly.
+- Minor improvements to build process and logging.
 
 ### Changed
- - Updates hashes for:
-   - PyTorch to 8d4926e30a944320adf434016129cb6788eff79b, from viable/strict
-   - ideep to e026f3b0318087fe19e2b062e8edf55bfe7a522c, from ideep_pytorch
-   - oneDNN to 0fd3b73a25d11106e141ddefd19fcacc74f8bbfe, from main
-   - Arm Compute Library to 6acccf1730b48c9a22155998fc4b2e0752472148. from main
-   - Torchao to 2e032c6b0de960dee554dcb08126ace718b14c6d, from main
+- Updates hashes for:
+  - PyTorch to 8d4926e30a944320adf434016129cb6788eff79b, from viable/strict
+  - ideep to e026f3b0318087fe19e2b062e8edf55bfe7a522c, from ideep_pytorch
+  - oneDNN to 0fd3b73a25d11106e141ddefd19fcacc74f8bbfe, from main
+  - Arm Compute Library to 6acccf1730b48c9a22155998fc4b2e0752472148. from main
+  - Torchao to 2e032c6b0de960dee554dcb08126ace718b14c6d, from main
+- Updates work-in-progress PyTorch PRs:
+  - Replaces https://github.com/pytorch/pytorch/pull/139753 with https://github.com/pytorch/pytorch/pull/145486
+- Updates transformers to version 4.48.2 and tokenizers to version 0.21
+
 ### Removed
- - Removes patches that are now merged upstream.
+- Removes patches that are now merged upstream.
 
 ### Fixed
-
+- Addition of https://github.com/pytorch/pytorch/pull/145486 fixes illigal instruction on non-SVE targets.
 
 ## [r24.12] 2024-12-20
 
