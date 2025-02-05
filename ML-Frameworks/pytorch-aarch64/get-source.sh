@@ -102,8 +102,11 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
     apply-github-patch https://github.com/pytorch/pytorch 139887 eff3c11b1a31f725b50020ce32f6eddba17b5a94 # Use s8s8s8 for qlinear on aarch64 instead of u8s8u8 with mkl-dnn
     apply-github-patch https://github.com/pytorch/pytorch 136850 6d5aaff8434203f870d76d840158d6989ddd61d0 # Enable XNNPACK for quantized add
     apply-github-patch https://github.com/pytorch/pytorch 142391 8373846f441381a56e7abd905af84102aa52fc7b # parallelize sort
-    apply-github-patch https://github.com/pytorch/pytorch 139387 e5e5d29d6bab882540e36e44a3a75bd187fcbb62 # Add prepacking for linear weights
-    apply-github-patch https://github.com/pytorch/pytorch 139387 19423aaa1af154e1d47d8acf1e677dff727da5aa # Add prepacking for linear weights
+    apply-github-patch https://github.com/pytorch/pytorch 139387 4140ee51b77d11966fc6d584f11eb15a45ec63c7 # Add prepacking for linear weights
+    apply-github-patch https://github.com/pytorch/pytorch 139387 c71443890e6d5538168d4fb2d760200fd9fef8d4 # Add prepacking for linear weights
+    apply-github-patch https://github.com/pytorch/pytorch 139387 3759c98aced224d9aa987e80db46a22355001cf5 # Add prepacking for linear weights
+    apply-github-patch https://github.com/pytorch/pytorch 139387 a7ff8b73fc5a44f8842853fe25a53695ecca92f2 # Add prepacking for linear weights
+    apply-github-patch https://github.com/pytorch/pytorch 139387 d4512a8ea1748ca15c751c2e87d177ef1c7094da # Add prepacking for linear weights
     apply-github-patch https://github.com/pytorch/pytorch 140159 8d3404ec5972528f606fe605887ad2254a174fbc # cpu: aarch64: enable gemm-bf16f32
     apply-github-patch https://github.com/pytorch/pytorch 140159 ab4c191ef0de1e4eced6b4dd7b6e387f57034ad9 # cpu: aarch64: enable gemm-bf16f32
     apply-github-patch https://github.com/pytorch/pytorch 140159 879ca72d54559a388db315eed40803d2f1c827b7 # cpu: aarch64: enable gemm-bf16f32
