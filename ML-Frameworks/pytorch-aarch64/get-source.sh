@@ -23,7 +23,7 @@ IDEEP_HASH=9873ffca18467b07f4fb6cbbd8742dc7c6588b72     # From ideep_pytorch
 ONEDNN_HASH=283cf3783c28c231308f13cf2c6a0247517f934f    # From main
 ACL_HASH=d9be9625ca86ebefcd171d049273d2ee295737a0       # From main
 TORCH_AO_HASH=e1cb44ab84eee0a3573bb161d65c18661dc4a307  # From main
-
+KLEIDI_AI_HASH=ef685a13cfbe8d418aa2ed34350e21e4938358b6 # From main
 
 function git-shallow-clone {
     (
@@ -115,10 +115,10 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
     apply-github-patch https://github.com/pytorch/pytorch 143666 8e5134e9c22cdb6150e425bee43015998ae55c59 # Extend Vec backend with SVE BF16
     apply-github-patch https://github.com/pytorch/pytorch 143666 5e73650463396c7f09e4d0c928a3f72a2cecf306 # Extend Vec backend with SVE BF16
     apply-github-patch https://github.com/pytorch/pytorch 143666 6e21cd41667e63b5c534ca87d8590e781b3f0f06 # Extend Vec backend with SVE BF16
-    
+    apply-github-patch https://github.com/pytorch/pytorch 146476 7f7782494e82ed76986716e58205c033809cca70 # Improve KleidiAI 4 bit kernel performance
 
     # Submodules needs to be handled manually for patches that adds submodules
-    setup_submodule https://git.gitlab.arm.com/kleidi/kleidiai.git third_party/kleidiai 202603f38a9df9d2ded89f12b41ded621c71d4ea
+    setup_submodule https://git.gitlab.arm.com/kleidi/kleidiai.git third_party/kleidiai $KLEIDI_AI_HASH
 
     git submodule sync
     git submodule update --init --checkout --force --recursive --jobs=$(nproc)
@@ -132,7 +132,7 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
             git fetch origin $ONEDNN_HASH && git clean -f && git checkout -f FETCH_HEAD
             apply-github-patch https://github.com/oneapi-src/oneDNN 2194 c22f4ae50002ef0a93bfe1895684f36abd92517d # src: cpu: aarch64: lowp_matmul: Make weights constant
             apply-github-patch https://github.com/oneapi-src/oneDNN 2212 3e4904106682369d9661350b97fc316e0a0edcbf # src: cpu: aarch64: lowp_matmul: Make weights constant
-
+            apply-github-patch https://github.com/oneapi-src/oneDNN 2502 49ac258a43520562a196ba081a3c259ac3732df2 # cpu: aarch64: ip: Allow bf16 for ACL inner product
         )
     )
 )
@@ -140,6 +140,7 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
 git-shallow-clone https://review.mlplatform.org/ml/ComputeLibrary $ACL_HASH
 (
     cd ComputeLibrary
+    apply-gerrit-patch https://review.mlplatform.org/c/ml/ComputeLibrary/+/13445/3 # feat: Enable BF16 inputs in CpuFullyConnected
     apply-gerrit-patch https://review.mlplatform.org/c/ml/ComputeLibrary/+/12818/1 # perf: Improve gemm_interleaved 2D vs 1D blocking heuristic
     apply-gerrit-patch https://review.mlplatform.org/c/ml/ComputeLibrary/+/12819/1 # fix: Do not skip prepare stage after updating quantization parameters
     apply-gerrit-patch https://review.mlplatform.org/c/ml/ComputeLibrary/+/12820/3 # fix: Do not skip MatrixBReduction in prepare for dynamic offsets

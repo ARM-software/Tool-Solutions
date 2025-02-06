@@ -10,6 +10,10 @@ where `YY` is the year, and `MM` the month of the increment.
 ### Added
 - Adds work-in-progress PyTorch PRs:
   - 145942 3d05899222da2b93ed3d4c88c382d318e68eeec6 - Enable qlinear_dynamic path for AArch64 through Arm Compute Library directly.
+  - 146476 8cacbf8a58ba43bb51340ba69204be342b368cf5 - Improve KleidiAI 4 bit kernel performance
+  - 143666 8e5134e9c22cdb6150e425bee43015998ae55c59 - Extend Vec backend with SVE BF16
+- Adds work-in-progress oneDNN PRs:
+  - 2502 49ac258a43520562a196ba081a3c259ac3732df2 - cpu: aarch64: ip: Allow bf16 for ACL inner product
 - Minor improvements to build process and logging.
 
 ### Changed
@@ -22,6 +26,7 @@ where `YY` is the year, and `MM` the month of the increment.
 - Updates work-in-progress PyTorch PRs:
   - Replaces https://github.com/pytorch/pytorch/pull/139753 with https://github.com/pytorch/pytorch/pull/145486
 - Updates transformers to version 4.48.2 and tokenizers to version 0.21
+- Updates KleidiAI submodule to ef685a13cfbe8d418aa2ed34350e21e4938358b6, from main.
 
 ### Removed
 - Removes patches that are now merged upstream.
