@@ -107,6 +107,7 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
     apply-github-patch https://github.com/pytorch/pytorch 139387 3759c98aced224d9aa987e80db46a22355001cf5 # Add prepacking for linear weights
     apply-github-patch https://github.com/pytorch/pytorch 139387 a7ff8b73fc5a44f8842853fe25a53695ecca92f2 # Add prepacking for linear weights
     apply-github-patch https://github.com/pytorch/pytorch 139387 d4512a8ea1748ca15c751c2e87d177ef1c7094da # Add prepacking for linear weights
+    apply-github-patch https://github.com/pytorch/pytorch 139387 d4145ece750e0737b0d1e73677d658817c4b64da # Add prepacking for linear weights
     apply-github-patch https://github.com/pytorch/pytorch 140159 8d3404ec5972528f606fe605887ad2254a174fbc # cpu: aarch64: enable gemm-bf16f32
     apply-github-patch https://github.com/pytorch/pytorch 140159 ab4c191ef0de1e4eced6b4dd7b6e387f57034ad9 # cpu: aarch64: enable gemm-bf16f32
     apply-github-patch https://github.com/pytorch/pytorch 140159 879ca72d54559a388db315eed40803d2f1c827b7 # cpu: aarch64: enable gemm-bf16f32
