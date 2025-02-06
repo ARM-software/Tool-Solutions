@@ -27,6 +27,7 @@ where `YY` is the year, and `MM` the month of the increment.
   - Replaces https://github.com/pytorch/pytorch/pull/139753 with https://github.com/pytorch/pytorch/pull/145486
 - Updates transformers to version 4.48.2 and tokenizers to version 0.21
 - Updates KleidiAI submodule to ef685a13cfbe8d418aa2ed34350e21e4938358b6, from main.
+- Removed packed linear function as this is now done automatically with `with torch.no_grad()`
 
 ### Removed
 - Removes patches that are now merged upstream.
