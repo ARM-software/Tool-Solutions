@@ -43,6 +43,7 @@ PYTORCH_HOST_DIR="${PWD}/pytorch"
 ACL_HOST_DIR="${PWD}/ComputeLibrary"
 
 PYTORCH_ROOT=/pytorch
+UTILS="/utils"
 
 if [ -f "$TORCH_BUILD_CONTAINER_ID_FILE" ]; then
     TORCH_BUILD_CONTAINER=$(cat $TORCH_BUILD_CONTAINER_ID_FILE)
@@ -73,6 +74,7 @@ if ! docker container inspect $TORCH_BUILD_CONTAINER >/dev/null 2>&1 ; then
         -v "${PYTORCH_HOST_DIR}:${PYTORCH_ROOT}" \
         -v "${PYTORCH_FINAL_PACKAGE_DIR}:/artifacts" \
         -v "${ACL_HOST_DIR}:/ComputeLibrary" \
+        -v "${PWD}/utils:${UTILS}" \
         -w / \
         "${IMAGE_NAME}")
 
@@ -85,7 +87,7 @@ if ! docker container inspect $TORCH_BUILD_CONTAINER >/dev/null 2>&1 ; then
     docker exec -t $TORCH_BUILD_CONTAINER bash -c "yum install -y tbb tbb-devel"
 
     # This must be in this if block because it cannot handle being called twice
-    docker exec -t $TORCH_BUILD_CONTAINER bash -c "bash $PYTORCH_ROOT/.ci/docker/common/install_openblas.sh"
+    docker exec -t $TORCH_BUILD_CONTAINER bash -c "bash $UTILS/install_openblas.sh"
 
     echo "Storing torch build container id in $TORCH_BUILD_CONTAINER_ID_FILE for reuse: $TORCH_BUILD_CONTAINER"
     echo $TORCH_BUILD_CONTAINER > "$TORCH_BUILD_CONTAINER_ID_FILE"

@@ -17,6 +17,8 @@
 # limitations under the License.
 # *******************************************************************************
 
+source utils/helper.sh
+
 set -eux -o pipefail
 PYTORCH_HASH=62ce3e6e84df516fdd5310d5095fa01251806f1d   # From viable/strict
 IDEEP_HASH=9873ffca18467b07f4fb6cbbd8742dc7c6588b72     # From ideep_pytorch
@@ -25,76 +27,9 @@ ACL_HASH=d9be9625ca86ebefcd171d049273d2ee295737a0       # From main
 TORCH_AO_HASH=e1cb44ab84eee0a3573bb161d65c18661dc4a307  # From main
 KLEIDI_AI_HASH=ef685a13cfbe8d418aa2ed34350e21e4938358b6 # From main
 
-function git-shallow-clone {
-    (
-        repo_name=$(basename "$1" .git)
-        if ! cd "$repo_name" ; then
-            echo "$repo_name doesn't exist, so we are making"
-            mkdir "$repo_name"
-            cd "$repo_name"
-            git init
-            git remote add origin $1
-        fi
-        git fetch --recurse-submodules=no origin $2
-        # We do a force checkout + clean to overwrite previous patches
-        git checkout -f $2
-        git clean -fd
-    )
-}
-
-function apply-github-patch {
-    # Apply a specific commit from a specific GitHub PR
-    # $1 is the repo url, $2 is the PR number, and $3 is commit hash
-    set -u
-
-    # Look in the PR first
-    curl --silent -L $1/pull/$2/commits/$3.patch -o $3.patch
-
-    # If the PR has been updated, the commit may no longer be there and the .patch will be empty.
-    # Look in the full repo instead.
-    # If it can't be found, this time curl will error
-    if [[ ! -s $3.patch ]]; then
-       >&2 echo "Commit $3 not found in $1/pull/$2. Checking the full repository..."
-       curl --silent --fail -L $1/commit/$3.patch -o $3.patch
-    fi
-
-    # Apply the patch and tidy up.
-    patch -p1 < $3.patch
-    rm $3.patch
-    return 0
-}
-
-function apply-gerrit-patch {
-    # $1 must be the url to a specific patch set
-    # We get the repo by removing /c and chopping off the change number
-    # e.g. https://review.mlplatform.org/c/ml/ComputeLibrary/+/12818/1 -> https://review.mlplatform.org/ml/ComputeLibrary/
-    repo_url=$(echo "$1" | sed 's#/c/#/#' | cut -d'+' -f1)
-    # e.g. refs/changes/18/12818/1 Note that where the middle number is the last 2 digits of the patch number
-    refname=$(echo "$1" | awk -F'/' '{print "refs/changes/" substr($(NF-1),length($(NF-1))-1,2) "/" $(NF-1) "/" $(NF)}')
-    git fetch $repo_url $refname && git cherry-pick --no-commit FETCH_HEAD
-}
-
-function setup_submodule() {
-    local original_dir=$(pwd)
-    rm -rf "$2"
-    git clone $1 $2
-    cd $2
-    git checkout $3
-    cd $original_dir
-}
-
-function reset_submodule() {
-    if [ -d "$1" ]; then
-        rm -rf "$1"
-    fi
-}
-
 git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
 (
     cd pytorch
-
-    # Bump OpenBLAS version. Note that install_openblas.sh has to be rerun in the PyTorch builder Docker container
-    sed -i -e 's/v0.3.25/v0.3.28/g' .ci/docker/common/install_openblas.sh
 
     apply-github-patch https://github.com/pytorch/pytorch 143190 f424c67660f45bfeaceb9bebfafc7e22638746c4 # Enable AArch64 CI scripts to be used for local dev
 
@@ -111,6 +46,7 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
     apply-github-patch https://github.com/pytorch/pytorch 140159 8d3404ec5972528f606fe605887ad2254a174fbc # cpu: aarch64: enable gemm-bf16f32
     apply-github-patch https://github.com/pytorch/pytorch 140159 ab4c191ef0de1e4eced6b4dd7b6e387f57034ad9 # cpu: aarch64: enable gemm-bf16f32
     apply-github-patch https://github.com/pytorch/pytorch 140159 879ca72d54559a388db315eed40803d2f1c827b7 # cpu: aarch64: enable gemm-bf16f32
+    apply-github-patch https://github.com/pytorch/pytorch 140159 150f5d92fa79a57a580ac000f667d05787b650b3 # cpu: aarch64: enable gemm-bf16f32
     apply-github-patch https://github.com/pytorch/pytorch 145942 3d05899222da2b93ed3d4c88c382d318e68eeec6 # Enable fast qlinear_dynamic path for AArch64 through Arm Compute Library directly
     apply-github-patch https://github.com/pytorch/pytorch 141127 3f2fad0b4774126f228597ba03b68a472fc433cc # Enables static quantization for aarch64
     apply-github-patch https://github.com/pytorch/pytorch 143666 8e5134e9c22cdb6150e425bee43015998ae55c59 # Extend Vec backend with SVE BF16
