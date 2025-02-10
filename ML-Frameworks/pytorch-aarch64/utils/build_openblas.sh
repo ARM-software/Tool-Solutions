@@ -25,16 +25,11 @@
 source /utils/helper.sh
 
 set -ex
+OPENBLAS_HASH="1b85b6a396c94e78c9ba14aafcdfd5c5da5a8bb2"
 OPENBLAS_CHECKOUT_DIR="OpenBLAS"
 
 cd /
-git clone https://github.com/OpenMathLib/OpenBLAS.git -b develop --depth 1
-(
-    cd $OPENBLAS_CHECKOUT_DIR
-    apply-github-patch https://github.com/OpenMathLib/OpenBLAS/ 5108 4379a6fbe37038082c657bba5be5c67331a0bd0b 
-    apply-github-patch https://github.com/OpenMathLib/OpenBLAS/ 5108 c748e6a33871f0dfa3bf6569c88a676c9a387411 
-    cd /
-)
+git-shallow-clone https://github.com/OpenMathLib/OpenBLAS.git $OPENBLAS_HASH
 
 OPENBLAS_BUILD_FLAGS="
 NUM_THREADS=128

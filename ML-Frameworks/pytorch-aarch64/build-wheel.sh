@@ -87,7 +87,7 @@ if ! docker container inspect $TORCH_BUILD_CONTAINER >/dev/null 2>&1 ; then
     docker exec -t $TORCH_BUILD_CONTAINER bash -c "yum install -y tbb tbb-devel"
 
     # This must be in this if block because it cannot handle being called twice
-    docker exec -t $TORCH_BUILD_CONTAINER bash -c "bash $UTILS/install_openblas.sh"
+    docker exec -t $TORCH_BUILD_CONTAINER bash -c "bash $UTILS/build_openblas.sh"
 
     echo "Storing torch build container id in $TORCH_BUILD_CONTAINER_ID_FILE for reuse: $TORCH_BUILD_CONTAINER"
     echo $TORCH_BUILD_CONTAINER > "$TORCH_BUILD_CONTAINER_ID_FILE"
