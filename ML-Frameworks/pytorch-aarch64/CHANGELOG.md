@@ -8,17 +8,30 @@ where `YY` is the year, and `MM` the month of the increment.
 ## [unreleased]
 
 ### Added
+
+### Changed
+
+### Removed
+
+### Fixed
+
+## [r25.02] 2025-02-11
+https://github.com/ARM-software/Tool-Solutions/tree/pytorch-aarch64--r25.02
+
+### Added
 - Adds work-in-progress PyTorch PRs:
-  - 145942 3d05899222da2b93ed3d4c88c382d318e68eeec6 - Enable qlinear_dynamic path for AArch64 through Arm Compute Library directly.
-  - 146476 8cacbf8a58ba43bb51340ba69204be342b368cf5 - Improve KleidiAI 4 bit kernel performance
-  - 143666 8e5134e9c22cdb6150e425bee43015998ae55c59 - Extend Vec backend with SVE BF16
+  - https://github.com/pytorch/pytorch/pull/145942 - Enable qlinear_dynamic path for AArch64 through Arm Compute Library directly. Gives ~15% speed up on approach in Tool Solutions 24.12.
+  - https://github.com/pytorch/pytorch/pull/146476 - Improve KleidiAI 4 bit kernel performance. Greater than 10% performance improvment when calling INT4 KleidiAI kernels
+  - https://github.com/pytorch/pytorch/pull/143666 - Extend Vec backend with SVE BF16.
 - Adds work-in-progress oneDNN PRs:
-  - 2502 49ac258a43520562a196ba081a3c259ac3732df2 - cpu: aarch64: ip: Allow bf16 for ACL inner product
+  - https://github.com/oneapi-src/oneDNN/pull/2502 - cpu: aarch64: ip: Allow bf16 for ACL inner product. Gives speedups of ~170x for BERT_pytorch and ~160x for alexnet using bf16 compile mode.
 - Minor improvements to build process and logging.
+- OpenBLAS build from source at 1b85b6a396c94e78c9ba14aafcdfd5c5da5a8bb2 from develop branch.
+  This includes https://github.com/OpenMathLib/OpenBLAS/pull/5108 to add SBGEMM support for 256bit SVE.
 
 ### Changed
 - Updates hashes for:
-  - PyTorch to 8d4926e30a944320adf434016129cb6788eff79b, from viable/strict
+  - PyTorch to 8d4926e30a944320adf434016129cb6788eff79b (2.7.0.dev20250115), from viable/strict
   - ideep to e026f3b0318087fe19e2b062e8edf55bfe7a522c, from ideep_pytorch
   - oneDNN to 0fd3b73a25d11106e141ddefd19fcacc74f8bbfe, from main
   - Arm Compute Library to 6acccf1730b48c9a22155998fc4b2e0752472148. from main
@@ -31,11 +44,13 @@ where `YY` is the year, and `MM` the month of the increment.
 
 ### Removed
 - Removes patches that are now merged upstream.
+- Removes https://github.com/pytorch/pytorch/pull/139387 - Add prepacking for linear weights. Performance gains better realised by ideep reorder caching.
 
 ### Fixed
 - Addition of https://github.com/pytorch/pytorch/pull/145486 fixes illigal instruction on non-SVE targets.
 
 ## [r24.12] 2024-12-20
+https://github.com/ARM-software/Tool-Solutions/tree/pytorch-aarch64--r24.12
 
 ### Added
 - Adds torchao.
