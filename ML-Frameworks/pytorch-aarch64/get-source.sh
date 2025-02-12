@@ -80,5 +80,5 @@ git-shallow-clone https://review.mlplatform.org/ml/ComputeLibrary $ACL_HASH
 git-shallow-clone https://github.com/pytorch/ao.git $TORCH_AO_HASH
 (
     cd ao
-    apply-github-patch https://github.com/pytorch/ao 1447 983215d4bc78759b278a757a3a69b50229c987c1 # [Feat]: Add support for kleidiai quantization schemes
+    apply-github-patch https://github.com/pytorch/ao 1447 738d7f2c5a48367822f2bf9d538160d19f02341e # [Feat]: Add support for kleidiai quantization schemes
 )
