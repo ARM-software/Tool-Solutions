@@ -1,7 +1,7 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 # *******************************************************************************
-# Copyright 2021-2022 Arm Limited and affiliates.
+# Copyright 2025 Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,20 +17,31 @@
 # limitations under the License.
 # *******************************************************************************
 
-set -euo pipefail
+function git-bump {
+    git fetch origin $1
+    # Clean up any patches
+    git checkout -- .
+    git reset --hard origin/$1
+    echo "Bumped to:"
+    git log -1
+}
 
-export CPLUS_INCLUDE_PATH="/usr/include/python3.8/"
+(
+    cd tensorflow
+    git-bump nightly
 
-mkdir -p $PACKAGE_DIR
-cd $PACKAGE_DIR
-readonly package=boost
-readonly boost_src=https://boostorg.jfrog.io/artifactory/main/release/1.70.0/source/boost_1_70_0.tar.bz2
-readonly num_cpus=$(nproc)
-wget $boost_src
-tar --bzip2 -xf boost_1_70_0.tar.bz2
-cd boost_1_70_0
-./bootstrap.sh --prefix=$PROD_DIR/$package/install
-./b2 -j $num_cpus
-./b2 headers
-sudo ./b2 install
-rm -rf $PACKAGE_DIR
+    (
+        cd third_party/mkl_dnn/oneDNN
+        git-bump main
+    )
+
+    (
+        cd third_party/compute_library/ComputeLibrary
+        git-bump main
+    )
+)
+
+echo "Put this into your get-sources.sh file"
+echo TENSORFLOW_HASH=$(cd tensorflow && git rev-parse HEAD)
+echo ONEDNN_HASH=$(cd tensorflow/third_party/mkl_dnn/oneDNN && git rev-parse HEAD)
+echo ACL_HASH=$(cd tensorflow/third_party/compute_library/ComputeLibrary && git rev-parse HEAD)

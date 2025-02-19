@@ -13,8 +13,11 @@ This ML [Tool Solutions](https://github.com/ARM-software/Tool-Solutions) reposit
 ## Table of Contents
 Here is a list of all the contents of this repository with short descriptions:
 
-### ML-Frameworks/pytorch-aarch64
-Dockerfiles with Arm tools pre-installed in them for developing across operating systems and easily sharing projects. Also included are some examples of how to build multi-architecture docker images supporting the Arm architecture and other Arm docker images such as how to build TensorFlow and PyTorch on AArch64.
+### [ML-Frameworks/pytorch-aarch64](https://github.com/ARM-software/Tool-Solutions/tree/main/ML-Frameworks/pytorch-aarch64) 
+Provides scripts to build a wheel and a Docker image containing PyTorch with examples.
+
+### [ML-Frameworks/tensorflow-aarch64](https://github.com/ARM-software/Tool-Solutions/tree/main/ML-Frameworks/tensorflow-aarch64)
+Provides scripts to build a wheel and a Docker image containing TensorFlow with examples.
 
 ## Releases
 ML [Tool Solutions](https://github.com/ARM-software/Tool-Solutions) has a monthly release cadence.

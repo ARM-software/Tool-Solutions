@@ -1,7 +1,7 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 # *******************************************************************************
-# Copyright 2022-2024 Arm Limited and affiliates.
+# Copyright 2024-2025 Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,25 +17,20 @@
 # limitations under the License.
 # *******************************************************************************
 
+help_str="dockerize.sh takes a TensorFlow wheel as argument. It \
+installs the wheel inside a Docker container with examples and requirements."
+if [ "$#" -ne 1 ]; then
+    echo $help_str
+    exit 1
+fi
 
-set -euo pipefail
+if ! [ -e "$1" ]; then
+    echo "I couldn't find a wheel at $1"
+    echo $help_str
+    exit 1
+fi
 
-cd $PACKAGE_DIR
-readonly package=tensorflow-addons
-readonly version="3380b3ccf906f20dbef49c05906e6b6dabf479cf"
-readonly src_host=https://github.com/tensorflow
-readonly src_repo=addons
-
-git clone ${src_host}/${src_repo}.git
-cd ${src_repo}
-git checkout $version
-
-# Make tf-addons compatible with TF v2.16
-patch -p1 < ../tf_addons_update.patch
-
-python ./configure.py
-
-bazel build build_pip_pkg
-bazel-bin/build_pip_pkg artifacts
-
-pip install artifacts/tensorflow_addons-*.whl
+docker build -t toolsolutions-tensorflow:latest  \
+    --build-arg TENSORFLOW_WHEEL=$1 \
+    .
+docker run --rm -it toolsolutions-tensorflow:latest

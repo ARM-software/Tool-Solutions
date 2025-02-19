@@ -1,0 +1,16 @@
+filelock~=3.17.0
+fsspec==2025.2.0
+huggingface-hub~=0.28.1
+opencv-python-headless~=4.11.0.86
+pandas~=2.2.3
+pillow~=11.1.0
+python-dateutil==2.9.0.post0
+pytz==2025.1
+PyYAML~=6.0.2
+regex==2024.11.6
+safetensors~=0.5.2
+tf_keras~=2.18.0
+tokenizers~=0.21.0
+tqdm~=4.67.1
+transformers~=4.49.0
+tzdata==2025.1

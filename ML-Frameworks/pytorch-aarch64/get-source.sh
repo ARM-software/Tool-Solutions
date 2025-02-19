@@ -17,7 +17,7 @@
 # limitations under the License.
 # *******************************************************************************
 
-source utils/helper.sh
+source ../utils/git-utils.sh
 
 set -eux -o pipefail
 PYTORCH_HASH=62ce3e6e84df516fdd5310d5095fa01251806f1d   # From viable/strict
