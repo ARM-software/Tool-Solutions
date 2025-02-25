@@ -8,10 +8,20 @@ where `YY` is the year, and `MM` the month of the increment.
 ## [Unreleased]
 
 ### Added
+- TensorFlow patch bumping to ComputeLibrary 24.12 and oneDNN 3.7-rc
 
 ### Changed
+- Updated ComputeLibrary to 0038c52 (Jan 6, 2025)
+- Updated oneDNN to d4b61e9 (Jan 14, 2025)
+- Updated TensorFlow to 2.20.dev-6506da6
 
 ### Removed
+- Removed MLCommons examples and patches
+- Removed cpp examples
+- Removed all inline patches, work in progress features should now be applied
+  from PRs using wget. Removed patches have been merged upstream (and now picked
+  up by new versions of software components) or are now included via wget in
+  `./get-source.sh`
 
 ### Fixed
 
