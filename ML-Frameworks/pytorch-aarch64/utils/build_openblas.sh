@@ -22,10 +22,10 @@
 # https://github.com/pytorch/pytorch/blob/main/.ci/docker/common/install_openblas.sh
 # TODO: discard this and use `pytorch/.ci/docker/common/install_openblas.sh` to build OpenBLAS after version upgrade
 
-source /utils/helper.sh
+source /common_utils/git-utils.sh
 
 set -ex
-OPENBLAS_HASH="1b85b6a396c94e78c9ba14aafcdfd5c5da5a8bb2"
+OPENBLAS_HASH="1533fe49bef51ff49e4358a2687f1e475801f9fd"
 OPENBLAS_CHECKOUT_DIR="OpenBLAS"
 
 cd /

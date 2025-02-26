@@ -44,6 +44,7 @@ ACL_HOST_DIR="${PWD}/ComputeLibrary"
 
 PYTORCH_ROOT=/pytorch
 UTILS="/utils"
+COMMON_UTILS="/common_utils"
 
 if [ -f "$TORCH_BUILD_CONTAINER_ID_FILE" ]; then
     TORCH_BUILD_CONTAINER=$(cat $TORCH_BUILD_CONTAINER_ID_FILE)
@@ -75,6 +76,7 @@ if ! docker container inspect $TORCH_BUILD_CONTAINER >/dev/null 2>&1 ; then
         -v "${PYTORCH_FINAL_PACKAGE_DIR}:/artifacts" \
         -v "${ACL_HOST_DIR}:/ComputeLibrary" \
         -v "${PWD}/utils:${UTILS}" \
+        -v "${PWD}/../utils:${COMMON_UTILS}" \
         -w / \
         "${IMAGE_NAME}")
 
