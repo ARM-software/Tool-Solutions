@@ -20,36 +20,36 @@
 source ../utils/git-utils.sh
 
 set -eux -o pipefail
-PYTORCH_HASH=62ce3e6e84df516fdd5310d5095fa01251806f1d   # From viable/strict
-IDEEP_HASH=9873ffca18467b07f4fb6cbbd8742dc7c6588b72     # From ideep_pytorch
-ONEDNN_HASH=283cf3783c28c231308f13cf2c6a0247517f934f    # From main
-ACL_HASH=d9be9625ca86ebefcd171d049273d2ee295737a0       # From main
-TORCH_AO_HASH=e1cb44ab84eee0a3573bb161d65c18661dc4a307  # From main
-KLEIDI_AI_HASH=ef685a13cfbe8d418aa2ed34350e21e4938358b6 # From main
+PYTORCH_He555c4d8ae6f8b0f6d21072a4559b6154c8c19eb  # 2.7.0.dev20250305 from viable/strict
+IDEEP_HASH=719d8e6cd7f7a0e01b155657526d693acf97c2b3    # From ideep_pytorch
+ONEDNN_HASH=321c4520924af264518159777f21f630075c9b71   # From main
+ACL_HASH=534f1c5aee4dc97794a6772a8215708abc1f1e52      # 25.02.1 release
+TORCH_AO_HASH=e1cb44ab84eee0a3573bb161d65c18661dc4a307 # From main
 
 git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
 (
     cd pytorch
 
-    apply-github-patch https://github.com/pytorch/pytorch 143190 f424c67660f45bfeaceb9bebfafc7e22638746c4 # Enable AArch64 CI scripts to be used for local dev
-
-    apply-github-patch https://github.com/pytorch/pytorch 145486 bd314eef0cb371607e714b3519f5564938490f4a # feat: add SVE dispatch for non-FBGEMM qembeddingbag (fixes illigal instruction failures on N1)
-    apply-github-patch https://github.com/pytorch/pytorch 139887 eff3c11b1a31f725b50020ce32f6eddba17b5a94 # Use s8s8s8 for qlinear on aarch64 instead of u8s8u8 with mkl-dnn
-    apply-github-patch https://github.com/pytorch/pytorch 136850 6d5aaff8434203f870d76d840158d6989ddd61d0 # Enable XNNPACK for quantized add
-    apply-github-patch https://github.com/pytorch/pytorch 142391 8373846f441381a56e7abd905af84102aa52fc7b # parallelize sort
+    apply-github-patch https://github.com/pytorch/pytorch 143190 afded46b6c48fb434467cedacee4da956a66be64 # Enable AArch64 CI scripts to be used for local dev
     apply-github-patch https://github.com/pytorch/pytorch 140159 8d3404ec5972528f606fe605887ad2254a174fbc # cpu: aarch64: enable gemm-bf16f32
-    apply-github-patch https://github.com/pytorch/pytorch 140159 ab4c191ef0de1e4eced6b4dd7b6e387f57034ad9 # cpu: aarch64: enable gemm-bf16f32
-    apply-github-patch https://github.com/pytorch/pytorch 140159 879ca72d54559a388db315eed40803d2f1c827b7 # cpu: aarch64: enable gemm-bf16f32
-    apply-github-patch https://github.com/pytorch/pytorch 140159 150f5d92fa79a57a580ac000f667d05787b650b3 # cpu: aarch64: enable gemm-bf16f32
-    apply-github-patch https://github.com/pytorch/pytorch 145942 3d05899222da2b93ed3d4c88c382d318e68eeec6 # Enable fast qlinear_dynamic path for AArch64 through Arm Compute Library directly
-    apply-github-patch https://github.com/pytorch/pytorch 141127 3f2fad0b4774126f228597ba03b68a472fc433cc # Enables static quantization for aarch64
-    apply-github-patch https://github.com/pytorch/pytorch 143666 8e5134e9c22cdb6150e425bee43015998ae55c59 # Extend Vec backend with SVE BF16
-    apply-github-patch https://github.com/pytorch/pytorch 143666 5e73650463396c7f09e4d0c928a3f72a2cecf306 # Extend Vec backend with SVE BF16
-    apply-github-patch https://github.com/pytorch/pytorch 143666 6e21cd41667e63b5c534ca87d8590e781b3f0f06 # Extend Vec backend with SVE BF16
-    apply-github-patch https://github.com/pytorch/pytorch 146476 7f7782494e82ed76986716e58205c033809cca70 # Improve KleidiAI 4 bit kernel performance
-
-    # Submodules needs to be handled manually for patches that adds submodules
-    setup_submodule https://git.gitlab.arm.com/kleidi/kleidiai.git third_party/kleidiai $KLEIDI_AI_HASH
+    apply-github-patch https://github.com/pytorch/pytorch 140159 ab4c191ef0de1e4eced6b4dd7b6e387f57034ad9
+    apply-github-patch https://github.com/pytorch/pytorch 140159 879ca72d54559a388db315eed40803d2f1c827b7
+    apply-github-patch https://github.com/pytorch/pytorch 140159 150f5d92fa79a57a580ac000f667d05787b650b3
+    apply-github-patch https://github.com/pytorch/pytorch 148542 99e5d35a460413da5a8976bef0b65babcdf95fc3 # Enable Direct Use of Arm Compute Library (ACL) in ATen
+    apply-github-patch https://github.com/pytorch/pytorch 147337 ac5618b6bc1d522f8e944b6567a74905af315fd9 # Enable a fast path for (static) qlinear for AArch64 through ACL directly
+    apply-github-patch https://github.com/pytorch/pytorch 147337 0b06ae118c19af5551c4c638c88abdf959ec8a3f
+    apply-github-patch https://github.com/pytorch/pytorch 146620 a0d20465a0590ecb79e7a8e2101145a223f89f36 # Enable qint8 and quint8 add for AArch64 using ACL directly
+    apply-github-patch https://github.com/pytorch/pytorch 148197 e2efe476c1162986eb16132cf6000be3ef9c211e # Enable oneDNN dispatch for gemm bf16bf16->bf16
+    apply-github-patch https://github.com/pytorch/pytorch 143666 4903aefc81145056ac5cc41cb5568dc61b03aca1 # Extend vec backend with BF16 SVE intrinsics
+    apply-github-patch https://github.com/pytorch/pytorch 143666 7c93930e5031cb964a17683f0b0bd965f1486f37
+    apply-github-patch https://github.com/pytorch/pytorch 143666 ec27f37b032a537075b0870750adae48c3f09e61
+    apply-github-patch https://github.com/pytorch/pytorch 143666 c063ac24cc582da05871b6c7a7c7e33b0b08e097
+    apply-github-patch https://github.com/pytorch/pytorch 143666 a632a1fb34fcc28ef98ab27a6041950f976bf475
+    apply-github-patch https://github.com/pytorch/pytorch 143666 03fca5494b1019514f7400c8737a57b6b8234773
+    apply-github-patch https://github.com/pytorch/pytorch 143666 17a346fab23182c0efade9fea982f5b8d45112f1
+    apply-github-patch https://github.com/pytorch/pytorch 143666 6ca8ed8d8fe58488e2896b57b99c24b21fc6c50b
+    apply-github-patch https://github.com/pytorch/pytorch 143666 c3341033261e46aa818444ceff9838eded8f71b2
+    apply-github-patch https://github.com/pytorch/pytorch 143666 00f0dc0fce51612fe7315653870e6528c3375092
 
     git submodule sync
     git submodule update --init --checkout --force --recursive --jobs=$(nproc)
@@ -57,13 +57,9 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
         cd third_party/ideep
         git fetch origin $IDEEP_HASH && git clean -f && git checkout -f FETCH_HEAD
         apply-github-patch https://github.com/intel/ideep 331 39e2de117c7470e7a8f8171603dd05d40b6943e1 # Cache reorder tensors
-        apply-github-patch https://github.com/intel/ideep 341 120bf1920cc126f3ee28c20a93b0013799b74339 # Include hash of weights in the key of the primitive cache for aarch64 lowp gemm
         (
             cd mkl-dnn
             git fetch origin $ONEDNN_HASH && git clean -f && git checkout -f FETCH_HEAD
-            apply-github-patch https://github.com/oneapi-src/oneDNN 2194 c22f4ae50002ef0a93bfe1895684f36abd92517d # src: cpu: aarch64: lowp_matmul: Make weights constant
-            apply-github-patch https://github.com/oneapi-src/oneDNN 2212 3e4904106682369d9661350b97fc316e0a0edcbf # src: cpu: aarch64: lowp_matmul: Make weights constant
-            apply-github-patch https://github.com/oneapi-src/oneDNN 2502 49ac258a43520562a196ba081a3c259ac3732df2 # cpu: aarch64: ip: Allow bf16 for ACL inner product
         )
     )
 )
@@ -71,10 +67,7 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
 git-shallow-clone https://review.mlplatform.org/ml/ComputeLibrary $ACL_HASH
 (
     cd ComputeLibrary
-    apply-gerrit-patch https://review.mlplatform.org/c/ml/ComputeLibrary/+/13445/3 # feat: Enable BF16 inputs in CpuFullyConnected
     apply-gerrit-patch https://review.mlplatform.org/c/ml/ComputeLibrary/+/12818/1 # perf: Improve gemm_interleaved 2D vs 1D blocking heuristic
-    apply-gerrit-patch https://review.mlplatform.org/c/ml/ComputeLibrary/+/12819/1 # fix: Do not skip prepare stage after updating quantization parameters
-    apply-gerrit-patch https://review.mlplatform.org/c/ml/ComputeLibrary/+/12820/3 # fix: Do not skip MatrixBReduction in prepare for dynamic offsets
 )
 
 git-shallow-clone https://github.com/pytorch/ao.git $TORCH_AO_HASH

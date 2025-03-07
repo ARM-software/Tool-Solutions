@@ -25,11 +25,13 @@
 source /common_utils/git-utils.sh
 
 set -ex
-OPENBLAS_HASH="1533fe49bef51ff49e4358a2687f1e475801f9fd"
+OPENBLAS_HASH="e4630ed15a8c52f780d9b3f9fb4ac2168c60f830"
 OPENBLAS_CHECKOUT_DIR="OpenBLAS"
 
 cd /
 git-shallow-clone https://github.com/OpenMathLib/OpenBLAS.git $OPENBLAS_HASH
+
+github-apply-patch https://github.com/OpenMathLib/OpenBLAS/ 5157 5e71cef602d7847b5b4648958e25af8a36d39729 # Optimize gemv_n_sve kernel
 
 OPENBLAS_BUILD_FLAGS="
 NUM_THREADS=128

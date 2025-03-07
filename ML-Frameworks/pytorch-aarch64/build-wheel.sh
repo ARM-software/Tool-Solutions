@@ -86,8 +86,6 @@ if ! docker container inspect $TORCH_BUILD_CONTAINER >/dev/null 2>&1 ; then
     docker exec -t $TORCH_BUILD_CONTAINER bash -c $PYTORCH_ROOT/.circleci/scripts/binary_populate_env.sh
     docker exec -t $TORCH_BUILD_CONTAINER bash -c "$PYTORCH_ROOT/.ci/aarch64_linux/aarch64_ci_setup.sh"
 
-    docker exec -t $TORCH_BUILD_CONTAINER bash -c "yum install -y tbb tbb-devel"
-
     # This must be in this if block because it cannot handle being called twice
     docker exec -t $TORCH_BUILD_CONTAINER bash -c "bash $UTILS/build_openblas.sh"
 

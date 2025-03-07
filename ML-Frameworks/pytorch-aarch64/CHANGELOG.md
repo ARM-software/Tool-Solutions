@@ -8,10 +8,29 @@ where `YY` is the year, and `MM` the month of the increment.
 ## [unreleased]
 
 ### Added
+- Adds work-in-progress PyTorch PRs:
+  - https://github.com/pytorch/pytorch/pull/148542 - Enables direct use Compute Library in ATen
+  - https://github.com/pytorch/pytorch/pull/147337 - Enables a fast path for static qlinear via Compute Library directly
+  - https://github.com/pytorch/pytorch/pull/146620 - Enables qint8 and quint8 add via Compute Library directly. Speedup for OMP_NUM_THREADS=1 is ~15x, and ~5.4x for 32 threads.
+  - https://github.com/pytorch/pytorch/pull/148197 - Enables oneDNN dispatch for GEMM bf16bf16->bf16
+  - https://github.com/pytorch/pytorch/pull/140159 - Enables gemm-bf16f32
+- Adds work-in-progress OpenBLAS PRs:
+  - https://github.com/OpenMathLib/OpenBLAS/pull/5157 - adds optimized gemv_n_sve kernel.
 
 ### Changed
+- Updates hashes for:
+  - PyTorch to e555c4d (2.7.0.dev20250305) from viable/strict branch.
+  - ideep to 719d8e6  from ideep_pytorch branch.
+  - oneDNN to 321c452 from main branch.
+  - Compute Library to v25.02.1.
+  - OpenBLAS to e4630ed from main.
+- Updates work-in-progress PyTorch PRs.
+- Updates torchaudio to 2.6.0.dev20250305.
+- Updates torchvision to 0.22.0.dev20250305.
+- Dockerfile now upgrades pip before installing Python packages.
 
 ### Removed
+- Removes patches which have now been merged into the upstream branches.
 
 ### Fixed
 
@@ -22,7 +41,7 @@ https://github.com/ARM-software/Tool-Solutions/tree/pytorch-aarch64--r25.02
 - Adds work-in-progress PyTorch PRs:
   - https://github.com/pytorch/pytorch/pull/145942 - Enable qlinear_dynamic path for AArch64 through Arm Compute Library directly. Gives ~15% speed up on approach in Tool Solutions 24.12.
   - https://github.com/pytorch/pytorch/pull/146476 - Improve KleidiAI 4 bit kernel performance. Greater than 10% performance improvment when calling INT4 KleidiAI kernels
-  - https://github.com/pytorch/pytorch/pull/143666 - Extend Vec backend with SVE BF16.
+  - https://github.com/pytorch/pytorch/pull/143666 - Extend Vec backend with SVE BF16 (gives ~2.8x improvement for aten::addmm in autocast=bf16 mode).
 - Adds work-in-progress oneDNN PRs:
   - https://github.com/oneapi-src/oneDNN/pull/2502 - cpu: aarch64: ip: Allow bf16 for ACL inner product. Gives speedups of ~170x for BERT_pytorch and ~160x for alexnet using bf16 compile mode.
 - Minor improvements to build process and logging.
