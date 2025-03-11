@@ -20,7 +20,7 @@
 source ../utils/git-utils.sh
 
 set -eux -o pipefail
-PYTORCH_He555c4d8ae6f8b0f6d21072a4559b6154c8c19eb  # 2.7.0.dev20250305 from viable/strict
+PYTORCH_HASH=e555c4d8ae6f8b0f6d21072a4559b6154c8c19eb  # 2.7.0.dev20250305 from viable/strict
 IDEEP_HASH=719d8e6cd7f7a0e01b155657526d693acf97c2b3    # From ideep_pytorch
 ONEDNN_HASH=321c4520924af264518159777f21f630075c9b71   # From main
 ACL_HASH=534f1c5aee4dc97794a6772a8215708abc1f1e52      # 25.02.1 release
@@ -31,10 +31,11 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
     cd pytorch
 
     apply-github-patch https://github.com/pytorch/pytorch 143190 afded46b6c48fb434467cedacee4da956a66be64 # Enable AArch64 CI scripts to be used for local dev
-    apply-github-patch https://github.com/pytorch/pytorch 140159 8d3404ec5972528f606fe605887ad2254a174fbc # cpu: aarch64: enable gemm-bf16f32
-    apply-github-patch https://github.com/pytorch/pytorch 140159 ab4c191ef0de1e4eced6b4dd7b6e387f57034ad9
-    apply-github-patch https://github.com/pytorch/pytorch 140159 879ca72d54559a388db315eed40803d2f1c827b7
-    apply-github-patch https://github.com/pytorch/pytorch 140159 150f5d92fa79a57a580ac000f667d05787b650b3
+    apply-github-patch https://github.com/pytorch/pytorch 140159 e4d2869fee8e0e44e2030069e3dcfb9a79fd7a76 # cpu: aarch64: enable gemm-bf16f32
+    apply-github-patch https://github.com/pytorch/pytorch 140159 534daf7f9f9208134c8b27b30a7c32d97e09a545
+    apply-github-patch https://github.com/pytorch/pytorch 140159 34eca5a075094fdde97ad92226ac88f0bb2cd4d5
+    apply-github-patch https://github.com/pytorch/pytorch 140159 b44ecb87523ae33ae6d9c5e3a9bee2d0bbc8393e
+    apply-github-patch https://github.com/pytorch/pytorch 140159 ffcc43e993b4cc8910a3b4ddf0cae54fe6ad8831
     apply-github-patch https://github.com/pytorch/pytorch 148542 99e5d35a460413da5a8976bef0b65babcdf95fc3 # Enable Direct Use of Arm Compute Library (ACL) in ATen
     apply-github-patch https://github.com/pytorch/pytorch 147337 ac5618b6bc1d522f8e944b6567a74905af315fd9 # Enable a fast path for (static) qlinear for AArch64 through ACL directly
     apply-github-patch https://github.com/pytorch/pytorch 147337 0b06ae118c19af5551c4c638c88abdf959ec8a3f
