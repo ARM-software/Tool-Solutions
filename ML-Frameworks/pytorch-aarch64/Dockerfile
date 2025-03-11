@@ -85,12 +85,13 @@ COPY $TORCH_AO_WHEEL /home/$DOCKER_USER/
 # https://pypi.org/project/change-wheel-version/ to set your built torch wheel
 # to match the git commit date, so that it is compatibile with the other built
 # torch* nightly builds
+RUN pip install --upgrade pip
 RUN pip install \
     "$(basename "$TORCH_WHEEL")" \
     "$(basename "$TORCH_AO_WHEEL")" \
-    torchaudio==2.6.0.dev20250115 \
+    torchaudio==2.6.0.dev20250305 \
     torchdata~=0.7.1 \
-    torchvision~=0.22.0.dev20250115 \
+    torchvision~=0.22.0.dev20250305 \
     torchtune==0.6.0.dev20250115 \
     --extra-index-url https://download.pytorch.org/whl/nightly/cpu \
     && rm \
