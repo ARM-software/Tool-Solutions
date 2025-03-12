@@ -5,7 +5,18 @@ docker/tensorflow-aarch64 will be noted in this log.
 Monthly increments are tagged `tensorflow-pytorch-aarch64--rYY.MM`,
 where `YY` is the year, and `MM` the month of the increment.
 
-## [Unreleased]
+## [unreleased]
+
+### Added
+
+### Changed
+
+### Removed
+
+### Fixed
+
+## [r25.03] 2025-03-14
+https://github.com/ARM-software/Tool-Solutions/tree/r25.03
 
 ### Added
 
