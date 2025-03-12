@@ -8,14 +8,23 @@ where `YY` is the year, and `MM` the month of the increment.
 ## [unreleased]
 
 ### Added
+
+### Changed
+
+### Removed
+
+### Fixed
+
+## [r25.03] 2025-03-14
+https://github.com/ARM-software/Tool-Solutions/tree/r25.03
+
+### Added
 - Adds work-in-progress PyTorch PRs:
   - https://github.com/pytorch/pytorch/pull/148542 - Enables direct use Compute Library in ATen
   - https://github.com/pytorch/pytorch/pull/147337 - Enables a fast path for static qlinear via Compute Library directly
   - https://github.com/pytorch/pytorch/pull/146620 - Enables qint8 and quint8 add via Compute Library directly. Speedup for OMP_NUM_THREADS=1 is ~15x, and ~5.4x for 32 threads.
   - https://github.com/pytorch/pytorch/pull/148197 - Enables oneDNN dispatch for GEMM bf16bf16->bf16
   - https://github.com/pytorch/pytorch/pull/140159 - Enables gemm-bf16f32
-- Adds work-in-progress OpenBLAS PRs:
-  - https://github.com/OpenMathLib/OpenBLAS/pull/5157 - adds optimized gemv_n_sve kernel.
 
 ### Changed
 - Updates hashes for:
@@ -23,11 +32,12 @@ where `YY` is the year, and `MM` the month of the increment.
   - ideep to 719d8e6  from ideep_pytorch branch.
   - oneDNN to 321c452 from main branch.
   - Compute Library to v25.02.1.
-  - OpenBLAS to e4630ed from main.
+  - OpenBLAS to ef9e3f7 from main.
 - Updates work-in-progress PyTorch PRs.
 - Updates torchaudio to 2.6.0.dev20250305.
 - Updates torchvision to 0.22.0.dev20250305.
 - Dockerfile now upgrades pip before installing Python packages.
+- git-shallow-clone function now supports cloning by tag as well as hash.
 
 ### Removed
 - Removes patches which have now been merged into the upstream branches.
