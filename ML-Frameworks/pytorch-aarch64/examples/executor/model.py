@@ -148,12 +148,12 @@ class Model:
                 # The RetinaNet model is loaded from a different module
                 class_ = getattr(torch_models.detection, model_class)
                 self._model = class_()
-                state_dict = torch.load(model_name, map_location="cpu")["model"]
+                state_dict = torch.load(model_name, map_location="cpu", weights_only=False)["model"]
             else:
                 # Loading a given state dict into the provided class
                 class_ = getattr(torch_models, model_class)
                 self._model = class_()
-                state_dict = torch.load(model_name, map_location="cpu")
+                state_dict = torch.load(model_name, map_location="cpu", weights_only=False)
             self._model.load_state_dict(state_dict)
 
         elif "script" in model_descriptor["model"]:
