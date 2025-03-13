@@ -20,11 +20,13 @@ https://github.com/ARM-software/Tool-Solutions/tree/r25.03
 
 ### Added
 - Adds work-in-progress PyTorch PRs:
-  - https://github.com/pytorch/pytorch/pull/148542 - Enables direct use Compute Library in ATen
-  - https://github.com/pytorch/pytorch/pull/147337 - Enables a fast path for static qlinear via Compute Library directly
+  - https://github.com/pytorch/pytorch/pull/148542 - Enables direct use Compute Library in ATen.
+  - https://github.com/pytorch/pytorch/pull/147337 - Enables a fast path for static qlinear via Compute Library directly.
   - https://github.com/pytorch/pytorch/pull/146620 - Enables qint8 and quint8 add via Compute Library directly. Speedup for OMP_NUM_THREADS=1 is ~15x, and ~5.4x for 32 threads.
-  - https://github.com/pytorch/pytorch/pull/148197 - Enables oneDNN dispatch for GEMM bf16bf16->bf16
-  - https://github.com/pytorch/pytorch/pull/140159 - Enables gemm-bf16f32
+  - https://github.com/pytorch/pytorch/pull/148197 - Enables oneDNN dispatch for GEMM bf16bf16->bf16.
+  - https://github.com/pytorch/pytorch/pull/140159 - Enables gemm-bf16f32/
+- Adds work-in-progress oneDNN PRs:
+  - https://github.com/uxlfoundation/oneDNN/pull/2838 - Dispatches fpmath_mode::bf16 conv to Compute Library.
 
 ### Changed
 - Updates hashes for:

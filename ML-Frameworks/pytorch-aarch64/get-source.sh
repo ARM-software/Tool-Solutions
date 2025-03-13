@@ -61,6 +61,7 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
         (
             cd mkl-dnn
             git fetch origin $ONEDNN_HASH && git clean -f && git checkout -f FETCH_HEAD
+            apply-github-patch https://github.com/uxlfoundation/oneDNN 2838 f752a5392e3179829b60ca0d6aef08948da2abab # Dispatches fpmath_mode::bf16 conv to Compute Library
         )
     )
 )
