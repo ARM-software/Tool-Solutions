@@ -75,8 +75,8 @@ That means we use commits off the following branches:
 - TensorFlow: nightly, which is the most recent main that passes the
   nightlies. We don't use main because there's no point us having to deal with
   already known issues.
-- oneDNN: 3.7-rc.
-- ComputeLibrary: 24.12.
+- oneDNN: 3.2.1.
+- ComputeLibrary: 23.05.1.
 
 Each commit of `tensorflow-aarch64` is a fixed reference point, both for
 benchmarking and bug fixes.
