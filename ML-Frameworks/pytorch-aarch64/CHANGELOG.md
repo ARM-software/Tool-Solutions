@@ -41,6 +41,7 @@ https://github.com/ARM-software/Tool-Solutions/tree/r25.03
 
 ### Removed
 - Removes patches which have now been merged into the upstream branches.
+- Removes static_quantize_conv example since https://github.com/pytorch/pytorch/pull/141127 is no longer included in the build.
 
 ### Fixed
 
