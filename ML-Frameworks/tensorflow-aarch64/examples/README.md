@@ -30,7 +30,7 @@ By default, the model will be optimized for inference before the classification 
 
 ### Object Detection
 
-The script [detect_objects.py](detect_object.py) demonstrates how to run inference using SSD-ResNet-34 model trained from the Common Object in Context (COCO) image dataset. This is a multiscale SSD (Single Shot Detection) model based on the ResNet-34 backbone network that performs object detection.
+The script [detect_objects.py](detect_objects.py) demonstrates how to run inference using SSD-ResNet-34 model trained from the Common Object in Context (COCO) image dataset. This is a multiscale SSD (Single Shot Detection) model based on the ResNet-34 backbone network that performs object detection.
 
 To run inference on example image call:
 
