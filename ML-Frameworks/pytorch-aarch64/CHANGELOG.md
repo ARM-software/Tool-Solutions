@@ -10,10 +10,16 @@ where `YY` is the year, and `MM` the month of the increment.
 ### Added
 
 ### Changed
+- Move torch* packages to latest stable to fix build error
+  - torchaudio==2.6.0.dev20250305 -> 2.6.0
+  - torchdata~=0.7.1 -> 0.11.0
+  - torchvision~=0.22.0.dev20250305 -> 0.21.0
+  - torchtune==0.6.0.dev20250115 -> 0.5.0
 
 ### Removed
 
 ### Fixed
+- Fix build error due to missing torchtune nightly build
 
 ## [r25.03] 2025-03-14
 https://github.com/ARM-software/Tool-Solutions/tree/r25.03
