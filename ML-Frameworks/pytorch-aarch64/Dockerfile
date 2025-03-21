@@ -64,7 +64,8 @@ RUN echo 'export PATH="$HOME/.local/bin:$PATH"' >>  /etc/bash.bashrc
 WORKDIR /home/$DOCKER_USER
 USER $DOCKER_USER
 
-# Base requirements for examples, excluding torch
+# Base requirements for examples, excluding torch and torch*
+RUN pip install --upgrade pip
 COPY requirements.txt ./
 RUN pip install -r requirements.txt
 
@@ -76,27 +77,26 @@ COPY $TORCH_WHEEL /home/$DOCKER_USER/
 RUN test -n "$TORCH_AO_WHEEL"
 COPY $TORCH_AO_WHEEL /home/$DOCKER_USER/
 
-# Install our dev build of torch alongside fixed nightly builds of torchaudio
-# and torchvision (following instructions from
-# https://pytorch.org/get-started/locally/ for torch*) torch is a prereq of
-# torch* so installing them at the same time means that _only_ the right torch
-# is installed. torch is also a prereq of torchdata, but torchdata has no
-# nightly, so we are more lax with requirement. You may want to use
-# https://pypi.org/project/change-wheel-version/ to set your built torch wheel
-# to match the git commit date, so that it is compatibile with the other built
-# torch* nightly builds
-RUN pip install --upgrade pip
+# Install torch* packages, these should be the latest stable (but pinned to
+# minor). We need --no-deps here because the torch* packages depend on the
+# corresponding version of torch. Note: if you add something to this list, you
+# will need to manually add their dependencies. We don't use the nightly
+# versions which corresponding to our torch build because they can disappear,
+# and we usually don't need features from the nightlies.
 RUN pip install \
-    "$(basename "$TORCH_WHEEL")" \
-    "$(basename "$TORCH_AO_WHEEL")" \
-    torchaudio==2.6.0.dev20250305 \
-    torchdata~=0.7.1 \
-    torchvision~=0.22.0.dev20250305 \
-    torchtune==0.6.0.dev20250115 \
-    --extra-index-url https://download.pytorch.org/whl/nightly/cpu \
-    && rm \
-    "$(basename "$TORCH_WHEEL")" \
-    "$(basename "$TORCH_AO_WHEEL")"
+    torchaudio~=2.6.0 \
+    torchdata~=0.11.0 \
+    torchvision~=0.21.0 \
+    torchtune~=0.5.0 \
+    --no-deps
+
+# We need --no-deps because the torch version won't match the versions on torch*
+RUN pip install "$(basename "$TORCH_WHEEL")" --no-deps \
+    && rm "$(basename "$TORCH_WHEEL")"
+
+# We need --no-deps because this won't match the torch version
+RUN pip install "$(basename "$TORCH_AO_WHEEL")" --no-deps \
+    && rm "$(basename "$TORCH_AO_WHEEL")"
 
 # Setup Examples
 COPY examples/ /home/$DOCKER_USER/
