@@ -51,6 +51,8 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
     apply-github-patch https://github.com/pytorch/pytorch 143666 6ca8ed8d8fe58488e2896b57b99c24b21fc6c50b
     apply-github-patch https://github.com/pytorch/pytorch 143666 c3341033261e46aa818444ceff9838eded8f71b2
     apply-github-patch https://github.com/pytorch/pytorch 143666 00f0dc0fce51612fe7315653870e6528c3375092
+    apply-github-patch https://github.com/pytorch/pytorch 149471 6554a48d887c1c6809bbfdb53660a0de39342420 #Pin auditwheel to 6.2.0
+    apply-github-patch https://github.com/pytorch/pytorch 149471 2d3befd1a324a8da29345e1a7eacfb88b48b9596
 
     git submodule sync
     git submodule update --init --checkout --force --recursive --jobs=$(nproc)
