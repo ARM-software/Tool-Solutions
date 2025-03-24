@@ -20,6 +20,7 @@ where `YY` is the year, and `MM` the month of the increment.
 
 ### Fixed
 - Fix build error due to missing torchtune nightly build
+- Fix build error due to auditwheel version change by applying commits from https://github.com/pytorch/pytorch/pull/149471
 
 ## [r25.03] 2025-03-14
 https://github.com/ARM-software/Tool-Solutions/tree/r25.03
