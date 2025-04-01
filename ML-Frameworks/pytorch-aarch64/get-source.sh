@@ -20,10 +20,10 @@
 source ../utils/git-utils.sh
 
 set -eux -o pipefail
-PYTORCH_HASH=e555c4d8ae6f8b0f6d21072a4559b6154c8c19eb  # 2.7.0.dev20250305 from viable/strict
+PYTORCH_HASH=114d404b0720e8073748690faeb96449e5c0b229  # torch-2.8.0.dev20250327 from viable/strict
 IDEEP_HASH=719d8e6cd7f7a0e01b155657526d693acf97c2b3    # From ideep_pytorch
-ONEDNN_HASH=321c4520924af264518159777f21f630075c9b71   # From main
-ACL_HASH=534f1c5aee4dc97794a6772a8215708abc1f1e52      # 25.02.1 release
+ONEDNN_HASH=5de25f354afee38bf2db61f485c729d30f62c611   # From main
+ACL_HASH=9033bdacdc3840c80762bc56e8facb87b0e1048e      # 25.03 release
 TORCH_AO_HASH=e1cb44ab84eee0a3573bb161d65c18661dc4a307 # From main
 
 git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
@@ -31,28 +31,14 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
     cd pytorch
 
     apply-github-patch https://github.com/pytorch/pytorch 143190 afded46b6c48fb434467cedacee4da956a66be64 # Enable AArch64 CI scripts to be used for local dev
-    apply-github-patch https://github.com/pytorch/pytorch 140159 e4d2869fee8e0e44e2030069e3dcfb9a79fd7a76 # cpu: aarch64: enable gemm-bf16f32
-    apply-github-patch https://github.com/pytorch/pytorch 140159 534daf7f9f9208134c8b27b30a7c32d97e09a545
-    apply-github-patch https://github.com/pytorch/pytorch 140159 34eca5a075094fdde97ad92226ac88f0bb2cd4d5
-    apply-github-patch https://github.com/pytorch/pytorch 140159 b44ecb87523ae33ae6d9c5e3a9bee2d0bbc8393e
-    apply-github-patch https://github.com/pytorch/pytorch 140159 ffcc43e993b4cc8910a3b4ddf0cae54fe6ad8831
-    apply-github-patch https://github.com/pytorch/pytorch 148542 99e5d35a460413da5a8976bef0b65babcdf95fc3 # Enable Direct Use of Arm Compute Library (ACL) in ATen
-    apply-github-patch https://github.com/pytorch/pytorch 147337 ac5618b6bc1d522f8e944b6567a74905af315fd9 # Enable a fast path for (static) qlinear for AArch64 through ACL directly
-    apply-github-patch https://github.com/pytorch/pytorch 147337 0b06ae118c19af5551c4c638c88abdf959ec8a3f
-    apply-github-patch https://github.com/pytorch/pytorch 146620 a0d20465a0590ecb79e7a8e2101145a223f89f36 # Enable qint8 and quint8 add for AArch64 using ACL directly
-    apply-github-patch https://github.com/pytorch/pytorch 148197 e2efe476c1162986eb16132cf6000be3ef9c211e # Enable oneDNN dispatch for gemm bf16bf16->bf16
-    apply-github-patch https://github.com/pytorch/pytorch 143666 4903aefc81145056ac5cc41cb5568dc61b03aca1 # Extend vec backend with BF16 SVE intrinsics
-    apply-github-patch https://github.com/pytorch/pytorch 143666 7c93930e5031cb964a17683f0b0bd965f1486f37
-    apply-github-patch https://github.com/pytorch/pytorch 143666 ec27f37b032a537075b0870750adae48c3f09e61
-    apply-github-patch https://github.com/pytorch/pytorch 143666 c063ac24cc582da05871b6c7a7c7e33b0b08e097
-    apply-github-patch https://github.com/pytorch/pytorch 143666 a632a1fb34fcc28ef98ab27a6041950f976bf475
-    apply-github-patch https://github.com/pytorch/pytorch 143666 03fca5494b1019514f7400c8737a57b6b8234773
-    apply-github-patch https://github.com/pytorch/pytorch 143666 17a346fab23182c0efade9fea982f5b8d45112f1
-    apply-github-patch https://github.com/pytorch/pytorch 143666 6ca8ed8d8fe58488e2896b57b99c24b21fc6c50b
-    apply-github-patch https://github.com/pytorch/pytorch 143666 c3341033261e46aa818444ceff9838eded8f71b2
-    apply-github-patch https://github.com/pytorch/pytorch 143666 00f0dc0fce51612fe7315653870e6528c3375092
-    apply-github-patch https://github.com/pytorch/pytorch 149471 6554a48d887c1c6809bbfdb53660a0de39342420 #Pin auditwheel to 6.2.0
-    apply-github-patch https://github.com/pytorch/pytorch 149471 2d3befd1a324a8da29345e1a7eacfb88b48b9596
+    apply-github-patch https://github.com/pytorch/pytorch 150158 c868c903a8d5e3878bf1afc6159ca48c9d1ecad9 # Pin cmake version
+    apply-github-patch https://github.com/pytorch/pytorch 140159 eb5c93062801320c5eb7e8b96b9a88721358858e # cpu: aarch64: enable gemm-bf16f32
+    apply-github-patch https://github.com/pytorch/pytorch 140159 48a32a05a56757dbd81ca112b04a01892115f811
+    apply-github-patch https://github.com/pytorch/pytorch 140159 e1886a5f022ee9df5ad475a9463f6714289ff22d
+    apply-github-patch https://github.com/pytorch/pytorch 140159 7d645531a9cf0b359182323e5b802e68f49af800
+    apply-github-patch https://github.com/pytorch/pytorch 140159 e1abdb6d3eba957cdbd882bec21feeeb46550cf7
+    apply-github-patch https://github.com/pytorch/pytorch 140159 4034f2538c4caafb806ecf4b2ef81b19ebda3fd6
+    apply-github-patch https://github.com/pytorch/pytorch 140159 1ce26d99bde511bb9cccc49be842c04e8d366f69
 
     git submodule sync
     git submodule update --init --checkout --force --recursive --jobs=$(nproc)
