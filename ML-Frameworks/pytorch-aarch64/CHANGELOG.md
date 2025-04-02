@@ -16,10 +16,10 @@ where `YY` is the year, and `MM` the month of the increment.
    - oneDNN to 5de25f354afee38bf2db61f485c729d30f62c611 from main
    - Compute Library to 9033bdacdc3840c80762bc56e8facb87b0e1048e, 25.03 release
    - OpenBLAS to edef2e4441e50e3a2da1920fdbde09101087c43d from main
+ - Updates existing WIP patches.
 
 ### Removed
  - Removes WIP patches which have now landed in the upstream nightly PyTorch builds.
- - Temporarily removes  https://github.com/pytorch/pytorch/pull/143666 as it requires a rebase.
  - Removes `--tags --force` from git clone command, and adds `--depth=1` to speedup the checkout.
 
 ### Fixed
