@@ -27,7 +27,7 @@ function git-shallow-clone {
             git init
             git remote add origin $1
         fi
-        git fetch --tags --force --recurse-submodules=no origin $2
+        git fetch --depth=1 --recurse-submodules=no origin $2
         # We do a force checkout + clean to overwrite previous patches
         git checkout -f $2
         git clean -fd

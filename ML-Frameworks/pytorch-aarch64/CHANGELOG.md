@@ -10,10 +10,21 @@ where `YY` is the year, and `MM` the month of the increment.
 ### Added
 
 ### Changed
+ - Updates hashes for:
+   - PyTorch 114d404b0720e8073748690faeb96449e5c0b229, 2.8.0.dev20250327 from viable/strict
+   - ideep to 719d8e6cd7f7a0e01b155657526d693acf97c2b3 from ideep_pytorch
+   - oneDNN to 5de25f354afee38bf2db61f485c729d30f62c611 from main
+   - Compute Library to 9033bdacdc3840c80762bc56e8facb87b0e1048e, 25.03 release
+   - OpenBLAS to edef2e4441e50e3a2da1920fdbde09101087c43d from main
 
 ### Removed
+ - Removes WIP patches which have now landed in the upstream nightly PyTorch builds.
+ - Temporarily removes  https://github.com/pytorch/pytorch/pull/143666 as it requires a rebase.
+ - Removes `--tags --force` from git clone command, and adds `--depth=1` to speedup the checkout.
 
 ### Fixed
+ - Pins cmake python package version to 3.31 to avoid known issue with cmake 4.0
+   https://github.com/pytorch/pytorch/issues/150167
 
 ## [r25.03.1] 2025-03-26
 https://github.com/ARM-software/Tool-Solutions/tree/r25.03.1
@@ -21,7 +32,7 @@ https://github.com/ARM-software/Tool-Solutions/tree/r25.03.1
 ### Added
 
 ### Changed
-- Move torch* packages to latest stable to fix build error
+- Move torch packages to latest stable to fix build error
   - torchaudio==2.6.0.dev20250305 -> 2.6.0
   - torchdata~=0.7.1 -> 0.11.0
   - torchvision~=0.22.0.dev20250305 -> 0.21.0

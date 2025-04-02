@@ -25,7 +25,7 @@
 source /common_utils/git-utils.sh
 
 set -ex
-OPENBLAS_HASH="ef9e3f71595edfc69aadeb34d99a96d5f72a29a2"
+OPENBLAS_HASH="edef2e4441e50e3a2da1920fdbde09101087c43d"
 OPENBLAS_CHECKOUT_DIR="OpenBLAS"
 
 cd /
