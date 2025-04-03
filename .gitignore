@@ -1,2 +1,7 @@
-build*.log
 ao/
+venv/
+__pycache__/
+
+build*.log
+*.pb
+*.zip
