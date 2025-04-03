@@ -20,7 +20,7 @@
 source ../utils/git-utils.sh
 
 set -eux -o pipefail
-PYTORCH_HASH=114d404b0720e8073748690faeb96449e5c0b229  # torch-2.8.0.dev20250327 from viable/strict
+PYTORCH_HASH=fc674b45d4d8edfd4c630d89f71ea9f85a2f61f2  # 2.8.0.dev20250403 from viable/strict
 IDEEP_HASH=719d8e6cd7f7a0e01b155657526d693acf97c2b3    # From ideep_pytorch
 ONEDNN_HASH=5de25f354afee38bf2db61f485c729d30f62c611   # From main
 ACL_HASH=9033bdacdc3840c80762bc56e8facb87b0e1048e      # 25.03 release
@@ -31,7 +31,6 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
     cd pytorch
 
     apply-github-patch pytorch/pytorch 143190 afded46b6c48fb434467cedacee4da956a66be64 # Enable AArch64 CI scripts to be used for local dev
-    apply-github-patch pytorch/pytorch 150158 c868c903a8d5e3878bf1afc6159ca48c9d1ecad9 # Pin cmake version
     apply-github-patch pytorch/pytorch 140159 eb5c93062801320c5eb7e8b96b9a88721358858e # cpu: aarch64: enable gemm-bf16f32
     apply-github-patch pytorch/pytorch 140159 48a32a05a56757dbd81ca112b04a01892115f811
     apply-github-patch pytorch/pytorch 140159 e1886a5f022ee9df5ad475a9463f6714289ff22d

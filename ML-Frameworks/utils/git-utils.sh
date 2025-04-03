@@ -49,7 +49,7 @@ function apply-github-patch {
     # If it can't be found, this time curl will error
     if [[ ! -s $3.patch ]]; then
        >&2 echo "Commit $3 not found in $1/pull/$2. Checking the full repository..."
-       curl --silent --fail -L $github_url/commit/$3.patch -o $3.patch
+       curl --silent --fail -L $github_url/$1/commit/$3.patch -o $3.patch
     fi
 
     # Apply the patch and tidy up.
