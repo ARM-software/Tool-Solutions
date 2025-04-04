@@ -83,11 +83,14 @@ COPY $TORCH_AO_WHEEL /home/$DOCKER_USER/
 # will need to manually add their dependencies. We don't use the nightly
 # versions which corresponding to our torch build because they can disappear,
 # and we usually don't need features from the nightlies.
+# Note: torchvision is currently pinned to a nightly build, this can be updated
+# at the next vision release, and the `--extra-index-url` removed.
 RUN pip install \
     torchaudio~=2.6.0 \
     torchdata~=0.11.0 \
-    torchvision~=0.21.0 \
+    torchvision~=0.22.0.dev20250403 \
     torchtune~=0.5.0 \
+    --extra-index-url https://download.pytorch.org/whl/nightly/cpu \
     --no-deps
 
 # We need --no-deps because the torch version won't match the versions on torch*
