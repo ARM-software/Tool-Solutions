@@ -19,7 +19,7 @@
 
 function git-shallow-clone {
     (
-        repo_name=$(basename "$1" .git)
+        local repo_name=$(basename "$1" .git)
         if ! cd "$repo_name" ; then
             echo "$repo_name doesn't exist, so we are making"
             mkdir "$repo_name"
@@ -36,18 +36,20 @@ function git-shallow-clone {
 
 function apply-github-patch {
     # Apply a specific commit from a specific GitHub PR
-    # $1 is the repo url, $2 is the PR number, and $3 is commit hash
+    # $1 is 'organisation/repo', $2 is the PR number, and $3 is commit hash
     set -u
 
+	local github_url='https://github.com'
+
     # Look in the PR first
-    curl --silent -L $1/pull/$2/commits/$3.patch -o $3.patch
+    curl --silent -L $github_url/$1/pull/$2/commits/$3.patch -o $3.patch
 
     # If the PR has been updated, the commit may no longer be there and the .patch will be empty.
     # Look in the full repo instead.
     # If it can't be found, this time curl will error
     if [[ ! -s $3.patch ]]; then
        >&2 echo "Commit $3 not found in $1/pull/$2. Checking the full repository..."
-       curl --silent --fail -L $1/commit/$3.patch -o $3.patch
+       curl --silent --fail -L $github_url/commit/$3.patch -o $3.patch
     fi
 
     # Apply the patch and tidy up.
@@ -60,9 +62,9 @@ function apply-gerrit-patch {
     # $1 must be the url to a specific patch set
     # We get the repo by removing /c and chopping off the change number
     # e.g. https://review.mlplatform.org/c/ml/ComputeLibrary/+/12818/1 -> https://review.mlplatform.org/ml/ComputeLibrary/
-    repo_url=$(echo "$1" | sed 's#/c/#/#' | cut -d'+' -f1)
+    local repo_url=$(echo "$1" | sed 's#/c/#/#' | cut -d'+' -f1)
     # e.g. refs/changes/18/12818/1 Note that where the middle number is the last 2 digits of the patch number
-    refname=$(echo "$1" | awk -F'/' '{print "refs/changes/" substr($(NF-1),length($(NF-1))-1,2) "/" $(NF-1) "/" $(NF)}')
+    local refname=$(echo "$1" | awk -F'/' '{print "refs/changes/" substr($(NF-1),length($(NF-1))-1,2) "/" $(NF-1) "/" $(NF)}')
     git fetch $repo_url $refname && git cherry-pick --no-commit FETCH_HEAD
 }
 
