@@ -21,55 +21,62 @@ source ../utils/git-utils.sh
 
 set -eux -o pipefail
 
-TENSORFLOW_HASH=6506da61ed123658ddca003774a5f2eb430c3cad   # Nightly Feb 11, 2025
-# ONEDNN_HASH=
-# ACL_HASH=
+TENSORFLOW_HASH=8ed060f0c234f4c069cde7fc7080f166c34c410a   # master Apr 03, 2025
+
+# The next oneDNN commits relocate xbyak_aarch64 as a third_party module,
+# but this is not picked up by TF Bazel build.
+ONEDNN_HASH=ad06da68524b2b5e63fc1d7a7a749d555394a0a7       # main Jan 03, 2025
+
+# The next ACL commit introduces KleidiAI as a third-party module,
+# but this is not picked up by TF Bazel build.
+ACL_HASH=0038c52d6c79b76755c087cda1be4bbf752e272c          # main Jan 6, 2025
 
 git-shallow-clone https://github.com/tensorflow/tensorflow.git $TENSORFLOW_HASH
 
-# Below code is used to build with customized commits of oneDNN and ACL with WIP patches applied,
-# please set ONEDNN_HASH and ACL_HASH above when uncommenting.
-# (
-#     cd tensorflow
+(
+    cd tensorflow
 
-#     # Apply TensorFlow WIP patches here
+    # Apply TensorFlow WIP patches here
+    apply-github-patch tensorflow/tensorflow 84975 1ca7978322313cd62733075ea354f2af5d1e54a0 # build(aarch64): Update to oneDNN-3.7 + ACL-24.12
 
-#     cd tensorflow
+    cd tensorflow
 
-#     # Set up workspace to point to local versions of Compute Library and oneDNN
-#     # Rename existing tf_http_archives
-#     sed -i -e 's/\"mkl_dnn_acl_compatible\"/\"mkl_dnn_acl_compatible_backup\"/g' workspace2.bzl
-#     sed -i -e 's/\"compute_library\"/\"compute_library_backup\"/g' workspace2.bzl
-#     # Insert a new_local_repository for oneDNN and ACL in place of the http_archives
-#     csplit -f workspace2.bzl. -n 1 workspace2.bzl /'def _tf_repositories():'/+2 '{0}'
-#     onednn_acl_local_repositories=$'
-#     native.new_local_repository(
-#         name = "mkl_dnn_acl_compatible",
-#         build_file = "//third_party/mkl_dnn:mkldnn_acl.BUILD",
-#         path = \'./third_party/mkl_dnn/oneDNN\'
-#     )
-#     native.local_repository(
-#         name = "compute_library",
-#         path = \'./third_party/compute_library/ComputeLibrary\'
-#     )'
-#     echo "$onednn_acl_local_repositories" > tensorflow_local-repositories.txt
-#     cat workspace2.bzl.0 tensorflow_local-repositories.txt workspace2.bzl.1 > workspace2.bzl
-#     cd ..
+    # Set up workspace to point to local versions of Compute Library and oneDNN
+    # Rename existing tf_http_archives
+    sed -i -e 's/\"mkl_dnn_acl_compatible\"/\"mkl_dnn_acl_compatible_backup\"/g' workspace2.bzl
+    sed -i -e 's/\"compute_library\"/\"compute_library_backup\"/g' workspace2.bzl
+    # Insert a new_local_repository for oneDNN and ACL in place of the http_archives
+    csplit -f workspace2.bzl. -n 1 workspace2.bzl /'def _tf_repositories():'/+2 '{0}'
+    onednn_acl_local_repositories=$'
+    native.new_local_repository(
+        name = "mkl_dnn_acl_compatible",
+        build_file = "//third_party/mkl_dnn:mkldnn_acl.BUILD",
+        path = \'./third_party/mkl_dnn/oneDNN\'
+    )
+    native.local_repository(
+        name = "compute_library",
+        path = \'./third_party/compute_library/ComputeLibrary\'
+    )'
+    echo "$onednn_acl_local_repositories" > tensorflow_local-repositories.txt
+    cat workspace2.bzl.0 tensorflow_local-repositories.txt workspace2.bzl.1 > workspace2.bzl
+    cd ..
 
-#     # oneDNN patches
-#     (
-#         cd third_party/mkl_dnn
-#         git-shallow-clone https://github.com/oneapi-src/oneDNN.git $ONEDNN_HASH
+    # oneDNN patches
+    (
+        cd third_party/mkl_dnn
+        git-shallow-clone https://github.com/oneapi-src/oneDNN.git $ONEDNN_HASH
 
-#         # Apply WIP patches here
-#     )
+        # Apply WIP patches here
+        cd oneDNN
+        apply-github-patch uxlfoundation/oneDNN 2958 ce72a428594c58e925de38c5eb6fea725fe9d0ff # cpu: aarch64: default num_threads to max for acl_threadpool
+    )
 
-#     # ACL patches
-#     (
-#         cd third_party/compute_library
-#         git-shallow-clone https://review.mlplatform.org/ml/ComputeLibrary $ACL_HASH
+    # ACL patches
+    (
+        cd third_party/compute_library
+        git-shallow-clone https://review.mlplatform.org/ml/ComputeLibrary $ACL_HASH
 
-#         # Apply WIP patches here
-#     )
+        # Apply WIP patches here
+    )
 
-# )
+)
