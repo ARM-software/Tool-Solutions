@@ -8,6 +8,8 @@ where `YY` is the year, and `MM` the month of the increment.
 ## [unreleased]
 
 ### Added
+ - Work in progress oneDNN patch, [Enable jit conv for 128](https://github.com/uxlfoundation/oneDNN/pull/3022) with ~30% speed up for backward convolutions
+
 
 ### Changed
  - Updates hashes for:
