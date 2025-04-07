@@ -40,6 +40,8 @@ fi
 
 ./build-wheel.sh
 
+[[ $* == *--wheel-only* ]] && exit 0
+
 # Use the second to last match, otherwise grep finds itself
 torch_wheel_name=$(grep -o "torch-.*.whl" $build_log | head -n -1 | tail -n 1)
 
