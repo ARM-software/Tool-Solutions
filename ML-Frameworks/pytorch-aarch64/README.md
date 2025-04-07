@@ -46,13 +46,18 @@ Specifically, `./build.sh` does 3 things:
 - build docker container with wheel installed (`./dockerize.sh` without the
   `docker run`).
 
-So, use this for development, do an initial run of `./get-source.sh` (or
+To use this for development, do an initial run of `./get-source.sh` (or
 all of `./build.sh`).
 Then you can modify the sources, and rerun `./build-wheel.sh` (which builds
 incrementally for faster iteration) to get a wheel with your changes in.
 You can then test your changes by installing the wheel in a virtual environment
 of your choice or use `./dockerize.sh <name-of-wheel>` to launch a container
 with the wheel installed (along with examples).
+
+### Flags useful for development
+- `--use-existing-sources` skips `get-source.sh` and just builds
+- `--force` overwrites sources
+- `--wheel-only` build just the torch wheel (no torchao or Docker image)
 
 ## Motivation
 PyTorch + ideep + oneDNN + ComputeLibrary is a deep stack. The purpose of

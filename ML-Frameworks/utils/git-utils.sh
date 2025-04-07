@@ -29,7 +29,7 @@ function git-shallow-clone {
         fi
         git fetch --depth=1 --recurse-submodules=no origin $2
         # We do a force checkout + clean to overwrite previous patches
-        git checkout -f $2
+        git checkout -f FETCH_HEAD
         git clean -fd
     )
 }

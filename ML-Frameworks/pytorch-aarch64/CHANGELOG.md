@@ -9,7 +9,7 @@ where `YY` is the year, and `MM` the month of the increment.
 
 ### Added
  - Work in progress oneDNN patch, [Enable jit conv for 128](https://github.com/uxlfoundation/oneDNN/pull/3022) with ~30% speed up for backward convolutions
-
+ - Add `--wheel-only` flag for only building the torch wheel
 
 ### Changed
  - Updates hashes for:
