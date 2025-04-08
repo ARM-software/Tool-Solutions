@@ -39,6 +39,7 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
     apply-github-patch pytorch/pytorch 140159 4034f2538c4caafb806ecf4b2ef81b19ebda3fd6
     apply-github-patch pytorch/pytorch 140159 1ce26d99bde511bb9cccc49be842c04e8d366f69
     apply-github-patch pytorch/pytorch 150527 57b737db805acc5a58a6c9ef59dfef5b23aaf3f0 # Add BF16 SVE intrinsics
+    apply-github-patch pytorch/pytorch 150833 02987a7c2e9b249a669723224c8d3cd80c6cb64e # Pin all root requirements to major versions
 
     git submodule sync
     git submodule update --init --checkout --force --recursive --jobs=$(nproc)
