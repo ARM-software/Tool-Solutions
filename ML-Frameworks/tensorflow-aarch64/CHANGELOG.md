@@ -15,6 +15,20 @@ where `YY` is the year, and `MM` the month of the increment.
 
 ### Fixed
 
+## [r25.04] 2025-04-16
+https://github.com/ARM-software/Tool-Solutions/tree/r25.04
+
+### Added
+ - Enables patching of build outside of Bazel build.
+ - default num_threads to max for acl_threadpool, see www.github.com/tensorflow/uxlfoundation/oneDNN/2958
+
+### Changed
+ - Updates TensorFlow build to use oneDNN 3.7 + ACL 24.12, see www.github.com/tensorflow/tensorflow/pull/84975
+
+### Removed
+
+### Fixed
+
 ## [r25.03.1] 2025-03-26
 https://github.com/ARM-software/Tool-Solutions/tree/r25.03.1
 

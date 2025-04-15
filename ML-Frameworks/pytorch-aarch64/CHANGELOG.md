@@ -8,6 +8,17 @@ where `YY` is the year, and `MM` the month of the increment.
 ## [unreleased]
 
 ### Added
+
+### Changed
+
+### Removed
+
+### Fixed
+
+## [r25.04] 2025-04-16
+https://github.com/ARM-software/Tool-Solutions/tree/r25.04
+
+### Added
  - Work in progress oneDNN patch, [Enable jit conv for 128](https://github.com/uxlfoundation/oneDNN/pull/3022) with ~30% speed up for backward convolutions
  - Add `--wheel-only` flag for only building the torch wheel
  - [Work in progress PyTorch patch for pinning the major versions of build dependencies](https://github.com/pytorch/pytorch/pull/150833)
@@ -25,6 +36,8 @@ where `YY` is the year, and `MM` the month of the increment.
 ### Removed
  - Removes WIP patches which have now landed in the upstream nightly PyTorch builds.
  - Removes `--tags --force` from git clone command, and adds `--depth=1` to speedup the checkout.
+ - Temporarily removes `--compile` option from some examples due to an issue with https://github.com/pytorch/pytorch/pull/147151
+   the compile path does not work as expected in these cases.
 
 ### Fixed
 
