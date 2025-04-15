@@ -201,7 +201,7 @@ The script [torchchat_llm_text_gen.py](torchchat_llm_text_gen.py) demonstrates h
 To run infernece using torchchat call:
 
 ```
-LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libtcmalloc.so.4  TORCHINDUCTOR_CPP_WRAPPER=1  TORCHINDUCTOR_FREEZING=1  OMP_NUM_THREADS=16 python torchchat_llm_text_gen.py --compile
+LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libtcmalloc.so.4  TORCHINDUCTOR_CPP_WRAPPER=1  TORCHINDUCTOR_FREEZING=1  OMP_NUM_THREADS=16 python torchchat_llm_text_gen.py
 ```
 
 #### Command-Line Options
@@ -211,9 +211,6 @@ LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libtcmalloc.so.4  TORCHINDUCTOR_CPP_WRAPPE
 
 `--max-new-tokens`
   Description: Max new tokens to generate.
-
-`--compile`
-  Description: Whether to compile the model (default: `False`).
 
 `--model`
   Description: Model alias. (Default: `"llama2"`  )
@@ -227,7 +224,7 @@ The script [transformers_llm_text_gen.py](transformers_llm_text_gen.py) demonstr
 To run infernece using torchchat call:
 
 ```
-LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libtcmalloc.so.4  TORCHINDUCTOR_CPP_WRAPPER=1  TORCHINDUCTOR_FREEZING=1  OMP_NUM_THREADS=16 python transformers_llm_text_gen.py --compile
+LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libtcmalloc.so.4  TORCHINDUCTOR_CPP_WRAPPER=1  TORCHINDUCTOR_FREEZING=1  OMP_NUM_THREADS=16 python transformers_llm_text_gen.py
 ```
 
 #### Command-Line Options
@@ -237,9 +234,6 @@ LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libtcmalloc.so.4  TORCHINDUCTOR_CPP_WRAPPE
 
 `--max-new-tokens`
   Description: Max new tokens to generate.
-
-`--compile`
-  Description: Whether to compile the model (default: `False`).
 
 `--model`
   Description: Local Path to model repo or huggingface model id. (Default: `"meta-llama/Llama-2-7b-hf"`  )
