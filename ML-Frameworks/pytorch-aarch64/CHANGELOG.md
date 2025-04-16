@@ -2,7 +2,7 @@
 All significant changes to the PyTorch container builds in
 docker/pytorch-aarch64 will be noted in this log.
 
-Monthly increments are tagged `tensorflow-pytorch-aarch64--rYY.MM`,
+Monthly increments are tagged `rYY.MM`,
 where `YY` is the year, and `MM` the month of the increment.
 
 ## [unreleased]
