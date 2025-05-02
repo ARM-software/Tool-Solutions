@@ -31,6 +31,8 @@ def main(args):
         "python3", torchchat_path, "generate", args.model,
         "--quantize", str(args.quant_config),
         "--prompt", prompt,
+        "--compile" if args.compile else "",
+        "--compile-prefill" if args.compile else "",
         "--max-autotune", "--max-new-tokens", str(args.max_new_tokens)
     ]
     command = [arg for arg in command if arg]
@@ -45,6 +47,8 @@ if __name__ == '__main__':
                         help='Path to json file for quantization config')
     parser.add_argument('--max-new-tokens', type=int,
                         default=64, help='New tokens to generate at decode.')
+    parser.add_argument('--compile', action='store_true',
+                        help='Whether to compile the model.')
     parser.add_argument('--model', type=str, default="llama2",
                         help='Torchchat supported model alias')
     parser.add_argument('--prompt', type=str, default="In a distant world where magic and technology coexist, "

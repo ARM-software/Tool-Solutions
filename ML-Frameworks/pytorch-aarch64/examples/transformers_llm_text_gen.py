@@ -130,6 +130,10 @@ def get_quantized_model(args):
     print("Quantizing model to 4 bit ..")
     quantize_model(model, "cpu", args.quant_config)
     model = model.eval()
+    if args.compile:
+        model.generation_config.cache_implementation = "static"
+        model.forward = torch.compile(
+            model.forward, backend='inductor', dynamic=True, fullgraph=True)
     return model, tokenizer, config
 
 
@@ -193,6 +197,8 @@ if __name__ == '__main__':
                         "gen_ai_utils/quant_configs/aarch64_cpu_channelwise.json", help='Path to json file for quantization config')
     parser.add_argument('--max-new-tokens', type=int,
                         default=64, help='New tokens to generate at decode.')
+    parser.add_argument('--compile', action='store_true',
+                        help='Whether to compile the model.')
     parser.add_argument('--model', type=Path, default=Path("meta-llama/Llama-2-7b-hf"),
                         help='Hugging Face model ID or Cloned model repository with model files')
     parser.add_argument('--prompt', type=str, default="In a distant world where magic and technology coexist, "
