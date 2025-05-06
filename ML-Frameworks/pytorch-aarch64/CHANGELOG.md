@@ -10,10 +10,18 @@ where `YY` is the year, and `MM` the month of the increment.
 ### Added
 
 ### Changed
+ - Updates hashes for:
+   - PyTorch e872bf8f888bdbb27a03e03935db61babf7180b8, 2.8.0.dev20250430 from viable/strict
+   - ideep to 2ef932a861439e4cc9bb8baee8424b57573de023 from ideep_pytorch
+   - oneDNN to 69150ce5fe1f453af9125ca42a921e017092ccf7 from main
+   - Compute Library to 334108c0efc512efdc9576ba957dbcf5b7ee168a, rc_25_04_29_0
+ - Updates existing WIP patches.
 
 ### Removed
+ - Removes WIP patches which have now landed in the upstream nightly PyTorch builds.
 
 ### Fixed
+ - Reverted this [commit](https://github.com/ARM-software/Tool-Solutions/commit/65dbd3bea401fc6cb170a937581427eaee3be086) to add back `--compile` option. The issue was fixed upstream and is included in the bumped hash
 
 ## [r25.04] 2025-04-16
 https://github.com/ARM-software/Tool-Solutions/tree/r25.04
