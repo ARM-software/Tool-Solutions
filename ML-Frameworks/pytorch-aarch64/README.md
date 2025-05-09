@@ -54,6 +54,10 @@ You can then test your changes by installing the wheel in a virtual environment
 of your choice or use `./dockerize.sh <name-of-wheel>` to launch a container
 with the wheel installed (along with examples).
 
+Note: if the environment variable `GITHUB_TOKEN` is set then the build will
+attemmpt to use `GITHUB_TOKEN` for authenticated access when downloading WIP patches.
+This can avoid issues with rate-limiting on annonymous access.
+
 ### Flags useful for development
 - `--use-existing-sources` skips `get-source.sh` and just builds
 - `--force` overwrites sources

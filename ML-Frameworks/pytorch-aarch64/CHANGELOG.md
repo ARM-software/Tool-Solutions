@@ -10,6 +10,7 @@ where `YY` is the year, and `MM` the month of the increment.
 ### Added
  - WIP patch to build a newer version of libgomp from source - https://github.com/pytorch/pytorch/pull/152361
    Improve scaling for >16 threads.
+ - Support for authenticated GitHub access to apply-github-patch
 
 ### Changed
  - Updates hashes for:

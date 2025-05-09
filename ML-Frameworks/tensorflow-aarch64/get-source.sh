@@ -37,7 +37,8 @@ git-shallow-clone https://github.com/tensorflow/tensorflow.git $TENSORFLOW_HASH
     cd tensorflow
 
     # Apply TensorFlow WIP patches here
-    apply-github-patch tensorflow/tensorflow 84975 1ca7978322313cd62733075ea354f2af5d1e54a0 # build(aarch64): Update to oneDNN-3.7 + ACL-24.12
+    # https://github.com/tensorflow/tensorflow/pull/84975 - build(aarch64): Update to oneDNN-3.7 + ACL-24.12
+    apply-github-patch tensorflow/tensorflow 1ca7978322313cd62733075ea354f2af5d1e54a0
 
     cd tensorflow
 
@@ -68,7 +69,8 @@ git-shallow-clone https://github.com/tensorflow/tensorflow.git $TENSORFLOW_HASH
 
         # Apply WIP patches here
         cd oneDNN
-        apply-github-patch uxlfoundation/oneDNN 2958 ce72a428594c58e925de38c5eb6fea725fe9d0ff # cpu: aarch64: default num_threads to max for acl_threadpool
+        # https://github.com/uxlfoundation/oneDNN/pull/2958 - set default num_threads to max for acl_threadpool
+        apply-github-patch uxlfoundation/oneDNN ce72a428594c58e925de38c5eb6fea725fe9d0ff
     )
 
     # ACL patches

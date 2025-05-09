@@ -8,6 +8,7 @@ where `YY` is the year, and `MM` the month of the increment.
 ## [unreleased]
 
 ### Added
+ - Support for authenticated GitHub access to apply-github-patch
 
 ### Changed
 
