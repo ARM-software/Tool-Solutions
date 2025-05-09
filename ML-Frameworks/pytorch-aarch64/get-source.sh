@@ -33,6 +33,7 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
     apply-github-patch pytorch/pytorch 143190 6e5628b1f648d862e8fdd150ad277120b236ed15 # Enable AArch64 CI scripts to be used for local dev 
     apply-github-patch pytorch/pytorch 140159 ca4a718be80eb88ca6804b91201e4f98a3e236c8 # cpu: enable gemm-bf16f32 for SDPA BF16                   
     apply-github-patch pytorch/pytorch 140159 406fe1fbd066401774c104d125a7ac0b3d6eb52b
+    apply-github-patch pytorch/pytorch 152361 7c54b6b07558c330ee2f95b4793edb3bfbb814c9 # Build libgomp (gcc-11) from source
     apply-github-patch pytorch/pytorch 150833 02987a7c2e9b249a669723224c8d3cd80c6cb64e # Pin all root requirements to major versions 
 
     git submodule sync
