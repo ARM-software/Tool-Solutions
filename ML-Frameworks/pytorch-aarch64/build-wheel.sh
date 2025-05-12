@@ -86,6 +86,9 @@ if ! docker container inspect $TORCH_BUILD_CONTAINER >/dev/null 2>&1 ; then
     docker exec -t $TORCH_BUILD_CONTAINER bash -c $PYTORCH_ROOT/.circleci/scripts/binary_populate_env.sh
     docker exec -t $TORCH_BUILD_CONTAINER bash -c "$PYTORCH_ROOT/.ci/aarch64_linux/aarch64_ci_setup.sh"
 
+    # Build a newer version of libgomp from source (see https://github.com/pytorch/pytorch/pull/152361)
+    docker exec -t $TORCH_BUILD_CONTAINER bash -c "bash $PYTORCH_ROOT/.ci/docker/common/install_libgomp.sh"
+
     # This must be in this if block because it cannot handle being called twice
     docker exec -t $TORCH_BUILD_CONTAINER bash -c "bash $UTILS/build_openblas.sh"
 
