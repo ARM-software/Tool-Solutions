@@ -45,7 +45,7 @@ function apply-github-patch {
     local github_url='https://github.com'
 
     # Download the .patch file.
-    if [ -n "$GITHUB_TOKEN" ]; then
+    if [[ "${GITHUB_TOKEN+x}" ]]; then
         curl --silent -H "Authorization: token $GITHUB_TOKEN" -H "Accept: application/vnd.github.v3.patch" -L $github_api_url/$1/commits/$2 -o $2.patch
     else
         curl --silent -L $github_url/$1/commit/$2.patch -o $2.patch
