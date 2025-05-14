@@ -35,26 +35,25 @@ function git-shallow-clone {
 }
 
 function apply-github-patch {
-    # Apply a specific commit from a specific GitHub PR
-    # $1 is 'organisation/repo', $2 is the PR number, and $3 is commit hash
+    # Apply a specific GitHub commit.
+    # $1 is 'organisation/repo', $2 is the commit hash
+    # To use an API token, which may avoid rate limits, set the environment variable GITHUB_TOKEN
+
     set -u
 
-	local github_url='https://github.com'
+    local github_api_url='https://api.github.com/repos'
+    local github_url='https://github.com'
 
-    # Look in the PR first
-    curl --silent -L $github_url/$1/pull/$2/commits/$3.patch -o $3.patch
-
-    # If the PR has been updated, the commit may no longer be there and the .patch will be empty.
-    # Look in the full repo instead.
-    # If it can't be found, this time curl will error
-    if [[ ! -s $3.patch ]]; then
-       >&2 echo "Commit $3 not found in $1/pull/$2. Checking the full repository..."
-       curl --silent --fail -L $github_url/$1/commit/$3.patch -o $3.patch
+    # Download the .patch file.
+    if [ -n "$GITHUB_TOKEN" ]; then
+        curl --silent -H "Authorization: token $GITHUB_TOKEN" -H "Accept: application/vnd.github.v3.patch" -L $github_api_url/$1/commits/$2 -o $2.patch
+    else
+        curl --silent -L $github_url/$1/commit/$2.patch -o $2.patch
     fi
 
     # Apply the patch and tidy up.
-    patch -p1 < $3.patch
-    rm $3.patch
+    patch -p1 < $2.patch
+    rm $2.patch
     return 0
 }
 

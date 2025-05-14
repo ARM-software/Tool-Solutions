@@ -15,6 +15,18 @@ where `YY` is the year, and `MM` the month of the increment.
 
 ### Fixed
 
+#### [r25.04] 2025-05-18
+https://github.com/ARM-software/Tool-Solutions/tree/r25.05
+
+### Added
+ - Support for authenticated GitHub access in apply-github-patch
+
+### Changed
+
+### Removed
+
+### Fixed
+
 ## [r25.04] 2025-04-16
 https://github.com/ARM-software/Tool-Solutions/tree/r25.04
 

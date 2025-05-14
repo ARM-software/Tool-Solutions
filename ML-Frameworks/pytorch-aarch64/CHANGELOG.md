@@ -8,8 +8,20 @@ where `YY` is the year, and `MM` the month of the increment.
 ## [unreleased]
 
 ### Added
+
+### Changed
+
+### Removed
+
+### Fixed
+
+### [r25.04] 2025-05-18
+https://github.com/ARM-software/Tool-Solutions/tree/r25.05
+
+### Added
  - WIP patch to build a newer version of libgomp from source - https://github.com/pytorch/pytorch/pull/152361
    Improve scaling for >16 threads.
+ - Support for authenticated GitHub access in apply-github-patch
 
 ### Changed
  - Updates hashes for:

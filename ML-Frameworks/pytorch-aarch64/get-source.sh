@@ -30,11 +30,15 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
 (
     cd pytorch
 
-    apply-github-patch pytorch/pytorch 143190 6e5628b1f648d862e8fdd150ad277120b236ed15 # Enable AArch64 CI scripts to be used for local dev
-    apply-github-patch pytorch/pytorch 140159 ca4a718be80eb88ca6804b91201e4f98a3e236c8 # cpu: enable gemm-bf16f32 for SDPA BF16
-    apply-github-patch pytorch/pytorch 140159 406fe1fbd066401774c104d125a7ac0b3d6eb52b
-    apply-github-patch pytorch/pytorch 152361 7c54b6b07558c330ee2f95b4793edb3bfbb814c9 # Build libgomp (gcc-11) from source
-    apply-github-patch pytorch/pytorch 150833 02987a7c2e9b249a669723224c8d3cd80c6cb64e # Pin all root requirements to major versions
+    # https://github.com/pytorch/pytorch/pull/143190 - Enable AArch64 CI scripts to be used for local dev
+    apply-github-patch pytorch/pytorch 6e5628b1f648d862e8fdd150ad277120b236ed15
+    # https://github.com/pytorch/pytorch/pull/140159 - cpu: enable gemm-bf16f32 for SDPA BF16
+    apply-github-patch pytorch/pytorch ca4a718be80eb88ca6804b91201e4f98a3e236c8
+    apply-github-patch pytorch/pytorch 406fe1fbd066401774c104d125a7ac0b3d6eb52b
+    # https://github.com/pytorch/pytorch/pull/152361 - Build libgomp (gcc-11) from source
+    apply-github-patch pytorch/pytorch 7c54b6b07558c330ee2f95b4793edb3bfbb814c9
+    # https://github.com/pytorch/pytorch/pull/150833 - Pin all root requirements to major versions
+    apply-github-patch pytorch/pytorch 02987a7c2e9b249a669723224c8d3cd80c6cb64e
 
     git submodule sync
     git submodule update --init --checkout --force --recursive --jobs=$(nproc)
@@ -45,7 +49,8 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
         (
             cd mkl-dnn
             git fetch origin $ONEDNN_HASH && git clean -f && git checkout -f FETCH_HEAD
-            apply-github-patch uxlfoundation/oneDNN 3022 4a00e92b995388192e666ee332554e4ef65b484a # cpu: aarch64: enable jit conv for 128
+            # https://github.com/uxlfoundation/oneDNN/pull/3922 - cpu: aarch64: enable jit conv for 128
+            apply-github-patch uxlfoundation/oneDNN 4a00e92b995388192e666ee332554e4ef65b484a
         )
     )
 )
@@ -53,11 +58,13 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
 git-shallow-clone https://review.mlplatform.org/ml/ComputeLibrary $ACL_HASH
 (
     cd ComputeLibrary
-    apply-gerrit-patch https://review.mlplatform.org/c/ml/ComputeLibrary/+/12818/1 # perf: Improve gemm_interleaved 2D vs 1D blocking heuristic
+    # Improve gemm_interleaved 2D vs 1D blocking heuristic
+    apply-gerrit-patch https://review.mlplatform.org/c/ml/ComputeLibrary/+/12818/1
 )
 
 git-shallow-clone https://github.com/pytorch/ao.git $TORCH_AO_HASH
 (
     cd ao
-    apply-github-patch pytorch/ao 1447 738d7f2c5a48367822f2bf9d538160d19f02341e # [Feat]: Add support for kleidiai quantization schemes
+    # https://github.com/pytorch/ao/pull/1447 - Add support for kleidiai quantization schemes
+    apply-github-patch pytorch/ao 738d7f2c5a48367822f2bf9d538160d19f02341e
 )
