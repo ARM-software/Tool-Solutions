@@ -20,25 +20,18 @@
 source ../utils/git-utils.sh
 
 set -eux -o pipefail
-PYTORCH_HASH=e872bf8f888bdbb27a03e03935db61babf7180b8  # 2.8.0.dev20250430 from viable/strict
-IDEEP_HASH=2ef932a861439e4cc9bb8baee8424b57573de023    # From ideep_pytorch
-ONEDNN_HASH=69150ce5fe1f453af9125ca42a921e017092ccf7   # From main
-ACL_HASH=334108c0efc512efdc9576ba957dbcf5b7ee168a      # rc_25_04_29_0
+PYTORCH_HASH=3040ca6d0f8558e39919b14eebeacc34ddf980f5   # main June 10th
+IDEEP_HASH=2ef932a861439e4cc9bb8baee8424b57573de023     # main June 10th
+ONEDNN_HASH=106a7b41bc4156297b8a88cd1951304b739cc427    # main June 10th
+ACL_HASH=6bc1c7b8d0756272e2a97a7489e13de90f864326       # main June 9th
 TORCH_AO_HASH=e1cb44ab84eee0a3573bb161d65c18661dc4a307 # From main
 
 git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
 (
     cd pytorch
 
-    # https://github.com/pytorch/pytorch/pull/143190 - Enable AArch64 CI scripts to be used for local dev
-    apply-github-patch pytorch/pytorch 6e5628b1f648d862e8fdd150ad277120b236ed15
-    # https://github.com/pytorch/pytorch/pull/140159 - cpu: enable gemm-bf16f32 for SDPA BF16
-    apply-github-patch pytorch/pytorch ca4a718be80eb88ca6804b91201e4f98a3e236c8
-    apply-github-patch pytorch/pytorch 406fe1fbd066401774c104d125a7ac0b3d6eb52b
     # https://github.com/pytorch/pytorch/pull/152361 - Build libgomp (gcc-11) from source
     apply-github-patch pytorch/pytorch 7c54b6b07558c330ee2f95b4793edb3bfbb814c9
-    # https://github.com/pytorch/pytorch/pull/150833 - Pin all root requirements to major versions
-    apply-github-patch pytorch/pytorch 02987a7c2e9b249a669723224c8d3cd80c6cb64e
 
     git submodule sync
     git submodule update --init --checkout --force --recursive --jobs=$(nproc)
