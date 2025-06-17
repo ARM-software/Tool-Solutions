@@ -37,4 +37,4 @@ tzdata==2024.2
 urllib3~=2.2.3
 sentencepiece==0.2.0  # Torchchat
 tomli==2.2.1          # Torchchat
-protobuf==5.29.2      # GenAI models dependency
+protobuf==5.29.5      # GenAI models dependency
