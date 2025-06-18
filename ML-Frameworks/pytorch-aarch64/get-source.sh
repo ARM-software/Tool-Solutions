@@ -36,6 +36,12 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
     # https://github.com/pytorch/pytorch/pull/150833 - Pin all root requirements to major versions
     apply-github-patch pytorch/pytorch 494dd1c84c508c20f2e688c46513f22bbcff175d
 
+    # https://github.com/pytorch/pytorch/pull/151547 - Update OpenBLAS commit
+    apply-github-patch pytorch/pytorch 8e3ad3a917e0f0e60a89f647897f4d4c1f5f835a
+    apply-github-patch pytorch/pytorch 0218b65bcf61971c1861cfe8bc586168b73aeb5f
+    apply-github-patch pytorch/pytorch 53fdcf26b63fbb223b6f01d00608c951541c4ce3
+    apply-github-patch pytorch/pytorch d1355a4d4ed7d7f1f052c4f613974885b2e8a05c
+
     git submodule sync
     git submodule update --init --checkout --force --recursive --jobs=$(nproc)
     (
