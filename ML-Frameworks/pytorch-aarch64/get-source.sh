@@ -33,6 +33,9 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
     # https://github.com/pytorch/pytorch/pull/152361 - Build libgomp (gcc-11) from source
     apply-github-patch pytorch/pytorch 7c54b6b07558c330ee2f95b4793edb3bfbb814c9
 
+    # https://github.com/pytorch/pytorch/pull/150833 - Pin all root requirements to major versions
+    apply-github-patch pytorch/pytorch 494dd1c84c508c20f2e688c46513f22bbcff175d
+
     git submodule sync
     git submodule update --init --checkout --force --recursive --jobs=$(nproc)
     (
