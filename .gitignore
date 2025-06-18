@@ -5,3 +5,5 @@ __pycache__/
 build*.log
 *.pb
 *.zip
+
+patch_cache/
