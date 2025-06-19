@@ -20,10 +20,10 @@
 source ../utils/git-utils.sh
 
 set -eux -o pipefail
-PYTORCH_HASH=3040ca6d0f8558e39919b14eebeacc34ddf980f5   # main June 10th
-IDEEP_HASH=2ef932a861439e4cc9bb8baee8424b57573de023     # main June 10th
-ONEDNN_HASH=106a7b41bc4156297b8a88cd1951304b739cc427    # main June 10th
-ACL_HASH=6bc1c7b8d0756272e2a97a7489e13de90f864326       # main June 9th
+PYTORCH_HASH=3040ca6d0f8558e39919b14eebeacc34ddf980f5   # 2.8.0.dev20250611 from viable/strict
+IDEEP_HASH=2ef932a861439e4cc9bb8baee8424b57573de023     # from ideep_pytorch, June 10th
+ONEDNN_HASH=106a7b41bc4156297b8a88cd1951304b739cc427    # from main, June 10th
+ACL_HASH=6bc1c7b8d0756272e2a97a7489e13de90f864326       # from main, June 9th
 TORCH_AO_HASH=e1cb44ab84eee0a3573bb161d65c18661dc4a307 # From main
 
 git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH

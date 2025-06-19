@@ -23,14 +23,6 @@ set -eux -o pipefail
 
 TENSORFLOW_HASH=65781570c55d2338106767de200323f123c3f91f
 
-# The next oneDNN commits relocate xbyak_aarch64 as a third_party module,
-# but this is not picked up by TF Bazel build.
-ONEDNN_HASH=ad06da68524b2b5e63fc1d7a7a749d555394a0a7       # main Jan 03, 2025
- 
-# The next ACL commit introduces KleidiAI as a third-party module,
-# but this is not picked up by TF Bazel build.
-ACL_HASH=0038c52d6c79b76755c087cda1be4bbf752e272c          # main Jan 6, 2025
-
 git-shallow-clone https://github.com/tensorflow/tensorflow.git $TENSORFLOW_HASH
 
 (
@@ -38,6 +30,7 @@ git-shallow-clone https://github.com/tensorflow/tensorflow.git $TENSORFLOW_HASH
 
     # Apply TensorFlow WIP patches here
 
-    apply-github-patch tensorflow/tensorflow 6eb08485a6312a02636f79d8eddf00a549e32aca # build(aarch64): Update to oneDNN-3.7 + ACL-24.12 (fix)
+    # https://github.com/tensorflow/tensorflow/pull/93951 - build(aarch64): Update to oneDNN-3.7 + ACL-24.12 (fix)
+    apply-github-patch tensorflow/tensorflow 6eb08485a6312a02636f79d8eddf00a549e32aca
 
 )

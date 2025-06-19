@@ -15,7 +15,27 @@ where `YY` is the year, and `MM` the month of the increment.
 
 ### Fixed
 
-### [r25.04] 2025-05-16
+## [r25.06] 2025-06-20
+https://github.com/ARM-software/Tool-Solutions/tree/r25.06
+
+### Added
+ - Adds WIP patch to update the OpenBLAS commit - https://github.com/pytorch/pytorch/pull/151547.
+   - Speedups across most of the HF models via significant boost to SDPA layers.
+   - Overall torchbench pass-rate increased.
+ - Adds support in `github-apply-patch` for local caching of patches.
+
+### Changed
+ - Updates protobuf from 5.29.2 to 5.29.5 in response to CVE-2025-4565.
+ - Updates hashes for:
+   - PyTorch to 3040ca6d0f8558e39919b14eebeacc34ddf980f5 2.8.0.dev20250611 from viable/strict.
+   - ideep to 2ef932a861439e4cc9bb8baee8424b57573de023 from ideep_pytorch, June 10.
+   - oneDNN to 106a7b41bc4156297b8a88cd1951304b739cc427 from main, June 10th.
+   - Compute Library to 6bc1c7b8d0756272e2a97a7489e13de90f864326 from main, June 9th.
+
+### Removed
+ - Removes patches which are no longer required.
+
+## [r25.05] 2025-05-16
 https://github.com/ARM-software/Tool-Solutions/tree/r25.05
 
 ### Added
