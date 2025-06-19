@@ -17,6 +17,13 @@
 # limitations under the License.
 # *******************************************************************************
 
+# Define patch cache directory as global variable, set to be in this directory,
+# shared by this Tool-Solutions. Collisions are almost impossible, even between
+# projects
+patch_cache_dir="$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")/patch_cache"
+mkdir -p $patch_cache_dir
+export patch_cache_dir
+
 function git-shallow-clone {
     (
         local repo_name=$(basename "$1" .git)
@@ -40,20 +47,21 @@ function apply-github-patch {
     # To use an API token, which may avoid rate limits, set the environment variable GITHUB_TOKEN
 
     set -u
+    patch_file="$patch_cache_dir/$2.patch"
+    if [ ! -f "$patch_file" ]; then
+        local github_api_url='https://api.github.com/repos'
+        local github_url='https://github.com'
 
-    local github_api_url='https://api.github.com/repos'
-    local github_url='https://github.com'
-
-    # Download the .patch file.
-    if [[ "${GITHUB_TOKEN+x}" ]]; then
-        curl --silent -H "Authorization: token $GITHUB_TOKEN" -H "Accept: application/vnd.github.v3.patch" -L $github_api_url/$1/commits/$2 -o $2.patch
-    else
-        curl --silent -L $github_url/$1/commit/$2.patch -o $2.patch
+        # Download the .patch file.
+        if [[ "${GITHUB_TOKEN+x}" ]]; then
+            curl --silent -H "Authorization: token $GITHUB_TOKEN" -H "Accept: application/vnd.github.v3.patch" -L $github_api_url/$1/commits/$2 -o "$patch_file"
+        else
+            curl --silent -L $github_url/$1/commit/$2.patch -o "$patch_file"
+        fi
     fi
 
-    # Apply the patch and tidy up.
-    patch -p1 < $2.patch
-    rm $2.patch
+    # Apply the patch
+    patch -p1 < "$patch_file"
     return 0
 }
 

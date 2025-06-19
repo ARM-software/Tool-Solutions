@@ -58,6 +58,12 @@ Note: if the environment variable `GITHUB_TOKEN` is set then the build will
 attemmpt to use `GITHUB_TOKEN` for authenticated access when downloading WIP patches.
 This can avoid issues with rate-limiting on annonymous access.
 
+Note: GitHub patches are cached in `utils/patch_cache` to save network
+traffic. This also allows you to use local patches that are not yet upstream by
+adding your patch to `utils/patch_cache` with the name
+`<your commit hash>.patch`. Then use `github-apply-patch` as usual in
+`get-source.sh`.
+
 ### Flags useful for development
 - `--use-existing-sources` skips `get-source.sh` and just builds
 - `--force` overwrites sources
