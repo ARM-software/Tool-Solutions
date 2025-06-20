@@ -15,7 +15,19 @@ where `YY` is the year, and `MM` the month of the increment.
 
 ### Fixed
 
-#### [r25.04] 2025-05-16
+## [r25.06] 2025-06-20
+https://github.com/ARM-software/Tool-Solutions/tree/r25.06
+
+### Added
+ - Adds support in `github-apply-patch` for local caching of patches.
+ - Adds WIP patch: https://github.com/tensorflow/tensorflow/pull/93951
+   to update to oneDNN-3.7 + ACL-24.12, and address unit test failures
+
+### Changed
+ - Updates TensorFlow hash to 65781570c55d2338106767de200323f123c3f91f
+   tensorflow-2.20.0.dev0 from main
+
+## [r25.05] 2025-05-16
 https://github.com/ARM-software/Tool-Solutions/tree/r25.05
 
 ### Added
