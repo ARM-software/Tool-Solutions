@@ -20,10 +20,10 @@
 source ../utils/git-utils.sh
 
 set -eux -o pipefail
-PYTORCH_HASH=3040ca6d0f8558e39919b14eebeacc34ddf980f5   # 2.8.0.dev20250611 from viable/strict
-IDEEP_HASH=2ef932a861439e4cc9bb8baee8424b57573de023     # from ideep_pytorch, June 10th
-ONEDNN_HASH=106a7b41bc4156297b8a88cd1951304b739cc427    # from main, June 10th
-ACL_HASH=6bc1c7b8d0756272e2a97a7489e13de90f864326       # from main, June 9th
+PYTORCH_HASH=5dfd8a9c7a464bb42e81b8594eefd2fa865e5423  # From viable/strict, July 3rd
+IDEEP_HASH=6eb12eaad5e0f7d8c8613c744ac8ba5a0843cb99    # From ideep_pytorch, July 3rd
+ONEDNN_HASH=0abfca1947b53c03ee74207e4710941ab6456f3b   # From main, July 3rd
+ACL_HASH=f69b48afcc59f1b3b0d4544289249bebba489f0a      # From main, June 26th
 TORCH_AO_HASH=e1cb44ab84eee0a3573bb161d65c18661dc4a307 # From main
 
 git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
@@ -32,15 +32,18 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
 
     # https://github.com/pytorch/pytorch/pull/152361 - Build libgomp (gcc-11) from source
     apply-github-patch pytorch/pytorch 7c54b6b07558c330ee2f95b4793edb3bfbb814c9
+    apply-github-patch pytorch/pytorch 3e17ce1619b2d02543a619f6217919b5adb36123
+    apply-github-patch pytorch/pytorch 2c884c2b580a93cd0b1e5eea36aa24e3acab91a9
 
     # https://github.com/pytorch/pytorch/pull/150833 - Pin all root requirements to major versions
-    apply-github-patch pytorch/pytorch 494dd1c84c508c20f2e688c46513f22bbcff175d
+    apply-github-patch pytorch/pytorch 51ce4213adb106659abc962fb66b94d595a19e20
 
     # https://github.com/pytorch/pytorch/pull/151547 - Update OpenBLAS commit
-    apply-github-patch pytorch/pytorch 8e3ad3a917e0f0e60a89f647897f4d4c1f5f835a
-    apply-github-patch pytorch/pytorch 0218b65bcf61971c1861cfe8bc586168b73aeb5f
-    apply-github-patch pytorch/pytorch 53fdcf26b63fbb223b6f01d00608c951541c4ce3
-    apply-github-patch pytorch/pytorch d1355a4d4ed7d7f1f052c4f613974885b2e8a05c
+    apply-github-patch pytorch/pytorch b06f8b5dbdc66878bf2492f08f42d7b1ad42a4f3
+    apply-github-patch pytorch/pytorch 7e467c44b70a0ba09d52b63e570f1c2fcb05b159
+    apply-github-patch pytorch/pytorch 4a596d0c6905c7a7274a479144f9edb4e18c3472
+    apply-github-patch pytorch/pytorch 78664d62d73fe9ebf3d08d4382986c7090e447d5
+    apply-github-patch pytorch/pytorch 190b3b3069b5ce130c1584d0d4ddd36d6d477801
 
     git submodule sync
     git submodule update --init --checkout --force --recursive --jobs=$(nproc)
@@ -51,8 +54,8 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
         (
             cd mkl-dnn
             git fetch origin $ONEDNN_HASH && git clean -f && git checkout -f FETCH_HEAD
-            # https://github.com/uxlfoundation/oneDNN/pull/3922 - cpu: aarch64: enable jit conv for 128
-            apply-github-patch uxlfoundation/oneDNN 4a00e92b995388192e666ee332554e4ef65b484a
+            # https://github.com/uxlfoundation/oneDNN/pull/3022 - cpu: aarch64: enable jit conv for 128
+            apply-github-patch uxlfoundation/oneDNN 244422f8cd0aab93d2a184894472c955ebb7bb97
         )
     )
 )
