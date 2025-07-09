@@ -10,6 +10,7 @@ where `YY` is the year, and `MM` the month of the increment.
 ### Added
 
 ### Changed
+ - Updated Dockerfile to minimise layers in the final image.
 
 ### Removed
 

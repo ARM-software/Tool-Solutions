@@ -17,7 +17,9 @@
 
 # Specify DOCKER_IMAGE_MIRROR if you want to use a mirror of hub.docker.com
 ARG DOCKER_IMAGE_MIRROR=""
-FROM ${DOCKER_IMAGE_MIRROR}ubuntu:22.04
+FROM ${DOCKER_IMAGE_MIRROR}ubuntu:22.04 AS workshop
+
+ARG USERNAME
 
 ARG TENSORFLOW_WHEEL
 ENV TENSORFLOW_WHEEL=$TENSORFLOW_WHEEL
@@ -76,4 +78,16 @@ RUN pip install -r requirements.txt --no-deps
 # Setup Examples
 COPY --chown=$DOCKER_USER examples/ /home/$DOCKER_USER/
 
+# Move build into final image as a single layer.
+FROM ${DOCKER_IMAGE_MIRROR}ubuntu:22.04
+
+ARG USERNAME
+
+ENV DOCKER_USER=${USERNAME}
+
+COPY --from=workshop / /
+RUN chown $DOCKER_USER:$DOCKER_USER /home/$DOCKER_USER
+
+USER $DOCKER_USER
+WORKDIR /home/$DOCKER_USER
 CMD ["bash", "-l"]
