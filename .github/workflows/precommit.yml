@@ -1,0 +1,96 @@
+# *******************************************************************************
+# Copyright 2025 Arm Limited and affiliates.
+# SPDX-License-Identifier: Apache-2.0
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# *******************************************************************************
+
+name: "Precommit"
+
+#* To avoid duplicate jobs running when both push and PR is satisfied, we use this:
+#* https://github.com/orgs/community/discussions/26940#discussioncomment-5686753
+on:
+  push:
+    branches: [main]
+    paths:
+      - "ML-Frameworks/pytorch-aarch64/**"
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - "ML-Frameworks/pytorch-aarch64/**"
+  #* allow manual trigger of workflow when needed.
+  workflow_dispatch:
+
+#* Stop stale workflows when pull requests are updated: https://stackoverflow.com/a/70972844
+#* Does not apply to the main branch.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+# Declare default permissions as read only.
+permissions: read-all
+
+jobs:
+  build-and-test:
+    strategy:
+      matrix:
+        config: [
+          { name: c7g, label: ah-ubuntu_22_04-c7g_4x-50, threading: OMP, toolset: gcc }
+        ]
+
+    runs-on: ${{ matrix.config.label }}
+    steps:
+      - name: Checkout Tool-Solutions
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          path: Tool-Solutions
+
+      # Note: This will create a github actions cache
+      - name: Get latest CMake and Ninja
+        uses: lukka/get-cmake@56d043d188c3612951d8755da8f4b709ec951ad6 # v3.31.6
+        with:
+          cmakeVersion: 3.31.0
+          ninjaVersion: 1.12.0
+
+      - name: Install openmp
+        run: |
+          sudo apt install -y libomp-dev
+
+      - name: Install gcc
+        run: |
+          sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
+          sudo apt update -y
+          sudo apt install -y g++-11
+
+      - name: setup python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: '3.10'
+
+      - name: Set up Docker
+        uses: docker/setup-docker-action@v4
+
+      - name: Build Tool-Solutions PyTorch
+        run: ${{ github.workspace }}/Tool-Solutions/ML-Frameworks/pytorch-aarch64/build.sh
+        working-directory: ${{ github.workspace }}/Tool-Solutions
+
+
+  # This job adds a check named "CI AArch64" that represents overall
+  # workflow status and can be used in branch rulesets
+  status:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    name: "CI AArch64"
+    steps:
+      - name: Print success
+        run: echo Success
