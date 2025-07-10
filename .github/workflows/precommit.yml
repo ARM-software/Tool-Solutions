@@ -83,9 +83,14 @@ jobs:
         uses: docker/setup-docker-action@v4
 
       - name: Build Tool-Solutions PyTorch
-        run: ${{ github.workspace }}/Tool-Solutions/ML-Frameworks/pytorch-aarch64/build.sh
         working-directory: ${{ github.workspace }}/Tool-Solutions/ML-Frameworks/pytorch-aarch64
-
+        run: ${{ github.workspace }}/Tool-Solutions/ML-Frameworks/pytorch-aarch64/build.sh
+      
+      - name: Run smoke tests
+        working-directory: ${{ github.workspace }}/Tool-Solutions/ML-Frameworks/pytorch-aarch64
+        run: |
+          source venv/bin/activate
+          ./examples/test.sh
 
   # This job adds a check named "CI AArch64" that represents overall
   # workflow status and can be used in branch rulesets
