@@ -10,7 +10,23 @@ where `YY` is the year, and `MM` the month of the increment.
 ### Added
 
 ### Changed
- - Updated Dockerfile to minimise layers in the final image.
+
+### Removed
+
+### Fixed
+
+## [25.07] 2025-07-11
+https://github.com/ARM-software/Tool-Solutions/tree/r25.07
+
+### Added
+
+### Changed
+ - Updates Dockerfile to minimise layers in the final image.
+ - Updates hashes for:
+   - PyTorch to 5dfd8a9c7a464bb42e81b8594eefd2fa865e5423, to 2.9.0.dev20250703 from viable/strict
+   - ideep to 6eb12eaad5e0f7d8c8613c744ac8ba5a0843cb99, from ideep_pytorch, July 3rd
+   - oneDNN to 0abfca1947b53c03ee74207e4710941ab6456f3b, from main, July 3rd
+   - Compute Library to f69b48afcc59f1b3b0d4544289249bebba489f0a, from main, June 26th
 
 ### Removed
 

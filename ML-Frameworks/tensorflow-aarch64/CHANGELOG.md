@@ -10,7 +10,19 @@ where `YY` is the year, and `MM` the month of the increment.
 ### Added
 
 ### Changed
- - Updated Dockerfile to minimise layers in the final image.
+
+### Removed
+
+### Fixed
+
+## [25.07] 2025-07-11
+https://github.com/ARM-software/Tool-Solutions/tree/r25.07
+
+### Added
+
+### Changed
+ - Updates Dockerfile to minimise layers in the final image.
+ - Updates TensorFlow hash to 70d137e8794f97728e094608ec9ea1c6c9fd42af, 2.20.0-dev0 from nightly, July 1st
 
 ### Removed
 

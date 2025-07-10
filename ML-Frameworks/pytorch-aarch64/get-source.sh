@@ -20,7 +20,7 @@
 source ../utils/git-utils.sh
 
 set -eux -o pipefail
-PYTORCH_HASH=5dfd8a9c7a464bb42e81b8594eefd2fa865e5423  # From viable/strict, July 3rd
+PYTORCH_HASH=5dfd8a9c7a464bb42e81b8594eefd2fa865e5423  # 2.9.0.dev20250703, from viable/strict, July 3rd
 IDEEP_HASH=6eb12eaad5e0f7d8c8613c744ac8ba5a0843cb99    # From ideep_pytorch, July 3rd
 ONEDNN_HASH=0abfca1947b53c03ee74207e4710941ab6456f3b   # From main, July 3rd
 ACL_HASH=f69b48afcc59f1b3b0d4544289249bebba489f0a      # From main, June 26th
