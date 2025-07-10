@@ -24,10 +24,12 @@ on:
     branches: [main]
     paths:
       - "ML-Frameworks/pytorch-aarch64/**"
+      - ".github/**"
   pull_request:
     types: [opened, synchronize, reopened]
     paths:
       - "ML-Frameworks/pytorch-aarch64/**"
+      - ".github/**"
   #* allow manual trigger of workflow when needed.
   workflow_dispatch:
 
@@ -82,7 +84,7 @@ jobs:
 
       - name: Build Tool-Solutions PyTorch
         run: ${{ github.workspace }}/Tool-Solutions/ML-Frameworks/pytorch-aarch64/build.sh
-        working-directory: ${{ github.workspace }}/Tool-Solutions
+        working-directory: ${{ github.workspace }}/Tool-Solutions/ML-Frameworks/pytorch-aarch64
 
 
   # This job adds a check named "CI AArch64" that represents overall
