@@ -18,7 +18,9 @@
 
 # Specify DOCKER_IMAGE_MIRROR if you want to use a mirror of hub.docker.com
 ARG DOCKER_IMAGE_MIRROR=""
-FROM ${DOCKER_IMAGE_MIRROR}ubuntu:22.04
+FROM ${DOCKER_IMAGE_MIRROR}ubuntu:22.04 AS workshop
+
+ARG USERNAME
 
 ARG TORCH_WHEEL
 ENV TORCH_WHEEL=$TORCH_WHEEL
@@ -44,7 +46,7 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # DOCKER_USER for the Docker user
-ENV DOCKER_USER=ubuntu
+ENV DOCKER_USER=${USERNAME}
 
 # Setup default user
 RUN useradd --create-home -s /bin/bash -m $DOCKER_USER && echo "$DOCKER_USER:Portland" | chpasswd && adduser $DOCKER_USER sudo
@@ -112,4 +114,16 @@ RUN sudo mkdir -p /home/ubuntu/gen_ai_utils/ && \
     sudo git config --global --add safe.directory /home/ubuntu/gen_ai_utils/torchchat && \
     sudo git checkout 90749d280bbc116fcc121a1eda1b60f1dba5b675
 
+# Move build into final image as a single layer.
+FROM ${DOCKER_IMAGE_MIRROR}ubuntu:22.04
+
+ARG USERNAME
+
+ENV DOCKER_USER=${USERNAME}
+
+COPY --from=workshop / /
+RUN chown $DOCKER_USER:$DOCKER_USER /home/$DOCKER_USER
+
+USER $DOCKER_USER
+WORKDIR /home/$DOCKER_USER
 CMD ["bash", "-l"]
