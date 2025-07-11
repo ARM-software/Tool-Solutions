@@ -50,7 +50,7 @@ torch_wheel_name=$(grep -o "torch-.*.whl" $build_log | head -n -1 | tail -n 1)
 # Use the second to last match, otherwise grep finds itself
 torch_ao_wheel_name=$(grep -o "torchao-.*.whl" $build_log | head -n -1 | tail -n 1)
 
-DOCKER_BUILDKIT=1 docker build -t toolsolutions-pytorch:latest \
+docker build -t toolsolutions-pytorch:latest \
     --build-arg TORCH_WHEEL=results/$torch_wheel_name \
     --build-arg DOCKER_IMAGE_MIRROR \
     --build-arg TORCH_AO_WHEEL=ao/dist/$torch_ao_wheel_name \
