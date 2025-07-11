@@ -86,18 +86,25 @@ jobs:
         working-directory: ${{ github.workspace }}/Tool-Solutions/ML-Frameworks/pytorch-aarch64
         run: ${{ github.workspace }}/Tool-Solutions/ML-Frameworks/pytorch-aarch64/build.sh
       
+      - name: Setup smoke test environment
+        working-directory: ${{ github.workspace }}/Tool-Solutions/ML-Frameworks/pytorch-aarch64
+        run: |
+          source venv/bin/activate
+          pip install --no-deps -r examples/requirements.txt
+
       - name: Run smoke tests
         working-directory: ${{ github.workspace }}/Tool-Solutions/ML-Frameworks/pytorch-aarch64
         run: |
           source venv/bin/activate
-          ./examples/test.sh
+          cd examples
+          ./test.sh
 
-  # This job adds a check named "CI AArch64" that represents overall
+  # This job adds a check named "Precommit-status" that represents overall
   # workflow status and can be used in branch rulesets
   status:
     needs: build-and-test
     runs-on: ubuntu-latest
-    name: "CI AArch64"
+    name: "Precommit-status"
     steps:
       - name: Print success
         run: echo Success

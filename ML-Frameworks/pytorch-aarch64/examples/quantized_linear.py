@@ -1,5 +1,5 @@
 # *******************************************************************************
-# Copyright 2024 Arm Limited and affiliates.
+# Copyright 2024-2025 Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,9 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # *******************************************************************************
-
-import sys
-import os
 
 import torch
 import torch.nn as nn
@@ -35,9 +32,9 @@ class Net(nn.Module):
         x = self.linear(x)
         return x
 
-M = int(sys.argv[1])
-K = int(sys.argv[2])
-N = int(sys.argv[3])
+M = 256
+K = 512
+N = 128
 
 model = Net(K, N)
 model = model.eval()
