@@ -56,3 +56,11 @@ docker build -t toolsolutions-pytorch:latest \
     --build-arg TORCH_AO_WHEEL=ao/dist/$torch_ao_wheel_name \
     --build-arg USERNAME=ubuntu \
     .
+
+# install PyTorch in venv
+if ! [ -d venv ]; then
+    python -m venv venv
+fi
+
+source venv/bin/activate
+pip install --force-reinstall results/$torch_wheel_name
