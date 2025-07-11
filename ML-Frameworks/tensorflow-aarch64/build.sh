@@ -47,4 +47,5 @@ echo $tf_wheel_name
 docker build -t toolsolutions-tensorflow:latest \
     --build-arg TENSORFLOW_WHEEL=results/$tf_wheel_name \
     --build-arg DOCKER_IMAGE_MIRROR \
+    --build-arg USERNAME=ubuntu \
     .
