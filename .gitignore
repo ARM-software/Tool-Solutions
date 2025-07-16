@@ -1,5 +1,5 @@
 ao/
-venv/
+venv*/
 __pycache__/
 
 build*.log
