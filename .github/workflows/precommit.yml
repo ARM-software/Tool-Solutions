@@ -68,6 +68,9 @@ jobs:
       - name: Run smoke tests
         run: docker run --rm toolsolutions-pytorch:latest ./test.sh
 
+      - name: Run unit tests
+        run: ./run_unit_test.sh
+
   # This job adds a check named "Precommit-status" that represents overall
   # workflow status and can be used in branch rulesets
   status:
