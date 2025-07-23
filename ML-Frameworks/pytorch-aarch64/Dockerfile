@@ -103,8 +103,11 @@ RUN pip install "$(basename "$TORCH_WHEEL")" --no-deps \
 RUN pip install "$(basename "$TORCH_AO_WHEEL")" --no-deps \
     && rm "$(basename "$TORCH_AO_WHEEL")"
 
-# Setup Examples
+# Setup Examples and tests
 COPY examples/ /home/$DOCKER_USER/
+COPY pytorch/test /home/$DOCKER_USER/pytorch/test
+
+RUN pip install -r requirements-unit.txt
 
 # Llm examples depends on torchchat
 RUN sudo mkdir -p /home/ubuntu/gen_ai_utils/ && \

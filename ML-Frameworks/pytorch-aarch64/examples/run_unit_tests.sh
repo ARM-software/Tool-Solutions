@@ -17,18 +17,7 @@
 # limitations under the License.
 # *******************************************************************************
 
-# Runs examples from README.md by looking for lines that start with python, this
-# doesn't catch everything but it's a good first approximation.
-# Store all examples in an array of strings (rather than all in a single string)
-# so that the `for` loop iterates over lines (examples) rather than words. See
-# https://unix.stackexchange.com/questions/412638 for more information
-readarray -t examples < <( grep -E '^python' README.md )
-for example in "${examples[@]}"; do
-    echo "Running: $example"
-    bash -c "$example"
-    echo ""
-done
-
-# Check an example with some of the flags from REAMDE.md > "General optimization
-# guidelines" There is no verbatim example for this
-LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libtcmalloc.so.4 DNNL_DEFAULT_FPMATH_MODE=BF16 ${examples[0]}
+LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libtcmalloc.so.4 DNNL_DEFAULT_FPMATH_MODE=BF16 /
+    python pytorch/test/test_mkldnn.py
+LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libtcmalloc.so.4 DNNL_DEFAULT_FPMATH_MODE=BF16 /
+    python pytorch/test/test_transformers.py
