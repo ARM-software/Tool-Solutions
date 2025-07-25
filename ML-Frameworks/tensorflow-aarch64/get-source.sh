@@ -21,7 +21,7 @@ source ../utils/git-utils.sh
 
 set -eux -o pipefail
 
-TENSORFLOW_HASH=70d137e8794f97728e094608ec9ea1c6c9fd42af # 2.20.0-dev0 from nightly, July 1st
+TENSORFLOW_HASH=ab8aab720f1648f6a470b159b0d1aea3a5b0df81 # 2.20.0-dev0 from master, 25th July 2025
 
 git-shallow-clone https://github.com/tensorflow/tensorflow.git $TENSORFLOW_HASH
 
@@ -31,6 +31,5 @@ git-shallow-clone https://github.com/tensorflow/tensorflow.git $TENSORFLOW_HASH
     # Apply TensorFlow WIP patches here
 
     # https://github.com/tensorflow/tensorflow/pull/93951 - build(aarch64): Update to oneDNN-3.7 + ACL-24.12 (fix)
-    apply-github-patch tensorflow/tensorflow 6eb08485a6312a02636f79d8eddf00a549e32aca
-
+    apply-github-patch tensorflow/tensorflow e9cd9ea7d5f52b6c6740ce4e486e0fce554a26a4
 )

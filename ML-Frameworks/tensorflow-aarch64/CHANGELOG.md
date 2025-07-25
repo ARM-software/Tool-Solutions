@@ -10,6 +10,7 @@ where `YY` is the year, and `MM` the month of the increment.
 ### Added
 
 ### Changed
+ - Updates TensorFlow hash to ab8aab720f1648f6a470b159b0d1aea3a5b0df81 # 2.20.0-dev0 from master, 25th July 2025
 
 ### Removed
 
