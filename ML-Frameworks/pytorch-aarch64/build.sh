@@ -28,7 +28,7 @@ if [ -d pytorch ] || [ -d builder ] || [ -d ComputeLibrary ] ; then
     echo "You appear to have sources already (pytorch/builder/ComputeLibrary)" \
 
     if ! ([[ $* == *--force* ]] || [[ $* == *--use-existing-sources* ]]) ; then
-        >2& echo "rerun with --force to overwrite sources or with" \
+        >&2 echo "rerun with --force to overwrite sources or with" \
                  "--use-existing-sources to build your existing sources."
         exit 1
     fi
