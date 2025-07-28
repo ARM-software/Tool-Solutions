@@ -24,7 +24,7 @@ PYTORCH_HASH=5dfd8a9c7a464bb42e81b8594eefd2fa865e5423  # 2.9.0.dev20250703, from
 IDEEP_HASH=6eb12eaad5e0f7d8c8613c744ac8ba5a0843cb99    # From ideep_pytorch, July 3rd
 ONEDNN_HASH=0abfca1947b53c03ee74207e4710941ab6456f3b   # From main, July 3rd
 ACL_HASH=f69b48afcc59f1b3b0d4544289249bebba489f0a      # From main, June 26th
-TORCH_AO_HASH=e1cb44ab84eee0a3573bb161d65c18661dc4a307 # From main
+TORCH_AO_HASH=ebfe1736c4442970835b6eda833c0bc5a1ce2dda # From main
 
 git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
 (
@@ -68,8 +68,3 @@ git-shallow-clone https://review.mlplatform.org/ml/ComputeLibrary $ACL_HASH
 )
 
 git-shallow-clone https://github.com/pytorch/ao.git $TORCH_AO_HASH
-(
-    cd ao
-    # https://github.com/pytorch/ao/pull/1447 - Add support for kleidiai quantization schemes
-    apply-github-patch pytorch/ao 738d7f2c5a48367822f2bf9d538160d19f02341e
-)

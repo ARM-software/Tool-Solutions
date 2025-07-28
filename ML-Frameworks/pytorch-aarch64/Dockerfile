@@ -106,14 +106,6 @@ RUN pip install "$(basename "$TORCH_AO_WHEEL")" --no-deps \
 # Setup Examples
 COPY examples/ /home/$DOCKER_USER/
 
-# Llm examples depends on torchchat
-RUN sudo mkdir -p /home/ubuntu/gen_ai_utils/ && \
-    cd /home/ubuntu/gen_ai_utils/ && \
-    sudo git clone https://github.com/pytorch/torchchat.git -b main && \
-    cd torchchat && \
-    sudo git config --global --add safe.directory /home/ubuntu/gen_ai_utils/torchchat && \
-    sudo git checkout 90749d280bbc116fcc121a1eda1b60f1dba5b675
-
 # Move build into final image as a single layer.
 FROM ${DOCKER_IMAGE_MIRROR}ubuntu:22.04
 
