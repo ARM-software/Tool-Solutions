@@ -10,6 +10,11 @@ where `YY` is the year, and `MM` the month of the increment.
 ### Added
 
 ### Changed
+- Updates hash for:
+  - TORCH_AO_HASH to ebfe1736c4442970835b6eda833c0bc5a1ce2dda, from main
+- Update the examples/transformers_llm_text_gen.py to use the new quantizer api Int8DynamicActivationIntxWeightConfig.
+- Deleted torchchat_llm_text_gen.py
+- Removed Dockerfile lines cloning TorchChat repo and setting safe.directory
 
 ### Removed
 

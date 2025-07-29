@@ -195,45 +195,35 @@ huggingface-cli login --token @hf_token
 
 ### Text Generation
 
-### Torchchat
-The script [torchchat_llm_text_gen.py](torchchat_llm_text_gen.py) demonstrates how to run llm inference using the Llama2 7B model via torchchat. It leverages the 4 bit dynamic quantization speedups and can supports multiple vision and text  models.
-
-To run infernece using torchchat call:
-
-```
-LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libtcmalloc.so.4  TORCHINDUCTOR_CPP_WRAPPER=1  TORCHINDUCTOR_FREEZING=1  OMP_NUM_THREADS=16 python torchchat_llm_text_gen.py --compile
-```
-
-#### Command-Line Options
-
-`--quant-config`
-  Description: Path to the model quantization config.
-
-`--max-new-tokens`
-  Description: Max new tokens to generate.
-
-`--compile`
-  Description: Whether to compile the model (default: `False`).
-
-`--model`
-  Description: Model alias. (Default: `"llama2"`  )
-
-`--prompt`
-  Description: Input prompt for model generation.
-
 ### Transformers
 The script [transformers_llm_text_gen.py](transformers_llm_text_gen.py) demonstrates how to generate text using Llama2 7B model via Transformers. It leverages the 4 bit dynamic quantization speedups and can supports vast number of text  models.
 
-To run infernece using torchchat call:
+Run inference using default (groupwise, layout-aware INT4) using tranformer call:
 
 ```
 LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libtcmalloc.so.4  TORCHINDUCTOR_CPP_WRAPPER=1  TORCHINDUCTOR_FREEZING=1  OMP_NUM_THREADS=16 python transformers_llm_text_gen.py --compile
 ```
 
+Run with symmetric_channelwise quantization:
+
+```
+LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libtcmalloc.so.4  TORCHINDUCTOR_CPP_WRAPPER=1  TORCHINDUCTOR_FREEZING=1  OMP_NUM_THREADS=16 python transformers_llm_text_gen.py --quant-scheme symmetric_channelwise --compile
+```
+
+Run with custom group size (e.g. 64):
+
+```
+LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libtcmalloc.so.4  TORCHINDUCTOR_CPP_WRAPPER=1  TORCHINDUCTOR_FREEZING=1  OMP_NUM_THREADS=16 python transformers_llm_text_gen.py --quant-scheme symmetric_groupwise --groupsize 64 --compile
+```
+
+
 #### Command-Line Options
 
-`--quant-config`
-  Description: Path to the model quantization config.
+`--quant-scheme`
+  Description: Quantization scheme to apply: symmetric_channelwise or symmetric_groupwise.
+
+`--groupsize`
+  Description: groupsize (used only with symmetric_groupwise).
 
 `--max-new-tokens`
   Description: Max new tokens to generate.
