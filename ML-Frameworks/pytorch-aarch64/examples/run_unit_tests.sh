@@ -17,7 +17,5 @@
 # limitations under the License.
 # *******************************************************************************
 
-LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libtcmalloc.so.4 DNNL_DEFAULT_FPMATH_MODE=BF16 /
-    python pytorch/test/test_mkldnn.py
-LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libtcmalloc.so.4 DNNL_DEFAULT_FPMATH_MODE=BF16 /
-    python pytorch/test/test_transformers.py
+OMP_NUM_THREADS=16 python pytorch/test/test_mkldnn.py
+OMP_NUM_THREADS=16 python pytorch/test/test_transformers.py

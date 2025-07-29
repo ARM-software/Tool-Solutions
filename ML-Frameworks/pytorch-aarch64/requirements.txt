@@ -4,6 +4,7 @@
 certifi==2024.8.30
 charset-normalizer~=3.4.0
 datasets~=3.4.1
+expecttest==0.3.0 # From unit tests
 filelock~=3.16.1
 fsspec==2024.9.0
 huggingface_hub==0.27.0
