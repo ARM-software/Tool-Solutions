@@ -66,7 +66,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run smoke tests
-        run: docker run --rm toolsolutions-pytorch:latest ./test.sh
+        run: docker run --rm toolsolutions-pytorch:latest ./test-examples.sh
 
       - name: Run unit tests
         run: docker run --rm toolsolutions-pytorch:latest bash ./run_unit_tests.sh
