@@ -66,7 +66,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run smoke tests
-        run: docker run --rm toolsolutions-pytorch:latest ./test.sh
+        run: docker run --rm toolsolutions-pytorch:latest ./test-examples.sh
+
+      - name: Run unit tests
+        run: docker run --rm toolsolutions-pytorch:latest ./run_unit_tests.sh
 
   # This job adds a check named "Precommit-status" that represents overall
   # workflow status and can be used in branch rulesets

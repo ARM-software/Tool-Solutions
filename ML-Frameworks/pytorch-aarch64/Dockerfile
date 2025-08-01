@@ -103,8 +103,9 @@ RUN pip install "$(basename "$TORCH_WHEEL")" --no-deps \
 RUN pip install "$(basename "$TORCH_AO_WHEEL")" --no-deps \
     && rm "$(basename "$TORCH_AO_WHEEL")"
 
-# Setup Examples
+# Setup Examples and tests
 COPY examples/ /home/$DOCKER_USER/
+COPY pytorch/test /home/$DOCKER_USER/pytorch/test
 
 # Move build into final image as a single layer.
 FROM ${DOCKER_IMAGE_MIRROR}ubuntu:22.04
