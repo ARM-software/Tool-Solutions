@@ -10,13 +10,20 @@ where `YY` is the year, and `MM` the month of the increment.
 ### Added
 
 ### Changed
-- Updates hash for:
+- Updates hashes for:
+  - PYTORCH_HASH to 6662a76f5975bae56ce9171b0afad32b53f89c25, 2.9.0.dev20250731 from viable/strict, August 1st
+  - IDEEP_HASH to 3527b0bf2127aa2de93810feb6906d173c24037f, from ideep_pytorch, August 1st
+  - ONEDNN_HASH to 7e85b94b5f6be27b83c5435603ab67888b99da32, from main, August 1st
+  - ACL_HASH to 3c32d706d0245dcb55181c8ced526eab05e2ff8d, from main, August 1st
   - TORCH_AO_HASH to ebfe1736c4442970835b6eda833c0bc5a1ce2dda, from main
 - Update the examples/transformers_llm_text_gen.py to use the new quantizer api Int8DynamicActivationIntxWeightConfig.
 - Deleted torchchat_llm_text_gen.py
 - Removed Dockerfile lines cloning TorchChat repo and setting safe.directory
 
 ### Removed
+- Temporarily removes https://github.com/pytorch/pytorch/pull/150833 (pins all root requirements to major versions)
+  pending a rebase for current PyTorch hash.
+- https://github.com/pytorch/pytorch/pull/151547, to update OpenBLAS commit as this has been merged upstream.
 
 ### Fixed
 

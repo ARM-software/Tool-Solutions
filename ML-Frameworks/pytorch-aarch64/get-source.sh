@@ -20,10 +20,10 @@
 source ../utils/git-utils.sh
 
 set -eux -o pipefail
-PYTORCH_HASH=5dfd8a9c7a464bb42e81b8594eefd2fa865e5423  # 2.9.0.dev20250703, from viable/strict, July 3rd
-IDEEP_HASH=6eb12eaad5e0f7d8c8613c744ac8ba5a0843cb99    # From ideep_pytorch, July 3rd
-ONEDNN_HASH=0abfca1947b53c03ee74207e4710941ab6456f3b   # From main, July 3rd
-ACL_HASH=f69b48afcc59f1b3b0d4544289249bebba489f0a      # From main, June 26th
+PYTORCH_HASH=6662a76f5975bae56ce9171b0afad32b53f89c25  # 2.9.0.dev20250731 from viable/strict, August 1st
+IDEEP_HASH=3527b0bf2127aa2de93810feb6906d173c24037f    # From ideep_pytorch, August 1st
+ONEDNN_HASH=7e85b94b5f6be27b83c5435603ab67888b99da32   # From main, August 1st
+ACL_HASH=3c32d706d0245dcb55181c8ced526eab05e2ff8d      # From main, August 1st
 TORCH_AO_HASH=ebfe1736c4442970835b6eda833c0bc5a1ce2dda # From main
 
 git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
@@ -34,16 +34,11 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
     apply-github-patch pytorch/pytorch 7c54b6b07558c330ee2f95b4793edb3bfbb814c9
     apply-github-patch pytorch/pytorch 3e17ce1619b2d02543a619f6217919b5adb36123
     apply-github-patch pytorch/pytorch 2c884c2b580a93cd0b1e5eea36aa24e3acab91a9
+    apply-github-patch pytorch/pytorch c4c280eb27859221159108356b7c91376202cdd8
 
     # https://github.com/pytorch/pytorch/pull/150833 - Pin all root requirements to major versions
-    apply-github-patch pytorch/pytorch 51ce4213adb106659abc962fb66b94d595a19e20
-
-    # https://github.com/pytorch/pytorch/pull/151547 - Update OpenBLAS commit
-    apply-github-patch pytorch/pytorch b06f8b5dbdc66878bf2492f08f42d7b1ad42a4f3
-    apply-github-patch pytorch/pytorch 7e467c44b70a0ba09d52b63e570f1c2fcb05b159
-    apply-github-patch pytorch/pytorch 4a596d0c6905c7a7274a479144f9edb4e18c3472
-    apply-github-patch pytorch/pytorch 78664d62d73fe9ebf3d08d4382986c7090e447d5
-    apply-github-patch pytorch/pytorch 190b3b3069b5ce130c1584d0d4ddd36d6d477801
+    # Needs an update.
+    # apply-github-patch pytorch/pytorch 51ce4213adb106659abc962fb66b94d595a19e20
 
     git submodule sync
     git submodule update --init --checkout --force --recursive --jobs=$(nproc)
