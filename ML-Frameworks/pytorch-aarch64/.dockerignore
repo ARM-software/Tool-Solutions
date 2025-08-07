@@ -1,4 +1,7 @@
 ComputeLibrary/
 pytorch/
+!pytorch/test
+!pytorch/test/**
+!pytorch/.ci/docker/requirements-ci.txt
 *.log
 .*_build_container_id
