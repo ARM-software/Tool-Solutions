@@ -36,6 +36,12 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
     apply-github-patch pytorch/pytorch 2c884c2b580a93cd0b1e5eea36aa24e3acab91a9
     apply-github-patch pytorch/pytorch c4c280eb27859221159108356b7c91376202cdd8
 
+    # https://github.com/pytorch/pytorch/pull/160080 - VLA Vectorized POC
+    apply-github-patch pytorch/pytorch 506ce2db42df78fd08e48d8af9bcf95d49782dfc
+    apply-github-patch pytorch/pytorch 9ecbee99ab70c3355b9e5956456b7ee7c8b65227
+    apply-github-patch pytorch/pytorch 60ded3ee7c45a28fbd87faad51c9f4d33d272ba7
+    apply-github-patch pytorch/pytorch e873ed21568093a72c04ca68f53112c136c2f417
+
     # https://github.com/pytorch/pytorch/pull/150833 - Pin all root requirements to major versions
     # Needs an update.
     # apply-github-patch pytorch/pytorch 51ce4213adb106659abc962fb66b94d595a19e20
