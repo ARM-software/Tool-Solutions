@@ -8,6 +8,8 @@ where `YY` is the year, and `MM` the month of the increment.
 ## [unreleased]
 
 ### Added
+- Added hashes for:
+  - VLA SVE Vectorized class: https://github.com/pytorch/pytorch/pull/160080
 
 ### Changed
 - Updates hashes for:
