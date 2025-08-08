@@ -36,9 +36,8 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
     apply-github-patch pytorch/pytorch 2c884c2b580a93cd0b1e5eea36aa24e3acab91a9
     apply-github-patch pytorch/pytorch c4c280eb27859221159108356b7c91376202cdd8
 
-    # https://github.com/pytorch/pytorch/pull/150833 - Pin all root requirements to major versions
-    # Needs an update.
-    # apply-github-patch pytorch/pytorch 51ce4213adb106659abc962fb66b94d595a19e20
+    # https://github.com/pytorch/pytorch/pull/160184 - Draft: separate reqs for manywheel build and pin
+    apply-github-patch pytorch/pytorch 9a8b0df99eac62e7ec6199dd0223a80d26e2dee0
 
     git submodule sync
     git submodule update --init --checkout --force --recursive --jobs=$(nproc)
