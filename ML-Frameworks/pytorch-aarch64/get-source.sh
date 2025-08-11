@@ -50,6 +50,7 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
             git fetch origin $ONEDNN_HASH && git clean -f && git checkout -f FETCH_HEAD
             # https://github.com/uxlfoundation/oneDNN/pull/3022 - cpu: aarch64: enable jit conv for 128
             apply-github-patch uxlfoundation/oneDNN 244422f8cd0aab93d2a184894472c955ebb7bb97
+            apply-github-patch uxlfoundation/oneDNN 466ee88db85db46c8e9cc0535e526efca6308329
         )
     )
 )
