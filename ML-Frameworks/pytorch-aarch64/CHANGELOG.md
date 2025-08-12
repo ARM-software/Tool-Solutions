@@ -8,6 +8,8 @@ where `YY` is the year, and `MM` the month of the increment.
 ## [unreleased]
 
 ### Added
+- Adds https://github.com/pytorch/pytorch/pull/159859, a WIP LUT implmentation of bf15 GELU
+  ~8x speedup over existing oneDNN implementation
 
 ### Changed
 - Updates hashes for:

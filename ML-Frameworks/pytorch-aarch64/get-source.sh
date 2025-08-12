@@ -39,6 +39,9 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
     # https://github.com/pytorch/pytorch/pull/160184 - Draft: separate reqs for manywheel build and pin
     apply-github-patch pytorch/pytorch 9a8b0df99eac62e7ec6199dd0223a80d26e2dee0
 
+    # https://github.com/pytorch/pytorch/pull/159859 - PoC LUT optimisation for GELU bf16 operators
+    apply-github-patch pytorch/pytorch 51626269d3730df1a6b465fa0191074fc31f7c29
+
     git submodule sync
     git submodule update --init --checkout --force --recursive --jobs=$(nproc)
     (
