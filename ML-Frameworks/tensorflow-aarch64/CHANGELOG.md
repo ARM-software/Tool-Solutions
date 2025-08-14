@@ -15,6 +15,7 @@ where `YY` is the year, and `MM` the month of the increment.
 ### Removed
 
 ### Fixed
+ - Updates Transformers to 4.50 as a mitigation for CVE-2025-2099.
 
 ## [r25.07] 2025-07-11
 https://github.com/ARM-software/Tool-Solutions/tree/r25.07
