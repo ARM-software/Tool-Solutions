@@ -19,6 +19,7 @@ opencv-python-headless~=4.10.0.84
 packaging~=24.1
 pandas~=2.2.3
 pillow~=11.0.0
+protobuf==5.29.5      # GenAI models dependency
 psutil~=7.0.0
 pyaml~=24.9.0
 python-dateutil~=2.9.0.post0
@@ -27,7 +28,8 @@ PyYAML~=6.0.2
 regex==2024.9.11
 requests~=2.32.3
 safetensors~=0.4.5
-setuptools>=78.1.1
+sentencepiece==0.2.0  # Torchchat
+setuptools>=78.1.1    # CVE-2024-6345 and CVE-2025-47273
 six~=1.16.0
 sympy~=1.13.1
 tiktoken~=0.9.0
@@ -37,6 +39,6 @@ transformers~=4.48.2
 typing_extensions~=4.12.2
 tzdata==2024.2
 urllib3~=2.2.3
-sentencepiece==0.2.0  # Torchchat
 tomli==2.2.1          # Torchchat
-protobuf==5.29.5      # GenAI models dependency
+wheel>=0.38.0         # CVE-2022-40898
+
