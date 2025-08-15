@@ -20,14 +20,16 @@
 source ../utils/git-utils.sh
 
 set -eux -o pipefail
-PYTORCH_HASH=6662a76f5975bae56ce9171b0afad32b53f89c25  # 2.9.0.dev20250731 from viable/strict, August 1st
+PYTORCH_HASH=4e2ddb5db67617f9f5309c8bba0c17adc84cadbc  # 2.9.0.dev20250808 from viable/strict, August 8th
 IDEEP_HASH=3527b0bf2127aa2de93810feb6906d173c24037f    # From ideep_pytorch, August 1st
 ONEDNN_HASH=7e85b94b5f6be27b83c5435603ab67888b99da32   # From main, August 1st
 ACL_HASH=3c32d706d0245dcb55181c8ced526eab05e2ff8d      # From main, August 1st
 TORCH_AO_HASH=ebfe1736c4442970835b6eda833c0bc5a1ce2dda # From main
+KLEIDIAI_HASH=8ca226712975f24f13f71d04cda039a0ee9f9e2f # v1.12 from main
 
 git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
 (
+    # Apply patches to PyTorch build
     cd pytorch
 
     # https://github.com/pytorch/pytorch/pull/152361 - Build libgomp (gcc-11) from source
@@ -39,9 +41,27 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
     # https://github.com/pytorch/pytorch/pull/160184 - Draft: separate reqs for manywheel build and pin
     apply-github-patch pytorch/pytorch 9a8b0df99eac62e7ec6199dd0223a80d26e2dee0
 
+    # https://github.com/pytorch/pytorch/pull/158250 - Ingtegrate INT4→BF16 via KleidiAI, with fallback
+    apply-github-patch pytorch/pytorch 7c55f2af0adf9ce62c2226e739a3c84902fe0048
+    apply-github-patch pytorch/pytorch 8c27947566c85d44bc7dcd7189db5da608453bbb
+    apply-github-patch pytorch/pytorch 15d78c833b032d3c76b70b12a5f2762fa87d2640
+    apply-github-patch pytorch/pytorch 186cbcf641f99a301cb26013e8d74d444ad1dcb9
+    apply-github-patch pytorch/pytorch a6128ce3a0d2080d80e6fa59061d6c085865376c
+    apply-github-patch pytorch/pytorch 52ee4ddc9a5a9cec8793b1ffeb0d74113e3da417
+    apply-github-patch pytorch/pytorch ab2a6760e4a4891accbacb9187cf3782cb4b55c3
+
+    # https://github.com/pytorch/pytorch/pull/160080 - VLA Vectorized POC
+    apply-github-patch pytorch/pytorch 506ce2db42df78fd08e48d8af9bcf95d49782dfc
+    apply-github-patch pytorch/pytorch 9ecbee99ab70c3355b9e5956456b7ee7c8b65227
+    apply-github-patch pytorch/pytorch 60ded3ee7c45a28fbd87faad51c9f4d33d272ba7
+    apply-github-patch pytorch/pytorch e873ed21568093a72c04ca68f53112c136c2f417
+    # Optimised SVE exp() implementation
+    apply-github-patch pytorch/pytorch e0340e599e2624d3504d58ba73d2009ee2f23191
+
     # https://github.com/pytorch/pytorch/pull/159859 - PoC LUT optimisation for GELU bf16 operators
     apply-github-patch pytorch/pytorch 51626269d3730df1a6b465fa0191074fc31f7c29
 
+    # Update submodules
     git submodule sync
     git submodule update --init --checkout --force --recursive --jobs=$(nproc)
     (
@@ -56,6 +76,11 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
             apply-github-patch uxlfoundation/oneDNN 466ee88db85db46c8e9cc0535e526efca6308329
         )
     )
+    (
+        cd third_party/kleidiai
+        git fetch origin $KLEIDIAI_HASH && git clean -f && git checkout -f FETCH_HEAD
+    )
+
 )
 
 git-shallow-clone https://review.mlplatform.org/ml/ComputeLibrary $ACL_HASH
