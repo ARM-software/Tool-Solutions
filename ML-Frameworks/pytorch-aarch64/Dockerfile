@@ -90,9 +90,8 @@ COPY $TORCH_AO_WHEEL /home/$DOCKER_USER/
 RUN pip install \
     torchaudio~=2.6.0 \
     torchdata~=0.11.0 \
-    torchvision~=0.22.0.dev20250403 \
+    torchvision~=0.23.0 \
     torchtune~=0.5.0 \
-    --extra-index-url https://download.pytorch.org/whl/nightly/cpu \
     --no-deps
 
 # We need --no-deps because the torch version won't match the versions on torch*
