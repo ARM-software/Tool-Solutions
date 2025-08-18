@@ -15,12 +15,12 @@ where `YY` is the year, and `MM` the month of the increment.
 
 ### Fixed
 
-## [r25.08] 2025-08-21
+## [r25.08] 2025-08-26
 https://github.com/ARM-software/Tool-Solutions/tree/r25.08
 
 ### Added
 - Adds https://github.com/pytorch/pytorch/pull/159859, a WIP LUT implmentation of bf16 GELU
-  ~8x speedup over existing oneDNN implementation.
+  upto 4x end-to-end speedups for Llama 3.2.
 - Adds https://github.com/pytorch/pytorch/pull/158250, to integrate INT4->BF16 via KleidiAI, with fallback.
 - Adds https://github.com/pytorch/pytorch/pull/160080, a VLA PoC for PyTorch.
   This includes an optimised SVE implementation of exp().
@@ -32,7 +32,7 @@ https://github.com/ARM-software/Tool-Solutions/tree/r25.08
   - IDEEP_HASH to 3527b0bf2127aa2de93810feb6906d173c24037f, from ideep_pytorch, August 1st.
   - ONEDNN_HASH to 7e85b94b5f6be27b83c5435603ab67888b99da32, from main, August 1st.
   - ACL_HASH to 3c32d706d0245dcb55181c8ced526eab05e2ff8d, from main, August 1st.
-  - TORCH_AO_HASH to ebfe1736c4442970835b6eda833c0bc5a1ce2dda, from main.
+  - TORCH_AO_HASH to 8d4a5d83d7be4d7807feabe38d37704c92d40900, from main, August 1st.
   - KLEIDIAI_HASH to 8ca226712975f24f13f71d04cda039a0ee9f9e2f, v1.12 from main.
 - Update the examples/transformers_llm_text_gen.py to use the new quantizer api Int8DynamicActivationIntxWeightConfig.
 - Deleted torchchat_llm_text_gen.py.
@@ -45,7 +45,7 @@ https://github.com/ARM-software/Tool-Solutions/tree/r25.08
 - Updates various Python packages to address known vulnerabilies with a high CVSS score:
   - Updates Transformers to 4.50 as a mitigation for CVE-2025-2099.
   - Updates Wheel version to 0.38.0 as a mitigation for CVE-2022-40898.
-  - Updates setup-tools to 78.1.1 as a mitigation for CVE-2025-47273.
+  - Updates setup-tools to 78.1.1 as a mitigation for CVE-2025-47273 and CVE-2024-6345.
   - Updates Torchvison to 0.23 to avoid the need to use `--extra-index-url`
     this is the recomended mitgation against CVE-2018-20225, affecting all versions of pip.
 

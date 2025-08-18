@@ -14,13 +14,15 @@ where `YY` is the year, and `MM` the month of the increment.
 ### Removed
 
 ### Fixed
- - Updates Transformers to 4.50 as a mitigation for CVE-2025-2099.
 
-## [r25.08] 2025-08-21
+## [r25.08] 2025-08-26
 https://github.com/ARM-software/Tool-Solutions/tree/r25.08
 
 ### Changed
  - Updates TensorFlow hash to ab8aab720f1648f6a470b159b0d1aea3a5b0df81 # 2.20.0-dev0 from master, 25th July 2025
+
+### Fixed
+ - Updates Transformers to 4.50 as a mitigation for CVE-2025-2099.
 
 ## [r25.07] 2025-07-11
 https://github.com/ARM-software/Tool-Solutions/tree/r25.07
