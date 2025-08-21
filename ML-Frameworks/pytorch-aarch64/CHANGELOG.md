@@ -20,7 +20,7 @@ https://github.com/ARM-software/Tool-Solutions/tree/r25.08
 
 ### Added
 - Adds https://github.com/pytorch/pytorch/pull/159859, a WIP LUT implmentation of bf16 GELU
-  this gives an ~8x end-to-end speedup for llama3.2 and an ~1.8x speedup for attention (both on 16 threads).
+  this gives an ~8x speedup on GELU and an ~1.8x speedup for attention for llama3.2 11B Vision (both on 16 threads).
 - Adds https://github.com/pytorch/pytorch/pull/158250, to integrate INT4->BF16 via KleidiAI, with fallback.
 - Adds https://github.com/pytorch/pytorch/pull/160080, a VLA PoC for PyTorch.
   This includes an optimised SVE implementation of exp().
@@ -35,6 +35,7 @@ https://github.com/ARM-software/Tool-Solutions/tree/r25.08
   - TORCH_AO_HASH to 8d4a5d83d7be4d7807feabe38d37704c92d40900, from main, August 1st.
   - KLEIDIAI_HASH to 8ca226712975f24f13f71d04cda039a0ee9f9e2f, v1.12 from main.
 - Update the examples/transformers_llm_text_gen.py to use the new quantizer api Int8DynamicActivationIntxWeightConfig.
+- Updares huggingface_hub to 0.34.0.
 - Deleted torchchat_llm_text_gen.py.
 - Removed Dockerfile lines cloning TorchChat repo and setting safe.directory.
 
@@ -43,7 +44,7 @@ https://github.com/ARM-software/Tool-Solutions/tree/r25.08
 
 ### Fixed
 - Updates various Python packages to address known vulnerabilies with a high CVSS score:
-  - Updates Transformers to 4.50 as a mitigation for CVE-2025-2099.
+  - Updates Transformers to 4.55.2, this also provides a mitigation for CVE-2025-2099.
   - Updates Wheel version to 0.38.0 as a mitigation for CVE-2022-40898.
   - Updates setup-tools to 78.1.1 as a mitigation for CVE-2025-47273 and CVE-2024-6345.
   - Updates Torchvison to 0.23 to avoid the need to use `--extra-index-url`
