@@ -1,0 +1,87 @@
+# *******************************************************************************
+# Copyright 2025 Arm Limited and affiliates.
+# SPDX-License-Identifier: Apache-2.0
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# *******************************************************************************
+
+name: "Precommit"
+
+#* To avoid duplicate jobs running when both push and PR is satisfied, we use this:
+#* https://github.com/orgs/community/discussions/26940#discussioncomment-5686753
+on:
+  push:
+    branches: [main]
+    paths:
+      - "ML-Frameworks/tensorflow-aarch64/**"
+      - ".github/**"
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - "ML-Frameworks/tensorflow-aarch64/**"
+      - ".github/**"
+  schedule:
+    #* minute (0-59) hour (0-23) day (1-31) month (1-12)  day of the week (0 - 6)
+    #* cron jobs run on the default (main) branch.
+    #* set to run at 5am UCT
+    - cron: "0 5 * * *"
+  #* allow manual trigger of workflow when needed.
+  workflow_dispatch:
+
+#* Stop stale workflows when pull requests are updated: https://stackoverflow.com/a/70972844
+#* Does not apply to the main branch.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+# Declare default permissions as read only.
+permissions: read-all
+
+jobs:
+  build-and-test:
+    strategy:
+      matrix:
+        config: [
+          { name: c7g, label: ah-ubuntu_22_04-c7g_4x-50 } # Metal instance required as 4x large is not big enough
+        ]
+
+    runs-on: ${{ matrix.config.label }}
+    steps:
+      - name: Checkout Tool-Solutions
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          path: Tool-Solutions
+      - name: Set up Docker
+        uses: docker/setup-docker-action@v4
+
+      - name: Build Tool-Solutions Tensorflow
+        working-directory: ${{ github.workspace }}/Tool-Solutions/ML-Frameworks/tensorflow-aarch64
+        run: ${{ github.workspace }}/Tool-Solutions/ML-Frameworks/tensorflow-aarch64/build.sh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run smoke tests
+        run: docker run --rm toolsolutions-tensorflow:latest ./test_examples.sh
+
+      - name: Run unit tests
+        run: docker run --rm toolsolutions-tensorflow:latest ./run_unit_tests.sh
+
+  # This job adds a check named "Precommit-status" that represents overall
+  # workflow status and can be used in branch rulesets
+  status:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    name: "tensorflow-status"
+    steps:
+      - name: Print success
+        run: echo Success

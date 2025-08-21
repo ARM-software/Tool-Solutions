@@ -1,5 +1,5 @@
 # *******************************************************************************
-# Copyright 2021-2023 Arm Limited and affiliates.
+# Copyright 2021-2023, 2025 Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -42,11 +42,19 @@ def download_image(image_loc):
     """
     image_file = image_loc
 
-    if image_loc.startswith('http'):
+    if image_loc.startswith("http"):
         image_file = image_loc.split("/")[-1]  # filename
 
         if not os.path.isfile(image_file):
             # download the image if required
+            opener = urllib.request.build_opener()
+            opener.addheaders = [
+                (
+                    "User-agent",
+                    "Tool-Solutions/1.0 (https://github.com/ARM-software/Tool-Solutions)",
+                )
+            ]
+            urllib.request.install_opener(opener)
             urllib.request.urlretrieve(image_loc, image_file)
 
     if not os.path.isfile(image_file):
@@ -90,9 +98,7 @@ def _preprocess_image_for_classification(image_url, model_descriptor):
             transforms.Resize(256),
             transforms.CenterCrop(224),
             transforms.ToTensor(),
-            transforms.Normalize(
-                mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
-            ),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
         ]
     )
     input_tensor = preprocess(input_image)
@@ -121,12 +127,8 @@ def _preprocess_image_for_detection(image_url, model_descriptor):
     numpy_image = numpy_image / 255.0
     if model_descriptor["model"]["name"] == common.SSD_RESNET34_NAME:
         # ssd_resnet34 needs to normalised around 0
-        mean = np.array(
-            model_descriptor["image_preprocess"]["mean"], dtype=np.float32
-        )
-        std = np.array(
-            model_descriptor["image_preprocess"]["std"], dtype=np.float32
-        )
+        mean = np.array(model_descriptor["image_preprocess"]["mean"], dtype=np.float32)
+        std = np.array(model_descriptor["image_preprocess"]["std"], dtype=np.float32)
         numpy_image = (numpy_image - mean) / std
 
     # the expected input is CHW, instead of HWC
@@ -138,9 +140,7 @@ def _preprocess_image_for_detection(image_url, model_descriptor):
     return torch.tensor(image_batch).float().to("cpu"), image_file
 
 
-def postprocess_image(
-        model_descriptor, image_file, predictions, labels
-):
+def postprocess_image(model_descriptor, image_file, predictions, labels):
     """
     Draw bounding boxes around objects that were detected for different models
     :param model_descriptor: Parsed yaml file describing model
@@ -153,7 +153,7 @@ def postprocess_image(
     # getting the appropriate postprocess function for the model
     postprocess_func = {
         common.RETINANET_NAME: _postprocess_image_for_openimages_detection,
-        common.SSD_RESNET34_NAME: _postprocess_image_for_coco_detection
+        common.SSD_RESNET34_NAME: _postprocess_image_for_coco_detection,
     }[model_name]
 
     return postprocess_func(model_descriptor, image_file, predictions, labels)
@@ -175,9 +175,7 @@ def _draw_box(image, label, left, right, top, bottom):
     font = cv2.FONT_HERSHEY_SIMPLEX
     font_scale = 1
     font_thickness = 2
-    label_size, _ = cv2.getTextSize(
-        label, font, font_scale, font_thickness
-    )
+    label_size, _ = cv2.getTextSize(label, font, font_scale, font_thickness)
     label_width, label_height = label_size
     cv2.rectangle(
         image,
@@ -209,8 +207,9 @@ def _write_boxes_file(image_file, image):
 
     print("Image with bounding boxes written to %s" % image_file_boxes)
 
+
 def _postprocess_image_for_coco_detection(
-        model_descriptor, image_file, predictions, labels
+    model_descriptor, image_file, predictions, labels
 ):
     """
     Draw bounding boxes around objects that were detected
@@ -244,7 +243,7 @@ def _postprocess_image_for_coco_detection(
 
 
 def _postprocess_image_for_openimages_detection(
-        model_descriptor, image_file, predictions, labels
+    model_descriptor, image_file, predictions, labels
 ):
     """
     Draw bounding boxes around objects that were detected
@@ -260,8 +259,8 @@ def _postprocess_image_for_openimages_detection(
 
     # unwrapping the single value predictions array
     [results] = predictions
-    boxes = results['boxes'].cpu()
-    scores = results['scores'].cpu()
+    boxes = results["boxes"].cpu()
+    scores = results["scores"].cpu()
 
     label_idx = 0
     for box, score in zip(boxes, scores):

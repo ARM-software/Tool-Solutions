@@ -30,6 +30,11 @@ on:
     paths:
       - "ML-Frameworks/pytorch-aarch64/**"
       - ".github/**"
+  schedule:
+    #* minute (0-59) hour (0-23) day (1-31) month (1-12)  day of the week (0 - 6)
+    #* cron jobs run on the default (main) branch.
+    #* set to run at 5am UCT
+    - cron: "0 5 * * *"
   #* allow manual trigger of workflow when needed.
   workflow_dispatch:
 
@@ -76,7 +81,7 @@ jobs:
   status:
     needs: build-and-test
     runs-on: ubuntu-latest
-    name: "Precommit-status"
+    name: "pytorch-status"
     steps:
       - name: Print success
         run: echo Success
