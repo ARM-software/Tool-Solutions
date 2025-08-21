@@ -56,9 +56,11 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
     apply-github-patch pytorch/pytorch 9f6d435629dd251620a1e17b8baa6bc18997f8ab
     apply-github-patch pytorch/pytorch b68b7867a72fe2ef4c38f9a3cdd93693700a182e
 
-    # https://github.com/pytorch/pytorch/pull/160080 - VLA Vectorized POC
-    # Includes optimised SVE exp() implementation
+    # https://github.com/pytorch/pytorch/pull/161049 - optimised SVE exp_u20 implementation
+    # based on Arm Optimised Routines - https://github.com/ARM-software/optimized-routines
     apply-github-patch pytorch/pytorch 3de5651bafcdabbc52d5205c0de3976188eba7fb
+
+    # https://github.com/pytorch/pytorch/pull/160080 - VLA Vectorized POC
     apply-github-patch pytorch/pytorch d5c1aedd5cb85b760abe76099efe64aa535bf1ea
     apply-github-patch pytorch/pytorch b1496344c65638f25547b841bb2c470127b7e420
     apply-github-patch pytorch/pytorch fd5f544e87e8c3d6890815ae28f1dc807331643a

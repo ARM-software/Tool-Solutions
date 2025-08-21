@@ -35,9 +35,9 @@ https://github.com/ARM-software/Tool-Solutions/tree/r25.08
   - TORCH_AO_HASH to 8d4a5d83d7be4d7807feabe38d37704c92d40900, from main, August 1st.
   - KLEIDIAI_HASH to 8ca226712975f24f13f71d04cda039a0ee9f9e2f, v1.12 from main.
 - Update the examples/transformers_llm_text_gen.py to use the new quantizer api Int8DynamicActivationIntxWeightConfig.
-- Updares huggingface_hub to 0.34.0.
 - Deleted torchchat_llm_text_gen.py.
 - Removed Dockerfile lines cloning TorchChat repo and setting safe.directory.
+- Updates huggingface_hub to 0.34.0.
 
 ### Removed
 - https://github.com/pytorch/pytorch/pull/151547, to update OpenBLAS commit as this has been merged upstream.
