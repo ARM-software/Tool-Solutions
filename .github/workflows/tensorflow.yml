@@ -23,13 +23,18 @@ on:
   push:
     branches: [main]
     paths:
-      - "ML-Frameworks/pytorch-aarch64/**"
+      - "ML-Frameworks/tensorflow-aarch64/**"
       - ".github/**"
   pull_request:
     types: [opened, synchronize, reopened]
     paths:
-      - "ML-Frameworks/pytorch-aarch64/**"
+      - "ML-Frameworks/tensorflow-aarch64/**"
       - ".github/**"
+  schedule:
+    #* minute (0-59) hour (0-23) day (1-31) month (1-12)  day of the week (0 - 6)
+    #* cron jobs run on the default (main) branch.
+    #* set to run at 5am UCT
+    - cron: "0 5 * * *"
   #* allow manual trigger of workflow when needed.
   workflow_dispatch:
 
@@ -47,7 +52,7 @@ jobs:
     strategy:
       matrix:
         config: [
-          { name: c7g, label: ah-ubuntu_22_04-c7g_4x-50 }
+          { name: c7g, label: ah-ubuntu_22_04-c7g_m-100 } # Metal instance required as 4x large is not big enough
         ]
 
     runs-on: ${{ matrix.config.label }}
@@ -59,24 +64,24 @@ jobs:
       - name: Set up Docker
         uses: docker/setup-docker-action@v4
 
-      - name: Build Tool-Solutions PyTorch
-        working-directory: ${{ github.workspace }}/Tool-Solutions/ML-Frameworks/pytorch-aarch64
-        run: ${{ github.workspace }}/Tool-Solutions/ML-Frameworks/pytorch-aarch64/build.sh
+      - name: Build Tool-Solutions Tensorflow
+        working-directory: ${{ github.workspace }}/Tool-Solutions/ML-Frameworks/tensorflow-aarch64
+        run: ${{ github.workspace }}/Tool-Solutions/ML-Frameworks/tensorflow-aarch64/build.sh
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run smoke tests
-        run: docker run --rm toolsolutions-pytorch:latest ./test-examples.sh
+        run: docker run --rm toolsolutions-tensorflow:latest ./test_examples.sh
 
       - name: Run unit tests
-        run: docker run --rm toolsolutions-pytorch:latest ./run_unit_tests.sh
+        run: docker run --rm toolsolutions-tensorflow:latest ./run_unit_tests.sh
 
   # This job adds a check named "Precommit-status" that represents overall
   # workflow status and can be used in branch rulesets
   status:
     needs: build-and-test
     runs-on: ubuntu-latest
-    name: "Precommit-status"
+    name: "pytorch-status"
     steps:
       - name: Print success
         run: echo Success

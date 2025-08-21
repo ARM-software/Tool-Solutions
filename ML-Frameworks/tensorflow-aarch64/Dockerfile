@@ -75,8 +75,9 @@ RUN pip install \
 COPY requirements.txt ./
 RUN pip install -r requirements.txt --no-deps
 
-# Setup Examples
+# Setup Examples and tests
 COPY --chown=$DOCKER_USER examples/ /home/$DOCKER_USER/
+COPY --chown=$DOCKER_USER tensorflow/ /home/$DOCKER_USER/tensorflow
 
 # Move build into final image as a single layer.
 FROM ${DOCKER_IMAGE_MIRROR}ubuntu:22.04
