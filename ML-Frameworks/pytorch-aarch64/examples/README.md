@@ -193,9 +193,37 @@ To access the protected models run
 huggingface-cli login --token @hf_token
 ```
 
+### Vision
+
+The script [llama_vision_instruct.py](llama_vision_instruct.py) uses Llama-3.2-11B-Vision-Instruct to decribe a [sample image](https://huggingface.co/datasets/huggingface/documentation-images/resolve/0052a70beed5bf71b92610a43a52df6d286cd5f3/diffusers/rabbit.jpg).
+
+```
+LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libtcmalloc.so.4    OMP_NUM_THREADS=16 python llama_vision_instruct.py --benchmark --dtype bfloat16 --quantize
+```
+
+#### Command line options
+
+`--num-new-tokens`
+  The model will always generate this number of new tokens.
+
+`--prompt`
+  Input prompt.
+
+`--image-url`
+  URL to image.
+
+`--benchmark`
+  Run a benchmark, with warmup and multiple iterations.
+
+`--dtype {bfloat16,float32}`
+  Precision to run the model in (or the non-linear layers for quantized model).
+
+`--quantize`
+  Quantize weights to int4 symmetric channelwise.
+
+
 ### Text Generation
 
-### Transformers
 The script [transformers_llm_text_gen.py](transformers_llm_text_gen.py) demonstrates how to generate text using Llama2 7B model via Transformers. It leverages the 4 bit dynamic quantization speedups and can supports vast number of text  models.
 
 Run inference using default (groupwise, layout-aware INT4) using tranformer call:
