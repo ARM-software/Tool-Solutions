@@ -15,7 +15,7 @@
 # limitations under the License.
 # *******************************************************************************
 
-name: "Precommit"
+name: "Build and test Tool-Solutions"
 
 #* To avoid duplicate jobs running when both push and PR is satisfied, we use this:
 #* https://github.com/orgs/community/discussions/26940#discussioncomment-5686753
@@ -30,6 +30,11 @@ on:
     paths:
       - "ML-Frameworks/pytorch-aarch64/**"
       - ".github/**"
+  schedule:
+    #* minute (0-59) hour (0-23) day (1-31) month (1-12)  day of the week (0 - 6)
+    #* cron jobs run on the default (main) branch.
+    #* set to run at 5am UCT
+    - cron: "0 5 * * *"
   #* allow manual trigger of workflow when needed.
   workflow_dispatch:
 
@@ -43,40 +48,18 @@ concurrency:
 permissions: read-all
 
 jobs:
-  build-and-test:
-    strategy:
-      matrix:
-        config: [
-          { name: c7g, label: ah-ubuntu_22_04-c7g_4x-50 }
-        ]
+  pytorch:
+    uses: ./.github/workflows/pytorch.yml
 
-    runs-on: ${{ matrix.config.label }}
-    steps:
-      - name: Checkout Tool-Solutions
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-        with:
-          path: Tool-Solutions
-      - name: Set up Docker
-        uses: docker/setup-docker-action@v4
-
-      - name: Build Tool-Solutions PyTorch
-        working-directory: ${{ github.workspace }}/Tool-Solutions/ML-Frameworks/pytorch-aarch64
-        run: ${{ github.workspace }}/Tool-Solutions/ML-Frameworks/pytorch-aarch64/build.sh
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Run smoke tests
-        run: docker run --rm toolsolutions-pytorch:latest ./test-examples.sh
-
-      - name: Run unit tests
-        run: docker run --rm toolsolutions-pytorch:latest ./run_unit_tests.sh
+  tensorflow:
+    uses: ./.github/workflows/tensorflow.yml
 
   # This job adds a check named "Precommit-status" that represents overall
   # workflow status and can be used in branch rulesets
   status:
-    needs: build-and-test
+    needs: [pytorch, tensorflow]
     runs-on: ubuntu-latest
-    name: "Precommit-status"
+    name: "precommit"
     steps:
       - name: Print success
         run: echo Success

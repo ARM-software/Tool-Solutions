@@ -1,5 +1,5 @@
 # *******************************************************************************
-# Copyright 2021-2023 Arm Limited and affiliates.
+# Copyright 2021-2023, 2025 Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -29,6 +29,16 @@ import tensorflow as tf
 
 from . import common
 
+# Install user agent to comply with Wikipedia policy
+opener = urllib.request.build_opener()
+opener.addheaders = [
+    (
+        "User-agent",
+        "Tool-Solutions/1.0 (https://github.com/ARM-software/Tool-Solutions)",
+    )
+]
+urllib.request.install_opener(opener)
+
 
 def _download_image(image_loc):
     """
@@ -38,12 +48,15 @@ def _download_image(image_loc):
     """
     image_file = image_loc
 
-    if image_loc.startswith('http'):
+    if image_loc.startswith("http"):
         image_file = image_loc.split("/")[-1]  # filename
 
         if not os.path.isfile(image_file):
             # Download the image if required
-            urllib.request.urlretrieve(image_loc, image_file)
+            urllib.request.urlretrieve(
+                image_loc,
+                image_file,
+            )
 
     if not os.path.isfile(image_file):
         sys.exit("Image %s does not exist!" % image_file)
@@ -81,7 +94,7 @@ def _preprocess_image_for_classification(image_url, model_descriptor):
 
     input_shape = model_descriptor["arguments"]["input_shape"]
     transpose = False
-    if  'transpose' in model_descriptor["arguments"]:
+    if "transpose" in model_descriptor["arguments"]:
         transpose = True
     if len(input_shape) == 4 and not transpose:
         dimensions = input_shape[1:3]
@@ -97,7 +110,7 @@ def _preprocess_image_for_classification(image_url, model_descriptor):
     )
     numpy_image = tf.keras.preprocessing.image.img_to_array(orig_image)
     if transpose:
-    # if transpose is set to true then expected input is CHW, instead of HWC
+        # if transpose is set to true then expected input is CHW, instead of HWC
         numpy_image = numpy_image.transpose([2, 0, 1])
 
     if len(input_shape) == 4:
@@ -127,17 +140,13 @@ def _preprocess_image_for_ssd_resnet34_detection(image_url, model_descriptor):
     )
 
     # normalise image
-    mean = np.array(
-        model_descriptor["image_preprocess"]["mean"], dtype=np.float32
-    )
-    std = np.array(
-        model_descriptor["image_preprocess"]["std"], dtype=np.float32
-    )
+    mean = np.array(model_descriptor["image_preprocess"]["mean"], dtype=np.float32)
+    std = np.array(model_descriptor["image_preprocess"]["std"], dtype=np.float32)
     numpy_image = numpy_image / 255.0 - mean
     numpy_image = numpy_image / std
 
     if model_descriptor["image_preprocess"]["transpose"]:
-    # if transpose is set to true then expected input is CHW, instead of HWC
+        # if transpose is set to true then expected input is CHW, instead of HWC
         numpy_image = numpy_image.transpose([2, 0, 1])
 
     # create batch of 1
@@ -146,9 +155,7 @@ def _preprocess_image_for_ssd_resnet34_detection(image_url, model_descriptor):
     return image_batch, image_file
 
 
-def postprocess_image(
-        model_descriptor, image_file, predictions, labels
-):
+def postprocess_image(model_descriptor, image_file, predictions, labels):
     """
     Draw bounding boxes around objects that were detected for different models
     :param model_descriptor: Parsed yaml file describing model
@@ -167,7 +174,7 @@ def postprocess_image(
 
 
 def _postprocess_image_for_coco_detection(
-        model_descriptor, image_file, predictions, labels
+    model_descriptor, image_file, predictions, labels
 ):
     """
     Draw bounding boxes around objects that were detected
@@ -199,9 +206,7 @@ def _postprocess_image_for_coco_detection(
         font = cv2.FONT_HERSHEY_SIMPLEX
         font_scale = 1
         font_thickness = 2
-        label_size, _ = cv2.getTextSize(
-            labels[idx], font, font_scale, font_thickness
-        )
+        label_size, _ = cv2.getTextSize(labels[idx], font, font_scale, font_thickness)
         label_width, label_height = label_size
         cv2.rectangle(
             image,
