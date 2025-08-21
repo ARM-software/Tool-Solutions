@@ -20,7 +20,7 @@ https://github.com/ARM-software/Tool-Solutions/tree/r25.08
 
 ### Added
 - Adds https://github.com/pytorch/pytorch/pull/159859, a WIP LUT implmentation of bf16 GELU
-  upto 4x end-to-end speedups for Llama 3.2.
+  this gives an ~8x end-to-end speedup for llama3.2 and an ~1.8x speedup for attention (both on 16 threads).
 - Adds https://github.com/pytorch/pytorch/pull/158250, to integrate INT4->BF16 via KleidiAI, with fallback.
 - Adds https://github.com/pytorch/pytorch/pull/160080, a VLA PoC for PyTorch.
   This includes an optimised SVE implementation of exp().
