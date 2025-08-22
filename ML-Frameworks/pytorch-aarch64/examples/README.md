@@ -195,7 +195,7 @@ huggingface-cli login --token @hf_token
 
 ### Vision
 
-The script [llama_vision_instruct.py](llama_vision_instruct.py) uses Llama-3.2-11B-Vision-Instruct to decribe a [sample image](https://huggingface.co/datasets/huggingface/documentation-images/resolve/0052a70beed5bf71b92610a43a52df6d286cd5f3/diffusers/rabbit.jpg).
+The script [llama_vision_instruct.py](llama_vision_instruct.py) runs and benchmarks Llama-3.2-11B-Vision-Instruct using text + image input and text output.
 
 ```
 LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libtcmalloc.so.4    OMP_NUM_THREADS=16 python llama_vision_instruct.py --benchmark --dtype bfloat16 --quantize
