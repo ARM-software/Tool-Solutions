@@ -15,16 +15,18 @@ where `YY` is the year, and `MM` the month of the increment.
 
 ### Fixed
 
-## [r25.08] 2025-08-26
+## [r25.08] 2025-08-27
 https://github.com/ARM-software/Tool-Solutions/tree/r25.08
 
 ### Added
 - Adds https://github.com/pytorch/pytorch/pull/159859, a WIP LUT implmentation of bf16 GELU
   this gives an ~8x speedup on GELU and an ~1.8x speedup for attention for llama3.2 11B Vision (both on 16 threads).
 - Adds https://github.com/pytorch/pytorch/pull/158250, to integrate INT4->BF16 via KleidiAI, with fallback.
-- Adds https://github.com/pytorch/pytorch/pull/160080, a VLA PoC for PyTorch.
-  This includes an optimised SVE implementation of exp().
+- Adds https://github.com/pytorch/pytorch/pull/160080, a VLA PoC for PyTorch, and
+  https://github.com/pytorch/pytorch/pull/161049, an optimised SVE exp_u20 implementation,
   Note: there may be some regressions on Neoverse-V1 with this WIP patch.
+- Adds a new example script llama_vision_instruct.py to run and benchmark
+  Llama-3.2-11B-Vision-Instruct using text + image input and text output.
 
 ### Changed
 - Updates hashes for:
