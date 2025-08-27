@@ -15,7 +15,7 @@ where `YY` is the year, and `MM` the month of the increment.
 
 ### Fixed
 
-## [r25.08] 2025-08-27
+## [r25.08] 2025-08-28
 https://github.com/ARM-software/Tool-Solutions/tree/r25.08
 
 ### Added
@@ -43,6 +43,7 @@ https://github.com/ARM-software/Tool-Solutions/tree/r25.08
 
 ### Removed
 - https://github.com/pytorch/pytorch/pull/151547, to update OpenBLAS commit as this has been merged upstream.
+- Temporarily removed --compile flag from transformers_llm_text_gen.py example as there is an unresolved issue with torch compile support in this case.
 
 ### Fixed
 - Updates various Python packages to address known vulnerabilies with a high CVSS score:

@@ -126,7 +126,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--prompt",
         type=str,
-        default="Describe this image",
+        default="what is the animal in this image",
         help="Input prompt.",
     )
     parser.add_argument(

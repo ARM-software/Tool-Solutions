@@ -15,7 +15,7 @@ where `YY` is the year, and `MM` the month of the increment.
 
 ### Fixed
 
-## [r25.08] 2025-08-26
+## [r25.08] 2025-08-28
 https://github.com/ARM-software/Tool-Solutions/tree/r25.08
 
 ### Changed

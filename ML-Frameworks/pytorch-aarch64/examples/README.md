@@ -224,24 +224,24 @@ LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libtcmalloc.so.4    OMP_NUM_THREADS=16 pyt
 
 ### Text Generation
 
-The script [transformers_llm_text_gen.py](transformers_llm_text_gen.py) demonstrates how to generate text using Llama2 7B model via Transformers. It leverages the 4 bit dynamic quantization speedups and can supports vast number of text  models.
+The script [transformers_llm_text_gen.py](transformers_llm_text_gen.py) demonstrates how to generate text using TinyLlama-1.1B-Chat-v1.0 model via Transformers. It leverages the 4 bit dynamic quantization and can support a wide range of text models.
 
 Run inference using default (groupwise, layout-aware INT4) using tranformer call:
 
 ```
-LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libtcmalloc.so.4  TORCHINDUCTOR_CPP_WRAPPER=1  TORCHINDUCTOR_FREEZING=1  OMP_NUM_THREADS=16 python transformers_llm_text_gen.py --compile
+LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libtcmalloc.so.4  TORCHINDUCTOR_CPP_WRAPPER=1  TORCHINDUCTOR_FREEZING=1  OMP_NUM_THREADS=16 python transformers_llm_text_gen.py
 ```
 
 Run with symmetric_channelwise quantization:
 
 ```
-LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libtcmalloc.so.4  TORCHINDUCTOR_CPP_WRAPPER=1  TORCHINDUCTOR_FREEZING=1  OMP_NUM_THREADS=16 python transformers_llm_text_gen.py --quant-scheme symmetric_channelwise --compile
+LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libtcmalloc.so.4  TORCHINDUCTOR_CPP_WRAPPER=1  TORCHINDUCTOR_FREEZING=1  OMP_NUM_THREADS=16 python transformers_llm_text_gen.py --quant-scheme symmetric_channelwise
 ```
 
 Run with custom group size (e.g. 64):
 
 ```
-LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libtcmalloc.so.4  TORCHINDUCTOR_CPP_WRAPPER=1  TORCHINDUCTOR_FREEZING=1  OMP_NUM_THREADS=16 python transformers_llm_text_gen.py --quant-scheme symmetric_groupwise --groupsize 64 --compile
+LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libtcmalloc.so.4  TORCHINDUCTOR_CPP_WRAPPER=1  TORCHINDUCTOR_FREEZING=1  OMP_NUM_THREADS=16 python transformers_llm_text_gen.py --quant-scheme symmetric_groupwise --groupsize 64
 ```
 
 
