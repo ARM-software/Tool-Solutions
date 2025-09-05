@@ -17,6 +17,8 @@
 # limitations under the License.
 # *******************************************************************************
 
+set -eux -o pipefail
+
 help_str="dockerize.sh takes a TensorFlow wheel as argument. It \
 installs the wheel inside a Docker container with examples and requirements."
 if [ "$#" -ne 1 ]; then
