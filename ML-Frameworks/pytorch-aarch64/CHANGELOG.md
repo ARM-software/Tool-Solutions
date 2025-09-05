@@ -14,6 +14,8 @@ where `YY` is the year, and `MM` the month of the increment.
 
 ### Removed
 - Removes WIP ComputeLibrary patch https://review.mlplatform.org/c/ml/ComputeLibrary/+/12818/1.
+- Removed unused dependencies:
+  - Delete unused submodules to avoid fetching.
 
 ### Fixed
 

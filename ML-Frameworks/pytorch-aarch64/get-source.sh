@@ -72,6 +72,18 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
     # https://github.com/pytorch/pytorch/pull/159859 - PoC LUT optimisation for GELU bf16 operators
     apply-github-patch pytorch/pytorch ebcc874e317f9563ab770fc5c27df969e0438a5e
 
+    # Remove deps that we don't need for manylinux AArch64 CPU builds before fetching.
+    # Only used when jni.h is present (see .ci/pytorch/build.sh:116), which is not the case for manylinux
+    git rm android/libs/fbjni
+    # Only needed if USE_ROCM=ON, which is OFF for AArch64
+    git rm third_party/composable_kernel
+    # Not used for CPU only builds
+    git rm third_party/cudnn_frontend
+    git rm third_party/cutlass
+    git rm third_party/NVTX
+    # Only used in WIN32 builds (see CMakeLists.txt:394)
+    git rm third_party/mimalloc
+
     # Update submodules
     git submodule sync
     git submodule update --init --checkout --force --recursive --jobs=$(nproc)
