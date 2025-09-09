@@ -10,8 +10,10 @@ where `YY` is the year, and `MM` the month of the increment.
 ### Added
 
 ### Changed
+- Updates ACL URL from [ML Platform](https://review.mlplatform.org/ml/ComputeLibrary) to [GitHub](https://github.com/ARM-software/ComputeLibrary.git).
 
 ### Removed
+- Removes WIP ComputeLibrary patch https://review.mlplatform.org/c/ml/ComputeLibrary/+/12818/1.
 
 ### Fixed
 

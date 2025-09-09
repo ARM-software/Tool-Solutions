@@ -65,16 +65,6 @@ function apply-github-patch {
     return 0
 }
 
-function apply-gerrit-patch {
-    # $1 must be the url to a specific patch set
-    # We get the repo by removing /c and chopping off the change number
-    # e.g. https://review.mlplatform.org/c/ml/ComputeLibrary/+/12818/1 -> https://review.mlplatform.org/ml/ComputeLibrary/
-    local repo_url=$(echo "$1" | sed 's#/c/#/#' | cut -d'+' -f1)
-    # e.g. refs/changes/18/12818/1 Note that where the middle number is the last 2 digits of the patch number
-    local refname=$(echo "$1" | awk -F'/' '{print "refs/changes/" substr($(NF-1),length($(NF-1))-1,2) "/" $(NF-1) "/" $(NF)}')
-    git fetch $repo_url $refname && git cherry-pick --no-commit FETCH_HEAD
-}
-
 function setup_submodule() {
     local original_dir=$(pwd)
     rm -rf "$2"
