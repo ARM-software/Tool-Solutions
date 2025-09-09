@@ -94,11 +94,6 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
 
 )
 
-git-shallow-clone https://review.mlplatform.org/ml/ComputeLibrary $ACL_HASH
-(
-    cd ComputeLibrary
-    # Improve gemm_interleaved 2D vs 1D blocking heuristic
-    apply-gerrit-patch https://review.mlplatform.org/c/ml/ComputeLibrary/+/12818/1
-)
+git-shallow-clone https://github.com/ARM-software/ComputeLibrary.git $ACL_HASH
 
 git-shallow-clone https://github.com/pytorch/ao.git $TORCH_AO_HASH
