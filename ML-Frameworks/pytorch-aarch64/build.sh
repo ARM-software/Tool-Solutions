@@ -50,4 +50,7 @@ torch_wheel_name=$(grep -o "torch-.*.whl" $build_log | head -n -1 | tail -n 1)
 # Use the second to last match, otherwise grep finds itself
 torch_ao_wheel_name=$(grep -o "torchao-.*.whl" $build_log | head -n -1 | tail -n 1)
 
-./dockerize.sh "results/$torch_wheel_name" "ao/dist/$torch_ao_wheel_name" --build-only
+# Place the torchao wheel next to the torch wheel
+cp "ao/dist/$torch_ao_wheel_name" "results/$torch_ao_wheel_name"
+
+./dockerize.sh "results/$torch_wheel_name" "results/$torch_ao_wheel_name" --build-only
