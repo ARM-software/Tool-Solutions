@@ -14,6 +14,10 @@ where `YY` is the year, and `MM` the month of the increment.
 
 ### Removed
 - Removes WIP ComputeLibrary patch https://review.mlplatform.org/c/ml/ComputeLibrary/+/12818/1.
+- Removed unused dependencies:
+  - Delete unused submodules to avoid fetching.
+  - Replace google-perftool bundle with specific libtcmalloc-minimal4 and add symlink so that you can still use it with `LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libtcmalloc.so.4`.
+  - Remove unused git apt package.
 
 ### Fixed
 

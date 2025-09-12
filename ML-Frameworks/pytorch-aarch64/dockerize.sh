@@ -17,6 +17,8 @@
 # limitations under the License.
 # *******************************************************************************
 
+set -eux -o pipefail
+
 help_str="dockerize.sh takes a PyTorch wheel as the first argument and an ao wheel
 as the second argument. It installs the wheel inside a Docker container with examples
 and requirements. The docker image will then be run unless you pass in the optional
