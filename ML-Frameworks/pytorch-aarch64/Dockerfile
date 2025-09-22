@@ -65,8 +65,12 @@ RUN echo 'export PATH="$HOME/.local/bin:$PATH"' >>  /etc/bash.bashrc
 WORKDIR /home/$DOCKER_USER
 USER $DOCKER_USER
 
+# Update to newer pip/setuptools/wheel (setuptools>= 70.0.0 due to CVE-2024-6345 and CVE-2025-47273)
+# and delete old system version (we essentially use apt:python3-pip to bootstrap pip)
+RUN pip install --upgrade pip~=25.2 setuptools~=78.1.1 wheel~=0.45.1 \
+    && sudo rm -r /usr/lib/python3/dist-packages/
+
 # Base requirements for examples, excluding torch and torch*
-RUN pip install --upgrade pip
 COPY requirements.txt ./
 RUN pip install -r requirements.txt
 
