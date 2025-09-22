@@ -37,14 +37,6 @@ from torchao.dtypes.uintx.packed_linear_int8_dynamic_activation_intx_weight_layo
 from torchao.quantization.granularity import PerGroup, PerAxis
 from torchao.quantization.quant_primitives import MappingType
 
-# This script requires a fairly recent version of transformers
-
-gen_ai_utils = os.getcwd() + "/gen_ai_utils/"
-local_packages = gen_ai_utils + "/genai_local_packages"
-install_script = gen_ai_utils + "/setup_local_packages.py"
-subprocess.run([sys.executable, install_script, local_packages, "transformers==4.47.1"])
-sys.path.insert(0, local_packages)
-
 from transformers import AutoModelForCausalLM, AutoConfig, AutoTokenizer, TextStreamer
 from torch.profiler import profile, ProfilerActivity, tensorboard_trace_handler
 
@@ -95,7 +87,7 @@ def load_model_components(model_folder_path):
 
 
 def get_quantized_model(args):
-    model_name = f"{args.model.name}"
+    model_name = f"{args.model}"
     print("Running model ", model_name)
     config, tokenizer, model = load_model_components(args.model)
     if model is None:
@@ -189,7 +181,7 @@ def eval_quantized_output(quantized_model, tokenizer, input_tensor, max_min_toke
 
 
 def main(args):
-    name_string = f"{args.model.name}"
+    name_string = f"{args.model}"
     quantized_model_, tokenizer_, config_ = get_quantized_model(args)
     input_tensor = tokenizer_.encode(args.prompt, return_tensors="pt")
     eval_quantized_output(
@@ -223,8 +215,8 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--model",
-        type=Path,
-        default=Path("TinyLlama/TinyLlama-1.1B-Chat-v1.0"),
+        type=str,
+        default="TinyLlama/TinyLlama-1.1B-Chat-v1.0",
         help="Hugging Face model ID or Cloned model repository with model files",
     )
     parser.add_argument(
