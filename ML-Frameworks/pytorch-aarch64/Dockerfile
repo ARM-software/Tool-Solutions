@@ -28,8 +28,6 @@ ENV TORCH_WHEEL=$TORCH_WHEEL
 ARG TORCH_AO_WHEEL
 ENV TORCH_AO_WHEEL=$TORCH_AO_WHEEL
 
-# TODO make sure Openblas is 0.3.28
-# And mlcommons is 4.1
 RUN if ! [ "$(arch)" = "aarch64" ] ; then exit 1; fi
 
 RUN apt-get update && apt-get install -y \
