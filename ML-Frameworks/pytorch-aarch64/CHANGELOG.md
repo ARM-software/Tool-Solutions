@@ -11,6 +11,14 @@ where `YY` is the year, and `MM` the month of the increment.
 
 ### Changed
 - Updates ACL URL from [ML Platform](https://review.mlplatform.org/ml/ComputeLibrary) to [GitHub](https://github.com/ARM-software/ComputeLibrary.git).
+- Updates hashes for:
+  - PYTORCH_HASH to 45d9dcccc5bfb46a9eaca037270278bc3d7c95ea, 2.9.0.dev20250923 from viable/strict, September 23rd.
+  - IDEEP_HASH to fd11055f4800ac89291e30b5387a79a1e6496aa6, from ideep_pytorch, September 10th.
+  - ONEDNN_HASH to 9e8f619477469ed75d323d4915bf7a2513f01713, from main, September 23rd.
+  - ACL_HASH to 531a4968cecb7b4fc0a3b65482e2c524289e087e, from main, September 23rd.
+  - TORCH_AO_HASH to 8e2ca35ea603349e71c2467e10fd371e34bf52bc, from main, September 23rd.
+  - KLEIDIAI_HASH to bd2e6ae060014035e25bf4986be682762c446c2d, v1.14 from main.
+- Update torchvision from 0.23.0 to a nightly build, 0.25.0.dev20250923
 
 ### Removed
 - Removes WIP ComputeLibrary patch https://review.mlplatform.org/c/ml/ComputeLibrary/+/12818/1.

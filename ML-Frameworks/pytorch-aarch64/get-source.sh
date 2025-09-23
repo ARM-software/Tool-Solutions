@@ -20,12 +20,12 @@
 source ../utils/git-utils.sh
 
 set -eux -o pipefail
-PYTORCH_HASH=4e2ddb5db67617f9f5309c8bba0c17adc84cadbc  # 2.9.0.dev20250808 from viable/strict, August 8th
-IDEEP_HASH=3527b0bf2127aa2de93810feb6906d173c24037f    # From ideep_pytorch, August 1st
-ONEDNN_HASH=7e85b94b5f6be27b83c5435603ab67888b99da32   # From main, August 1st
-ACL_HASH=3c32d706d0245dcb55181c8ced526eab05e2ff8d      # From main, August 1st
-TORCH_AO_HASH=8d4a5d83d7be4d7807feabe38d37704c92d40900 # From main, August 1st
-KLEIDIAI_HASH=8ca226712975f24f13f71d04cda039a0ee9f9e2f # v1.12 from main
+PYTORCH_HASH=45d9dcccc5bfb46a9eaca037270278bc3d7c95ea  # 2.9.0.dev20250923 from viable/strict, September 23rd
+IDEEP_HASH=fd11055f4800ac89291e30b5387a79a1e6496aa6    # From ideep_pytorch, September 10th
+ONEDNN_HASH=9e8f619477469ed75d323d4915bf7a2513f01713   # From main, September 23rd
+ACL_HASH=531a4968cecb7b4fc0a3b65482e2c524289e087e      # From main, September 23rd
+TORCH_AO_HASH=8e2ca35ea603349e71c2467e10fd371e34bf52bc # From main, September 23rd
+KLEIDIAI_HASH=bd2e6ae060014035e25bf4986be682762c446c2d # v1.14 from main
 
 git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
 (
@@ -41,8 +41,7 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
     # https://github.com/pytorch/pytorch/pull/160184 - Draft: separate reqs for manywheel build and pin
     # Note: as part of this patch, setuptools is pinned to ~= 78.1.1 which is not affected by
     # CVE-2025-47273 and CVE-2024-6345
-    apply-github-patch pytorch/pytorch 6d61f487b6ca98b3d80f9e7ecc0a49a1ab528535
-
+    apply-github-patch pytorch/pytorch 4d344570e5a114fa522e3370c5d59161e2ed8619
 
     # https://github.com/pytorch/pytorch/pull/158250 - Ingtegrate INT4→BF16 via KleidiAI, with fallback
     apply-github-patch pytorch/pytorch 7c55f2af0adf9ce62c2226e739a3c84902fe0048
@@ -61,13 +60,14 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
     apply-github-patch pytorch/pytorch 3de5651bafcdabbc52d5205c0de3976188eba7fb
 
     # https://github.com/pytorch/pytorch/pull/160080 - VLA Vectorized POC
-    apply-github-patch pytorch/pytorch d5c1aedd5cb85b760abe76099efe64aa535bf1ea
-    apply-github-patch pytorch/pytorch b1496344c65638f25547b841bb2c470127b7e420
-    apply-github-patch pytorch/pytorch fd5f544e87e8c3d6890815ae28f1dc807331643a
-    apply-github-patch pytorch/pytorch 01d97374f5492ca2e1f1eb487e74667a78a00b71
-    apply-github-patch pytorch/pytorch ea3fca1a47f3673eaf778505142cde765b3ab725
-    apply-github-patch pytorch/pytorch f5f5e4f802824344ce90c1f37df124990dea934c
-    apply-github-patch pytorch/pytorch a57478fa655ceff0a910fc936df89b7647ce0e39
+    apply-github-patch pytorch/pytorch e84eabd4f9761362ba081512b2922b4f18c97d41
+    apply-github-patch pytorch/pytorch a49982892480af69fae8bb19505b31b3304cda7a
+    apply-github-patch pytorch/pytorch 6ca9dc026d8d65c575c880ebe8b678f724d609a1
+    apply-github-patch pytorch/pytorch 3b92a1adfe40ca9c37e7db523eccaad4358d949c
+    apply-github-patch pytorch/pytorch 0384f48daa4b27d155632329521128212dd6fda3
+    apply-github-patch pytorch/pytorch bf4b0e8c41c75d9106e2e432c6b9a00319295930
+    apply-github-patch pytorch/pytorch dae9a71d99faa19764c47c602cb92bbf72ca7260
+    apply-github-patch pytorch/pytorch 8ac81dba2155808427ec3943c4d057f6b05b23d6
 
     # https://github.com/pytorch/pytorch/pull/159859 - PoC LUT optimisation for GELU bf16 operators
     apply-github-patch pytorch/pytorch ebcc874e317f9563ab770fc5c27df969e0438a5e
@@ -95,8 +95,7 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
             cd mkl-dnn
             git fetch origin $ONEDNN_HASH && git clean -f && git checkout -f FETCH_HEAD
             # https://github.com/uxlfoundation/oneDNN/pull/3022 - cpu: aarch64: enable jit conv for 128
-            apply-github-patch uxlfoundation/oneDNN 244422f8cd0aab93d2a184894472c955ebb7bb97
-            apply-github-patch uxlfoundation/oneDNN 466ee88db85db46c8e9cc0535e526efca6308329
+            apply-github-patch uxlfoundation/oneDNN b43cc9c4526c16a292860dadf34b3585b1f33531
         )
     )
     (
