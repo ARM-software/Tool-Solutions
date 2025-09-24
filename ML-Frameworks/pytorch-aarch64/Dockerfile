@@ -89,9 +89,9 @@ COPY $TORCH_AO_WHEEL /home/$DOCKER_USER/
 # will need to manually add their dependencies. We don't use the nightly
 # versions which corresponding to our torch build because they can disappear,
 # and we usually don't need features from the nightlies.
-RUN pip install \
-    torchvision~=0.23.0 \
-    --no-deps
+# Note: torchvision is pinned to a nightly build, this can be updated
+# at the next vision release, and the `--extra-index-url` removed.
+RUN pip install --pre torchvision==0.25.0.dev20250923 --index-url https://download.pytorch.org/whl/nightly/cpu --no-deps
 
 # We need --no-deps because the torch version won't match the versions on torch*
 RUN pip install "$(basename "$TORCH_WHEEL")" --no-deps \
