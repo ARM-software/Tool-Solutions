@@ -57,7 +57,7 @@ COPY bash_profile /home/$DOCKER_USER/.bash_profile
 RUN chown $DOCKER_USER:$DOCKER_USER /home/$DOCKER_USER/.bash_profile
 
 # Add welcome message to warn about dev quality
-COPY welcome.txt /home/$DOCKER_USER/.
+COPY welcome.txt LICENSE SECURITY.md /home/$DOCKER_USER/
 RUN echo '[ ! -z "$TERM" -a -r /home/$DOCKER_USER/welcome.txt ] && cat /home/$DOCKER_USER/welcome.txt' >> /etc/bash.bashrc
 RUN echo 'export PATH="$HOME/.local/bin:$PATH"' >>  /etc/bash.bashrc
 

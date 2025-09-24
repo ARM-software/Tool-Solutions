@@ -35,12 +35,20 @@ if ! [ -e "$1" ] || ! [ -e "$2" ]; then
     exit 1
 fi
 
+# Grab files to be copied into the container
+if [ ! -f LICENSE ]; then cp ../../LICENSE .; fi
+if [ ! -f SECURITY.md ]; then cp ../../SECURITY.md .; fi
+
 docker build -t toolsolutions-pytorch:latest  \
     --build-arg TORCH_WHEEL=$1 \
     --build-arg DOCKER_IMAGE_MIRROR \
     --build-arg TORCH_AO_WHEEL=$2 \
     --build-arg USERNAME=ubuntu \
     .
+
+# Cleanup
+if [ -f LICENSE ]; then rm -f LICENSE; fi
+if [ -f SECURITY.md ]; then rm -f SECURITY.md; fi
 
 [[ $* == *--build-only* ]] && exit 0
 docker run --rm -it toolsolutions-pytorch:latest
