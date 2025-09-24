@@ -8,10 +8,13 @@ where `YY` is the year, and `MM` the month of the increment.
 ## [unreleased]
 
 ### Added
+ - Adds WIP patch to upgrade Compute Library to 52.4.0
 
 ### Changed
+ - Updates TensorFLow hash to 6aa8fd07270293b918255af5988aef45b844c5b4 # from nightly, September 22nd
 
 ### Removed
+ - Removed previous patch updating oneDNN and Compute Library that has been merged upstream
 
 ### Fixed
 

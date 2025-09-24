@@ -29,19 +29,7 @@ function git-bump {
 (
     cd tensorflow
     git-bump nightly
-
-    (
-        cd third_party/mkl_dnn/oneDNN
-        git-bump main
-    )
-
-    (
-        cd third_party/compute_library/ComputeLibrary
-        git-bump main
-    )
 )
 
-echo "Put this into your get-sources.sh file"
+echo "Put this into your get-source.sh file"
 echo TENSORFLOW_HASH=$(cd tensorflow && git rev-parse HEAD)
-echo ONEDNN_HASH=$(cd tensorflow/third_party/mkl_dnn/oneDNN && git rev-parse HEAD)
-echo ACL_HASH=$(cd tensorflow/third_party/compute_library/ComputeLibrary && git rev-parse HEAD)
