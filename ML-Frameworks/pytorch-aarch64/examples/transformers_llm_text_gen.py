@@ -113,6 +113,7 @@ def get_quantized_model(args):
         weight_mapping_type=mapping_type,
         layout=layout,
         weight_dtype=torch.int4,
+        intx_packing_format="opaque_aten_kleidiai",
     )
 
     print("Quantization config:")

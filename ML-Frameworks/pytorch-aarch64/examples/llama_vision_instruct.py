@@ -52,6 +52,7 @@ def main(args):
                 weight_mapping_type=MappingType.SYMMETRIC_NO_CLIPPING_ERR, # MappingType.SYMMETRIC can also be used but increases error
                 layout=layout,
                 weight_dtype=torch.int4,
+                intx_packing_format="opaque_aten_kleidiai",
             ),
         )
 
