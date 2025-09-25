@@ -20,6 +20,7 @@ where `YY` is the year, and `MM` the month of the increment.
   - KLEIDIAI_HASH to bd2e6ae060014035e25bf4986be682762c446c2d, v1.14 from main.
 - Update torchvision from 0.23.0 to a nightly build, 0.25.0.dev20250923
 - Change of flag name in `./build.sh` from `--force` to `--fresh`
+- Add `intx_packing_format="opaque_aten_kleidiai"` to `Int8DynamicActivationIntxWeightConfig` due to torchao API change
 
 ### Removed
 - Removes WIP ComputeLibrary patch https://review.mlplatform.org/c/ml/ComputeLibrary/+/12818/1.
