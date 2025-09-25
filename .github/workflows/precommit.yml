@@ -23,13 +23,29 @@ on:
   push:
     branches: [main]
     paths:
-      - "ML-Frameworks/pytorch-aarch64/**"
       - ".github/**"
+      - "ML-Frameworks/pytorch-aarch64/**"
+      - "ML-Frameworks/tensorflow-aarch64/**"
+      # Exclusions (must come after the includes):
+      - "!ML-Frameworks/pytorch-aarch64/CHANGELOG.md"
+      - "!ML-Frameworks/pytorch-aarch64/README.md"
+      - "!ML-Frameworks/pytorch-aarch64/welcome.txt"
+      - "!ML-Frameworks/tensorflow-aarch64/CHANGELOG.md"
+      - "!ML-Frameworks/tensorflow-aarch64/README.md"
+      - "!ML-Frameworks/tensorflow-aarch64/welcome.txt"
   pull_request:
     types: [opened, synchronize, reopened]
     paths:
-      - "ML-Frameworks/pytorch-aarch64/**"
       - ".github/**"
+      - "ML-Frameworks/pytorch-aarch64/**"
+      - "ML-Frameworks/tensorflow-aarch64/**"
+      # Exclusions (must come after the includes):
+      - "!ML-Frameworks/pytorch-aarch64/CHANGELOG.md"
+      - "!ML-Frameworks/pytorch-aarch64/README.md"
+      - "!ML-Frameworks/pytorch-aarch64/welcome.txt"
+      - "!ML-Frameworks/tensorflow-aarch64/CHANGELOG.md"
+      - "!ML-Frameworks/tensorflow-aarch64/README.md"
+      - "!ML-Frameworks/tensorflow-aarch64/welcome.txt"
   schedule:
     #* minute (0-59) hour (0-23) day (1-31) month (1-12)  day of the week (0 - 6)
     #* cron jobs run on the default (main) branch.
