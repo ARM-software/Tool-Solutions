@@ -32,7 +32,12 @@ if ! [ -e "$1" ]; then
     exit 1
 fi
 
-docker build -t toolsolutions-tensorflow:latest  \
+docker buildx \
+    build --load \
+    -t toolsolutions-tensorflow:latest  \
+    --build-context rootdir=../.. \
     --build-arg TENSORFLOW_WHEEL=$1 \
     .
+
+[[ $* == *--build-only* ]] && exit 0
 docker run --rm -it toolsolutions-tensorflow:latest

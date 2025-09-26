@@ -57,6 +57,9 @@ COPY welcome.txt /home/$DOCKER_USER/.
 RUN echo '[ ! -z "$TERM" -a -r /home/$DOCKER_USER/welcome.txt ] && cat /home/$DOCKER_USER/welcome.txt' >> /etc/bash.bashrc
 RUN echo 'export PATH="$HOME/.local/bin:$PATH"' >>  /etc/bash.bashrc
 
+# Grab the SECURITY.md from the root directory
+COPY --from=rootdir SECURITY.md /home/$DOCKER_USER/
+
 # Move to userland
 WORKDIR /home/$DOCKER_USER
 USER $DOCKER_USER
