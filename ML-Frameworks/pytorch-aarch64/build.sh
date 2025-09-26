@@ -45,8 +45,34 @@ if [ -f .torch_build_container_id ] || [ -f .torch_ao_build_container_id ] || \
 
     # Wipe old build artefacts
     if [[ $* == *--fresh* ]]; then
-        if [ -f .torch_build_container_id ]; then rm -f .torch_build_container_id; fi
-        if [ -f .torch_ao_build_container_id ]; then rm -f .torch_ao_build_container_id; fi
+        # Make sure we can wipe directories created with root privileges in Docker
+        if [ -f .torch_build_container_id ]; then
+            TORCH_BUILD_CONTAINER=$(cat .torch_build_container_id)
+            if [ ! -z "$(docker ps -a --no-trunc | grep $TORCH_BUILD_CONTAINER)" ]; then
+                # Change permissions from root
+                docker exec $TORCH_BUILD_CONTAINER chown -R $(id -u):$(id -g) /artifacts 2>/dev/null || true
+                docker exec $TORCH_BUILD_CONTAINER chown -R $(id -u):$(id -g) /ComputeLibrary 2>/dev/null || true
+                docker exec $TORCH_BUILD_CONTAINER chown -R $(id -u):$(id -g) /pytorch 2>/dev/null || true
+
+                # Wipe old container
+                docker rm -f $TORCH_BUILD_CONTAINER 2>/dev/null || true
+            fi
+            rm -f .torch_build_container_id
+        fi
+
+        # Make sure we can wipe directories created with root privileges in Docker
+        if [ -f .torch_ao_build_container_id ]; then
+            TORCH_AO_BUILD_CONTAINER=$(cat .torch_ao_build_container_id)
+            if [ ! -z "$(docker ps -a --no-trunc | grep $TORCH_AO_BUILD_CONTAINER)" ]; then
+                docker exec $TORCH_AO_BUILD_CONTAINER chown -R $(id -u):$(id -g) /ao
+
+                # Wipe old container
+                docker rm -f $TORCH_AO_BUILD_CONTAINER 2>/dev/null || true
+            fi
+            rm -f .torch_ao_build_container_id
+        fi
+
+        # Wipe the other directories; we should have the privileges now
         if [ -d ao ]; then rm -rf ao; fi
         if [ -d ComputeLibrary ]; then rm -rf ComputeLibrary; fi
         if [ -d pytorch ]; then rm -rf pytorch; fi

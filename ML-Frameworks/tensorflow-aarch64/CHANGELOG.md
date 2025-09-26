@@ -25,6 +25,7 @@ https://github.com/ARM-software/Tool-Solutions/tree/r25.09
 ### Changed
  - Updates TensorFLow hash to 6aa8fd07270293b918255af5988aef45b844c5b4 # from nightly, September 22nd
  - Updates `dockerize.sh` build to use BuildKit (to add extra build contexts)
+ - Change of flag name in `./build.sh` from `--force` to `--fresh`
 
 ### Removed
  - Removed previous patch updating oneDNN and Compute Library that has been merged upstream
