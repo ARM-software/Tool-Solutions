@@ -35,9 +35,12 @@ if ! [ -e "$1" ] || ! [ -e "$2" ]; then
     exit 1
 fi
 
-docker build -t toolsolutions-pytorch:latest  \
-    --build-arg TORCH_WHEEL=$1 \
+docker buildx \
+    build --load \
+    -t toolsolutions-pytorch:latest  \
+    --build-context rootdir=../.. \
     --build-arg DOCKER_IMAGE_MIRROR \
+    --build-arg TORCH_WHEEL=$1 \
     --build-arg TORCH_AO_WHEEL=$2 \
     --build-arg USERNAME=ubuntu \
     .
