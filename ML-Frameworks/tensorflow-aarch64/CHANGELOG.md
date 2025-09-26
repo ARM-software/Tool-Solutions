@@ -8,6 +8,17 @@ where `YY` is the year, and `MM` the month of the increment.
 ## [unreleased]
 
 ### Added
+
+### Changed
+
+### Removed
+
+### Fixed
+
+## [r25.09] 2025-09-29
+https://github.com/ARM-software/Tool-Solutions/tree/r25.09
+
+### Added
  - Adds WIP patch to upgrade Compute Library to 52.4.0
  - Adds `SECURITY.md` to built image
 
