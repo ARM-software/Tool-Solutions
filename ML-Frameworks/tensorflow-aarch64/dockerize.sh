@@ -37,6 +37,8 @@ docker buildx \
     -t toolsolutions-tensorflow:latest  \
     --build-context rootdir=../.. \
     --build-arg TENSORFLOW_WHEEL=$1 \
+    --build-arg DOCKER_IMAGE_MIRROR \
+    --build-arg USERNAME=ubuntu \
     .
 
 [[ $* == *--build-only* ]] && exit 0
