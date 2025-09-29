@@ -41,7 +41,7 @@ RUN apt-get install -y protobuf-compiler
 RUN apt-get install -y wget
 
 # DOCKER_USER for the Docker user
-ENV DOCKER_USER=ubuntu
+ENV DOCKER_USER=${USERNAME}
 
 # Setup default user
 RUN useradd --create-home -s /bin/bash -m $DOCKER_USER && echo "$DOCKER_USER:Portland" | chpasswd && adduser $DOCKER_USER sudo
@@ -53,9 +53,12 @@ COPY bash_profile /home/$DOCKER_USER/.bash_profile
 RUN chown $DOCKER_USER:$DOCKER_USER /home/$DOCKER_USER/.bash_profile
 
 # Add welcome message to warn about dev quality
-COPY welcome.txt /home/$DOCKER_USER/.
+COPY welcome.txt /home/$DOCKER_USER/
 RUN echo '[ ! -z "$TERM" -a -r /home/$DOCKER_USER/welcome.txt ] && cat /home/$DOCKER_USER/welcome.txt' >> /etc/bash.bashrc
 RUN echo 'export PATH="$HOME/.local/bin:$PATH"' >>  /etc/bash.bashrc
+
+# Grab the SECURITY.md from the root directory
+COPY --from=rootdir SECURITY.md /home/$DOCKER_USER/
 
 # Move to userland
 WORKDIR /home/$DOCKER_USER
@@ -66,10 +69,8 @@ RUN test -n "$TENSORFLOW_WHEEL"
 COPY $TENSORFLOW_WHEEL /home/$DOCKER_USER/
 
 # Install our dev build of TensorFlow.
-RUN pip install \
-    "$(basename "$TENSORFLOW_WHEEL")" \
-    && rm \
-    "$(basename "$TENSORFLOW_WHEEL")"
+RUN pip install "$(basename "$TENSORFLOW_WHEEL")" \
+    && rm "$(basename "$TENSORFLOW_WHEEL")"
 
 # Base requirements for examples, excluding TensorFlow
 COPY requirements.txt ./

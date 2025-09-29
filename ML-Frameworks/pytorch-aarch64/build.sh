@@ -24,13 +24,58 @@ build_log=build-$(git rev-parse --short=7 HEAD)-$(date '+%Y-%m-%dT%H-%M-%S').log
 exec &> >(tee -a $build_log)
 
 # Bail out if sources are already there
-if [ -d pytorch ] || [ -d builder ] || [ -d ComputeLibrary ] ; then
-    echo "You appear to have sources already (pytorch/builder/ComputeLibrary)" \
+if [ -f .torch_build_container_id ] || [ -f .torch_ao_build_container_id ] || \
+    [ -d ao ] || [ -d ComputeLibrary ] || [ -d pytorch ]; then
+    printf "\n\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n\n\n" \
+        "You appear to have artefacts from a previous build lying around." \
+        "Check for any of the following:" \
+        "  - .torch_build_container_id" \
+        "  - .torch_ao_build_container_id" \
+        "  - ao" \
+        "  - ComputeLibrary" \
+        "  - pytorch"
 
-    if ! ([[ $* == *--force* ]] || [[ $* == *--use-existing-sources* ]]) ; then
-        >&2 echo "rerun with --force to overwrite sources or with" \
-                 "--use-existing-sources to build your existing sources."
+    if [[ "$*" != *--fresh* ]] && [[ "$*" != *--use-existing-sources* ]]; then
+        >&2 printf "\n\n%s\n%s\n%s\n\n\n" \
+            "Rerun with one of the following options:" \
+            "  - '--fresh': wipe the pre-existing sources and do a fresh build" \
+            "  - '--use-existing-sources': reuse the sources as is"
         exit 1
+    fi
+
+    # Wipe old build artefacts
+    if [[ $* == *--fresh* ]]; then
+        # Make sure we can wipe directories created with root privileges in Docker
+        if [ -f .torch_build_container_id ]; then
+            TORCH_BUILD_CONTAINER=$(cat .torch_build_container_id)
+            if [ ! -z "$(docker ps -a --no-trunc | grep $TORCH_BUILD_CONTAINER)" ]; then
+                # Change permissions from root
+                docker exec $TORCH_BUILD_CONTAINER chown -R $(id -u):$(id -g) /artifacts 2>/dev/null || true
+                docker exec $TORCH_BUILD_CONTAINER chown -R $(id -u):$(id -g) /ComputeLibrary 2>/dev/null || true
+                docker exec $TORCH_BUILD_CONTAINER chown -R $(id -u):$(id -g) /pytorch 2>/dev/null || true
+
+                # Wipe old container
+                docker rm -f $TORCH_BUILD_CONTAINER 2>/dev/null || true
+            fi
+            rm -f .torch_build_container_id
+        fi
+
+        # Make sure we can wipe directories created with root privileges in Docker
+        if [ -f .torch_ao_build_container_id ]; then
+            TORCH_AO_BUILD_CONTAINER=$(cat .torch_ao_build_container_id)
+            if [ ! -z "$(docker ps -a --no-trunc | grep $TORCH_AO_BUILD_CONTAINER)" ]; then
+                docker exec $TORCH_AO_BUILD_CONTAINER chown -R $(id -u):$(id -g) /ao
+
+                # Wipe old container
+                docker rm -f $TORCH_AO_BUILD_CONTAINER 2>/dev/null || true
+            fi
+            rm -f .torch_ao_build_container_id
+        fi
+
+        # Wipe the other directories; we should have the privileges now
+        if [ -d ao ]; then rm -rf ao; fi
+        if [ -d ComputeLibrary ]; then rm -rf ComputeLibrary; fi
+        if [ -d pytorch ]; then rm -rf pytorch; fi
     fi
 fi
 

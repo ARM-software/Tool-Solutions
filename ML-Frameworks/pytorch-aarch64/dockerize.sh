@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # *******************************************************************************
-# Copyright 2024 Arm Limited and affiliates.
+# Copyright 2025 Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -35,9 +35,12 @@ if ! [ -e "$1" ] || ! [ -e "$2" ]; then
     exit 1
 fi
 
-docker build -t toolsolutions-pytorch:latest  \
-    --build-arg TORCH_WHEEL=$1 \
+docker buildx \
+    build --load \
+    -t toolsolutions-pytorch:latest  \
+    --build-context rootdir=../.. \
     --build-arg DOCKER_IMAGE_MIRROR \
+    --build-arg TORCH_WHEEL=$1 \
     --build-arg TORCH_AO_WHEEL=$2 \
     --build-arg USERNAME=ubuntu \
     .

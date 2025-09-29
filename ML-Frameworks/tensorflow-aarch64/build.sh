@@ -25,12 +25,40 @@ exec &> >(tee -a $build_log)
 
 # # Bail out if sources are already there
 if [ -d tensorflow ] ; then
-    echo "You appear to have sources already" \
+    printf "\n\n%s\n%s\n%s\n\n\n" \
+        "You appear to have artefacts from a previous build lying around." \
+        "Check for the following:" \
+        "  - tensorflow"
 
-    if ! ([[ $* == *--force* ]] || [[ $* == *--use-existing-sources* ]]) ; then
-        echo "rerun with --force to overwrite sources or with" \
-                 "--use-existing-sources to build your existing sources." 1>&2
+    if ! ([[ $* == *--fresh* ]] || [[ $* == *--use-existing-sources* ]]) ; then
+        printf "\n\n%s\n%s\n%s\n\n\n" \
+                "Rerun with one of the following options:" \
+                "  - '--fresh': wipe the pre-existing sources and do a fresh build" \
+                "  - '--use-existing-sources': reuse the sources as is" 1>&2
         exit 1
+    fi
+
+    # Wipe old build artefacts
+    if [[ $* == *--fresh* ]]; then
+        if [ -d tensorflow ]; then
+            # Change permissions for folders created as root in docker
+            if [ -d tensorflow/build_output ]; then
+                if [ ! -z "$(docker ps -a --no-trunc | grep tf)" ]; then
+                    docker exec tf chown -R $(id -u):$(id -g) build_output 2>/dev/null || true
+                else
+                    printf "\n\n%s\n%s\n%s\n\n\n" \
+                        "Unable to locate docker container 'tf'. You may need to" \
+                        "rerun this script with sudo privileges to make sure everything" \
+                        "has been properly wiped."
+                fi
+            fi
+
+            # Wipe the container. Adapted from: tensorflow/ci/official/utilities/cleanup_docker.sh
+            docker rm -f tf 2>/dev/null || true
+
+            # Wipe the folder
+            rm -rf tensorflow
+        fi
     fi
 fi
 

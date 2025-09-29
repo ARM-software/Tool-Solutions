@@ -28,8 +28,6 @@ ENV TORCH_WHEEL=$TORCH_WHEEL
 ARG TORCH_AO_WHEEL
 ENV TORCH_AO_WHEEL=$TORCH_AO_WHEEL
 
-# TODO make sure Openblas is 0.3.28
-# And mlcommons is 4.1
 RUN if ! [ "$(arch)" = "aarch64" ] ; then exit 1; fi
 
 RUN apt-get update && apt-get install -y \
@@ -59,16 +57,24 @@ COPY bash_profile /home/$DOCKER_USER/.bash_profile
 RUN chown $DOCKER_USER:$DOCKER_USER /home/$DOCKER_USER/.bash_profile
 
 # Add welcome message to warn about dev quality
-COPY welcome.txt /home/$DOCKER_USER/.
+COPY welcome.txt /home/$DOCKER_USER/
 RUN echo '[ ! -z "$TERM" -a -r /home/$DOCKER_USER/welcome.txt ] && cat /home/$DOCKER_USER/welcome.txt' >> /etc/bash.bashrc
 RUN echo 'export PATH="$HOME/.local/bin:$PATH"' >>  /etc/bash.bashrc
+
+# Grab the SECURITY.md from the root directory
+COPY --from=rootdir SECURITY.md /home/$DOCKER_USER/
 
 # Move to userland
 WORKDIR /home/$DOCKER_USER
 USER $DOCKER_USER
 
+# Update to newer pip/setuptools/wheel (setuptools>= 70.0.0 due to CVE-2024-6345
+# and CVE-2025-47273, wheel >= 0.38.0 due to CVE-2022-40898) and delete old system
+# version (we essentially use apt:python3-pip to bootstrap pip)
+RUN pip install --upgrade pip~=25.2 setuptools~=78.1.1 wheel~=0.45.1 \
+    && sudo rm -r /usr/lib/python3/dist-packages/
+
 # Base requirements for examples, excluding torch and torch*
-RUN pip install --upgrade pip
 COPY requirements.txt ./
 RUN pip install -r requirements.txt
 
@@ -86,14 +92,9 @@ COPY $TORCH_AO_WHEEL /home/$DOCKER_USER/
 # will need to manually add their dependencies. We don't use the nightly
 # versions which corresponding to our torch build because they can disappear,
 # and we usually don't need features from the nightlies.
-# Note: torchvision is currently pinned to a nightly build, this can be updated
+# Note: torchvision is pinned to a nightly build, this can be updated
 # at the next vision release, and the `--extra-index-url` removed.
-RUN pip install \
-    torchaudio~=2.6.0 \
-    torchdata~=0.11.0 \
-    torchvision~=0.23.0 \
-    torchtune~=0.5.0 \
-    --no-deps
+RUN pip install --pre torchvision==0.25.0.dev20250923 --index-url https://download.pytorch.org/whl/nightly/cpu --no-deps
 
 # We need --no-deps because the torch version won't match the versions on torch*
 RUN pip install "$(basename "$TORCH_WHEEL")" --no-deps \

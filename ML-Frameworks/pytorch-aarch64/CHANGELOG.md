@@ -10,7 +10,30 @@ where `YY` is the year, and `MM` the month of the increment.
 ### Added
 
 ### Changed
+
+### Removed
+
+### Fixed
+
+## [r25.09] 2025-09-29
+https://github.com/ARM-software/Tool-Solutions/tree/r25.09
+
+### Added
+- Adds `SECURITY.md` to built image.
+
+### Changed
 - Updates ACL URL from [ML Platform](https://review.mlplatform.org/ml/ComputeLibrary) to [GitHub](https://github.com/ARM-software/ComputeLibrary.git).
+- Updates hashes for:
+  - PYTORCH_HASH to 45d9dcccc5bfb46a9eaca037270278bc3d7c95ea, 2.9.0.dev20250923 from viable/strict, September 23rd.
+  - IDEEP_HASH to fd11055f4800ac89291e30b5387a79a1e6496aa6, from ideep_pytorch, September 10th.
+  - ONEDNN_HASH to 9e8f619477469ed75d323d4915bf7a2513f01713, from main, September 23rd.
+  - ACL_HASH to 531a4968cecb7b4fc0a3b65482e2c524289e087e, from main, September 23rd.
+  - TORCH_AO_HASH to 8e2ca35ea603349e71c2467e10fd371e34bf52bc, from main, September 23rd.
+  - KLEIDIAI_HASH to bd2e6ae060014035e25bf4986be682762c446c2d, v1.14 from main.
+- Update torchvision from 0.23.0 to a nightly build, 0.25.0.dev20250923.
+- Change of flag name in `./build.sh` from `--force` to `--fresh`
+- Add `intx_packing_format="opaque_aten_kleidiai"` to `Int8DynamicActivationIntxWeightConfig` due to torchao API change
+- Updates `dockerize.sh` build to use BuildKit (to add extra build contexts).
 
 ### Removed
 - Removes WIP ComputeLibrary patch https://review.mlplatform.org/c/ml/ComputeLibrary/+/12818/1.
@@ -18,6 +41,9 @@ where `YY` is the year, and `MM` the month of the increment.
   - Delete unused submodules to avoid fetching.
   - Replace google-perftool bundle with specific libtcmalloc-minimal4 and add symlink so that you can still use it with `LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libtcmalloc.so.4`.
   - Remove unused git apt package.
+  - Remove outdated versions of pip/setuptools/wheel from image after pip updates itself.
+  - Remove manual install of transformers in `transformers_llm_text_gen.py`, we now use a single version everywhere.
+  - Remove unused pip packages: datasets, omegaconf, psutil, tiktoken, torchaudio, torchdata and torchtune.
 
 ### Fixed
 
