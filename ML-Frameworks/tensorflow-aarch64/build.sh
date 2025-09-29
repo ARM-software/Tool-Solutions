@@ -72,8 +72,4 @@ fi
 tf_wheel_name=$(grep -o "tensorflow-.*.whl" $build_log | head -n -1 | tail -n 1)
 echo $tf_wheel_name
 
-docker build -t toolsolutions-tensorflow:latest \
-    --build-arg TENSORFLOW_WHEEL=results/$tf_wheel_name \
-    --build-arg DOCKER_IMAGE_MIRROR \
-    --build-arg USERNAME=ubuntu \
-    .
+./dockerize.sh "results/$tf_wheel_name" --build-only

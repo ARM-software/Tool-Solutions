@@ -21,7 +21,7 @@ set -eux -o pipefail
 
 help_str="dockerize.sh takes a TensorFlow wheel as argument. It \
 installs the wheel inside a Docker container with examples and requirements."
-if [ "$#" -ne 1 ]; then
+if [ "$#" -lt 1 ]; then
     echo $help_str
     exit 1
 fi
