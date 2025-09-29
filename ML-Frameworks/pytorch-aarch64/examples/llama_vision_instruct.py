@@ -53,6 +53,7 @@ def main(args):
                 layout=layout,
                 weight_dtype=torch.int4,
                 intx_packing_format="opaque_aten_kleidiai",
+                version=1,
             ),
         )
 
