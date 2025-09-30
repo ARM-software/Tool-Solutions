@@ -24,7 +24,7 @@ https://github.com/ARM-software/Tool-Solutions/tree/r25.09
 ### Changed
 - Updates ACL URL from [ML Platform](https://review.mlplatform.org/ml/ComputeLibrary) to [GitHub](https://github.com/ARM-software/ComputeLibrary.git).
 - Updates hashes for:
-  - PYTORCH_HASH to 45d9dcccc5bfb46a9eaca037270278bc3d7c95ea, 2.9.0.dev20250923 from viable/strict, September 23rd.
+  - PYTORCH_HASH to 45d9dcccc5bfb46a9eaca037270278bc3d7c95ea, 2.10.0.dev20250923 from viable/strict, September 23rd.
   - IDEEP_HASH to fd11055f4800ac89291e30b5387a79a1e6496aa6, from ideep_pytorch, September 10th.
   - ONEDNN_HASH to 9e8f619477469ed75d323d4915bf7a2513f01713, from main, September 23rd.
   - ACL_HASH to 531a4968cecb7b4fc0a3b65482e2c524289e087e, from main, September 23rd.
