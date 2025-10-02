@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # *******************************************************************************
-# Copyright 2025 Arm Limited and affiliates.
+# Copyright 2025-2026 Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,7 +21,7 @@
 # shared by this Tool-Solutions. Collisions are almost impossible, even between
 # projects
 patch_cache_dir="$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")/patch_cache"
-mkdir -p $patch_cache_dir
+mkdir -p "$patch_cache_dir"
 export patch_cache_dir
 
 function git-shallow-clone {
@@ -45,23 +45,44 @@ function apply-github-patch {
     # Apply a specific GitHub commit.
     # $1 is 'organisation/repo', $2 is the commit hash
     # To use an API token, which may avoid rate limits, set the environment variable GITHUB_TOKEN
-
     set -u
-    patch_file="$patch_cache_dir/$2.patch"
-    if [ ! -f "$patch_file" ]; then
-        local github_api_url='https://api.github.com/repos'
-        local github_url='https://github.com'
 
+    local github_url='https://github.com'
+    local github_api_url='https://api.github.com/repos'
+
+    local patch_file="$patch_cache_dir/$2.patch"
+
+    if [ ! -f "$patch_file" ]; then
         # Download the .patch file.
         if [[ "${GITHUB_TOKEN+x}" ]]; then
-            curl --silent -H "Authorization: token $GITHUB_TOKEN" -H "Accept: application/vnd.github.v3.patch" -L $github_api_url/$1/commits/$2 -o "$patch_file"
+            curl --silent \
+                -H "Authorization: token $GITHUB_TOKEN" \
+                -H "Accept: application/vnd.github.v3.patch" \
+                -L $github_api_url/$1/commits/$2 -o "$patch_file"
         else
             curl --silent -L $github_url/$1/commit/$2.patch -o "$patch_file"
         fi
     fi
 
-    # Apply the patch
-    patch -p1 < "$patch_file"
+    # Approach #1: Try a simple patch application with 'git am'
+    git am --keep-cr "$patch_file" && return 0
+    git am --abort || true # wokeignore:rule=abort/terminate
+
+    # Approach #2: Try a three-way merge after fetching the parent commit. It can handle
+    # scenarios in which the context of the patch has moved. However, we need the parent
+    # commit of the patch for this so we'll try to fetch it with the '--depth=2'
+    local fetch_url="${github_url}/$1.git"
+    if [[ "${GITHUB_TOKEN+x}" ]]; then
+        fetch_url="https://x-access-token:${GITHUB_TOKEN}@github.com/$1.git"
+    fi
+    git fetch --no-tags --quiet --depth=2 "$fetch_url" "$2" || true
+    git am --3way --keep-cr "$patch_file" && return 0
+    git am --abort || true # wokeignore:rule=abort/terminate
+
+    # Approach #3: Fall back to GNU 'patch'
+    patch -p1 < "$patch_file" || return 1
+    git add -A
+    git -c user.name="apply-github-patch" -c user.email="noreply@example.com" commit -m "Applied patch $2 from $1."
     return 0
 }
 
