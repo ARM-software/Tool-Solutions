@@ -64,15 +64,28 @@ RUN echo 'export PATH="$HOME/.local/bin:$PATH"' >>  /etc/bash.bashrc
 # Grab the SECURITY.md from the root directory
 COPY --from=rootdir SECURITY.md /home/$DOCKER_USER/
 
+# Update to newer pip/setuptools/wheel (setuptools >= 70.0.0 due to CVE-2024-6345
+# and CVE-2025-47273, wheel >= 0.38.0 due to CVE-2022-40898) and delete old system
+# version (we essentially use apt:python3-pip to bootstrap pip)
+RUN pip install --upgrade pip~=25.2 setuptools~=78.1.1 wheel~=0.45.1
+
+# Remove system Python stuff. Should be safe to wipe after the line above, because
+# python3 -m pip now uses the /usr/local install
+RUN apt-get update && apt-get purge -y \
+      python3-pip \
+      python3-setuptools \
+      python3-pkg-resources \
+      python3-wheel \
+      python3-distutils \
+      python3-lib2to3 \
+      python3-dev \
+      python3.10-dev \
+    && apt-get autoremove -y \
+    && rm -rf /var/lib/apt/lists/*
+
 # Move to userland
 WORKDIR /home/$DOCKER_USER
 USER $DOCKER_USER
-
-# Update to newer pip/setuptools/wheel (setuptools>= 70.0.0 due to CVE-2024-6345
-# and CVE-2025-47273, wheel >= 0.38.0 due to CVE-2022-40898) and delete old system
-# version (we essentially use apt:python3-pip to bootstrap pip)
-RUN pip install --upgrade pip~=25.2 setuptools~=78.1.1 wheel~=0.45.1 \
-    && sudo rm -r /usr/lib/python3/dist-packages/
 
 # Base requirements for examples, excluding torch and torch*
 COPY requirements.txt ./
