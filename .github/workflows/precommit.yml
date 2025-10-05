@@ -26,6 +26,7 @@ on:
       - ".github/**"
       - "ML-Frameworks/pytorch-aarch64/**"
       - "ML-Frameworks/tensorflow-aarch64/**"
+      - "ML-Frameworks/utils/**"
       # Exclusions (must come after the includes):
       - "!ML-Frameworks/pytorch-aarch64/CHANGELOG.md"
       - "!ML-Frameworks/pytorch-aarch64/README.md"
@@ -39,6 +40,7 @@ on:
       - ".github/**"
       - "ML-Frameworks/pytorch-aarch64/**"
       - "ML-Frameworks/tensorflow-aarch64/**"
+      - "ML-Frameworks/utils/**"
       # Exclusions (must come after the includes):
       - "!ML-Frameworks/pytorch-aarch64/CHANGELOG.md"
       - "!ML-Frameworks/pytorch-aarch64/README.md"
