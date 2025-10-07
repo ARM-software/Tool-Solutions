@@ -12,8 +12,15 @@ where `YY` is the year, and `MM` the month of the increment.
 ### Changed
 
 ### Removed
+- Removes protobuf packages from Docker image that are not required for running tensorflow. Mitigation for CVE-2025-4565.
+- Removes system level python packages that aren't used.
 
 ### Fixed
+ - Updates Transformers to 4.53.0 as a mitigation for: CVE-2025-6051, CVE-2025-3933, CVE-2025-6638, CVE-2025-3262, CVE-2025-3263, CVE-2025-3264, CVE-2025-5197, CVE-2025-6921, CVE-2025-3777.
+ - Updates huggingface to 0.34.0 for compatibility with updated Transformers.
+ - Updates pip to >= 25.2 due to CVE-2025-8869 and CVE-2023-5752.
+ - Updates wheel to >= 0.38.0 due to CVE-2022-40898.
+ - Updates setuptools to >= 78.1.1 due to CVE-2024-6345, CVE-2022-40897 and CVE-2025-47273.
 
 ## [r25.09] 2025-09-29
 https://github.com/ARM-software/Tool-Solutions/tree/r25.09
