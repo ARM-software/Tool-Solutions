@@ -1,6 +1,6 @@
 filelock~=3.17.0
 fsspec==2025.2.0
-huggingface-hub~=0.28.1
+huggingface-hub~=0.34.0
 opencv-python-headless~=4.11.0.86
 pandas~=2.2.3
 pillow~=11.1.0
@@ -12,5 +12,5 @@ safetensors~=0.5.2
 tf_keras~=2.18.0
 tokenizers~=0.21.0
 tqdm~=4.67.1
-transformers~=4.50.0
+transformers~=4.53.0
 tzdata==2025.1
