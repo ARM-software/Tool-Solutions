@@ -72,6 +72,10 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
     # https://github.com/pytorch/pytorch/pull/159859 - PoC LUT optimisation for GELU bf16 operators
     apply-github-patch pytorch/pytorch ebcc874e317f9563ab770fc5c27df969e0438a5e
 
+    # https://github.com/pytorch/pytorch/pull/164741 - Enable mimalloc on non-Windows platforms and
+    # make default for AArch64 builds
+    apply-github-patch pytorch/pytorch 9f6a4018f6e7d77d4ac974a38f68fbd7c8eef25c
+
     # Remove deps that we don't need for manylinux AArch64 CPU builds before fetching.
     # Only used when jni.h is present (see .ci/pytorch/build.sh:116), which is not the case for manylinux
     git rm android/libs/fbjni
@@ -81,8 +85,6 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
     git rm third_party/cudnn_frontend
     git rm third_party/cutlass
     git rm third_party/NVTX
-    # Only used in WIN32 builds (see CMakeLists.txt:394)
-    git rm third_party/mimalloc
 
     # Update submodules
     git submodule sync
