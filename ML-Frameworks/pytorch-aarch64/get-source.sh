@@ -84,11 +84,26 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
     # Not used for CPU only builds
     git rm third_party/cudnn_frontend
     git rm third_party/cutlass
+    git rm third_party/flash-attention
     git rm third_party/NVTX
 
     # Update submodules
     git submodule sync
     git submodule update --init --checkout --force --recursive --jobs=$(nproc)
+
+    # Remove deps that we don't need which come from third party. It would be nice to avoid
+    # fetching completely, but this was tricky with git submodule update --init --checkout --force --recursive
+    (
+        cd third_party/fbgemm
+        git rm external/cutlass
+        git rm external/composable_kernel
+        git rm -r fbgemm_gpu/experimental
+    )
+    (
+        cd third_party/aiter
+        git rm 3rdparty/composable_kernel
+    )
+
     (
         cd third_party/ideep
         git fetch origin $IDEEP_HASH && git clean -f && git checkout -f FETCH_HEAD
@@ -105,6 +120,11 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
         git fetch origin $KLEIDIAI_HASH && git clean -f && git checkout -f FETCH_HEAD
     )
 
+    # rebuild third_party/LICENSES_BUNDLED.txt after modifying PyTorch submodules if we can
+    # this will also get done in PyTorch build too
+    if command -v python3 >/dev/null 2>&1; then
+        python3 third_party/build_bundled.py
+    fi
 )
 
 git-shallow-clone https://github.com/ARM-software/ComputeLibrary.git $ACL_HASH
