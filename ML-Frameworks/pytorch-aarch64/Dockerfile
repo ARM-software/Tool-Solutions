@@ -37,12 +37,7 @@ RUN apt-get update && apt-get install -y \
     python-is-python3 \
     # To allow users to install new things if they want
     sudo \
-    # tcmalloc can speed up some models, see README.md for more details
-    # we use minimal package instead of gperftools to reduce dependencies
-    libtcmalloc-minimal4 \
-    && rm -rf /var/lib/apt/lists/* \
-    # Make libtcmalloc_minimal accessible from the usual libtcmalloc location
-    && sudo ln -s /usr/lib/aarch64-linux-gnu/libtcmalloc_minimal.so.4 /usr/lib/aarch64-linux-gnu/libtcmalloc.so.4
+    && rm -rf /var/lib/apt/lists/*
 
 # DOCKER_USER for the Docker user
 ENV DOCKER_USER=${USERNAME}
