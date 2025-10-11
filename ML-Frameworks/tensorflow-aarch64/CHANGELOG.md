@@ -12,8 +12,19 @@ where `YY` is the year, and `MM` the month of the increment.
 ### Changed
 
 ### Removed
-- Removes protobuf packages from Docker image that are not required for running tensorflow. Mitigation for CVE-2025-4565.
-- Removes system level python packages that aren't used.
+
+### Fixed
+
+## [r25.10] 2025-10-15
+https://github.com/ARM-software/Tool-Solutions/tree/r25.10
+
+### Added
+
+### Changed
+
+### Removed
+ - Removes protobuf packages from Docker image that are not required for running tensorflow. Mitigation for CVE-2025-4565.
+ - Removes system level python packages that aren't used.
 
 ### Fixed
  - Updates Transformers to 4.53.0 as a mitigation for: CVE-2025-6051, CVE-2025-3933, CVE-2025-6638, CVE-2025-3262, CVE-2025-3263, CVE-2025-3264, CVE-2025-5197, CVE-2025-6921, CVE-2025-3777.

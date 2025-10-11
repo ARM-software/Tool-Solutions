@@ -12,8 +12,22 @@ where `YY` is the year, and `MM` the month of the increment.
 ### Changed
 
 ### Removed
-- Delete unused submodules of PyTorch's third-party modules.
-- Removed all references to tcmalloc as the default build now uses mimalloc.
+
+### Fixed
+
+## [r25.10] 2025-10-15
+https://github.com/ARM-software/Tool-Solutions/tree/r25.10
+
+### Added
+ - Adds PyTorch [PR](https://github.com/pytorch/pytorch/pull/164741) to enable mimalloc by default on AArch64 build:
+   - Yields ~28% and ~20% mean improvement for fp32 and bf16 respectively.
+
+### Changed
+
+### Removed
+ - Completely removes unnecessary python packages, including setuptools, from PyTorch Docker image.
+ - Delete unused submodules of PyTorch's third-party modules.
+ - Removed all references to tcmalloc as the default build now uses mimalloc.
 
 ### Fixed
 
@@ -21,31 +35,31 @@ where `YY` is the year, and `MM` the month of the increment.
 https://github.com/ARM-software/Tool-Solutions/tree/r25.09
 
 ### Added
-- Adds `SECURITY.md` to built image.
+ - Adds `SECURITY.md` to built image.
 
 ### Changed
-- Updates ACL URL from [ML Platform](https://review.mlplatform.org/ml/ComputeLibrary) to [GitHub](https://github.com/ARM-software/ComputeLibrary.git).
-- Updates hashes for:
-  - PYTORCH_HASH to 45d9dcccc5bfb46a9eaca037270278bc3d7c95ea, 2.10.0.dev20250923 from viable/strict, September 23rd.
-  - IDEEP_HASH to fd11055f4800ac89291e30b5387a79a1e6496aa6, from ideep_pytorch, September 10th.
-  - ONEDNN_HASH to 9e8f619477469ed75d323d4915bf7a2513f01713, from main, September 23rd.
-  - ACL_HASH to 531a4968cecb7b4fc0a3b65482e2c524289e087e, from main, September 23rd.
-  - TORCH_AO_HASH to 8e2ca35ea603349e71c2467e10fd371e34bf52bc, from main, September 23rd.
-  - KLEIDIAI_HASH to bd2e6ae060014035e25bf4986be682762c446c2d, v1.14 from main.
-- Update torchvision from 0.23.0 to a nightly build, 0.25.0.dev20250923.
-- Change of flag name in `./build.sh` from `--force` to `--fresh`
-- Add `intx_packing_format="opaque_aten_kleidiai"` to `Int8DynamicActivationIntxWeightConfig` due to torchao API change
-- Updates `dockerize.sh` build to use BuildKit (to add extra build contexts).
+ - Updates ACL URL from [ML Platform](https://review.mlplatform.org/ml/ComputeLibrary) to [GitHub](https://github.com/ARM-software/ComputeLibrary.git).
+ - Updates hashes for:
+   - PYTORCH_HASH to 45d9dcccc5bfb46a9eaca037270278bc3d7c95ea, 2.10.0.dev20250923 from viable/strict, September 23rd.
+   - IDEEP_HASH to fd11055f4800ac89291e30b5387a79a1e6496aa6, from ideep_pytorch, September 10th.
+   - ONEDNN_HASH to 9e8f619477469ed75d323d4915bf7a2513f01713, from main, September 23rd.
+   - ACL_HASH to 531a4968cecb7b4fc0a3b65482e2c524289e087e, from main, September 23rd.
+   - TORCH_AO_HASH to 8e2ca35ea603349e71c2467e10fd371e34bf52bc, from main, September 23rd.
+   - KLEIDIAI_HASH to bd2e6ae060014035e25bf4986be682762c446c2d, v1.14 from main.
+ - Update torchvision from 0.23.0 to a nightly build, 0.25.0.dev20250923.
+ - Change of flag name in `./build.sh` from `--force` to `--fresh`
+ - Add `intx_packing_format="opaque_aten_kleidiai"` to `Int8DynamicActivationIntxWeightConfig` due to torchao API change
+ - Updates `dockerize.sh` build to use BuildKit (to add extra build contexts).
 
 ### Removed
-- Removes WIP ComputeLibrary patch https://review.mlplatform.org/c/ml/ComputeLibrary/+/12818/1.
-- Removed unused dependencies:
-  - Delete unused submodules to avoid fetching.
-  - Replace google-perftool bundle with specific libtcmalloc-minimal4 and add symlink so that you can still use it with `LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libtcmalloc.so.4`.
-  - Remove unused git apt package.
-  - Remove outdated versions of pip/setuptools/wheel from image after pip updates itself.
-  - Remove manual install of transformers in `transformers_llm_text_gen.py`, we now use a single version everywhere.
-  - Remove unused pip packages: datasets, omegaconf, psutil, tiktoken, torchaudio, torchdata and torchtune.
+ - Removes WIP ComputeLibrary patch https://review.mlplatform.org/c/ml/ComputeLibrary/+/12818/1.
+ - Removed unused dependencies:
+   - Delete unused submodules to avoid fetching.
+   - Replace google-perftool bundle with specific libtcmalloc-minimal4 and add symlink so that you can still use it with `LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libtcmalloc.so.4`.
+   - Remove unused git apt package.
+   - Remove outdated versions of pip/setuptools/wheel from image after pip updates itself.
+   - Remove manual install of transformers in `transformers_llm_text_gen.py`, we now use a single version everywhere.
+   - Remove unused pip packages: datasets, omegaconf, psutil, tiktoken, torchaudio, torchdata and torchtune.
 
 ### Fixed
 
@@ -53,39 +67,39 @@ https://github.com/ARM-software/Tool-Solutions/tree/r25.09
 https://github.com/ARM-software/Tool-Solutions/tree/r25.08
 
 ### Added
-- Adds https://github.com/pytorch/pytorch/pull/159859, a WIP LUT implmentation of bf16 GELU
-  this gives an ~8x speedup on GELU and an ~1.8x speedup for attention for llama3.2 11B Vision (both on 16 threads).
-- Adds https://github.com/pytorch/pytorch/pull/158250, to integrate INT4->BF16 via KleidiAI, with fallback.
-- Adds https://github.com/pytorch/pytorch/pull/160080, a VLA PoC for PyTorch, and
-  https://github.com/pytorch/pytorch/pull/161049, an optimised SVE exp_u20 implementation,
-  Note: there may be some regressions on Neoverse-V1 with this WIP patch.
-- Adds a new example script llama_vision_instruct.py to run and benchmark
-  Llama-3.2-11B-Vision-Instruct using text + image input and text output.
+ - Adds https://github.com/pytorch/pytorch/pull/159859, a WIP LUT implmentation of bf16 GELU
+   this gives an ~8x speedup on GELU and an ~1.8x speedup for attention for llama3.2 11B Vision (both on 16 threads).
+ - Adds https://github.com/pytorch/pytorch/pull/158250, to integrate INT4->BF16 via KleidiAI, with fallback.
+ - Adds https://github.com/pytorch/pytorch/pull/160080, a VLA PoC for PyTorch, and
+   https://github.com/pytorch/pytorch/pull/161049, an optimised SVE exp_u20 implementation,
+   Note: there may be some regressions on Neoverse-V1 with this WIP patch.
+ - Adds a new example script llama_vision_instruct.py to run and benchmark
+   Llama-3.2-11B-Vision-Instruct using text + image input and text output.
 
 ### Changed
-- Updates hashes for:
-  - PYTORCH_HASH to 4e2ddb5db67617f9f5309c8bba0c17adc84cadbc, 2.9.0.dev20250808 from viable/strict, August 8th.
-  - IDEEP_HASH to 3527b0bf2127aa2de93810feb6906d173c24037f, from ideep_pytorch, August 1st.
-  - ONEDNN_HASH to 7e85b94b5f6be27b83c5435603ab67888b99da32, from main, August 1st.
-  - ACL_HASH to 3c32d706d0245dcb55181c8ced526eab05e2ff8d, from main, August 1st.
-  - TORCH_AO_HASH to 8d4a5d83d7be4d7807feabe38d37704c92d40900, from main, August 1st.
-  - KLEIDIAI_HASH to 8ca226712975f24f13f71d04cda039a0ee9f9e2f, v1.12 from main.
-- Update the examples/transformers_llm_text_gen.py to use the new quantizer api Int8DynamicActivationIntxWeightConfig.
-- Deleted torchchat_llm_text_gen.py.
-- Removed Dockerfile lines cloning TorchChat repo and setting safe.directory.
-- Updates huggingface_hub to 0.34.0.
+ - Updates hashes for:
+   - PYTORCH_HASH to 4e2ddb5db67617f9f5309c8bba0c17adc84cadbc, 2.9.0.dev20250808 from viable/strict, August 8th.
+   - IDEEP_HASH to 3527b0bf2127aa2de93810feb6906d173c24037f, from ideep_pytorch, August 1st.
+   - ONEDNN_HASH to 7e85b94b5f6be27b83c5435603ab67888b99da32, from main, August 1st.
+   - ACL_HASH to 3c32d706d0245dcb55181c8ced526eab05e2ff8d, from main, August 1st.
+   - TORCH_AO_HASH to 8d4a5d83d7be4d7807feabe38d37704c92d40900, from main, August 1st.
+   - KLEIDIAI_HASH to 8ca226712975f24f13f71d04cda039a0ee9f9e2f, v1.12 from main.
+ - Update the examples/transformers_llm_text_gen.py to use the new quantizer api Int8DynamicActivationIntxWeightConfig.
+ - Deleted torchchat_llm_text_gen.py.
+ - Removed Dockerfile lines cloning TorchChat repo and setting safe.directory.
+ - Updates huggingface_hub to 0.34.0.
 
 ### Removed
-- https://github.com/pytorch/pytorch/pull/151547, to update OpenBLAS commit as this has been merged upstream.
-- Temporarily removed --compile flag from transformers_llm_text_gen.py example as there is an unresolved issue with torch compile support in this case.
+ - https://github.com/pytorch/pytorch/pull/151547, to update OpenBLAS commit as this has been merged upstream.
+ - Temporarily removed --compile flag from transformers_llm_text_gen.py example as there is an unresolved issue with torch compile support in this case.
 
 ### Fixed
-- Updates various Python packages to address known vulnerabilies with a high CVSS score:
-  - Updates Transformers to 4.55.2, this also provides a mitigation for CVE-2025-2099.
-  - Updates Wheel version to 0.38.0 as a mitigation for CVE-2022-40898.
-  - Updates setup-tools to 78.1.1 as a mitigation for CVE-2025-47273 and CVE-2024-6345.
-  - Updates Torchvison to 0.23 to avoid the need to use `--extra-index-url`
-    this is the recomended mitgation against CVE-2018-20225, affecting all versions of pip.
+ - Updates various Python packages to address known vulnerabilies with a high CVSS score:
+   - Updates Transformers to 4.55.2, this also provides a mitigation for CVE-2025-2099.
+   - Updates Wheel version to 0.38.0 as a mitigation for CVE-2022-40898.
+   - Updates setup-tools to 78.1.1 as a mitigation for CVE-2025-47273 and CVE-2024-6345.
+   - Updates Torchvison to 0.23 to avoid the need to use `--extra-index-url`
+     this is the recomended mitgation against CVE-2018-20225, affecting all versions of pip.
 
 ## [r25.07] 2025-07-11
 https://github.com/ARM-software/Tool-Solutions/tree/r25.07
