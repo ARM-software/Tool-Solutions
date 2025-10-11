@@ -28,7 +28,3 @@ for example in "${examples[@]}"; do
     bash -c "$example"
     echo ""
 done
-
-# Check an example with some of the flags from REAMDE.md > "General optimization
-# guidelines" There is no verbatim example for this
-LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libtcmalloc.so.4 DNNL_DEFAULT_FPMATH_MODE=BF16 ${examples[0]}

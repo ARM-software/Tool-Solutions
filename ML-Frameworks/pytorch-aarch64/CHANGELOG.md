@@ -13,6 +13,7 @@ where `YY` is the year, and `MM` the month of the increment.
 
 ### Removed
 - Delete unused submodules of PyTorch's third-party modules.
+- Removed all references to tcmalloc as the default build now uses mimalloc.
 
 ### Fixed
 
