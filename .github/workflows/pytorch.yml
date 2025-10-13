@@ -20,8 +20,39 @@ name: "Build and test PyTorch"
 #* To avoid duplicate jobs running when both push and PR is satisfied, we use this:
 #* https://github.com/orgs/community/discussions/26940#discussioncomment-5686753
 on:
-  workflow_call:
+  push:
+    branches: [main]
+    paths:
+      - ".github/**"
+      - "ML-Frameworks/pytorch-aarch64/**"
+      - "ML-Frameworks/utils/**"
+      # Exclusions (must come after the includes):
+      - "!ML-Frameworks/pytorch-aarch64/CHANGELOG.md"
+      - "!ML-Frameworks/pytorch-aarch64/README.md"
+      - "!ML-Frameworks/pytorch-aarch64/welcome.txt"
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - ".github/**"
+      - "ML-Frameworks/pytorch-aarch64/**"
+      - "ML-Frameworks/utils/**"
+      # Exclusions (must come after the includes):
+      - "!ML-Frameworks/pytorch-aarch64/CHANGELOG.md"
+      - "!ML-Frameworks/pytorch-aarch64/README.md"
+      - "!ML-Frameworks/pytorch-aarch64/welcome.txt"
+  schedule:
+    #* minute (0-59) hour (0-23) day (1-31) month (1-12)  day of the week (0 - 6)
+    #* cron jobs run on the default (main) branch.
+    #* set to run at 5am UCT
+    - cron: "0 5 * * *"
+  #* allow manual trigger of workflow when needed.
   workflow_dispatch:
+
+#* Stop stale workflows when pull requests are updated: https://stackoverflow.com/a/70972844
+#* Does not apply to the main branch.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 # Declare default permissions as read only.
 permissions: read-all
@@ -40,6 +71,7 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           path: Tool-Solutions
+
       - name: Set up Docker
         uses: docker/setup-docker-action@v4
 
