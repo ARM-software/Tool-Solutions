@@ -108,7 +108,7 @@ docker exec -t $TORCH_BUILD_CONTAINER bash -c "rm -rf $PYTORCH_ROOT/dist"
 # pytorch/.ci/aarch64_linux/aarch64_wheel_ci_build.py for this logic.
 build_date=$(cd $PYTORCH_HOST_DIR && git log --pretty=format:%cs -1 | tr -d '-')
 version=$(cat $PYTORCH_HOST_DIR/version.txt| tr -d [:space:] )
-OVERRIDE_PACKAGE_VERSION=${version%??}.dev$build_date
+OVERRIDE_PACKAGE_VERSION="${version%??}.dev${build_date}${TORCH_RELEASE_ID:+"+$TORCH_RELEASE_ID"}"
 # We unset MAX_JOBS from 12 (written to /tmp/env by populate_binary_env.sh) to
 # let any downstream functions to decide. Currently nproc when ninja is used,
 # but ideally we would let ninja make the right choice, but nproc is good enough
