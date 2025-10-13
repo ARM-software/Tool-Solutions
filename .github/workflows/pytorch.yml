@@ -58,13 +58,14 @@ concurrency:
 permissions: read-all
 
 jobs:
-  build-and-test:
+  build-image:
     strategy:
       matrix:
-        config: [
-          { name: c7g, label: ah-ubuntu_22_04-c7g_8x-100 }
-        ]
-
+        config:
+          [
+            { name: c7g, label: ah-ubuntu_22_04-c7g_8x-100 },
+            { name: c8g, label: ah-ubuntu_22_04-c8g_8x }
+           ]
     runs-on: ${{ matrix.config.label }}
     steps:
       - name: Checkout Tool-Solutions
@@ -81,7 +82,45 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Run smoke tests
+      - name: Save image as a artifact
+        run: docker save toolsolutions-pytorch:latest -o toolsolutions-pytorch-image-${{ matrix.config.name }}.tar
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: toolsolutions-pytorch-image-${{ matrix.config.name }}
+          path: toolsolutions-pytorch-image-${{ matrix.config.name }}.tar
+          compression-level: 9
+          retention-days: 1
+
+  test:
+    needs: build-image
+    strategy:
+      matrix:
+        config:
+          [
+            { name: c7g, label: ah-ubuntu_22_04-c7g_8x-100 },
+            { name: c8g, label: ah-ubuntu_22_04-c8g_8x }
+           ]
+        onednn_fpmath_mode: [FP32, BF16]
+    runs-on: ${{ matrix.config.label }}
+    env:
+      ONEDNN_DEFAULT_FPMATH_MODE: ${{ matrix.onednn_fpmath_mode }}
+
+    steps:
+      - name: Download image artifact
+        uses: actions/download-artifact@v5
+        with:
+          name: toolsolutions-pytorch-image-${{ matrix.config.name }}
+          path: .
+
+      - name: Set up Docker
+        uses: docker/setup-docker-action@v4
+
+      - name: Load Docker image
+        run: docker load -i toolsolutions-pytorch-image-${{ matrix.config.name }}.tar
+
+      - name: Run smoke tests for
         run: docker run --rm toolsolutions-pytorch:latest ./test-examples.sh
 
       - name: Run unit tests
