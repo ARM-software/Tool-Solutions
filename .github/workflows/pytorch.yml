@@ -30,11 +30,15 @@ jobs:
   build-and-test:
     strategy:
       matrix:
-        config: [
-          { name: c7g, label: ah-ubuntu_22_04-c7g_8x-100 }
-        ]
-
+        config:
+          [
+            { name: c7g, label: ah-ubuntu_22_04-c7g_8x-100 },
+            { name: c8g, label: ah-ubuntu_22_04-c8g_8x }
+           ]
+        onednn_fpmath_mode: [FP32, BF16]
     runs-on: ${{ matrix.config.label }}
+    env:
+      ONEDNN_DEFAULT_FPMATH_MODE: ${{ matrix.onednn_fpmath_mode }}
     steps:
       - name: Checkout Tool-Solutions
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
