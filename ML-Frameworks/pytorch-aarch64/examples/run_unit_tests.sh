@@ -17,5 +17,14 @@
 # limitations under the License.
 # *******************************************************************************
 
-OMP_NUM_THREADS=16 python pytorch/test/test_mkldnn.py
-OMP_NUM_THREADS=16 python pytorch/test/test_transformers.py
+if [[ "${ONEDNN_DEFAULT_FPMATH_MODE:-}" == "BF16" ]]; then
+    OMP_NUM_THREADS=16 python -m unittest pytorch/test/test_mkldnn.py -k lower_precision -k bf16 -k bfloat16 -k float16
+else
+    OMP_NUM_THREADS=16 python -m unittest pytorch/test/test_mkldnn.py
+fi
+
+if [[ "${ONEDNN_DEFAULT_FPMATH_MODE:-}" == "BF16" ]]; then
+    OMP_NUM_THREADS=16 python -m unittest pytorch/test/test_transformers.py -k bfloat16 -k float16
+else
+    OMP_NUM_THREADS=16 python -m unittest pytorch/test/test_transformers.py
+fi
