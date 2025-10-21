@@ -8,6 +8,7 @@ where `YY` is the year, and `MM` the month of the increment.
 ## [unreleased]
 
 ### Added
+ -  Adds patch fixing CPUIDInfo initialization, re-enabling oneDNN+ACL path
 
 ### Changed
 
