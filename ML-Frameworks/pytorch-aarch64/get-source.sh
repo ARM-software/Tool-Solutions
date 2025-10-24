@@ -76,6 +76,10 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
     # make default for AArch64 builds
     apply-github-patch pytorch/pytorch 9f6a4018f6e7d77d4ac974a38f68fbd7c8eef25c
 
+    # https://github.com/pytorch/pytorch/pull/144992 - Enable fp16 linear layers in PyTorch via ACL
+    apply-github-patch pytorch/pytorch 00076d21ed6cd7df2a61165b1fb1d0a436f4e403
+    apply-github-patch pytorch/pytorch 850db41fe6d33c6460740da781b40e009f04a47c
+
     # Remove deps that we don't need for manylinux AArch64 CPU builds before fetching.
     # Only used when jni.h is present (see .ci/pytorch/build.sh:116), which is not the case for manylinux
     git rm android/libs/fbjni
