@@ -8,6 +8,7 @@ where `YY` is the year, and `MM` the month of the increment.
 ## [unreleased]
 
 ### Added
+ - Adds PyTorch [PR][https://github.com/pytorch/pytorch/pull/144992] Enable fp16 linear layers in PyTorch via ACL
 
 ### Changed
 
