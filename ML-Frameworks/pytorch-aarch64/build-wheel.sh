@@ -30,21 +30,34 @@
 set -eux -o pipefail
 
 PYTHON_VERSION="3.10"
+OPENBLAS_VERSION="v0.3.30"
+ACL_VERSION="v52.6.0"
 
 # Specify DOCKER_IMAGE_MIRROR if you want to use a mirror of hub.docker.com
-IMAGE_NAME="${DOCKER_IMAGE_MIRROR:-}pytorch/manylinux2_28_aarch64-builder:cpu-aarch64-a040006da76a51c4f660331e9abd3affe5a4bd81"
+IMAGE_NAME="${DOCKER_IMAGE_MIRROR:-}pytorch/manylinux2_28_aarch64-builder:cpu-aarch64-d8be0384e085f551506bd739678109fa0f5ee7ac"
 TORCH_BUILD_CONTAINER_ID_FILE="${PWD}/.torch_build_container_id"
 
 # Output dir for PyTorch wheel and other artifacts
 OUTPUT_DIR=${OUTPUT_DIR:-"${PWD}/results"}
-PYTORCH_FINAL_PACKAGE_DIR=$OUTPUT_DIR
 
+# Where folders sit locally
 PYTORCH_HOST_DIR="${PWD}/pytorch"
 ACL_HOST_DIR="${PWD}/ComputeLibrary"
+OPENSSL_HOST_DIR="/opt/openssl"
+PYTORCH_FINAL_PACKAGE_DIR="${OUTPUT_DIR}"
 
+# Where folders sit mounted in the container
 PYTORCH_ROOT=/pytorch
-UTILS="/utils"
-COMMON_UTILS="/common_utils"
+ACL_ROOT=/acl
+UTILS=/utils
+COMMON_UTILS=/common_utils
+
+# Want a CPU build
+DESIRED_CUDA=cpu
+GPU_ARCH_TYPE=cpu-aarch64
+
+# Affects the number of jobs used in install_acl.sh and install_openblas.sh
+NPROC=${NPROC:-$(nproc --ignore=2)}
 
 if [ -f "$TORCH_BUILD_CONTAINER_ID_FILE" ]; then
     TORCH_BUILD_CONTAINER=$(cat $TORCH_BUILD_CONTAINER_ID_FILE)
@@ -55,26 +68,28 @@ else
 fi
 
 if ! docker container inspect $TORCH_BUILD_CONTAINER >/dev/null 2>&1 ; then
-
     # Based on environment used in pytorch/.github/workflows/_binary-build-linux.yml
     # and pytorch/.github/workflows/generated-linux-aarch64-binary-manywheel-nightly.yml
     TORCH_BUILD_CONTAINER=$(docker run -t -d \
+        -e NPROC=${NPROC} \
+        -e OPENBLAS_VERSION=${OPENBLAS_VERSION} \
+        -e ACL_VERSION=${ACL_VERSION} \
         -e BINARY_ENV_FILE=/tmp/env \
         -e BUILD_ENVIRONMENT=linux-aarch64-binary-manywheel \
-        -e DESIRED_CUDA=cpu \
-        -e DESIRED_PYTHON=$PYTHON_VERSION \
+        -e DESIRED_CUDA=${DESIRED_CUDA} \
+        -e DESIRED_PYTHON=${PYTHON_VERSION} \
         -e GITHUB_ACTIONS=0 \
-        -e GPU_ARCH_TYPE=cpu-aarch64 \
+        -e GPU_ARCH_TYPE=${GPU_ARCH_TYPE} \
         -e PACKAGE_TYPE=manywheel \
-        -e PYTORCH_FINAL_PACKAGE_DIR=$PYTORCH_FINAL_PACKAGE_DIR \
-        -e PYTORCH_ROOT=$PYTORCH_ROOT \
+        -e PYTORCH_FINAL_PACKAGE_DIR="${PYTORCH_FINAL_PACKAGE_DIR}" \
+        -e PYTORCH_ROOT="${PYTORCH_ROOT}" \
         -e SKIP_ALL_TESTS=1 \
         -e PYTORCH_EXTRA_INSTALL_REQUIREMENTS="nvidia-cuda-nvrtc-cu12==12.1.105; platform_system == 'Linux' and platform_machine == 'x86_64' | nvidia-cuda-runtime-cu12==12.1.105; platform_system == 'Linux' and platform_machine == 'x86_64' | nvidia-cuda-cupti-cu12==12.1.105; platform_system == 'Linux' and platform_machine == 'x86_64' | nvidia-cudnn-cu12==8.9.2.26; platform_system == 'Linux' and platform_machine == 'x86_64' | nvidia-cublas-cu12==12.1.3.1; platform_system == 'Linux' and platform_machine == 'x86_64' | nvidia-cufft-cu12==11.0.2.54; platform_system == 'Linux' and platform_machine == 'x86_64' | nvidia-curand-cu12==10.3.2.106; platform_system == 'Linux' and platform_machine == 'x86_64' | nvidia-cusolver-cu12==11.4.5.107; platform_system == 'Linux' and platform_machine == 'x86_64' | nvidia-cusparse-cu12==12.1.0.106; platform_system == 'Linux' and platform_machine == 'x86_64' | nvidia-nccl-cu12==2.19.3; platform_system == 'Linux' and platform_machine == 'x86_64' | nvidia-nvtx-cu12==12.1.105; platform_system == 'Linux' and platform_machine == 'x86_64'" \
-        -e OPENSSL_ROOT_DIR=/opt/openssl \
-        -e CMAKE_INCLUDE_PATH="/opt/openssl/include" \
+        -e OPENSSL_ROOT_DIR="${OPENSSL_HOST_DIR}" \
+        -e CMAKE_INCLUDE_PATH="${OPENSSL_HOST_DIR}/include" \
         -v "${PYTORCH_HOST_DIR}:${PYTORCH_ROOT}" \
         -v "${PYTORCH_FINAL_PACKAGE_DIR}:/artifacts" \
-        -v "${ACL_HOST_DIR}:/ComputeLibrary" \
+        -v "${ACL_HOST_DIR}:${ACL_ROOT}" \
         -v "${PWD}/utils:${UTILS}" \
         -v "${PWD}/../utils:${COMMON_UTILS}" \
         -w / \
@@ -83,14 +98,12 @@ if ! docker container inspect $TORCH_BUILD_CONTAINER >/dev/null 2>&1 ; then
     # Currently changes in these scripts will not be applied without a clean
     # build, which is not ideal for dev work. But we have to balance this with
     # extra time/network traffic when rebuilding many times.
-    docker exec -t $TORCH_BUILD_CONTAINER bash -c $PYTORCH_ROOT/.circleci/scripts/binary_populate_env.sh
+    docker exec -t $TORCH_BUILD_CONTAINER bash -c "$PYTORCH_ROOT/.circleci/scripts/binary_populate_env.sh"
     docker exec -t $TORCH_BUILD_CONTAINER bash -c "$PYTORCH_ROOT/.ci/aarch64_linux/aarch64_ci_setup.sh"
 
-    # Build a newer version of libgomp from source (see https://github.com/pytorch/pytorch/pull/152361)
-    docker exec -t $TORCH_BUILD_CONTAINER bash -c "bash $PYTORCH_ROOT/.ci/docker/common/install_libgomp.sh"
-
     # This must be in this if block because it cannot handle being called twice
-    docker exec -t $TORCH_BUILD_CONTAINER bash -c "bash $UTILS/build_openblas.sh"
+    docker exec -t $TORCH_BUILD_CONTAINER bash -c "bash $PYTORCH_ROOT/.ci/docker/common/install_acl.sh"
+    docker exec -t $TORCH_BUILD_CONTAINER bash -c "bash $PYTORCH_ROOT/.ci/docker/common/install_openblas.sh"
 
     echo "Storing torch build container id in $TORCH_BUILD_CONTAINER_ID_FILE for reuse: $TORCH_BUILD_CONTAINER"
     echo $TORCH_BUILD_CONTAINER > "$TORCH_BUILD_CONTAINER_ID_FILE"

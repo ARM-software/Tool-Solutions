@@ -11,6 +11,7 @@ where `YY` is the year, and `MM` the month of the increment.
  -  Adds patch fixing CPUIDInfo initialization, re-enabling oneDNN+ACL path
 
 ### Changed
+ - Updates TensorFlow hash to f40a10e064561ed66c03359c7751ccc5ae03dc4d, from nightly, Nov 10th
 
 ### Removed
 
