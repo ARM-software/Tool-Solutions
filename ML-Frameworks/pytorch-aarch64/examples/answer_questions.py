@@ -1,5 +1,5 @@
 # *******************************************************************************
-# Copyright 2021-2024 Arm Limited and affiliates.
+# Copyright 2021-2025 Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -117,7 +117,7 @@ def main():
         answer = squad_records["answer"].iloc[i_record]
 
     if args["bert_large"]:
-        model_hf_path = "Graphcore/bert-large-uncased-squad"
+        model_hf_path = "google-bert/bert-large-uncased-whole-word-masking-finetuned-squad"
         model_name = "BERT Large"
     else:
         model_hf_path = "distilbert-base-uncased-distilled-squad"
