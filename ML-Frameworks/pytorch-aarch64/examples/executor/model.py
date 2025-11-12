@@ -34,6 +34,16 @@ import torch
 import torchvision.models as torch_models
 
 
+# Install user agent to comply with Wikipedia policy
+opener = urllib.request.build_opener()
+opener.addheaders = [
+    (
+        "User-agent",
+        "Tool-Solutions/1.0 (https://github.com/ARM-software/Tool-Solutions)",
+    )
+]
+urllib.request.install_opener(opener)
+
 def _zip_file(zip_file, model_name, extract):
     with zipfile.ZipFile(zip_file) as zf_h:
         for file in zf_h.namelist():
