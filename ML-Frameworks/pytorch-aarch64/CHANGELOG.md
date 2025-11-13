@@ -8,6 +8,17 @@ where `YY` is the year, and `MM` the month of the increment.
 ## [unreleased]
 
 ### Added
+
+### Changed
+
+### Removed
+
+### Fixed
+
+## [r25.11] 2025-11-21
+https://github.com/ARM-software/Tool-Solutions/tree/r25.11
+
+### Added
  - Adds PyTorch [PR #167720](https://github.com/pytorch/pytorch/pull/167720), to allow missing cutlass file 
    if CUDA disabled.
  - Adds oneDNN [PR #4237](https://github.com/uxlfoundation/oneDNN/pull/4237), which improves cache
