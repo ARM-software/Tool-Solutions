@@ -29,7 +29,7 @@ from torchao.dtypes.uintx.packed_linear_int8_dynamic_activation_intx_weight_layo
     PackedLinearInt8DynamicActivationIntxWeightLayout,
     Target,
 )
-from torchao.quantization.granularity import PerGroup, PerAxis
+from torchao.quantization.granularity import PerAxis
 from torchao.quantization.quant_primitives import MappingType
 import numpy as np
 import os
@@ -53,7 +53,7 @@ def main(args):
                 layout=layout,
                 weight_dtype=torch.int4,
                 intx_packing_format="opaque_aten_kleidiai",
-                version=1,
+                version=2,
             ),
         )
 

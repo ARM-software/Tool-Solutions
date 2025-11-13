@@ -19,6 +19,16 @@ import sys
 import random
 import torch
 from transformers import AutoTokenizer, AutoModelForQuestionAnswering
+from torchao.quantization.quant_api import (
+    Int8DynamicActivationIntxWeightConfig,
+    quantize_,
+)
+from torchao.dtypes.uintx.packed_linear_int8_dynamic_activation_intx_weight_layout import (
+    PackedLinearInt8DynamicActivationIntxWeightLayout,
+    Target,
+)
+from torchao.quantization.granularity import PerAxis
+from torchao.quantization.quant_primitives import MappingType
 
 from utils import nlp
 
@@ -43,7 +53,7 @@ def main():
     parser.add_argument("--bert-large", action='store_true',
         help="Use BERT large instead of DistilBERT")
     parser.add_argument("--quantize", action='store_true',
-        help="Quantize the model to int8 using dynamic quantization")
+        help="Quantize the model to int4 using dynamic quantization")
     parser.add_argument("--warmup", action='store_true',
         help="Run warmup")
 
@@ -127,10 +137,20 @@ def main():
     model = AutoModelForQuestionAnswering.from_pretrained(model_hf_path)
 
     if args["quantize"]:
-        model = torch.ao.quantization.quantize_dynamic(
+        layout = PackedLinearInt8DynamicActivationIntxWeightLayout(target=Target.ATEN)
+        quantize_(
             model,
-            {torch.nn.Linear},
-            dtype=torch.qint8)
+            Int8DynamicActivationIntxWeightConfig(
+                weight_scale_dtype=torch.float32,
+                weight_granularity=PerAxis(0),
+                weight_mapping_type=MappingType.SYMMETRIC_NO_CLIPPING_ERR,
+                layout=layout,
+                weight_dtype=torch.int4,
+                intx_packing_format="opaque_aten_kleidiai",
+                version=2,
+            ),
+            filter_fn=lambda m, _: isinstance(m, torch.nn.Linear),
+        )
 
     encoding = token.encode_plus(
         question,
