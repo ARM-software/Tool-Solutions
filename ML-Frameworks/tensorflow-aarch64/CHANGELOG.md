@@ -8,6 +8,17 @@ where `YY` is the year, and `MM` the month of the increment.
 ## [unreleased]
 
 ### Added
+
+### Changed
+
+### Removed
+
+### Fixed
+
+## [r25.11] 2025-11-21
+https://github.com/ARM-software/Tool-Solutions/tree/r25.11
+
+### Added
  -  Adds patch fixing CPUIDInfo initialization, re-enabling oneDNN+ACL path
 
 ### Changed
