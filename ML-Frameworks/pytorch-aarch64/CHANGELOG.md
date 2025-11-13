@@ -8,12 +8,28 @@ where `YY` is the year, and `MM` the month of the increment.
 ## [unreleased]
 
 ### Added
- - Adds PyTorch [PR][https://github.com/pytorch/pytorch/pull/144992] Enable fp16 linear layers in PyTorch via ACL
- - Adds PyTorch [PR](https://github.com/pytorch/pytorch/pull/167328) Build cpuinfo into c10 shared library
+ - Adds PyTorch [PR #167720](https://github.com/pytorch/pytorch/pull/167720), to allow missing cutlass file 
+   if CUDA disabled.
+ - Adds oneDNN [PR #4237](https://github.com/uxlfoundation/oneDNN/pull/4237), which improves cache
+   blocking 4/8 inner blocks.
+ - Adds PyTorch [PR](https://github.com/pytorch/pytorch/pull/167328) Build cpuinfo into c10 shared library.
+ - Adds PyTorch [PR](https://github.com/pytorch/pytorch/pull/144992) Enable fp16 linear layers in PyTorch via ACL.
 
 ### Changed
+ - Now building ACL with PyTorch `install_acl.sh` script.
+ - PyTorch manylinux AArch64 builder image from `cpu-aarch64-a040006da76a51c4f660331e9abd3affe5a4bd81`
+   to `cpu-aarch64-d8be0384e085f551506bd739678109fa0f5ee7ac`
+ - Updates hashes for:
+   - `PYTORCH_HASH` to `5ce4a8b49f9986b050a9f6fcc7dd4cf999baa509`, 2.10.0.dev20251112 from viable/strict, Nov 12th.
+   - `IDEEP_HASH` to `927570638b237b0e39fb0626a868adffdbf70bbb`, from ideep_pytorch, October 20th.
+   - `ONEDNN_HASH` to `80886d0559482dfe2019c2ae83eebd6d0d3a17d4`, from main, Nov 9th.
+   - `TORCH_AO_HASH` to `17867e6788e4889b294449770f0275045384eab2`, from main, Nov 8th.
+   - `KLEIDIAI_HASH` to `7bf4de9a56106f0fb0d57dfabeb4c7a2668deaf6`, v1.16.0 from main, Nov 10th.
+ - Replaced `ACL_HASH=007264fa740de5723ebddef16b7bb3657692c088` with `ACL_VERSION=v52.6.0`, from main, October 31st.
+ - Update `torchvision` from 0.25.0.dev20250923 to 0.25.0.dev20251104.
 
 ### Removed
+ - Removes patches which are no longer required.
 
 ### Fixed
 

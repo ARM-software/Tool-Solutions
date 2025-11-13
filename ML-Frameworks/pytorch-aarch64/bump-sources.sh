@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # *******************************************************************************
-# Copyright 2024 Arm Limited and affiliates.
+# Copyright 2024-2025 Arm Limited and affiliates.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -42,13 +42,7 @@ function git-bump {
     )
 )
 
-(
-    cd ComputeLibrary
-    git-bump main
-)
-
 echo "Put this into your get-sources.sh file"
 echo PYTORCH_HASH=$(cd pytorch && git rev-parse HEAD)
 echo IDEEP_HASH=$(cd pytorch/third_party/ideep && git rev-parse HEAD)
 echo ONEDNN_HASH=$(cd pytorch/third_party/ideep/mkl-dnn && git rev-parse HEAD)
-echo ACL_HASH=$(cd ComputeLibrary && git rev-parse HEAD)
