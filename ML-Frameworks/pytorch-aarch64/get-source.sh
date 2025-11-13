@@ -80,6 +80,11 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
     apply-github-patch pytorch/pytorch 00076d21ed6cd7df2a61165b1fb1d0a436f4e403
     apply-github-patch pytorch/pytorch 850db41fe6d33c6460740da781b40e009f04a47c
 
+    # https://github.com/pytorch/pytorch/pull/167328 - Build cpuinfo into c10 shared library
+    apply-github-patch pytorch/pytorch 715ba4203ccaa71f7cb8f351fa135110b6f7ecd4
+    apply-github-patch pytorch/pytorch e90d7480934224777722d4093795f96c667e5520
+    apply-github-patch pytorch/pytorch f5bfabc03efb34416378036ab717512d5611d8f4
+
     # Remove deps that we don't need for manylinux AArch64 CPU builds before fetching.
     # Only used when jni.h is present (see .ci/pytorch/build.sh:116), which is not the case for manylinux
     git rm android/libs/fbjni

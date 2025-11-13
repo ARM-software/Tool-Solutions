@@ -9,6 +9,7 @@ where `YY` is the year, and `MM` the month of the increment.
 
 ### Added
  - Adds PyTorch [PR][https://github.com/pytorch/pytorch/pull/144992] Enable fp16 linear layers in PyTorch via ACL
+ - Adds PyTorch [PR](https://github.com/pytorch/pytorch/pull/167328) Build cpuinfo into c10 shared library
 
 ### Changed
 
