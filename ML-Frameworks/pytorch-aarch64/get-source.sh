@@ -117,3 +117,8 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
 )
 
 git-shallow-clone https://github.com/pytorch/ao.git $TORCH_AO_HASH
+(
+    # Remove cutlass directory
+    cd ao
+    git rm third_party/cutlass
+)
