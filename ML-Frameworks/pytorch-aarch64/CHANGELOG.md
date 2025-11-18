@@ -13,7 +13,6 @@ where `YY` is the year, and `MM` the month of the increment.
  - Adds oneDNN [PR #4237](https://github.com/uxlfoundation/oneDNN/pull/4237), which improves cache
    blocking 4/8 inner blocks.
  - Adds PyTorch [PR](https://github.com/pytorch/pytorch/pull/167328) Build cpuinfo into c10 shared library.
- - Adds PyTorch [PR](https://github.com/pytorch/pytorch/pull/144992) Enable fp16 linear layers in PyTorch via ACL.
 
 ### Changed
  - Now building ACL with PyTorch `install_acl.sh` script.

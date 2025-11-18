@@ -55,10 +55,6 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
     # https://github.com/pytorch/pytorch/pull/159859 - PoC LUT optimisation for GELU bf16 operators
     apply-github-patch pytorch/pytorch ebcc874e317f9563ab770fc5c27df969e0438a5e
 
-    # https://github.com/pytorch/pytorch/pull/144992 - Enable fp16 linear layers in PyTorch via ACL
-    apply-github-patch pytorch/pytorch 00076d21ed6cd7df2a61165b1fb1d0a436f4e403
-    apply-github-patch pytorch/pytorch 850db41fe6d33c6460740da781b40e009f04a47c
-
     # https://github.com/pytorch/pytorch/pull/167328 - Build cpuinfo into c10 shared library
     apply-github-patch pytorch/pytorch 715ba4203ccaa71f7cb8f351fa135110b6f7ecd4
     apply-github-patch pytorch/pytorch e90d7480934224777722d4093795f96c667e5520
