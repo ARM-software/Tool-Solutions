@@ -22,6 +22,7 @@ pyaml~=24.9.0
 python-dateutil~=2.9.0.post0
 pytz==2024.2
 PyYAML~=6.0.2
+pytest~=8.4.2
 regex==2024.9.11
 requests~=2.32.3
 safetensors~=0.4.5
