@@ -96,6 +96,7 @@ jobs:
   test:
     needs: build-image
     strategy:
+      fail-fast: false
       matrix:
         config:
           [
@@ -104,9 +105,6 @@ jobs:
            ]
         onednn_fpmath_mode: [FP32, BF16]
     runs-on: ${{ matrix.config.label }}
-    env:
-      ONEDNN_DEFAULT_FPMATH_MODE: ${{ matrix.onednn_fpmath_mode }}
-
     steps:
       - name: Download image artifact
         uses: actions/download-artifact@v5
@@ -120,8 +118,14 @@ jobs:
       - name: Load Docker image
         run: docker load -i toolsolutions-pytorch-image-${{ matrix.config.name }}.tar
 
-      - name: Run smoke tests for
-        run: docker run --rm toolsolutions-pytorch:latest ./test-examples.sh
+      - name: Run smoke tests
+        run: |
+          docker run --rm \
+            -e ONEDNN_DEFAULT_FPMATH_MODE=${{ matrix.onednn_fpmath_mode }} \
+            toolsolutions-pytorch:latest ./test-examples.sh
 
       - name: Run unit tests
-        run: docker run --rm toolsolutions-pytorch:latest ./run_unit_tests.sh
+        run: |
+          docker run --rm \
+            -e ONEDNN_DEFAULT_FPMATH_MODE=${{ matrix.onednn_fpmath_mode }} \
+            toolsolutions-pytorch:latest ./run_unit_tests.sh
