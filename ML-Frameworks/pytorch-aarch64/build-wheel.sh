@@ -1,4 +1,4 @@
-# #!/bin/bash
+#!/bin/bash
 
 # *******************************************************************************
 # Copyright 2024-2025 Arm Limited and affiliates.
@@ -23,15 +23,19 @@
 # The logic in this script should mirror the upstream build pipelines as closely
 # as possible, along with Tool-Solutions specific changes we want to test (e.g.
 # installing tbb) or improving local development in a way that doesn't affect
-# the result (e,.g. unsetting MAX_JOBS). Currently the upstream logic is defined
-# in pytorch/.github/workflows/_binary-build-linux.yml and
-# pytorch/.github/workflows/generated-linux-aarch64-binary-manywheel-nightly.yml
+# the result. Currently the upstream logic is defined in 
+#               pytorch/.github/workflows/_binary-build-linux.yml 
+# and
+#   pytorch/.github/workflows/generated-linux-aarch64-binary-manywheel-nightly.yml
 
 set -eux -o pipefail
 
 PYTHON_VERSION="3.10"
 OPENBLAS_VERSION="v0.3.30"
 ACL_VERSION="v52.6.0"
+
+PYTHON_TAG="cp$(echo "$PYTHON_VERSION" | tr -d .)-cp$(echo "$PYTHON_VERSION" | tr -d .)"
+PYTHON_BIN="/opt/python/${PYTHON_TAG}/bin"
 
 # Specify DOCKER_IMAGE_MIRROR if you want to use a mirror of hub.docker.com
 IMAGE_NAME="${DOCKER_IMAGE_MIRROR:-}pytorch/manylinux2_28_aarch64-builder:cpu-aarch64-d8be0384e085f551506bd739678109fa0f5ee7ac"
@@ -42,22 +46,21 @@ OUTPUT_DIR=${OUTPUT_DIR:-"${PWD}/results"}
 
 # Where folders sit locally
 PYTORCH_HOST_DIR="${PWD}/pytorch"
-ACL_HOST_DIR="${PWD}/ComputeLibrary"
 OPENSSL_HOST_DIR="/opt/openssl"
-PYTORCH_FINAL_PACKAGE_DIR="${OUTPUT_DIR}"
+PYTORCH_FINAL_PACKAGE_HOST_DIR="${OUTPUT_DIR}"
 
 # Where folders sit mounted in the container
 PYTORCH_ROOT=/pytorch
-ACL_ROOT=/acl
 UTILS=/utils
 COMMON_UTILS=/common_utils
+PYTORCH_FINAL_PACKAGE_DIR=/artifacts
 
 # Want a CPU build
 DESIRED_CUDA=cpu
 GPU_ARCH_TYPE=cpu-aarch64
 
 # Affects the number of jobs used in install_acl.sh and install_openblas.sh
-NPROC=${NPROC:-$(nproc --ignore=2)}
+MAX_JOBS=${MAX_JOBS:-$(nproc --ignore=2)}
 
 if [ -f "$TORCH_BUILD_CONTAINER_ID_FILE" ]; then
     TORCH_BUILD_CONTAINER=$(cat $TORCH_BUILD_CONTAINER_ID_FILE)
@@ -71,7 +74,7 @@ if ! docker container inspect $TORCH_BUILD_CONTAINER >/dev/null 2>&1 ; then
     # Based on environment used in pytorch/.github/workflows/_binary-build-linux.yml
     # and pytorch/.github/workflows/generated-linux-aarch64-binary-manywheel-nightly.yml
     TORCH_BUILD_CONTAINER=$(docker run -t -d \
-        -e NPROC=${NPROC} \
+        -e MAX_JOBS=${MAX_JOBS} \
         -e OPENBLAS_VERSION=${OPENBLAS_VERSION} \
         -e ACL_VERSION=${ACL_VERSION} \
         -e BINARY_ENV_FILE=/tmp/env \
@@ -84,12 +87,10 @@ if ! docker container inspect $TORCH_BUILD_CONTAINER >/dev/null 2>&1 ; then
         -e PYTORCH_FINAL_PACKAGE_DIR="${PYTORCH_FINAL_PACKAGE_DIR}" \
         -e PYTORCH_ROOT="${PYTORCH_ROOT}" \
         -e SKIP_ALL_TESTS=1 \
-        -e PYTORCH_EXTRA_INSTALL_REQUIREMENTS="nvidia-cuda-nvrtc-cu12==12.1.105; platform_system == 'Linux' and platform_machine == 'x86_64' | nvidia-cuda-runtime-cu12==12.1.105; platform_system == 'Linux' and platform_machine == 'x86_64' | nvidia-cuda-cupti-cu12==12.1.105; platform_system == 'Linux' and platform_machine == 'x86_64' | nvidia-cudnn-cu12==8.9.2.26; platform_system == 'Linux' and platform_machine == 'x86_64' | nvidia-cublas-cu12==12.1.3.1; platform_system == 'Linux' and platform_machine == 'x86_64' | nvidia-cufft-cu12==11.0.2.54; platform_system == 'Linux' and platform_machine == 'x86_64' | nvidia-curand-cu12==10.3.2.106; platform_system == 'Linux' and platform_machine == 'x86_64' | nvidia-cusolver-cu12==11.4.5.107; platform_system == 'Linux' and platform_machine == 'x86_64' | nvidia-cusparse-cu12==12.1.0.106; platform_system == 'Linux' and platform_machine == 'x86_64' | nvidia-nccl-cu12==2.19.3; platform_system == 'Linux' and platform_machine == 'x86_64' | nvidia-nvtx-cu12==12.1.105; platform_system == 'Linux' and platform_machine == 'x86_64'" \
         -e OPENSSL_ROOT_DIR="${OPENSSL_HOST_DIR}" \
         -e CMAKE_INCLUDE_PATH="${OPENSSL_HOST_DIR}/include" \
         -v "${PYTORCH_HOST_DIR}:${PYTORCH_ROOT}" \
-        -v "${PYTORCH_FINAL_PACKAGE_DIR}:/artifacts" \
-        -v "${ACL_HOST_DIR}:${ACL_ROOT}" \
+        -v "${PYTORCH_FINAL_PACKAGE_HOST_DIR}:${PYTORCH_FINAL_PACKAGE_DIR}" \
         -v "${PWD}/utils:${UTILS}" \
         -v "${PWD}/../utils:${COMMON_UTILS}" \
         -w / \
@@ -98,36 +99,44 @@ if ! docker container inspect $TORCH_BUILD_CONTAINER >/dev/null 2>&1 ; then
     # Currently changes in these scripts will not be applied without a clean
     # build, which is not ideal for dev work. But we have to balance this with
     # extra time/network traffic when rebuilding many times.
-    docker exec -t $TORCH_BUILD_CONTAINER bash -c "$PYTORCH_ROOT/.circleci/scripts/binary_populate_env.sh"
-    docker exec -t $TORCH_BUILD_CONTAINER bash -c "$PYTORCH_ROOT/.ci/aarch64_linux/aarch64_ci_setup.sh"
+    docker exec $TORCH_BUILD_CONTAINER bash "${PYTORCH_ROOT}/.circleci/scripts/binary_populate_env.sh"
 
-    # This must be in this if block because it cannot handle being called twice
-    docker exec -t $TORCH_BUILD_CONTAINER bash -c "bash $PYTORCH_ROOT/.ci/docker/common/install_acl.sh"
-    docker exec -t $TORCH_BUILD_CONTAINER bash -c "bash $PYTORCH_ROOT/.ci/docker/common/install_openblas.sh"
+    # Install scons for ACL build
+    docker exec $TORCH_BUILD_CONTAINER ${PYTHON_BIN}/python3 -m pip install scons==4.7.0
+    docker exec $TORCH_BUILD_CONTAINER ln -sf ${PYTHON_BIN}/scons /usr/local/bin
 
-    echo "Storing torch build container id in $TORCH_BUILD_CONTAINER_ID_FILE for reuse: $TORCH_BUILD_CONTAINER"
-    echo $TORCH_BUILD_CONTAINER > "$TORCH_BUILD_CONTAINER_ID_FILE"
+    # Affected by ACL_VERSION set as an environment variable above
+    echo "Overriding Arm Compute Library version: ${ACL_VERSION}"
+    docker exec "$TORCH_BUILD_CONTAINER" "${PYTORCH_ROOT}/.ci/docker/common/install_acl.sh"
+
+    # Affected by OPENBLAS_VERSION set as an environment variable above
+    echo "Installing OpenBLAS version: ${OPENBLAS_VERSION}"
+    docker exec "$TORCH_BUILD_CONTAINER" "${PYTORCH_ROOT}/.ci/docker/common/install_openblas.sh"
+
+    echo "Storing torch build container ID in ${TORCH_BUILD_CONTAINER_ID_FILE} for reuse: ${TORCH_BUILD_CONTAINER}"
+    echo $TORCH_BUILD_CONTAINER > "${TORCH_BUILD_CONTAINER_ID_FILE}"
 else
     docker restart $TORCH_BUILD_CONTAINER
 fi
 
 # If there are multiple wheels in the dist directory, an old wheel can be
 # erroneously copied to results, so we clear the directory to be sure
-docker exec -t $TORCH_BUILD_CONTAINER bash -c "rm -rf $PYTORCH_ROOT/dist"
+docker exec $TORCH_BUILD_CONTAINER rm -rf "${PYTORCH_ROOT}/dist"
 
 # We set OVERRIDE_PACKAGE_VERSION to be based on the date of the latest torch
 # commit, this allows us to also install the matching torch* packages, set in
 # the Dockerfile. This is what PyTorch does in its nightly pipeline, see
 # pytorch/.ci/aarch64_linux/aarch64_wheel_ci_build.py for this logic.
 build_date=$(cd $PYTORCH_HOST_DIR && git log --pretty=format:%cs -1 | tr -d '-')
-version=$(cat $PYTORCH_HOST_DIR/version.txt| tr -d [:space:] )
+version=$(cat $PYTORCH_HOST_DIR/version.txt| tr -d "[:space:]" )
 OVERRIDE_PACKAGE_VERSION="${version%??}.dev${build_date}${TORCH_RELEASE_ID:+"+$TORCH_RELEASE_ID"}"
-# We unset MAX_JOBS from 12 (written to /tmp/env by populate_binary_env.sh) to
-# let any downstream functions to decide. Currently nproc when ninja is used,
-# but ideally we would let ninja make the right choice, but nproc is good enough
-docker exec -t $TORCH_BUILD_CONTAINER \
-    bash -c "source /tmp/env && unset MAX_JOBS && OVERRIDE_PACKAGE_VERSION=$OVERRIDE_PACKAGE_VERSION bash $PYTORCH_ROOT/.ci/aarch64_linux/aarch64_ci_build.sh"
+
+docker exec $TORCH_BUILD_CONTAINER bash -lc "
+  source /tmp/env &&
+  BUILD_TEST=0 \
+  OVERRIDE_PACKAGE_VERSION=$OVERRIDE_PACKAGE_VERSION \
+  bash ${PYTORCH_ROOT}/.ci/manywheel/build.sh
+"
 
 # directories generated by the docker container are owned by root, so transfer ownership to user
-docker exec $TORCH_BUILD_CONTAINER chown -R $(id -u):$(id -g) $PYTORCH_ROOT
-docker exec $TORCH_BUILD_CONTAINER chown -R $(id -u):$(id -g) /artifacts
+docker exec $TORCH_BUILD_CONTAINER chown -R "$(id -u)":"$(id -g)" "${PYTORCH_ROOT}" /artifacts
