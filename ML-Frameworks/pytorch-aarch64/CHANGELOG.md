@@ -10,6 +10,12 @@ where `YY` is the year, and `MM` the month of the increment.
 ### Added
 
 ### Changed
+ - Updates hashes for:
+   - `PYTORCH_HASH` to `93fef4bd1dd265588863929e35d9ac89328d5695`, 2.10.0.dev20251124 from viable/strict, Nov 24th.
+   - `IDEEP_HASH` to `3724bec97a77ce990e8c6dc5e595bb3beee75257`, from ideep_pytorch, Nov 24th.
+   - `ONEDNN_HASH` to `0b8a866c009b03f322e6526d7c33cfec84a4a97a`, from main, Nov 25th.
+   - `TORCH_AO_HASH` to `ab6bc89512d912c17a79ed8d4d709612d3e32884`, from main, Nov 25th.
+   - `KLEIDIAI_HASH` to `94d6cc40689f44d308dbd57cb842e335fdd958f1`, v1.17.0 from main, Nov 17th.
 
 ### Removed
 

@@ -21,36 +21,31 @@ source ../utils/git-utils.sh
 
 set -eux -o pipefail
 
-PYTORCH_HASH=5ce4a8b49f9986b050a9f6fcc7dd4cf999baa509  # 2.10.0.dev20251112 from viable/strict, Nov 12th
-IDEEP_HASH=927570638b237b0e39fb0626a868adffdbf70bbb    # From ideep_pytorch, October 20th
-ONEDNN_HASH=80886d0559482dfe2019c2ae83eebd6d0d3a17d4   # From main, Nov 9th
-TORCH_AO_HASH=17867e6788e4889b294449770f0275045384eab2 # From main, Nov 8th
-KLEIDIAI_HASH=7bf4de9a56106f0fb0d57dfabeb4c7a2668deaf6 # v1.16.0 from main, Nov 10th
+PYTORCH_HASH=93fef4bd1dd265588863929e35d9ac89328d5695  # 2.10.0.dev20251124 from viable/strict, Nov 24th
+IDEEP_HASH=3724bec97a77ce990e8c6dc5e595bb3beee75257    # From ideep_pytorch, Nov 24th
+ONEDNN_HASH=0b8a866c009b03f322e6526d7c33cfec84a4a97a   # From main, Nov 25th
+TORCH_AO_HASH=ab6bc89512d912c17a79ed8d4d709612d3e32884 # From main, Nov 25th
+KLEIDIAI_HASH=94d6cc40689f44d308dbd57cb842e335fdd958f1 # v1.17.0 from main, Nov 17th
 
 git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
 (
     # Apply patches to PyTorch build
     cd pytorch
 
-    # https://github.com/pytorch/pytorch/pull/160184 - Draft: separate reqs for manywheel build and pin
+    # https://github.com/pytorch/pytorch/pull/167829 - Refactor ACL and OpenBLAS install scripts on AArch64
     # Note: as part of this patch, setuptools is pinned to ~= 78.1.1 which is not affected by
     # CVE-2025-47273 and CVE-2024-6345
-    apply-github-patch pytorch/pytorch 4d344570e5a114fa522e3370c5d59161e2ed8619
+    apply-github-patch pytorch/pytorch 69db12b465887df96d27fe2bb93746ac334577f1
+    apply-github-patch pytorch/pytorch 5184c373a8bc77809b6e59361e191d4e78d6a824
+
+    # FIXME: Temporarily disabled; to be updated in a later PR
+    # # https://github.com/pytorch/pytorch/pull/160184 - Draft: separate reqs for manywheel build and pin
+    # # Note: as part of this patch, setuptools is pinned to ~= 78.1.1 which is not affected by
+    # # CVE-2025-47273 and CVE-2024-6345
+    # apply-github-patch pytorch/pytorch 4d344570e5a114fa522e3370c5d59161e2ed8619
 
     # https://github.com/pytorch/pytorch/pull/167720 - Allow missing cutlass file if CUDA disabled
-    apply-github-patch pytorch/pytorch 18f9ef2fe29b10b385f25eb6c98e3ac06227d2d9
-
-    # https://github.com/pytorch/pytorch/pull/158250 - Integrate INT4→BF16 via KleidiAI, with fallback
-    apply-github-patch pytorch/pytorch a9ec9d509167bfd33cbcd168cb40d183acf9c13a
-    apply-github-patch pytorch/pytorch 67f1076366b88c6617256236020b58da00665ed4
-    apply-github-patch pytorch/pytorch 99c57644d5d8a9359b6b98ac7bb96787ac594606
-    apply-github-patch pytorch/pytorch a770fb9a9786d7ce39a3b066809fa8c0de7d47d5
-    apply-github-patch pytorch/pytorch 30dd7406155c51b033b5e8a9c5a453fa59599db8
-    apply-github-patch pytorch/pytorch 00b919af8e7bb50f52ec45fdad09304d4104464a
-    apply-github-patch pytorch/pytorch fe40a60d7ad506aab016e66b53fdf0fc4f83b7a1
-    apply-github-patch pytorch/pytorch 89fc01183127da738fc3723747f7bf0721fe9e09
-    apply-github-patch pytorch/pytorch 23b4c39348426914cf3e6770dfaff0745245976c
-    apply-github-patch pytorch/pytorch c5e778f5d4cac56b9d96f666c3082aab244e662f
+    apply-github-patch pytorch/pytorch 6fbbfe712d89895824e466a4e3ae6a0f35626078
 
     # https://github.com/pytorch/pytorch/pull/159859 - PoC LUT optimisation for GELU bf16 operators
     apply-github-patch pytorch/pytorch ebcc874e317f9563ab770fc5c27df969e0438a5e
