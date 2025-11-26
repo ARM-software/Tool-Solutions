@@ -17,7 +17,7 @@
 
 # Specify DOCKER_IMAGE_MIRROR if you want to use a mirror of hub.docker.com
 ARG DOCKER_IMAGE_MIRROR=""
-FROM ${DOCKER_IMAGE_MIRROR}ubuntu:22.04 AS workshop
+FROM ${DOCKER_IMAGE_MIRROR}ubuntu:24.04 AS workshop
 
 ARG USERNAME
 
@@ -29,6 +29,8 @@ RUN if ! [ "$(arch)" = "aarch64" ] ; then exit 1; fi
 RUN apt-get update && apt-get install -y \
     # We need pip to install things, this will also bring in a minimal python3
     python3-pip \
+    # So that we can create a virtual environment
+    python3-venv \
     # So that we can call python instead of python3
     python-is-python3 \
     # To allow users to install new things if they want
@@ -43,8 +45,12 @@ RUN apt-get install -y wget
 # DOCKER_USER for the Docker user
 ENV DOCKER_USER=${USERNAME}
 
-# Setup default user
-RUN useradd --create-home -s /bin/bash -m $DOCKER_USER && echo "$DOCKER_USER:Portland" | chpasswd && adduser $DOCKER_USER sudo
+# Create user only if it doesn't already exist
+RUN id "$DOCKER_USER" >/dev/null 2>&1 || useradd --create-home -s /bin/bash -m "$DOCKER_USER"
+
+# Set password and add to sudo group
+RUN echo "$DOCKER_USER:ToolSolutionsTensorFlow" | chpasswd && adduser "$DOCKER_USER" sudo || true
+
 RUN echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
 
@@ -60,12 +66,6 @@ RUN echo 'export PATH="$HOME/.local/bin:$PATH"' >>  /etc/bash.bashrc
 # Grab the SECURITY.md from the root directory
 COPY --from=rootdir SECURITY.md /home/$DOCKER_USER/
 
-# Update to newer pip/setuptools/wheel (setuptools >= 78.1.1 due to CVE-2024-6345,
-# CVE-2022-40897 and CVE-2025-47273, wheel >= 0.38.0 due to CVE-2022-40898 and
-# pip >= 25.2 due to CVE-2025-8869 and CVE-2023-5752) and delete old system
-# version (we essentially use apt:python3-pip to bootstrap pip)
-RUN pip install --upgrade pip~=25.2 setuptools~=78.1.1 wheel~=0.45.1
-
 # Remove system Python stuff. Should be safe to wipe after the line above, because
 # python3 -m pip now uses the /usr/local install. Also removes unused protobuf
 # packages to resolve CVE-2025-4565.
@@ -77,10 +77,10 @@ RUN apt-get update && apt-get purge -y \
       python3-distutils \
       python3-lib2to3 \
       python3-dev \
-      python3.10-dev \
-      libprotobuf23 \
-      libprotobuf-lite23 \
-      libprotoc23 \
+      python3.12-dev \
+      libprotobuf32t64 \
+      libprotobuf-lite32t64 \
+      libprotoc32t64 \
       protobuf-compiler \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*
@@ -88,6 +88,17 @@ RUN apt-get update && apt-get purge -y \
 # Move to userland
 WORKDIR /home/$DOCKER_USER
 USER $DOCKER_USER
+
+# Create a per-user virtualenv and use that for everything Python
+RUN python -m venv /home/$DOCKER_USER/.venv
+
+# Make the venv python/pip first on PATH for all subsequent layers and at runtime
+ENV PATH="/home/$DOCKER_USER/.venv/bin:$PATH"
+
+# Update to newer pip/setuptools/wheel (setuptools >= 70.0.0 due to CVE-2024-6345
+# and CVE-2025-47273, wheel >= 0.38.0 due to CVE-2022-40898) and delete old system
+# version (we essentially use apt:python3-pip to bootstrap pip)
+RUN pip install --upgrade pip~=25.2 setuptools~=78.1.1 wheel~=0.45.1
 
 # Check TENSORFLOW_WHEEL was set and copy
 RUN test -n "$TENSORFLOW_WHEEL"
@@ -106,7 +117,7 @@ COPY --chown=$DOCKER_USER examples/ /home/$DOCKER_USER/
 COPY --chown=$DOCKER_USER tensorflow/ /home/$DOCKER_USER/tensorflow
 
 # Move build into final image as a single layer.
-FROM ${DOCKER_IMAGE_MIRROR}ubuntu:22.04
+FROM ${DOCKER_IMAGE_MIRROR}ubuntu:24.04
 
 ARG USERNAME
 
@@ -117,4 +128,8 @@ RUN chown $DOCKER_USER:$DOCKER_USER /home/$DOCKER_USER
 
 USER $DOCKER_USER
 WORKDIR /home/$DOCKER_USER
+
+# Ensure the venv is on PATH in the final image as well
+ENV PATH="/home/$DOCKER_USER/.venv/bin:$PATH"
+
 CMD ["bash", "-l"]

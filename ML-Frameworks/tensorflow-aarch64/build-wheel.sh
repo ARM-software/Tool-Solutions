@@ -28,7 +28,7 @@
 
 set -eux -o pipefail
 
-DEFAULT_PYTHON_VERSION=3.10
+DEFAULT_PYTHON_VERSION=3.12
 PYTHON_VERSION=${PYTHON_VERSION:-$DEFAULT_PYTHON_VERSION}
 # TensorFlow's upstream build scripts expect python version to be in format e.g. py311 not 3.11
 TF_PY_VERSION="py${PYTHON_VERSION//./}"
