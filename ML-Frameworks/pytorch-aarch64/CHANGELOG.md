@@ -8,6 +8,7 @@ where `YY` is the year, and `MM` the month of the increment.
 ## [unreleased]
 
 ### Added
+ - Adds oneDNN [PR](https://github.com/uxlfoundation/oneDNN/pull/4377) optimize brgemm.
 
 ### Changed
  - Updates hashes for:
