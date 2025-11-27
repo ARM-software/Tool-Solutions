@@ -45,23 +45,42 @@ function apply-github-patch {
     # Apply a specific GitHub commit.
     # $1 is 'organisation/repo', $2 is the commit hash
     # To use an API token, which may avoid rate limits, set the environment variable GITHUB_TOKEN
-
     set -u
+
+    local github_url='https://github.com'
+    local github_api_url='https://api.github.com/repos'
+
     patch_file="$patch_cache_dir/$2.patch"
     if [ ! -f "$patch_file" ]; then
-        local github_api_url='https://api.github.com/repos'
-        local github_url='https://github.com'
-
         # Download the .patch file.
         if [[ "${GITHUB_TOKEN+x}" ]]; then
-            curl --silent -H "Authorization: token $GITHUB_TOKEN" -H "Accept: application/vnd.github.v3.patch" -L $github_api_url/$1/commits/$2 -o "$patch_file"
+            curl --silent \
+                -H "Authorization: token $GITHUB_TOKEN" -H "Accept: application/vnd.github.v3.patch" -L $github_api_url/$1/commits/$2 -o "$patch_file"
         else
             curl --silent -L $github_url/$1/commit/$2.patch -o "$patch_file"
         fi
     fi
 
-    # Apply the patch
+    # Three-way merge is less brittle than plain 'git am'. It can handle scenarios in which
+    # the context of the patch has moved. However, we need the parent commit of the patch for
+    # this so we'll try to fetch it with the '--depth=2'
+    local fetch_url="${github_url}/$1.git"
+    if [[ "${GITHUB_TOKEN+x}" ]]; then
+        # See https://docs.github.com/en/apps/creating-github-apps/writing-code-for-a-github-app/building-ci-checks-with-a-github-app?versionId=free-pro-team%40latest&productId=code-security&restPage=dependabot%2Cworking-with-dependabot%2Cconfiguring-access-to-private-registries-for-dependabot#add-code-to-clone-a-repository
+        fetch_url="https://x-access-token:${GITHUB_TOKEN}@github.com/$1.git"
+    fi
+    git fetch --no-tags --quiet --depth=2 "$fetch_url" "$2" || true
+
+    # Try three-way merge
+    git am -3 --keep-cr "$patch_file" && return 0
+    git am --abort || true
+
+    # Fall back to GNU 'patch'
     patch -p1 < "$patch_file"
+
+    # Commit with dummy credentials
+    git add -A
+    git -c user.name="apply-github-patch" -c user.email="noreply@example.com" commit -m "Applied patch $2 from $1."
     return 0
 }
 
