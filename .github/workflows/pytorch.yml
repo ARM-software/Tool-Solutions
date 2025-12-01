@@ -86,7 +86,7 @@ jobs:
         run: docker save toolsolutions-pytorch:latest -o toolsolutions-pytorch-image-${{ matrix.config.name }}.tar
 
       - name: Upload build artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: toolsolutions-pytorch-image-${{ matrix.config.name }}
           path: toolsolutions-pytorch-image-${{ matrix.config.name }}.tar
