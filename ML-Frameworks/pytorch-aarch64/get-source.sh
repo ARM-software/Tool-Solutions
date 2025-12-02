@@ -97,6 +97,8 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
 
             # https://github.com/uxlfoundation/oneDNN/pull/4237 - cpu: aarch64: jit_reorder: cache blocking 4/8 inner blocks
             apply-github-patch uxlfoundation/oneDNN 8bdff1a2a6625432701363185a9bd34f7c22f241
+            # https://github.com/uxlfoundation/oneDNN/pull/4377 - cpu: aarch64: conv: optimize brgemm
+            apply-github-patch uxlfoundation/oneDNN 93b8cc29afc6ee9c2856436a5f5b10d5f1f2f2f1
         )
     )
     (
