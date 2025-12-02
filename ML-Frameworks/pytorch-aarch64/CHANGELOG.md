@@ -11,6 +11,7 @@ where `YY` is the year, and `MM` the month of the increment.
  - Adds oneDNN [PR](https://github.com/uxlfoundation/oneDNN/pull/4377) optimize brgemm.
 
 ### Changed
+ - Updates Ubuntu and Python version to 24.04 and 3.12, respectively.
  - Updates hashes for:
    - `PYTORCH_HASH` to `93fef4bd1dd265588863929e35d9ac89328d5695`, 2.10.0.dev20251124 from viable/strict, Nov 24th.
    - `IDEEP_HASH` to `3724bec97a77ce990e8c6dc5e595bb3beee75257`, from ideep_pytorch, Nov 24th.

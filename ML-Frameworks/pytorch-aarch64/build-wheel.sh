@@ -30,7 +30,7 @@
 
 set -eux -o pipefail
 
-PYTHON_VERSION="3.10"
+PYTHON_VERSION="3.12"
 OPENBLAS_VERSION="v0.3.30"
 ACL_VERSION="v52.6.0"
 
