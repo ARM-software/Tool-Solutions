@@ -8,6 +8,17 @@ where `YY` is the year, and `MM` the month of the increment.
 ## [unreleased]
 
 ### Added
+
+### Changed
+
+### Removed
+
+### Fixed
+
+## [r25.12] 2025-12-15
+https://github.com/ARM-software/Tool-Solutions/tree/r25.12
+
+### Added
  - Adds oneDNN [PR](https://github.com/uxlfoundation/oneDNN/pull/4377) optimize brgemm.
 
 ### Changed
