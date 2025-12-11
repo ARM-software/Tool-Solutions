@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: Copyright 2022-2025 Arm Limited and affiliates.
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # Changelog
 All significant changes to the PyTorch container builds in
 docker/pytorch-aarch64 will be noted in this log.
@@ -42,7 +48,7 @@ https://github.com/ARM-software/Tool-Solutions/tree/r25.12
 https://github.com/ARM-software/Tool-Solutions/tree/r25.11
 
 ### Added
- - Adds PyTorch [PR #167720](https://github.com/pytorch/pytorch/pull/167720), to allow missing cutlass file 
+ - Adds PyTorch [PR #167720](https://github.com/pytorch/pytorch/pull/167720), to allow missing cutlass file
    if CUDA disabled.
  - Adds oneDNN [PR #4237](https://github.com/uxlfoundation/oneDNN/pull/4237), which improves cache
    blocking 4/8 inner blocks.

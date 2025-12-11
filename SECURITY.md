@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: Copyright 2025 Arm Limited and affiliates.
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # Security Policy: DO NOT USE IN PRODUCTION
 
 > [!WARNING]
