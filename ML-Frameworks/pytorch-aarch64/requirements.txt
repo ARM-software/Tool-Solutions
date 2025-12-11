@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: Copyright 2024, 2025 Arm Limited and affiliates.
+#
+# SPDX-License-Identifier: Apache-2.0
+
 # Does not include torch and related packages (torchvision, torchdata etc)
 # because we install them in the docker container using the official nightly
 # PyTorch channel and our own built torch wheel (see Dockerfile for more info   )

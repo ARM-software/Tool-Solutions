@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: Copyright 2018-2022, 2024, 2025 Arm Limited and affiliates.
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # Tool Solutions
 
 > [!WARNING]
@@ -13,7 +19,7 @@ This ML [Tool Solutions](https://github.com/ARM-software/Tool-Solutions) reposit
 ## Table of Contents
 Here is a list of all the contents of this repository with short descriptions:
 
-### [ML-Frameworks/pytorch-aarch64](https://github.com/ARM-software/Tool-Solutions/tree/main/ML-Frameworks/pytorch-aarch64) 
+### [ML-Frameworks/pytorch-aarch64](https://github.com/ARM-software/Tool-Solutions/tree/main/ML-Frameworks/pytorch-aarch64)
 Provides scripts to build a wheel and a Docker image containing PyTorch with examples.
 
 ### [ML-Frameworks/tensorflow-aarch64](https://github.com/ARM-software/Tool-Solutions/tree/main/ML-Frameworks/tensorflow-aarch64)
