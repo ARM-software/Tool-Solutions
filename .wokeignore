@@ -1,0 +1,7 @@
+# SPDX-FileCopyrightText: Copyright 2025 Arm Limited and affiliates.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+LICENSE
+LICENSES/*
+ML-Frameworks/pytorch-aarch64/examples/openimages-mlperf.json

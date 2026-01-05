@@ -15,14 +15,11 @@
 # limitations under the License.
 # *******************************************************************************
 
-description: >-
-  SSD-ResNet34 FP32 for object detection pretrained on COCO 2017 dataset. For details on how
-  this model was trained please see
-  <https://github.com/mlcommons/training/tree/master/image_classification> for more information
+description: "SSD-ResNet34 FP32 for object detection pretrained on COCO 2017 dataset. For details on how this model was trained please see <https://github.com/mlcommons/training/tree/master/image_classification> for more information" # wokeignore:rule=master
 model:
     name: resnet34_tf.22.5.nhwc.pb
     source: https://zenodo.org/record/3708755/files/tf_ssd1200_resnet34_22.5_coco2017.zip
-    labels: https://raw.githubusercontent.com/amikelive/coco-labels/master/coco-labels-2014_2017.txt
+    labels: https://raw.githubusercontent.com/amikelive/coco-labels/master/coco-labels-2014_2017.txt # wokeignore:rule=master
     threshold: 0.5
 arguments:
     input: image

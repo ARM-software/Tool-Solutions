@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # This script is based on the upstream MLCommon's instructions to download datasets.
-# https://github.com/mlperf/inference/tree/master/vision/classification_and_detection
+# https://github.com/mlperf/inference/tree/master/vision/classification_and_detection # wokeignore:rule=master
 
 # Download ImageNet's validation set
 # These will be installed to ${HOME}/CK_TOOLS/

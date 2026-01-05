@@ -1,0 +1,280 @@
+# SPDX-FileCopyrightText: Copyright 2024, 2025 Arm Limited and affiliates.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+# Custom settings and rules for get-woke (https://github.com/get-woke/woke)
+
+# Rules based on:
+# - get-woke default set: https://github.com/get-woke/woke/blob/main/pkg/rule/default.yaml
+# - INCITS inclusive terminology guidelines:
+#   https://www.incits.org/dotAsset/ac0948e7-8708-46ef-9e0c-783c904a14c7.pdf
+
+rules:
+  - name: abort/terminate
+    terms:
+      - abort
+      - terminate
+    alternatives:
+      - halt
+      - end
+      - stop
+      - eliminate
+      - quit
+      - cease
+      - close
+      - "hard stop"
+      - "end involuntarily"
+      - "force quit"
+
+  - name: blackbox
+    terms:
+      - black-box
+      - blackbox
+      - black box
+    alternatives:
+      - closed-box
+
+  - name: blacklist
+    terms:
+      - blacklist
+      - black-list
+      - blacklisted
+      - black-listed
+    alternatives:
+      - denylist
+      - blocklist
+      - exclusion list
+
+  - name: chinese-wall
+    terms:
+      - "chinese wall"
+      - "chinese-wall"
+      - "Chinese wall"
+    alternatives:
+      - "ethical wall"
+
+  - name: colony
+    terms:
+      - colony
+    alternatives:
+      - settlement
+      - population
+      - community
+      - territory
+
+  - name: crazy
+    terms:
+      - crazy
+    alternatives:
+      - unexpected
+      - surprising
+      - puzzling
+
+  - name: cripple
+    terms:
+      - cripple
+    alternatives:
+      - limit
+      - disadvantage
+
+  - name: dumb
+    terms:
+      - dumb
+      - dummy
+    alternatives:
+      - foolish
+      - silent
+      - placeholder
+      - sample
+
+  - name: first-class
+    terms:
+      - "first-class citizen"
+    alternatives:
+      - "first-class entity"
+      - "core entity"
+      - "top level entity"
+
+  - name: handicap
+    terms:
+      - handicap
+    alternatives:
+      - limit
+      - disadvantage
+
+  - name: hang
+    terms:
+      - hang
+      - hanged
+    alternatives:
+      - froze
+      - frozen
+      - unresponsive
+    options:
+      word_boundary: true
+
+  - name: he/she
+    terms:
+      - she
+      - he
+      - she'd
+      - he'd
+      - she'll
+      - he'll
+      - she's
+      - he's
+    alternatives:
+      - they
+      - it
+    options:
+      word_boundary: true
+
+  - name: her/him
+    terms:
+      - her
+      - hers
+      - him
+      - his
+    alternatives:
+      - their
+      - theirs
+      - them
+    options:
+      word_boundary: true
+
+  - name: herself/himself
+    terms:
+      - herself
+      - himself
+    alternatives:
+      - themselves
+      - theirself
+      - self
+
+  - name: grandfathered
+    terms:
+      - grandfathered
+    alternatives:
+      - legacy status
+
+  - name: guys
+    terms:
+      - guys
+    alternatives:
+      - folks
+      - people
+      - you all
+    options:
+      word_boundary: true
+
+  - name: kill/murder
+    terms:
+      - kill
+      - murder
+    alternatives:
+      - halt
+      - end
+      - stop
+      - eliminate
+      - quit
+      - cease
+      - close
+      - "hard stop"
+      - "end involuntarily"
+      - "force quit"
+    options:
+      word_boundary: true
+
+  - name: man/woman
+    terms:
+      - man
+      - woman
+    alternatives:
+      - human
+      - person
+    options:
+      word_boundary: true
+
+  - name: man-hours
+    terms:
+      - man hours
+      - man-hours
+    alternatives:
+      - person hours
+      - engineer hours
+
+  - name: master
+    terms:
+      - master
+    alternatives:
+      - main
+      - leader
+      - primary
+
+  - name: suicide
+    terms:
+      - suicide
+    alternatives:
+      - "shut down"
+      - "self destruct"
+
+  - name: master-slave
+    terms:
+      - master-slave
+      - master/slave
+    alternatives:
+      - leader/follower
+      - primary/replica
+      - primary/standby
+
+  - name: ocd
+    terms:
+      - ocd
+      - neurotic
+      - ocd
+      - o.c.d
+      - o.c.d.
+    alternatives:
+      - has an anxiety disorder
+      - obsessive
+      - pedantic
+      - picky
+    options:
+      word_boundary: true
+
+  - name: slave
+    terms:
+      - slave
+    alternatives:
+      - follower
+      - replica
+      - standby
+
+  - name: sanity
+    terms:
+      - sanity
+      - sane
+    alternatives:
+      - confidence
+      - quick check
+      - coherence check
+      - correct
+      - adequate
+
+  - name: whitebox
+    terms:
+      - white-box
+      - whitebox
+      - white box
+    alternatives:
+      - open-box
+
+  - name: whitelist
+    terms:
+      - whitelist
+      - white-list
+      - whitelisted
+      - white-listed
+    alternatives:
+      - allowlist
+      - inclusion list

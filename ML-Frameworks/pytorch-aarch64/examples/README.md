@@ -58,6 +58,7 @@ This is a multiscale SSD (Single Shot Detection) model based on the ResNet-34 ba
 To run inference with SSD-ResNet-34 on example image call:
 
 ```bash
+# wokeignore:rule=master
 python detect_objects.py -m ./ssd_resnet34.yml -i https://raw.githubusercontent.com/zhreshold/mxnet-ssd/master/data/demo/street.jpg
 ```
 
@@ -79,7 +80,7 @@ There is also additional information in `image_preprocess` that is used to prepr
 - `mean`: Mean values per channel for normalizing image
 - `std`: Standard deviation values per channel for normalizing image
 
-_Note: in PyTorch, in order to load the model from saved checkpoint, it is also necessary to have the implementation of that model in Python. In the example configuration used here, the implementation of the model (`SSD_R34`) is defined [here](https://github.com/mlcommons/inference/tree/master/vision/classification_and_detection/python/models)._
+_Note: in PyTorch, in order to load the model from saved checkpoint, it is also necessary to have the implementation of that model in Python. In the example configuration used here, the implementation of the model (`SSD_R34`) is defined [here](https://github.com/mlcommons/inference/tree/master/vision/classification_and_detection/python/models)._ <!-- wokeignore:rule=master -->
 
 ## Natural Language Processing (NLP)
 

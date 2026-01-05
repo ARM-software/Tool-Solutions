@@ -79,7 +79,7 @@ https://github.com/ARM-software/Tool-Solutions/tree/r25.09
 https://github.com/ARM-software/Tool-Solutions/tree/r25.08
 
 ### Changed
- - Updates TensorFlow hash to ab8aab720f1648f6a470b159b0d1aea3a5b0df81 # 2.20.0-dev0 from master, 25th July 2025
+ - Updates TensorFlow hash to ab8aab720f1648f6a470b159b0d1aea3a5b0df81 # 2.20.0-dev0 from master, 25th July 2025 <!-- wokeignore:rule=master -->
 
 ### Fixed
  - Updates Transformers to 4.50 as a mitigation for CVE-2025-2099.
@@ -598,7 +598,7 @@ https://github.com/ARM-software/Tool-Solutions/tree/tensorflow-pytorch-aarch64--
 
 ### Changed
 - Updates Compute Library version to 21.11.
-- Updates tensorflow/benchmarks to use the master branch.
+- Updates tensorflow/benchmarks to use the master branch. <!-- wokeignore:rule=master -->
 
 ### Fixed
 - Various improvements and corrections to the documentation.

@@ -18,7 +18,7 @@
 description: >-
   resnet50-v1.5 is a TensorFlow implementation of ResNet-50 - an image classification model
   pretrained on the ImageNet dataset. For details on how this model was trained please see
-  <https://github.com/mlcommons/training/tree/master/image_classification> for more information
+  <https://github.com/mlcommons/training/tree/master/image_classification> for more information # wokeignore:rule=master
 model:
     name: resnet50_v1.pb
     source: https://zenodo.org/record/2535873/files/resnet50_v1.pb
