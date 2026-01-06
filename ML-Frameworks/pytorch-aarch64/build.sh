@@ -83,7 +83,12 @@ if ! [[ $* == *--use-existing-sources* ]]; then
     ./get-source.sh
 fi
 
-./build-wheel.sh
+# We build the wheel with ccache by default; allow disabling it via the --disable-ccache flag
+build_wheel_args=()
+if [[ "$*" == *--disable-ccache* ]]; then
+    build_wheel_args+=(--disable-ccache)
+fi
+./build-wheel.sh "${build_wheel_args[@]}"
 
 [[ $* == *--wheel-only* ]] && exit 0
 

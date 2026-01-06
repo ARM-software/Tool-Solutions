@@ -33,10 +33,14 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
     cd pytorch
 
     # https://github.com/pytorch/pytorch/pull/167829 - Refactor ACL and OpenBLAS install scripts on AArch64
-    # Note: as part of this patch, setuptools is pinned to ~= 78.1.1 which is not affected by
-    # CVE-2025-47273 and CVE-2024-6345
-    apply-github-patch pytorch/pytorch 69db12b465887df96d27fe2bb93746ac334577f1
-    apply-github-patch pytorch/pytorch 5184c373a8bc77809b6e59361e191d4e78d6a824
+    apply-github-patch pytorch/pytorch f5e7b3ab44b14902f1e44ac138006b04bd9b7728
+
+    # https://github.com/pytorch/pytorch/pull/170062 - Add ccache support to ACL/OpenBLAS and manywheel
+    # build script.
+    apply-github-patch pytorch/pytorch 327b118078869b85d979d9f7eb1038b8a53c8a49
+
+    # https://github.com/pytorch/pytorch/pull/170600 - Gate deletion of clean-up steps in build_common.sh
+    apply-github-patch pytorch/pytorch e368ec2693b8b2b8ba35d0913f1d663ba2fdc804
 
     # FIXME: Temporarily disabled; to be updated in a later PR
     # # https://github.com/pytorch/pytorch/pull/160184 - Draft: separate reqs for manywheel build and pin
