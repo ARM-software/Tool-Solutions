@@ -12,6 +12,7 @@ where `YY` is the year, and `MM` the month of the increment.
  - Adds PyTorch [PR #170062](https://github.com/pytorch/pytorch/pull/170062), to add ccache support to ACL/OpenBLAS and manywheel build script.
 
 ### Changed
+ - Updates Ubuntu and Python version to 24.04 and 3.12, respectively.
 
 ### Removed
 

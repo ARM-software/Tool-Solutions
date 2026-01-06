@@ -62,7 +62,7 @@ jobs:
     strategy:
       matrix:
         config: [
-          { name: c7g, label: ah-ubuntu_22_04-c7g_8x-100 } # Metal instance required as 4x large is not big enough
+          { name: c7g, label: ah-ubuntu_24_04-c7g_8x-100 } # Metal instance required as 4x large is not big enough
         ]
 
     runs-on: ${{ matrix.config.label }}

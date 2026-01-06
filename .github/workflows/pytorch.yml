@@ -63,8 +63,8 @@ jobs:
       matrix:
         config:
           [
-            { name: c7g, label: ah-ubuntu_22_04-c7g_8x-100 },
-            { name: c8g, label: ah-ubuntu_22_04-c8g_8x }
+            { name: c7g, label: ah-ubuntu_24_04-c7g_8x-100 },
+            { name: c8g, label: ah-ubuntu_24_04-c8g_8x }
            ]
     runs-on: ${{ matrix.config.label }}
     env:
@@ -128,8 +128,8 @@ jobs:
       matrix:
         config:
           [
-            { name: c7g, label: ah-ubuntu_22_04-c7g_8x-100 },
-            { name: c8g, label: ah-ubuntu_22_04-c8g_8x }
+            { name: c7g, label: ah-ubuntu_24_04-c7g_8x-100 },
+            { name: c8g, label: ah-ubuntu_24_04-c8g_8x }
            ]
         onednn_fpmath_mode: [FP32, BF16]
     runs-on: ${{ matrix.config.label }}
