@@ -1,0 +1,31 @@
+# SPDX-FileCopyrightText: Copyright 2025 Arm Limited and affiliates.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+name: Inclusive language review
+
+# Trigger on pull requests only
+on:
+  - pull_request
+
+#* Stop stale workflows when pull requests are updated: https://stackoverflow.com/a/70972844
+#* Does not apply to the main branch.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+# Declare default permissions as read only.
+permissions: read-all
+
+jobs:
+  woke:
+    runs-on: ah-ubuntu_24_04-c7g_2x-50
+    steps:
+      - name: Checkout Tool-Solutions
+        uses: actions/checkout@v6.0.1
+
+      - name: Run 'woke'
+        uses: get-woke/woke-action@v0
+        with:
+          fail-on-error: true
+          woke-args: -c ${{ github.workspace }}/.woke.yml --output text

@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # This script is  based on the upstream MLCommon's instructions to download models.
-# https://github.com/mlperf/inference/tree/master/vision/classification_and_detection
+# https://github.com/mlperf/inference/tree/master/vision/classification_and_detection # wokeignore:rule=master
 
 cd inference/vision/classification_and_detection
 

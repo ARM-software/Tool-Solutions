@@ -34,7 +34,8 @@ The script [detect_objects.py](detect_objects.py) demonstrates how to run infere
 
 To run inference on example image call:
 
-```
+```bash
+# wokeignore:rule=master
 python detect_objects.py -m ./ssd_resnet34.yml -i https://raw.githubusercontent.com/zhreshold/mxnet-ssd/master/data/demo/street.jpg
 ```
 
