@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: Copyright 2021-2025 Arm Limited and affiliates.
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # Examples
 
 <!-- Generated with VS Code's 'Markdown All in One' extension. -->

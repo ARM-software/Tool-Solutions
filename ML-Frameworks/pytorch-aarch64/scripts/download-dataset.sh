@@ -1,4 +1,9 @@
 #!/bin/bash
+
+# SPDX-FileCopyrightText: Copyright 2020, 2021, 2023, 2025 Arm Limited and affiliates.
+#
+# SPDX-License-Identifier: Apache-2.0
+
 set -euo pipefail
 
 # This script is based on the upstream MLCommon's instructions to download datasets.
