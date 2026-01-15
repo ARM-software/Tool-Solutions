@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: Copyright 2021-2023, 2025 Arm Limited and affiliates.
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # Python Examples
 
 This folder contains number of scripts that demonstrate how to run inference with various machine learning models.
