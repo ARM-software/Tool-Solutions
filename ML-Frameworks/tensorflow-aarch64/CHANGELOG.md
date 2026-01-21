@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: Copyright 2022-2025 Arm Limited and affiliates.
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # Changelog
 All significant changes to the TensorFlow container builds in
 docker/tensorflow-aarch64 will be noted in this log.

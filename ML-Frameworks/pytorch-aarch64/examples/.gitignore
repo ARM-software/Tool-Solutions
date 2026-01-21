@@ -1,2 +1,6 @@
+# SPDX-FileCopyrightText: Copyright 2025 Arm Limited and affiliates.
+#
+# SPDX-License-Identifier: Apache-2.0
+
 ssd_resnet*/
 dev-v2.0.json
