@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# SPDX-FileCopyrightText: Copyright 2024, 2025 Arm Limited and affiliates.
+# SPDX-FileCopyrightText: Copyright 2024-2026 Arm Limited and affiliates.
 #
 # SPDX-License-Identifier: Apache-2.0
 
@@ -127,6 +127,10 @@ if ! docker container inspect $TORCH_BUILD_CONTAINER >/dev/null 2>&1 ; then
     # Install scons for ACL build
     docker exec $TORCH_BUILD_CONTAINER ${PYTHON_BIN}/python3 -m pip install scons==4.7.0
     docker exec $TORCH_BUILD_CONTAINER ln -sf ${PYTHON_BIN}/scons /usr/local/bin
+
+    # The Docker image comes with a pre-built version of ACL, but we want to build our own
+    # so we remove the provided version here
+    docker exec "$TORCH_BUILD_CONTAINER" rm -rf /acl
 
     # Affected by ACL_VERSION set as an environment variable above
     echo "Overriding Arm Compute Library version: ${ACL_VERSION}"
