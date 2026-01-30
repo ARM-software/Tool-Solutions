@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# SPDX-FileCopyrightText: Copyright 2024, 2025 Arm Limited and affiliates.
+# SPDX-FileCopyrightText: Copyright 2024-2026 Arm Limited and affiliates.
 #
 # SPDX-License-Identifier: Apache-2.0
 
@@ -45,6 +45,11 @@ if ! docker container inspect $TORCH_BUILD_CONTAINER >/dev/null 2>&1 ; then
         -v "${TORCH_AO_HOST_DIR}:${TORCH_AO_ROOT}" \
         -w / \
         "${IMAGE_NAME}")
+
+    # The Docker image comes with a copy of ACL, but we want to build against whichever
+    # version is compatible with the pip-installed torch (which ships its own copy of ACL),
+    # so we remove the existing copy here
+    docker exec -t $TORCH_BUILD_CONTAINER bash -c "cd / && rm -rf acl/"
 
     docker exec -t $TORCH_BUILD_CONTAINER bash -c "python${PYTHON_VERSION} -m venv $TEST_VENV"
     docker exec -t $TORCH_BUILD_CONTAINER bash -c "source $TEST_VENV/bin/activate && pip install typing_extensions torch wheel numpy --no-deps"
