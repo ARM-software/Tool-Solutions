@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: Copyright 2019-2025 Arm Limited and affiliates.
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # PyTorch for AArch64
 
 > [!WARNING]
