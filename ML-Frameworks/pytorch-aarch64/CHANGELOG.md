@@ -1,5 +1,5 @@
 <!--
-SPDX-FileCopyrightText: Copyright 2022-2025 Arm Limited and affiliates.
+SPDX-FileCopyrightText: Copyright 2022-2026 Arm Limited and affiliates.
 
 SPDX-License-Identifier: Apache-2.0
 -->
@@ -18,6 +18,8 @@ where `YY` is the year, and `MM` the month of the increment.
  - Adds PyTorch [PR #170062](https://github.com/pytorch/pytorch/pull/170062), to add ccache support to ACL/OpenBLAS and manywheel build script.
 
 ### Changed
+ - PyTorch and TorchAO manylinux AArch64 builder image from `cpu-aarch64-d8be0384e085f551506bd739678109fa0f5ee7ac`
+   to `cpu-aarch64-69d4c1f80b5e7da224d4f9c2170ef100e75dfe03`
  - Updates the URL used to download weights for ResNet50 used by `classify_image.py`.
  - Updates `torchvision` from 0.25.0.dev20251104 to 0.25.0.dev20260111.
  - Updates Ubuntu and Python version to 24.04 and 3.12, respectively.
