@@ -25,7 +25,7 @@ PYTHON_TAG="cp$(echo "$PYTHON_VERSION" | tr -d .)-cp$(echo "$PYTHON_VERSION" | t
 PYTHON_BIN="/opt/python/${PYTHON_TAG}/bin"
 
 # Specify DOCKER_IMAGE_MIRROR if you want to use a mirror of hub.docker.com
-IMAGE_NAME="${DOCKER_IMAGE_MIRROR:-}pytorch/manylinux2_28_aarch64-builder:cpu-aarch64-d8be0384e085f551506bd739678109fa0f5ee7ac"
+IMAGE_NAME="${DOCKER_IMAGE_MIRROR:-}pytorch/manylinux2_28_aarch64-builder:cpu-aarch64-69d4c1f80b5e7da224d4f9c2170ef100e75dfe03"
 TORCH_BUILD_CONTAINER_ID_FILE="${PWD}/.torch_build_container_id"
 
 # Output dir for PyTorch wheel and other artifacts
