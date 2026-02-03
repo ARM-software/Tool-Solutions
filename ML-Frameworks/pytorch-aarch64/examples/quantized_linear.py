@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright 2024, 2025 Arm Limited and affiliates.
+# SPDX-FileCopyrightText: Copyright 2024-2026 Arm Limited and affiliates.
 #
 # SPDX-License-Identifier: Apache-2.0
 
@@ -9,10 +9,6 @@ import torch.nn as nn
 from torchao.quantization.quant_api import (
     Int8DynamicActivationIntxWeightConfig,
     quantize_,
-)
-from torchao.dtypes.uintx.packed_linear_int8_dynamic_activation_intx_weight_layout import (
-    PackedLinearInt8DynamicActivationIntxWeightLayout,
-    Target,
 )
 from torchao.quantization.granularity import PerAxis
 from torchao.quantization.quant_primitives import MappingType
@@ -55,7 +51,6 @@ quantize_(
         weight_scale_dtype=torch.float32,
         weight_granularity=PerAxis(0),
         weight_mapping_type=MappingType.SYMMETRIC_NO_CLIPPING_ERR,
-        layout=PackedLinearInt8DynamicActivationIntxWeightLayout(target=Target.ATEN),
         weight_dtype=torch.int4,
         intx_packing_format="opaque_aten_kleidiai",
         version=2,
