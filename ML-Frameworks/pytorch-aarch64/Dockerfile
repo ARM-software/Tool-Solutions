@@ -56,7 +56,7 @@ COPY --chown=$DOCKER_USER:$DOCKER_USER ${TORCH_AO_WHEEL} /home/$DOCKER_USER/
 # Install wheels
 RUN set -eux && pip install --no-deps "$(basename "$TORCH_WHEEL")" && rm "$(basename "$TORCH_WHEEL")"
 RUN set -eux && pip install --no-deps "$(basename "$TORCH_AO_WHEEL")" && rm "$(basename "$TORCH_AO_WHEEL")"
-RUN pip install --pre torchvision==0.25.0.dev20260111 --index-url https://download.pytorch.org/whl/nightly/cpu --no-deps
+RUN pip install --pre torchvision==0.25.0.dev20260130 --index-url https://download.pytorch.org/whl/nightly/cpu --no-deps
 
 # Copy examples/tests into image
 COPY --chown=$DOCKER_USER:$DOCKER_USER examples/ /home/$DOCKER_USER/

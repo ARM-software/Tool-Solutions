@@ -1,15 +1,11 @@
-# SPDX-FileCopyrightText: Copyright 2024, 2025 Arm Limited and affiliates.
+# SPDX-FileCopyrightText: Copyright 2024-2026 Arm Limited and affiliates.
 #
 # SPDX-License-Identifier: Apache-2.0
 
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
 import sys
 import os
 import tempfile
-from pathlib import Path
-import subprocess
 import argparse
 import time
 
@@ -17,15 +13,10 @@ from torchao.quantization.quant_api import (
     Int8DynamicActivationIntxWeightConfig,
     quantize_,
 )
-from torchao.dtypes.uintx.packed_linear_int8_dynamic_activation_intx_weight_layout import (
-    PackedLinearInt8DynamicActivationIntxWeightLayout,
-    Target,
-)
 from torchao.quantization.granularity import PerGroup, PerAxis
 from torchao.quantization.quant_primitives import MappingType
 
 from transformers import AutoModelForCausalLM, AutoConfig, AutoTokenizer, TextStreamer
-from torch.profiler import profile, ProfilerActivity, tensorboard_trace_handler
 
 torch.set_grad_enabled(False)
 
@@ -83,7 +74,6 @@ def get_quantized_model(args):
 
     print("Quantizing model to 4 bit ..")
 
-    layout = PackedLinearInt8DynamicActivationIntxWeightLayout(target=Target.ATEN)
     # Set granularity and mapping type based on quant-scheme
     if args.quant_scheme == "symmetric_channelwise":
         granularity = PerAxis(axis=0)
@@ -98,7 +88,6 @@ def get_quantized_model(args):
         weight_scale_dtype=torch.float32,
         weight_granularity=granularity,
         weight_mapping_type=mapping_type,
-        layout=layout,
         weight_dtype=torch.int4,
         intx_packing_format="opaque_aten_kleidiai",
     )
