@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# SPDX-FileCopyrightText: Copyright 2020-2025 Arm Limited and affiliates.
+# SPDX-FileCopyrightText: Copyright 2020-2026 Arm Limited and affiliates.
 #
 # SPDX-License-Identifier: Apache-2.0
 
@@ -8,7 +8,7 @@ set -eux -o pipefail
 
 # exec redirects all output from now on into a file and stdout
 build_log=build-$(git rev-parse --short=7 HEAD)-$(date '+%Y-%m-%dT%H-%M-%S').log
-exec &> >(tee -a $build_log)
+exec &> >(tee -a "$build_log")
 
 # Bail out if sources are already there
 if [ -f .torch_build_container_id ] || [ -f .torch_ao_build_container_id ] || \
@@ -70,6 +70,10 @@ if ! [[ $* == *--use-existing-sources* ]]; then
     ./get-source.sh
 fi
 
+# Set the output dir for the wheels
+OUTPUT_DIR=${OUTPUT_DIR:-"${PWD}/results"}
+export OUTPUT_DIR="${OUTPUT_DIR}"
+
 # We build the wheel with ccache by default; allow disabling it via the --disable-ccache flag
 build_wheel_args=()
 if [[ "$*" == *--disable-ccache* ]]; then
@@ -80,14 +84,11 @@ fi
 [[ $* == *--wheel-only* ]] && exit 0
 
 # Use the second to last match, otherwise grep finds itself
-torch_wheel_name=$(grep -o "torch-.*.whl" $build_log | head -n -1 | tail -n 1)
+torch_wheel_name=$(grep -o "torch-.*.whl" "$build_log" | head -n -1 | tail -n 1)
 
 ./build-torch-ao-wheel.sh
 
 # Use the second to last match, otherwise grep finds itself
-torch_ao_wheel_name=$(grep -o "torchao-.*.whl" $build_log | head -n -1 | tail -n 1)
-
-# Place the torchao wheel next to the torch wheel
-cp "ao/dist/$torch_ao_wheel_name" "results/$torch_ao_wheel_name"
+torch_ao_wheel_name=$(grep -o "torchao-.*.whl" "$build_log" | head -n -1 | tail -n 1)
 
 ./dockerize.sh "results/$torch_wheel_name" "results/$torch_ao_wheel_name" --build-only

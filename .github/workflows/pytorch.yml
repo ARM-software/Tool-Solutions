@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright 2025 Arm Limited and affiliates.
+# SPDX-FileCopyrightText: Copyright 2025, 2026 Arm Limited and affiliates.
 #
 # SPDX-License-Identifier: Apache-2.0
 
@@ -55,7 +55,7 @@ jobs:
            ]
     runs-on: ${{ matrix.config.label }}
     env:
-      CCACHE_HOST_DIR: ${{ github.workspace }}/Tool-Solutions/ML-Frameworks/pytorch-aarch64/.ccache
+      CCACHE_LOCAL_DIR: ${{ github.workspace }}/Tool-Solutions/ML-Frameworks/pytorch-aarch64/.ccache
       TORCH_BUILD_CONTAINER_ID_FILE: ${{ github.workspace }}/Tool-Solutions/ML-Frameworks/pytorch-aarch64/.torch_build_container_id
     steps:
       - name: Checkout Tool-Solutions
@@ -71,14 +71,14 @@ jobs:
         run: echo "week=$(date -u +%G-%V)" >> "$GITHUB_OUTPUT"
 
       # Restore cache if available. GitHub automatically evicts cache entries that have not been
-      # accessed for over 7 days. We rotate the cache key weekly; if no cache exists for the 
-      # current week, a cache from a previous week (via the prefix restore key) will be restored 
-      # and then saved under the current week's key at the end of the job. This effectively limits 
+      # accessed for over 7 days. We rotate the cache key weekly; if no cache exists for the
+      # current week, a cache from a previous week (via the prefix restore key) will be restored
+      # and then saved under the current week's key at the end of the job. This effectively limits
       # the cache to at most two weeks of cache data.
       - name: Restore ccache cache
         uses: actions/cache@v5
         with:
-          path: ${{ env.CCACHE_HOST_DIR }}
+          path: ${{ env.CCACHE_LOCAL_DIR }}
           key: ccache-${{ matrix.config.name }}-${{ steps.cache_suffix.outputs.week }}
           restore-keys: |
             ccache-${{ matrix.config.name }}-
@@ -88,11 +88,11 @@ jobs:
         run: ${{ github.workspace }}/Tool-Solutions/ML-Frameworks/pytorch-aarch64/build.sh
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CCACHE_HOST_DIR: ${{ env.CCACHE_HOST_DIR }}
+          CCACHE_LOCAL_DIR: ${{ env.CCACHE_LOCAL_DIR }}
           CCACHE_MAXSIZE: 2G
 
       - name: Print ccache disk usage
-        run: du -sh "${{ env.CCACHE_HOST_DIR }}" || true
+        run: du -sh "${{ env.CCACHE_LOCAL_DIR }}" || true
 
       - name: Report final ccache build stats
         run: docker exec "$(cat ${{ env.TORCH_BUILD_CONTAINER_ID_FILE }})" ccache -s || true
