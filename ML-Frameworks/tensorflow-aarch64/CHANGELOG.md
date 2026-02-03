@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: Copyright 2022-2026 Arm Limited and affiliates.
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # Changelog
 All significant changes to the TensorFlow container builds in
 docker/tensorflow-aarch64 will be noted in this log.
@@ -10,7 +16,7 @@ where `YY` is the year, and `MM` the month of the increment.
 ### Added
 
 ### Changed
- - Updates TensorFlow hash to 20c4833e3b81d1aa947643da899b8fb512d22e36, from nightly, Jan 11th
+ - Updates TensorFlow hash to 3d4958d107b77a2e4398c066971a099a369ef739, from nightly, Feb 2nd
  - Updates Ubuntu and Python version to 24.04 and 3.12, respectively.
 
 ### Removed

@@ -1,21 +1,8 @@
 #!/bin/bash
 
-# *******************************************************************************
-# Copyright 2024-2025 Arm Limited and affiliates.
+# SPDX-FileCopyrightText: Copyright 2024-2026 Arm Limited and affiliates.
+#
 # SPDX-License-Identifier: Apache-2.0
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-# *******************************************************************************
 
 # Note that this script intentionally has no options. It builds *the* PyTorch
 # Tool-Solutions, of which there is only one type
@@ -23,8 +10,8 @@
 # The logic in this script should mirror the upstream build pipelines as closely
 # as possible, along with Tool-Solutions specific changes we want to test (e.g.
 # installing tbb) or improving local development in a way that doesn't affect
-# the result. Currently the upstream logic is defined in 
-#               pytorch/.github/workflows/_binary-build-linux.yml 
+# the result. Currently the upstream logic is defined in
+#               pytorch/.github/workflows/_binary-build-linux.yml
 # and
 #   pytorch/.github/workflows/generated-linux-aarch64-binary-manywheel-nightly.yml
 
@@ -32,13 +19,13 @@ set -eux -o pipefail
 
 PYTHON_VERSION="3.12"
 OPENBLAS_VERSION="v0.3.30"
-ACL_VERSION="v52.6.0"
+ACL_VERSION="v52.8.0"
 
 PYTHON_TAG="cp$(echo "$PYTHON_VERSION" | tr -d .)-cp$(echo "$PYTHON_VERSION" | tr -d .)"
 PYTHON_BIN="/opt/python/${PYTHON_TAG}/bin"
 
 # Specify DOCKER_IMAGE_MIRROR if you want to use a mirror of hub.docker.com
-IMAGE_NAME="${DOCKER_IMAGE_MIRROR:-}pytorch/manylinux2_28_aarch64-builder:cpu-aarch64-d8be0384e085f551506bd739678109fa0f5ee7ac"
+IMAGE_NAME="${DOCKER_IMAGE_MIRROR:-}pytorch/manylinux2_28_aarch64-builder:cpu-aarch64-69d4c1f80b5e7da224d4f9c2170ef100e75dfe03"
 TORCH_BUILD_CONTAINER_ID_FILE="${PWD}/.torch_build_container_id"
 
 # Output dir for PyTorch wheel and other artifacts
@@ -140,6 +127,10 @@ if ! docker container inspect $TORCH_BUILD_CONTAINER >/dev/null 2>&1 ; then
     # Install scons for ACL build
     docker exec $TORCH_BUILD_CONTAINER ${PYTHON_BIN}/python3 -m pip install scons==4.7.0
     docker exec $TORCH_BUILD_CONTAINER ln -sf ${PYTHON_BIN}/scons /usr/local/bin
+
+    # The Docker image comes with a pre-built version of ACL, but we want to build our own
+    # so we remove the provided version here
+    docker exec "$TORCH_BUILD_CONTAINER" rm -rf /acl
 
     # Affected by ACL_VERSION set as an environment variable above
     echo "Overriding Arm Compute Library version: ${ACL_VERSION}"

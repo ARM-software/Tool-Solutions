@@ -1,20 +1,7 @@
-# *******************************************************************************
-# Copyright 2020-2026 Arm Limited and affiliates.
-# Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-FileCopyrightText: Copyright 2020-2026 Arm Limited and affiliates.
+# SPDX-FileCopyrightText: Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+#
 # SPDX-License-Identifier: Apache-2.0
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-# *******************************************************************************
 
 # Specify DOCKER_IMAGE_MIRROR if you want to use a mirror of hub.docker.com
 ARG PYTHON_IMAGE=python:3.12-slim
@@ -69,7 +56,7 @@ COPY --chown=$DOCKER_USER:$DOCKER_USER ${TORCH_AO_WHEEL} /home/$DOCKER_USER/
 # Install wheels
 RUN set -eux && pip install --no-deps "$(basename "$TORCH_WHEEL")" && rm "$(basename "$TORCH_WHEEL")"
 RUN set -eux && pip install --no-deps "$(basename "$TORCH_AO_WHEEL")" && rm "$(basename "$TORCH_AO_WHEEL")"
-RUN pip install --pre torchvision==0.25.0.dev20260111 --index-url https://download.pytorch.org/whl/nightly/cpu --no-deps
+RUN pip install --pre torchvision==0.25.0.dev20260130 --index-url https://download.pytorch.org/whl/nightly/cpu --no-deps
 
 # Copy examples/tests into image
 COPY --chown=$DOCKER_USER:$DOCKER_USER examples/ /home/$DOCKER_USER/

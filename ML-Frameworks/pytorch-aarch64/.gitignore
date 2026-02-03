@@ -1,6 +1,11 @@
+# SPDX-FileCopyrightText: Copyright 2024-2026 Arm Limited and affiliates.
+#
+# SPDX-License-Identifier: Apache-2.0
+
 ComputeLibrary/
 pytorch/
 results/
 ao/
 *.whl
 .*_build_container_id
+.ccache/
