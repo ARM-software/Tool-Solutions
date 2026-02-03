@@ -19,7 +19,7 @@ set -eux -o pipefail
 
 PYTHON_VERSION="3.12"
 OPENBLAS_VERSION="v0.3.30"
-ACL_VERSION="v52.6.0"
+ACL_VERSION="v52.8.0"
 
 PYTHON_TAG="cp$(echo "$PYTHON_VERSION" | tr -d .)-cp$(echo "$PYTHON_VERSION" | tr -d .)"
 PYTHON_BIN="/opt/python/${PYTHON_TAG}/bin"
