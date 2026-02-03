@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# SPDX-FileCopyrightText: Copyright 2024, 2025 Arm Limited and affiliates.
+# SPDX-FileCopyrightText: Copyright 2024-2026 Arm Limited and affiliates.
 #
 # SPDX-License-Identifier: Apache-2.0
 
@@ -8,11 +8,11 @@ source ../utils/git-utils.sh
 
 set -eux -o pipefail
 
-PYTORCH_HASH=93fef4bd1dd265588863929e35d9ac89328d5695  # 2.10.0.dev20251124 from viable/strict, Nov 24th
-IDEEP_HASH=3724bec97a77ce990e8c6dc5e595bb3beee75257    # From ideep_pytorch, Nov 24th
-ONEDNN_HASH=0b8a866c009b03f322e6526d7c33cfec84a4a97a   # From main, Nov 25th
-TORCH_AO_HASH=ab6bc89512d912c17a79ed8d4d709612d3e32884 # From main, Nov 25th
-KLEIDIAI_HASH=94d6cc40689f44d308dbd57cb842e335fdd958f1 # v1.17.0 from main, Nov 17th
+PYTORCH_HASH=77da53a7356e033e3fc1e03fdd960fc4ad117882   # 2.11.0.dev20260130 from viable/strict, Jan 30th
+IDEEP_HASH=bbb9ffb9e0c401ca058b7f35a6ebe7d0e08ffd34     # From ideep_pytorch, Jan 30th
+ONEDNN_HASH=804f364c04ad8a763d534abaabc99bf99c2754e0    # From main, Jan 30th
+TORCH_AO_HASH=30fcb156945ecacd515775414d37c09bfe60727e  # From main, Jan 30th
+KLEIDIAI_HASH=5addaad73ebbb02e7dde6c50fff3bdb2ae8c407f  # v1.20.0 from main, Jan 30th
 
 git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
 (
@@ -40,10 +40,6 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
 
     # https://github.com/pytorch/pytorch/pull/159859 - PoC LUT optimisation for GELU bf16 operators
     apply-github-patch pytorch/pytorch ebcc874e317f9563ab770fc5c27df969e0438a5e
-
-    # https://github.com/pytorch/pytorch/pull/144992 - Enable fp16 linear layers in PyTorch via ACL
-    apply-github-patch pytorch/pytorch 00076d21ed6cd7df2a61165b1fb1d0a436f4e403
-    apply-github-patch pytorch/pytorch 850db41fe6d33c6460740da781b40e009f04a47c
 
     # https://github.com/pytorch/pytorch/pull/167328 - Build cpuinfo into c10 shared library
     apply-github-patch pytorch/pytorch 715ba4203ccaa71f7cb8f351fa135110b6f7ecd4
@@ -85,11 +81,6 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
         (
             cd mkl-dnn
             git fetch origin $ONEDNN_HASH && git clean -f && git checkout -f FETCH_HEAD
-
-            # https://github.com/uxlfoundation/oneDNN/pull/4237 - cpu: aarch64: jit_reorder: cache blocking 4/8 inner blocks
-            apply-github-patch uxlfoundation/oneDNN 8bdff1a2a6625432701363185a9bd34f7c22f241
-            # https://github.com/uxlfoundation/oneDNN/pull/4377 - cpu: aarch64: conv: optimize brgemm
-            apply-github-patch uxlfoundation/oneDNN 93b8cc29afc6ee9c2856436a5f5b10d5f1f2f2f1
         )
     )
     (
