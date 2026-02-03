@@ -1,0 +1,60 @@
+# SPDX-FileCopyrightText: Copyright 2025 Arm Limited and affiliates.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+fail_fast: false
+
+repos:
+  - repo: local
+    hooks:
+      # Python/YAML/shell: use hash comments (no --multi-line)
+      - id: reuse-annotate-current-year-python-yaml-shell-files
+        name: REUSE Annotate (Python add current year, merge)
+        language: python
+        additional_dependencies: [reuse==6.2.0]
+        entry: reuse annotate
+        args:
+          - --merge-copyrights
+          - --license
+          - Apache-2.0
+          - --copyright
+          - Arm Limited and affiliates.
+          - --copyright-prefix
+          - spdx-string
+          - --style
+          - python
+        pass_filenames: true
+        files: '(\.gitignore|\.dockerignore|requirements\.txt|bash_profile|Dockerfile|\.(py|yml|yaml|sh|bash))$'
+        stages: [ pre-commit ]
+
+      # JSON/Markdown/welcome.txt: use sidecar .license files
+      - id: reuse-annotate-current-year-json-and-md
+        name: REUSE Annotate (JSON/Markdown/welcome.txt sidecar fallback add current year, merge)
+        language: python
+        additional_dependencies: [reuse==6.2.0]
+        entry: reuse annotate
+        args:
+          - --merge-copyrights
+          - --license
+          - Apache-2.0
+          - --copyright
+          - Arm Limited and affiliates.
+          - --copyright-prefix
+          - spdx-string
+          - --fallback-dot-license
+        pass_filenames: true
+        files: '(welcome\.txt|\.(json|md))$'
+        stages: [ pre-commit ]
+
+  - repo: https://github.com/fsfe/reuse-tool
+    rev: v6.2.0
+    hooks:
+      - id: reuse-lint-file
+        stages: [ pre-commit ]
+        name: "REUSE Compliant Copyright and License"
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+        stages: [ pre-commit ]

@@ -1,21 +1,8 @@
 #!/bin/bash
 
-# *******************************************************************************
-# Copyright 2024-2025 Arm Limited and affiliates.
+# SPDX-FileCopyrightText: Copyright 2024-2026 Arm Limited and affiliates.
+#
 # SPDX-License-Identifier: Apache-2.0
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-# *******************************************************************************
 
 # Note that this script intentionally has no options. It builds *the* torchao
 # Tool-Solutions, of which there is only one type
@@ -25,7 +12,7 @@ set -eux -o pipefail
 PYTHON_VERSION="3.12"
 
 # Specify DOCKER_IMAGE_MIRROR if you want to use a mirror of hub.docker.com
-IMAGE_NAME="${DOCKER_IMAGE_MIRROR:-}pytorch/manylinux2_28_aarch64-builder:cpu-aarch64-d8be0384e085f551506bd739678109fa0f5ee7ac"
+IMAGE_NAME="${DOCKER_IMAGE_MIRROR:-}pytorch/manylinux2_28_aarch64-builder:cpu-aarch64-69d4c1f80b5e7da224d4f9c2170ef100e75dfe03"
 TORCH_BUILD_CONTAINER_ID_FILE="${PWD}/.torch_ao_build_container_id"
 
 TEST_VENV=aarch64_env_test_torch_ao
@@ -58,6 +45,11 @@ if ! docker container inspect $TORCH_BUILD_CONTAINER >/dev/null 2>&1 ; then
         -v "${TORCH_AO_HOST_DIR}:${TORCH_AO_ROOT}" \
         -w / \
         "${IMAGE_NAME}")
+
+    # The Docker image comes with a copy of ACL, but we want to build against whichever
+    # version is compatible with the pip-installed torch (which ships its own copy of ACL),
+    # so we remove the existing copy here
+    docker exec -t $TORCH_BUILD_CONTAINER bash -c "cd / && rm -rf acl/"
 
     docker exec -t $TORCH_BUILD_CONTAINER bash -c "python${PYTHON_VERSION} -m venv $TEST_VENV"
     docker exec -t $TORCH_BUILD_CONTAINER bash -c "source $TEST_VENV/bin/activate && pip install typing_extensions torch wheel numpy --no-deps"
