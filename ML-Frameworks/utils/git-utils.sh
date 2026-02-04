@@ -51,8 +51,12 @@ function apply-github-patch {
         fi
     fi
 
+    _git_with_credentials() {
+        git -c user.name="apply-github-patch" -c user.email="noreply@example.com" "$@"
+    }
+
     # Approach #1: Try a simple patch application with 'git am'
-    git am --keep-cr "$patch_file" && return 0
+    _git_with_credentials am --keep-cr "$patch_file" && return 0
     git am --abort || true # wokeignore:rule=abort/terminate
 
     # Approach #2: Try a three-way merge after fetching the parent commit. It can handle
@@ -63,13 +67,13 @@ function apply-github-patch {
         fetch_url="https://x-access-token:${GITHUB_TOKEN}@github.com/$1.git"
     fi
     git fetch --no-tags --quiet --depth=2 "$fetch_url" "$2" || true
-    git am --3way --keep-cr "$patch_file" && return 0
+    _git_with_credentials am --3way --keep-cr "$patch_file" && return 0
     git am --abort || true # wokeignore:rule=abort/terminate
 
     # Approach #3: Fall back to GNU 'patch'
     patch -p1 < "$patch_file" || return 1
     git add -A
-    git -c user.name="apply-github-patch" -c user.email="noreply@example.com" commit -m "Applied patch $2 from $1."
+    _git_with_credentials commit -m "Applied patch $2 from $1."
     return 0
 }
 
