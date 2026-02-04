@@ -56,6 +56,8 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
     git rm third_party/cutlass
     git rm third_party/flash-attention
     git rm third_party/NVTX
+    # fbgemm/fbgemm_gpu/experimental/gen_ai has moved to the 'mslk' repo. Get rid of it
+    git rm third_party/mslk
 
     # Update submodules
     git submodule sync
