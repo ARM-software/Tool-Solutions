@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# SPDX-FileCopyrightText: Copyright 2024, 2025 Arm Limited and affiliates.
+# SPDX-FileCopyrightText: Copyright 2024-2026 Arm Limited and affiliates.
 #
 # SPDX-License-Identifier: Apache-2.0
 
@@ -29,7 +29,7 @@ docker buildx \
     --build-arg DOCKER_IMAGE_MIRROR \
     --build-arg TORCH_WHEEL=$1 \
     --build-arg TORCH_AO_WHEEL=$2 \
-    --build-arg USERNAME=ubuntu \
+    --build-arg USERNAME=debian \
     .
 
 [[ $* == *--build-only* ]] && exit 0
