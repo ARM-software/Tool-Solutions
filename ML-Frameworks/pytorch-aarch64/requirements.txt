@@ -21,7 +21,7 @@ opencv-python-headless~=4.10.0.84
 packaging~=24.1
 pandas~=2.2.3
 pillow~=11.0.0
-protobuf==5.29.5      # GenAI models dependency
+protobuf==6.33.5      # GenAI models dependency
 pyaml~=24.9.0
 python-dateutil~=2.9.0.post0
 pytz==2024.2
