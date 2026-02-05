@@ -16,7 +16,18 @@ where `YY` is the year, and `MM` the month of the increment.
 ### Added
 
 ### Changed
- - Updates TensorFlow hash to 3d4958d107b77a2e4398c066971a099a369ef739, from nightly, Feb 2nd.
+
+### Removed
+
+### Fixed
+
+## [r26.02] 2026-02-09
+https://github.com/ARM-software/Tool-Solutions/tree/r26.02
+
+### Added
+
+### Changed
+ - Updates TensorFlow hash to 3d4958d107b77a2e4398c066971a099a369ef739, from nightly, Feb 2nd
  - Updates Ubuntu and Python version to 24.04 and 3.12, respectively.
 
 ### Removed
