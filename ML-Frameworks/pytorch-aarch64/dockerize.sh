@@ -22,6 +22,9 @@ if ! [ -e "$1" ] || ! [ -e "$2" ]; then
     exit 1
 fi
 
+IMAGE_USERNAME="${USERNAME:-$(. /etc/os-release && echo "$ID")}"
+echo "USERNAME=$IMAGE_USERNAME"
+
 docker buildx \
     build --load \
     -t toolsolutions-pytorch:latest  \
@@ -29,7 +32,7 @@ docker buildx \
     --build-arg DOCKER_IMAGE_MIRROR \
     --build-arg TORCH_WHEEL=$1 \
     --build-arg TORCH_AO_WHEEL=$2 \
-    --build-arg USERNAME=debian \
+    --build-arg USERNAME="$IMAGE_USERNAME" \
     .
 
 [[ $* == *--build-only* ]] && exit 0
