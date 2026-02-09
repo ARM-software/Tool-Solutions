@@ -40,7 +40,7 @@ RUN python -m venv /home/$DOCKER_USER/.venv
 ENV PATH="/home/$DOCKER_USER/.venv/bin:${PATH}"
 
 # Install uv for quicker package installations
-RUN pip install uv
+RUN pip install uv==0.9.29
 
 # Update to newer pip/setuptools/wheel (setuptools >= 70.0.0 due to CVE-2024-6345
 # and CVE-2025-47273, wheel >= 0.38.0 due to CVE-2022-40898) and delete old system
