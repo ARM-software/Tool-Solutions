@@ -57,7 +57,7 @@ function apply-github-patch {
 
     # Approach #1: Try a simple patch application with 'git am'
     _git_with_credentials am --keep-cr "$patch_file" && return 0
-    git am --abort || true # wokeignore:rule=abort/terminate
+    _git_with_credentials am --abort || true # wokeignore:rule=abort/terminate
 
     # Approach #2: Try a three-way merge after fetching the parent commit. It can handle
     # scenarios in which the context of the patch has moved. However, we need the parent
@@ -68,7 +68,7 @@ function apply-github-patch {
     fi
     git fetch --no-tags --quiet --depth=2 "$fetch_url" "$2" || true
     _git_with_credentials am --3way --keep-cr "$patch_file" && return 0
-    git am --abort || true # wokeignore:rule=abort/terminate
+    _git_with_credentials am --abort || true # wokeignore:rule=abort/terminate
 
     # Approach #3: Fall back to GNU 'patch'
     patch -p1 < "$patch_file" || return 1

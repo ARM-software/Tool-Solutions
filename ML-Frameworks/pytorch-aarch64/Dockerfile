@@ -4,13 +4,13 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # Specify DOCKER_IMAGE_MIRROR if you want to use a mirror of hub.docker.com
-ARG PYTHON_IMAGE=python:3.12-slim
+ARG BASE_IMAGE=python:3.12-slim
 ARG DOCKER_IMAGE_MIRROR=""
 
 # ============================
 # Workshop
 # ============================
-FROM ${DOCKER_IMAGE_MIRROR}${PYTHON_IMAGE} AS workshop
+FROM ${DOCKER_IMAGE_MIRROR}${BASE_IMAGE} AS workshop
 
 ARG USERNAME
 ARG TORCH_WHEEL
@@ -33,6 +33,7 @@ COPY --chown=$DOCKER_USER:$DOCKER_USER welcome.txt /home/$DOCKER_USER/welcome.tx
 
 # Switch to userland
 USER $DOCKER_USER
+RUN echo "DOCKER_USER=${DOCKER_USER}"
 WORKDIR /home/$DOCKER_USER
 
 # Create virtual environment
@@ -68,7 +69,7 @@ COPY --chown=$DOCKER_USER:$DOCKER_USER pytorch/test /home/$DOCKER_USER/pytorch/t
 # ============================
 # Final flat image
 # ============================
-FROM ${DOCKER_IMAGE_MIRROR}${PYTHON_IMAGE}
+FROM ${DOCKER_IMAGE_MIRROR}${BASE_IMAGE}
 
 ARG USERNAME
 ENV DEBIAN_FRONTEND=noninteractive
