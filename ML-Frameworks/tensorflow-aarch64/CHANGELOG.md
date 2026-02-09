@@ -20,6 +20,9 @@ where `YY` is the year, and `MM` the month of the increment.
 ### Removed
 
 ### Fixed
+ - Updates Python packages to address known vulnerabilies with a high CVSS score:
+   - Updates `urllib` to 2.6.3 as a mitigation for CVE-2025-66418, CVE-2025-66471, and CVE-2026-21441.
+   - Updates `wheel` to 0.46.2 as a mitigation for CVE-2026-24049.
 
 ## [r26.02] 2026-02-09
 https://github.com/ARM-software/Tool-Solutions/tree/r26.02

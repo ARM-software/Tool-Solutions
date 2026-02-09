@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright 2020-2025 Arm Limited and affiliates.
+# SPDX-FileCopyrightText: Copyright 2020-2026 Arm Limited and affiliates.
 #
 # SPDX-License-Identifier: Apache-2.0
 
@@ -82,10 +82,10 @@ RUN python -m venv /home/$DOCKER_USER/.venv
 # Make the venv python/pip first on PATH for all subsequent layers and at runtime
 ENV PATH="/home/$DOCKER_USER/.venv/bin:$PATH"
 
-# Update to newer pip/setuptools/wheel (setuptools >= 70.0.0 due to CVE-2024-6345
-# and CVE-2025-47273, wheel >= 0.38.0 due to CVE-2022-40898) and delete old system
-# version (we essentially use apt:python3-pip to bootstrap pip)
-RUN pip install --upgrade pip~=25.2 setuptools~=78.1.1 wheel~=0.45.1
+# Update to newer pip/setuptools/wheel:
+#  - setuptools >= 70.0.0 due to CVE-2024-6345 and CVE-2025-47273
+#  - wheel >= 0.38.0 due to CVE-2022-40898 and >= 0.46.2 due to CVE-2026-24049
+RUN pip install --upgrade pip~=26.0 setuptools~=78.1.1 wheel~=0.46.2
 
 # Check TENSORFLOW_WHEEL was set and copy
 RUN test -n "$TENSORFLOW_WHEEL"
