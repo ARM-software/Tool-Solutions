@@ -12,12 +12,11 @@ ARG DOCKER_IMAGE_MIRROR=""
 # ============================
 FROM ${DOCKER_IMAGE_MIRROR}${BASE_IMAGE} AS workshop
 
-ARG USERNAME
 ARG TORCH_WHEEL
 ARG TORCH_AO_WHEEL
 
 ENV DEBIAN_FRONTEND=noninteractive
-ENV DOCKER_USER=${USERNAME}
+ENV DOCKER_USER=debian
 
 RUN test "$(arch)" = "aarch64"
 
@@ -71,9 +70,8 @@ COPY --chown=$DOCKER_USER:$DOCKER_USER pytorch/test /home/$DOCKER_USER/pytorch/t
 # ============================
 FROM ${DOCKER_IMAGE_MIRROR}${BASE_IMAGE}
 
-ARG USERNAME
 ENV DEBIAN_FRONTEND=noninteractive
-ENV DOCKER_USER=${USERNAME}
+ENV DOCKER_USER=debian
 
 # Runtime OS bits + UI
 RUN set -eux && \
