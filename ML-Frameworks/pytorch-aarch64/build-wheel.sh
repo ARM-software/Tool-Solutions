@@ -155,7 +155,11 @@ docker_exec rm -rf "${PYTORCH_CONTAINER_DIR}/dist"
 # commit, this allows us to also install the matching torch* packages, set in
 # the Dockerfile. This is what PyTorch does in its nightly pipeline, see
 # pytorch/.ci/aarch64_linux/aarch64_wheel_ci_build.py for this logic.
-build_date=$(cd "$PYTORCH_LOCAL_DIR" && git log --pretty=format:%cs -1 | tr -d '-')
+# NOTE: This relies on the fact that we only ever perform a shallow clone of the
+# PyTorch repo so the first commit is the latest commit on the branch we clone,
+# which is what we want to base the version on. If this ever changes, we may need
+# to update this logic.
+build_date=$(cd "$PYTORCH_LOCAL_DIR" && git log --reverse --pretty=format:%cs -1 | tr -d '-')
 version=$(cat "$PYTORCH_LOCAL_DIR/version.txt" | tr -d "[:space:]")
 OVERRIDE_PACKAGE_VERSION="${version%??}.dev${build_date}${TORCH_RELEASE_ID:+"+$TORCH_RELEASE_ID"}"
 
