@@ -4,6 +4,8 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+source ./versions.sh
+
 set -eux -o pipefail
 
 help_str="dockerize.sh takes a PyTorch wheel as the first argument and an ao wheel
@@ -29,6 +31,7 @@ docker buildx \
     --build-arg DOCKER_IMAGE_MIRROR \
     --build-arg TORCH_WHEEL=$1 \
     --build-arg TORCH_AO_WHEEL=$2 \
+    --build-arg TORCHVISION_NIGHTLY="${TORCHVISION_NIGHTLY}" \
     .
 
 [[ $* == *--build-only* ]] && exit 0

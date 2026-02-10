@@ -15,6 +15,8 @@
 # and
 #   pytorch/.github/workflows/generated-linux-aarch64-binary-manywheel-nightly.yml
 
+source ./versions.sh
+
 set -eux -o pipefail
 
 docker_exec() {
@@ -22,8 +24,6 @@ docker_exec() {
 }
 
 PYTHON_VERSION="3.12"
-OPENBLAS_VERSION="v0.3.30"
-ACL_VERSION="v52.8.0"
 
 # Specify DOCKER_IMAGE_MIRROR if you want to use a mirror of hub.docker.com
 IMAGE_NAME="${DOCKER_IMAGE_MIRROR:-}pytorch/manylinux2_28_aarch64-builder:cpu-aarch64-69d4c1f80b5e7da224d4f9c2170ef100e75dfe03"
@@ -155,7 +155,7 @@ docker_exec rm -rf "${PYTORCH_CONTAINER_DIR}/dist"
 # commit, this allows us to also install the matching torch* packages, set in
 # the Dockerfile. This is what PyTorch does in its nightly pipeline, see
 # pytorch/.ci/aarch64_linux/aarch64_wheel_ci_build.py for this logic.
-build_date=$(cd "$PYTORCH_LOCAL_DIR" && git log --pretty=format:%cs -1 | tr -d '-')
+build_date=$(cd "$PYTORCH_LOCAL_DIR" && git show -s --format=%cs "${PYTORCH_HASH}" | tr -d '-')
 version=$(cat "$PYTORCH_LOCAL_DIR/version.txt" | tr -d "[:space:]")
 OVERRIDE_PACKAGE_VERSION="${version%??}.dev${build_date}${TORCH_RELEASE_ID:+"+$TORCH_RELEASE_ID"}"
 

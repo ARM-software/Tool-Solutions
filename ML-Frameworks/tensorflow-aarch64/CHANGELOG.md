@@ -21,7 +21,7 @@ where `YY` is the year, and `MM` the month of the increment.
 
 ### Fixed
 
-## [r26.02] 2026-02-09
+## [r26.02] 2026-02-11
 https://github.com/ARM-software/Tool-Solutions/tree/r26.02
 
 ### Added
