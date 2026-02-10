@@ -1,117 +1,82 @@
-# SPDX-FileCopyrightText: Copyright 2020-2025 Arm Limited and affiliates.
+# SPDX-FileCopyrightText: Copyright 2020-2026 Arm Limited and affiliates.
 #
 # SPDX-License-Identifier: Apache-2.0
 
 # Specify DOCKER_IMAGE_MIRROR if you want to use a mirror of hub.docker.com
+ARG BASE_IMAGE=python:3.12-slim
 ARG DOCKER_IMAGE_MIRROR=""
-FROM ${DOCKER_IMAGE_MIRROR}ubuntu:24.04 AS workshop
 
-ARG USERNAME
+# ============================
+# Workshop
+# ============================
+FROM ${DOCKER_IMAGE_MIRROR}${BASE_IMAGE} AS workshop
 
 ARG TENSORFLOW_WHEEL
-ENV TENSORFLOW_WHEEL=$TENSORFLOW_WHEEL
 
-RUN if ! [ "$(arch)" = "aarch64" ] ; then exit 1; fi
+ENV DEBIAN_FRONTEND=noninteractive
+ENV DOCKER_USER=debian
 
-RUN apt-get update && apt-get install -y \
-    # We need pip to install things, this will also bring in a minimal python3
-    python3-pip \
-    # So that we can create a virtual environment
-    python3-venv \
-    # So that we can call python instead of python3
-    python-is-python3 \
-    # To allow users to install new things if they want
-    sudo \
-    # Git
-    git \
-    && rm -rf /var/lib/apt/lists/*
-RUN apt-get update
-RUN apt-get install -y protobuf-compiler
-RUN apt-get install -y wget
+RUN test "$(arch)" = "aarch64"
 
-# DOCKER_USER for the Docker user
-ENV DOCKER_USER=${USERNAME}
+# Install OS dependencies
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends protobuf-compiler wget && \
+    rm -rf /var/lib/apt/lists/*
 
-# Create user only if it doesn't already exist
-RUN id "$DOCKER_USER" >/dev/null 2>&1 || useradd --create-home -s /bin/bash -m "$DOCKER_USER"
+# Create user
+RUN set -eux && id "$DOCKER_USER" >/dev/null 2>&1 || useradd --create-home -s /bin/bash "$DOCKER_USER"
 
-# Set password and add to sudo group
-RUN echo "$DOCKER_USER:ToolSolutionsTensorFlow" | chpasswd && adduser "$DOCKER_USER" sudo || true
+# Copy bash profile and welcome text into user home
+COPY --chown=$DOCKER_USER:$DOCKER_USER bash_profile /home/$DOCKER_USER/.bash_profile
+COPY --chown=$DOCKER_USER:$DOCKER_USER welcome.txt /home/$DOCKER_USER/welcome.txt
 
-RUN echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
-RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
-
-# Import profile for bash
-COPY bash_profile /home/$DOCKER_USER/.bash_profile
-RUN chown $DOCKER_USER:$DOCKER_USER /home/$DOCKER_USER/.bash_profile
-
-# Add welcome message to warn about dev quality
-COPY welcome.txt /home/$DOCKER_USER/
-RUN echo '[ ! -z "$TERM" -a -r /home/$DOCKER_USER/welcome.txt ] && cat /home/$DOCKER_USER/welcome.txt' >> /etc/bash.bashrc
-RUN echo 'export PATH="$HOME/.local/bin:$PATH"' >>  /etc/bash.bashrc
-
-# Grab the SECURITY.md from the root directory
-COPY --from=rootdir SECURITY.md /home/$DOCKER_USER/
-
-# Remove system Python stuff. Should be safe to wipe after the line above, because
-# python3 -m pip now uses the /usr/local install. Also removes unused protobuf
-# packages to resolve CVE-2025-4565.
-RUN apt-get update && apt-get purge -y \
-      python3-pip \
-      python3-setuptools \
-      python3-pkg-resources \
-      python3-wheel \
-      python3-distutils \
-      python3-lib2to3 \
-      python3-dev \
-      python3.12-dev \
-      libprotobuf32t64 \
-      libprotobuf-lite32t64 \
-      libprotoc32t64 \
-      protobuf-compiler \
-    && apt-get autoremove -y \
-    && rm -rf /var/lib/apt/lists/*
-
-# Move to userland
-WORKDIR /home/$DOCKER_USER
+# Switch to userland
 USER $DOCKER_USER
+WORKDIR /home/$DOCKER_USER
 
-# Create a per-user virtualenv and use that for everything Python
+# Create virtual environment
 RUN python -m venv /home/$DOCKER_USER/.venv
+ENV PATH="/home/$DOCKER_USER/.venv/bin:${PATH}"
 
-# Make the venv python/pip first on PATH for all subsequent layers and at runtime
-ENV PATH="/home/$DOCKER_USER/.venv/bin:$PATH"
+# Install uv for quicker package installations
+RUN pip install uv==0.9.29
 
 # Update to newer pip/setuptools/wheel (setuptools >= 70.0.0 due to CVE-2024-6345
 # and CVE-2025-47273, wheel >= 0.38.0 due to CVE-2022-40898) and delete old system
 # version (we essentially use apt:python3-pip to bootstrap pip)
-RUN pip install --upgrade pip~=25.2 setuptools~=78.1.1 wheel~=0.45.1
+RUN uv pip install --upgrade pip~=25.2 setuptools~=78.1.1 wheel~=0.45.1
 
-# Check TENSORFLOW_WHEEL was set and copy
-RUN test -n "$TENSORFLOW_WHEEL"
-COPY $TENSORFLOW_WHEEL /home/$DOCKER_USER/
+# Install non-TensorFlow requirements
+COPY --chown=$DOCKER_USER:$DOCKER_USER requirements.txt .
+RUN uv pip install -r requirements.txt --no-deps
 
-# Install our dev build of TensorFlow.
-RUN pip install "$(basename "$TENSORFLOW_WHEEL")" \
-    && rm "$(basename "$TENSORFLOW_WHEEL")"
+# Bring wheels into image
+RUN test -n "${TENSORFLOW_WHEEL}"
+COPY --chown=$DOCKER_USER:$DOCKER_USER ${TENSORFLOW_WHEEL} /home/$DOCKER_USER/
 
-# Base requirements for examples, excluding TensorFlow
-COPY requirements.txt ./
-RUN pip install -r requirements.txt --no-deps
+# Install wheel
+RUN set -eux && uv pip install "$(basename "$TENSORFLOW_WHEEL")" && rm "$(basename "$TENSORFLOW_WHEEL")"
 
-# Setup Examples and tests
-COPY --chown=$DOCKER_USER examples/ /home/$DOCKER_USER/
-COPY --chown=$DOCKER_USER tensorflow/ /home/$DOCKER_USER/tensorflow
+# Copy examples/tests into image
+COPY --chown=$DOCKER_USER:$DOCKER_USER examples/ /home/$DOCKER_USER/
+COPY --chown=$DOCKER_USER:$DOCKER_USER tensorflow/ /home/$DOCKER_USER/tensorflow
 
-# Move build into final image as a single layer.
-FROM ${DOCKER_IMAGE_MIRROR}ubuntu:24.04
+# ============================
+# Final flat image
+# ============================
+FROM ${DOCKER_IMAGE_MIRROR}${BASE_IMAGE}
 
-ARG USERNAME
+ENV DEBIAN_FRONTEND=noninteractive
+ENV DOCKER_USER=debian
 
-ENV DOCKER_USER=${USERNAME}
+# Runtime OS bits + UI
+RUN set -eux && \
+    if ! id "$DOCKER_USER" >/dev/null 2>&1; then useradd --create-home -s /bin/bash "$DOCKER_USER"; fi && \
+    echo '[ -n "$TERM" -a -r "$HOME/welcome.txt" ] && cat "$HOME/welcome.txt"' >> /etc/bash.bashrc && \
+    echo 'export PATH="$HOME/.local/bin:$HOME/.venv/bin:$PATH"' >> /etc/bash.bashrc
 
-COPY --from=workshop / /
-RUN chown $DOCKER_USER:$DOCKER_USER /home/$DOCKER_USER
+# Bring in prepped env + code
+COPY --from=workshop --chown=$DOCKER_USER:$DOCKER_USER /home/$DOCKER_USER /home/$DOCKER_USER
 
 USER $DOCKER_USER
 WORKDIR /home/$DOCKER_USER
