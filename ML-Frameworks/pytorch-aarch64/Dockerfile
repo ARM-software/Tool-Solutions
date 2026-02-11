@@ -33,7 +33,6 @@ COPY --chown=$DOCKER_USER:$DOCKER_USER welcome.txt /home/$DOCKER_USER/welcome.tx
 
 # Switch to userland
 USER $DOCKER_USER
-RUN echo "DOCKER_USER=${DOCKER_USER}"
 WORKDIR /home/$DOCKER_USER
 
 # Create virtual environment
@@ -76,8 +75,6 @@ ENV DOCKER_USER=debian
 
 # Runtime OS bits + UI
 RUN set -eux && \
-    apt-get update && \
-    rm -rf /var/lib/apt/lists/* && \
     if ! id "$DOCKER_USER" >/dev/null 2>&1; then useradd --create-home -s /bin/bash "$DOCKER_USER"; fi && \
     echo '[ -n "$TERM" -a -r "$HOME/welcome.txt" ] && cat "$HOME/welcome.txt"' >> /etc/bash.bashrc && \
     echo 'export PATH="$HOME/.local/bin:$HOME/.venv/bin:$PATH"' >> /etc/bash.bashrc

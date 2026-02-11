@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# SPDX-FileCopyrightText: Copyright 2024, 2025 Arm Limited and affiliates.
+# SPDX-FileCopyrightText: Copyright 2024-2026 Arm Limited and affiliates.
 #
 # SPDX-License-Identifier: Apache-2.0
 
@@ -25,7 +25,6 @@ docker buildx \
     --build-context rootdir=../.. \
     --build-arg TENSORFLOW_WHEEL=$1 \
     --build-arg DOCKER_IMAGE_MIRROR \
-    --build-arg USERNAME=ubuntu \
     .
 
 [[ $* == *--build-only* ]] && exit 0
