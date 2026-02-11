@@ -14,6 +14,7 @@ FROM ${DOCKER_IMAGE_MIRROR}${BASE_IMAGE} AS workshop
 
 ARG TORCH_WHEEL
 ARG TORCH_AO_WHEEL
+ARG TORCHVISION_NIGHTLY
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV DOCKER_USER=debian
@@ -59,7 +60,7 @@ COPY --chown=$DOCKER_USER:$DOCKER_USER ${TORCH_AO_WHEEL} /home/$DOCKER_USER/
 # Install wheels
 RUN set -eux && uv pip install --no-deps "$(basename "$TORCH_WHEEL")" && rm "$(basename "$TORCH_WHEEL")"
 RUN set -eux && uv pip install --no-deps "$(basename "$TORCH_AO_WHEEL")" && rm "$(basename "$TORCH_AO_WHEEL")"
-RUN uv pip install --pre torchvision==0.25.0.dev20260130 --index-url https://download.pytorch.org/whl/nightly/cpu --no-deps
+RUN uv pip install --pre torchvision==${TORCHVISION_NIGHTLY} --index-url https://download.pytorch.org/whl/nightly/cpu --no-deps
 
 # Copy examples/tests into image
 COPY --chown=$DOCKER_USER:$DOCKER_USER examples/ /home/$DOCKER_USER/

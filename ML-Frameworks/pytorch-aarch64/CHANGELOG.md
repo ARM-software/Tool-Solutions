@@ -21,7 +21,7 @@ where `YY` is the year, and `MM` the month of the increment.
 
 ### Fixed
 
-## [r26.02] 2026-02-09
+## [r26.02] 2026-02-11
 https://github.com/ARM-software/Tool-Solutions/tree/r26.02
 
 ### Added
@@ -30,7 +30,7 @@ https://github.com/ARM-software/Tool-Solutions/tree/r26.02
 
 ### Changed
  - Updates hashes for:
-   - `PYTORCH_HASH` to `77da53a7356e033e3fc1e03fdd960fc4ad117882`, 2.11.0.dev20260130 from viable/strict, Jan 30th.
+   - `PYTORCH_HASH` to `77da53a7356e033e3fc1e03fdd960fc4ad117882`, 2.11.0.dev20260129 from viable/strict, Jan 29th.
    - `IDEEP_HASH` to `bbb9ffb9e0c401ca058b7f35a6ebe7d0e08ffd34`, from ideep_pytorch, Jan 30th.
    - `ONEDNN_HASH` to `804f364c04ad8a763d534abaabc99bf99c2754e0`, from main, Jan 30th.
    - `TORCH_AO_HASH` to `30fcb156945ecacd515775414d37c09bfe60727e`, from main, Jan 30th.
