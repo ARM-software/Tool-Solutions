@@ -1,5 +1,5 @@
 <!--
-SPDX-FileCopyrightText: Copyright 2019-2025 Arm Limited and affiliates.
+SPDX-FileCopyrightText: Copyright 2019-2026 Arm Limited and affiliates.
 
 SPDX-License-Identifier: Apache-2.0
 -->
@@ -74,6 +74,66 @@ adding your patch to `utils/patch_cache` with the name
 - `--use-existing-sources` skips `get-source.sh` and just builds
 - `--force` overwrites sources
 - `--wheel-only` build just the torch wheel (no torchao or Docker image)
+
+### Updating pinned versions
+
+Pinned source hashes and component versions live in [`versions.sh`](./versions.sh).
+When updating, follow the rules below so each commit of `pytorch-aarch64` remains a reproducible reference point.
+
+> **Note:** In practice this process can be laborious.
+> You may wish to use ChatGPT or Codex to help automate this process.
+> For Codex, we provide a skill named `bump-sources`, located at `.agents/skills/bump-sources/SKILL.md`.
+
+#### Commit hashes
+
+For these dependencies, you should assign the commit hash from the latest commit to the appropriate variable in `versions.sh` (e.g. assign the latest commit hash for PyTorch to `PYTORCH_HASH`).
+
+- PyTorch: https://github.com/pytorch/pytorch/tree/viable/strict
+  - Use the latest commit on this branch. Build the wheel to determine the version used in the trailing comment.
+  - Note: we use `viable/strict` because [all PyTorch tests are guaranteed to be passing on this branch](https://github.com/pytorch/pytorch/wiki/PyTorch-Workflow-Cheatsheet#developing-a-new-feature).
+
+- ideep: https://github.com/intel/ideep/tree/ideep_pytorch
+  - Use the latest commit on this branch.
+
+- oneDNN: https://github.com/uxlfoundation/oneDNN/tree/main
+  - Use the latest commit on this branch.
+
+- TorchAO: https://github.com/pytorch/ao/tree/main
+  - Use the latest commit on this branch.
+
+- KleidiAI: https://github.com/ARM-software/kleidiai/tree/main
+  - Use the latest commit on this branch. Use the project version from the `CMakeLists.txt` to set the version in the trailing comment.
+
+#### Tags
+
+For these dependencies, you should assign the latest tag from the releases to the appropriate variable in `versions.sh` (e.g. assign the latest tag for `ComputeLibrary` to `ACL_VERSION`).
+
+- ComputeLibrary: https://github.com/ARM-software/ComputeLibrary/tags
+  - Pick the newest release tag.
+
+- OpenBLAS: https://github.com/OpenMathLib/OpenBLAS/tags
+  - Pick the newest release tag.
+
+#### Nightly wheels
+
+For these dependencies, you should assign the latest nightly wheel version to the appropriate variable in `versions.sh` (e.g. assign the latest wheel version for `torchvision` to `TORCHVISION_NIGHTLY`).
+
+- Torchvision: https://download.pytorch.org/whl/nightly/torchvision/
+  - Pick the newest wheel matching: `+cpu`, the Python ABI (e.g. `cp312` for Python 3.12), `manylinux_2_28_aarch64.whl`.
+    Record the dev version from the filename.
+  - Example: `torchvision-0.26.0.dev20260215+cpu-cp312-cp312-manylinux_2_28_aarch64.whl` → `0.26.0.dev20260215`
+
+#### After updating `versions.sh`
+
+After bumping the sources, you will probably find that `./get-source.sh` will fail to apply the patches. There are a few possible causes:
+
+- The PR has gone in; this means that you can delete the appropriate line in `./get-source.sh` because it is no longer needed.
+- There is a conflict; you will need to ask the PR owner to rebase their patch onto the tip of the development branch.
+
+You may also find that it no longer builds. There are no simple solutions to this, but you may want to try:
+
+- Rolling some of the sources back to where they previously built successfully. First check if they build on their own, then whether they all build together.
+- Build without the patches, then include them one by one.
 
 ## Motivation
 PyTorch + ideep + oneDNN + ComputeLibrary is a deep stack. The purpose of

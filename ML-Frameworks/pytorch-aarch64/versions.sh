@@ -6,6 +6,8 @@
 
 # Source-of-truth versions and hashes for this repo
 
+# For information on how to update the versions below, read the README.md.
+
 # get-source.sh deps
 PYTORCH_HASH=77da53a7356e033e3fc1e03fdd960fc4ad117882   # 2.11.0.dev20260129 from viable/strict, Jan 29th
 IDEEP_HASH=bbb9ffb9e0c401ca058b7f35a6ebe7d0e08ffd34     # From ideep_pytorch, Jan 30th
