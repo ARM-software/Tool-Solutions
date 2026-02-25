@@ -2,8 +2,13 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-import sys
+# System packages
+import argparse
 import random
+import sys
+import time
+
+# Installed packages
 import torch
 from transformers import AutoTokenizer, AutoModelForQuestionAnswering
 from torchao.quantization.quant_api import (
@@ -13,11 +18,24 @@ from torchao.quantization.quant_api import (
 from torchao.quantization.granularity import PerAxis
 from torchao.quantization.quant_primitives import MappingType
 
+# Local modules
 from utils import nlp
 
-import time
 
-import argparse
+def get_best_span_from_scores(start_scores, end_scores, max_answer_len, top_k):
+    best_score = -1e18
+    (start_idx, end_idx) = (0, 0)
+    topk_start_posns = torch.topk(start_scores[0], k=top_k).indices.tolist()
+    topk_end_posns = torch.topk(end_scores[0], k=top_k).indices.tolist()
+    for start in topk_start_posns:
+        for end in topk_end_posns:
+            if (end < start) or ((end + 1) - start > max_answer_len):
+                continue
+            score = start_scores[0][start].item() + end_scores[0][end].item()
+            if score > best_score:
+                (best_score, start_idx, end_idx) = (score, start, end)
+    return (start_idx, end_idx)
+
 
 def main():
     """
@@ -46,7 +64,7 @@ def main():
     subject = args.get("subject","")
     context = ""
     question = args.get("question","")
-    answer = args.get("answer","")
+    answer = ""
     squadid = args.get("squadid","")
 
     # Setup the question, either from a specified SQuAD record
@@ -80,13 +98,8 @@ def main():
             i_record = 0
         else:
             if subject:
-                print(
-                    "Picking a question at random on the subject: ",
-                    subject,
-                )
-                squad_records = squad_data.loc[
-                    squad_data["subject"] == subject
-                ]
+                print("Picking a question at random on the subject: ", subject)
+                squad_records = squad_data.loc[squad_data["subject"] == subject]
             else:
                 print(
                     "No SQuAD ID or question provided, picking one at random!"
@@ -109,16 +122,17 @@ def main():
         question = squad_records["question"].iloc[i_record]
         answer = squad_records["answer"].iloc[i_record]
 
+    # Select model and tokenizer
     if args["bert_large"]:
         model_hf_path = "google-bert/bert-large-uncased-whole-word-masking-finetuned-squad"
         model_name = "BERT Large"
     else:
         model_hf_path = "distilbert-base-uncased-distilled-squad"
         model_name = "DistilBERT"
-
     token = AutoTokenizer.from_pretrained(model_hf_path, return_token_type_ids=True)
     model = AutoModelForQuestionAnswering.from_pretrained(model_hf_path)
 
+    # Optional: quantize
     if args["quantize"]:
         quantize_(
             model,
@@ -133,17 +147,11 @@ def main():
             filter_fn=lambda m, _: isinstance(m, torch.nn.Linear),
         )
 
-    encoding = token.encode_plus(
-        question,
-        context,
-        max_length=512, truncation=True
-    )
+    # Encode context
+    encoding = token.encode_plus(question, context, max_length=512, truncation=True)
+    (input_ids, attention_mask) = (encoding["input_ids"], encoding["attention_mask"])
 
-    input_ids, attention_mask = (
-        encoding["input_ids"],
-        encoding["attention_mask"],
-    )
-
+    # Warm-up
     if args["warmup"]:
         model(
             torch.tensor([input_ids]),
@@ -151,32 +159,40 @@ def main():
             return_dict=False,
         )
 
+    # Process
     start_time = time.time()
-    start_scores, end_scores = model(
-        torch.tensor([input_ids]),
-        attention_mask=torch.tensor([attention_mask]),
-        return_dict=False,
-    )
+    with torch.no_grad():
+        start_scores, end_scores = model(
+            torch.tensor([input_ids]),
+            attention_mask=torch.tensor([attention_mask]),
+            return_dict=False,
+        )
     end_time = time.time()
 
-    answer_ids = input_ids[
-        torch.argmax(start_scores) : torch.argmax(end_scores) + 1
-    ]
-    answer_tokens = token.convert_ids_to_tokens(
-        answer_ids, skip_special_tokens=True
-    )
-    answer_tokens_to_string = token.convert_tokens_to_string(answer_tokens)
+    # Post-process scores to find most likely answer
+    (start_idx, end_idx) = get_best_span_from_scores(
+        start_scores, end_scores, max_answer_len=30, top_k=20)
+
+    # Decode answer
+    answer_ids = input_ids[start_idx:end_idx + 1]
+    answer_tokens_to_string = token.decode(answer_ids, skip_special_tokens=True).strip()
 
     # Display results
     print(f"\n{model_name} question answering example.")
     print("======================================")
     print("Reading from: ", subject, source)
-    print("\nContext: ", context)
-    print(f"Inference time: {end_time - start_time}s")
+    max_context_to_print = 1000
+    if len(context) <= max_context_to_print:
+        print("\nContext: ", context)
+    else:
+        print(f"\nContext (limited to {max_context_to_print} chars):")
+        print(context[:max_context_to_print])
+        print("...")
     print("--")
-    print("Question: ", question)
-    print("Answer: ", answer_tokens_to_string)
-    print("Reference Answer: ", answer)
+    print("Question:", question)
+    print("Answer:", answer_tokens_to_string)
+    print("Reference Answer:", answer)
+    print(f"Inference time: {end_time - start_time:.6f}s")
 
 
 if __name__ == "__main__":
