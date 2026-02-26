@@ -8,7 +8,7 @@ source ../utils/git-utils.sh
 
 set -eux -o pipefail
 
-TENSORFLOW_HASH=3d4958d107b77a2e4398c066971a099a369ef739 # from nightly, Feb 2nd
+TENSORFLOW_HASH=535fc05dbac76cec4a446eec0bed866394167c05 # from nightly, Feb 25th
 
 git-shallow-clone https://github.com/tensorflow/tensorflow.git $TENSORFLOW_HASH
 
