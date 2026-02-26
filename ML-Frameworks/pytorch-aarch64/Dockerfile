@@ -43,10 +43,10 @@ ENV PATH="/home/$DOCKER_USER/.venv/bin:${PATH}"
 # Install uv for quicker package installations
 RUN pip install uv==0.9.29
 
-# Update to newer pip/setuptools/wheel (setuptools >= 70.0.0 due to CVE-2024-6345
-# and CVE-2025-47273, wheel >= 0.38.0 due to CVE-2022-40898) and delete old system
-# version (we essentially use apt:python3-pip to bootstrap pip)
-RUN uv pip install --upgrade pip~=25.2 setuptools~=78.1.1 wheel~=0.45.1
+# Update to newer pip/setuptools/wheel:
+#  - setuptools >= 70.0.0 due to CVE-2024-6345 and CVE-2025-47273
+#  - wheel >= 0.38.0 due to CVE-2022-40898 and >= 0.46.2 due to CVE-2026-24049
+RUN uv pip install --upgrade pip~=26.0 setuptools~=78.1.1 wheel~=0.46.2
 
 # Install non-torch requirements
 COPY --chown=$DOCKER_USER:$DOCKER_USER requirements.txt .

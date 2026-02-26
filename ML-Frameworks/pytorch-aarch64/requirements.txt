@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright 2024, 2025 Arm Limited and affiliates.
+# SPDX-FileCopyrightText: Copyright 2024-2026 Arm Limited and affiliates.
 #
 # SPDX-License-Identifier: Apache-2.0
 
@@ -37,4 +37,4 @@ tqdm~=4.66.5
 transformers~=4.55.2  # >= 4.50.0 due to CVE-2025-2099
 typing_extensions~=4.12.2
 tzdata==2024.2
-urllib3~=2.2.3
+urllib3~=2.6.3 # >= 2.6.3 due to CVE-2026-21441
