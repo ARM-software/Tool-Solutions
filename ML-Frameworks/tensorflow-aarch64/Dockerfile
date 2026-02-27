@@ -84,4 +84,6 @@ COPY --from=workshop --chown=$DOCKER_USER:$DOCKER_USER /home/$DOCKER_USER /home/
 USER $DOCKER_USER
 WORKDIR /home/$DOCKER_USER
 
+ENV PATH="/home/$DOCKER_USER/.local/bin:/home/$DOCKER_USER/.venv/bin:$PATH"
+
 CMD ["bash", "-l"]

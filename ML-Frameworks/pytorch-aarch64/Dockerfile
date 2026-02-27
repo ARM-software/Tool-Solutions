@@ -32,20 +32,21 @@ COPY --chown=$DOCKER_USER:$DOCKER_USER welcome.txt /home/$DOCKER_USER/welcome.tx
 
 # Switch to userland
 USER $DOCKER_USER
-RUN echo "DOCKER_USER=${DOCKER_USER}"
 WORKDIR /home/$DOCKER_USER
 
-# Create virtual environment
-RUN python -m venv /home/$DOCKER_USER/.venv
+# Add ~/.local/bin to PATH to use uv later
+ENV PATH="/home/$DOCKER_USER/.local/bin:${PATH}"
+
+# Install uv for quicker package installations (installed to ~/.local/bin with --user)
+RUN python -m pip install --user uv==0.9.29
+
+# Create virtual environment with uv
+RUN uv venv /home/$DOCKER_USER/.venv
 ENV PATH="/home/$DOCKER_USER/.venv/bin:${PATH}"
 
-# Install uv for quicker package installations
-RUN pip install uv==0.9.29
-
-# Update to newer pip/setuptools/wheel (setuptools >= 70.0.0 due to CVE-2024-6345
-# and CVE-2025-47273, wheel >= 0.38.0 due to CVE-2022-40898) and delete old system
-# version (we essentially use apt:python3-pip to bootstrap pip)
-RUN uv pip install --upgrade pip~=25.2 setuptools~=78.1.1 wheel~=0.45.1
+# Remove pip and update to newer setuptools/wheel (setuptools >= 70.0.0 due to CVE-2024-6345
+# and CVE-2025-47273, wheel >= 0.38.0 due to CVE-2022-40898)
+RUN uv pip uninstall pip && uv pip install --upgrade setuptools~=78.1.1 wheel~=0.45.1
 
 # Install non-torch requirements
 COPY --chown=$DOCKER_USER:$DOCKER_USER requirements.txt .
@@ -75,11 +76,10 @@ ENV DOCKER_USER=debian
 
 # Runtime OS bits + UI
 RUN set -eux && \
-    apt-get update && \
-    rm -rf /var/lib/apt/lists/* && \
     if ! id "$DOCKER_USER" >/dev/null 2>&1; then useradd --create-home -s /bin/bash "$DOCKER_USER"; fi && \
     echo '[ -n "$TERM" -a -r "$HOME/welcome.txt" ] && cat "$HOME/welcome.txt"' >> /etc/bash.bashrc && \
-    echo 'export PATH="$HOME/.local/bin:$HOME/.venv/bin:$PATH"' >> /etc/bash.bashrc
+    echo 'export PATH="$HOME/.local/bin:$HOME/.venv/bin:$PATH"' >> /etc/bash.bashrc && \
+    python3 -m pip uninstall -y pip
 
 # Bring in prepped env + code
 COPY --from=workshop --chown=$DOCKER_USER:$DOCKER_USER /home/$DOCKER_USER /home/$DOCKER_USER
@@ -87,6 +87,6 @@ COPY --from=workshop --chown=$DOCKER_USER:$DOCKER_USER /home/$DOCKER_USER /home/
 USER $DOCKER_USER
 WORKDIR /home/$DOCKER_USER
 
-ENV PATH="/home/$DOCKER_USER/.venv/bin:${PATH}"
+ENV PATH="/home/$DOCKER_USER/.local/bin:/home/$DOCKER_USER/.venv/bin:$PATH"
 
 CMD ["bash", "-l"]
