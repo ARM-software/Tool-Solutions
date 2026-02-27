@@ -61,8 +61,8 @@ of your choice or use `./dockerize.sh <name-of-wheel>` to launch a container
 with the wheel installed (along with examples).
 
 Note: if the environment variable `GITHUB_TOKEN` is set then the build will
-attemmpt to use `GITHUB_TOKEN` for authenticated access when downloading WIP patches.
-This can avoid issues with rate-limiting on annonymous access.
+attempt to use `GITHUB_TOKEN` for authenticated access when downloading WIP patches.
+This can avoid issues with rate-limiting on anonymous access.
 
 Note: GitHub patches are cached in `utils/patch_cache` to save network
 traffic. This also allows you to use local patches that are not yet upstream by
@@ -87,6 +87,7 @@ When updating, follow the rules below so each commit of `pytorch-aarch64` remain
 #### Commit hashes
 
 For these dependencies, you should assign the commit hash from the latest commit to the appropriate variable in `versions.sh` (e.g. assign the latest commit hash for PyTorch to `PYTORCH_HASH`).
+Note: use the `CommitDate` for the trailing comments unless otherwise specified (you can run `git show -s --format=%cs <commit-ish>`).
 
 - PyTorch: https://github.com/pytorch/pytorch/tree/viable/strict
   - Use the latest commit on this branch. Build the wheel to determine the version used in the trailing comment.
