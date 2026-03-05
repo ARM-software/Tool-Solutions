@@ -50,6 +50,9 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
     git rm third_party/NVTX
     # fbgemm/fbgemm_gpu/experimental/gen_ai has moved to the 'mslk' repo. Get rid of it
     git rm third_party/mslk
+    # This third-party folder contains just a license to cover libomp from the LLVM project
+    # which is not present in our torch build; it contains libgomp
+    git rm -r third_party/llvm-openmp
 
     # Update submodules
     git submodule sync
