@@ -52,7 +52,10 @@ function apply-github-patch {
     fi
 
     _git_with_credentials() {
-        git -c user.name="apply-github-patch" -c user.email="noreply@example.com" "$@"
+        git -c user.name="apply-github-patch" \
+            -c user.email="noreply@example.com" \
+            -c commit.gpgsign="false" \
+            "$@"
     }
 
     # Approach #1: Try a simple patch application with 'git am'
@@ -75,19 +78,4 @@ function apply-github-patch {
     git add -A
     _git_with_credentials commit -m "Applied patch $2 from $1."
     return 0
-}
-
-function setup_submodule() {
-    local original_dir=$(pwd)
-    rm -rf "$2"
-    git clone $1 $2
-    cd $2
-    git checkout $3
-    cd $original_dir
-}
-
-function reset_submodule() {
-    if [ -d "$1" ]; then
-        rm -rf "$1"
-    fi
 }

@@ -21,6 +21,18 @@ where `YY` is the year, and `MM` the month of the increment.
 
 ### Fixed
 
+## [r26.03] 2026-03-09
+https://github.com/ARM-software/Tool-Solutions/tree/r26.03
+
+### Added
+
+### Changed
+ - Updates TensorFlow hash to 535fc05dbac76cec4a446eec0bed866394167c05 from nightly, Feb 25th
+
+### Removed
+
+### Fixed
+
 ## [r26.02] 2026-02-11
 https://github.com/ARM-software/Tool-Solutions/tree/r26.02
 

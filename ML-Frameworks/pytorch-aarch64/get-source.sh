@@ -30,16 +30,13 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
     # # CVE-2025-47273 and CVE-2024-6345
     # apply-github-patch pytorch/pytorch 4d344570e5a114fa522e3370c5d59161e2ed8619
 
-    # https://github.com/pytorch/pytorch/pull/167720 - Allow missing cutlass file if CUDA disabled
-    apply-github-patch pytorch/pytorch 6fbbfe712d89895824e466a4e3ae6a0f35626078
-
     # https://github.com/pytorch/pytorch/pull/159859 - PoC LUT optimisation for GELU bf16 operators
     apply-github-patch pytorch/pytorch ebcc874e317f9563ab770fc5c27df969e0438a5e
 
     # https://github.com/pytorch/pytorch/pull/167328 - Build cpuinfo into c10 shared library
-    apply-github-patch pytorch/pytorch 715ba4203ccaa71f7cb8f351fa135110b6f7ecd4
-    apply-github-patch pytorch/pytorch e90d7480934224777722d4093795f96c667e5520
-    apply-github-patch pytorch/pytorch f5bfabc03efb34416378036ab717512d5611d8f4
+    apply-github-patch pytorch/pytorch 7c053dd1582b778c81101dd452708c4ec6e58233
+    apply-github-patch pytorch/pytorch b1782bbe0eda5957870e2f6e95b8f167e04843cb
+    apply-github-patch pytorch/pytorch 337925aed2babb3ef7808f78536bbbc9df346a4f
 
     # Remove deps that we don't need for manylinux AArch64 CPU builds before fetching.
     # Only used when jni.h is present (see .ci/pytorch/build.sh:116), which is not the case for manylinux
