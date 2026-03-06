@@ -45,102 +45,29 @@ concurrency:
 permissions: read-all
 
 jobs:
-  build-image:
-    strategy:
-      matrix:
-        config:
-          [
-            { name: c7g, label: ah-ubuntu_24_04-c7g_8x-100 },
-            { name: c8g, label: ah-ubuntu_24_04-c8g_8x }
-           ]
-    runs-on: ${{ matrix.config.label }}
-    env:
-      CCACHE_LOCAL_DIR: ${{ github.workspace }}/Tool-Solutions/ML-Frameworks/pytorch-aarch64/.ccache
-      TORCH_BUILD_CONTAINER_ID_FILE: ${{ github.workspace }}/Tool-Solutions/ML-Frameworks/pytorch-aarch64/.torch_build_container_id
-    steps:
-      - name: Checkout Tool-Solutions
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-        with:
-          path: Tool-Solutions
+  run-c6g:
+    name: "c6g - build & test"
+    uses: ./.github/workflows/_pytorch-single-platform.yml
+    with:
+      target_name: c6g
+      runner_label: ah-ubuntu_22_04-c6g_8x-100
+      onednn_fpmath_modes_json: '["FP32"]'
+    secrets: inherit
 
-      - name: Set up Docker
-        uses: docker/setup-docker-action@v4
+  run-c7g:
+    name: "c7g - build & test"
+    uses: ./.github/workflows/_pytorch-single-platform.yml
+    with:
+      target_name: c7g
+      runner_label: ah-ubuntu_24_04-c7g_8x-100
+      onednn_fpmath_modes_json: '["FP32","BF16"]'
+    secrets: inherit
 
-      - name: Create unique cache key from the year and week (YYYY-WW)
-        id: cache_suffix
-        run: echo "week=$(date -u +%G-%V)" >> "$GITHUB_OUTPUT"
-
-      # Restore cache if available. GitHub automatically evicts cache entries that have not been
-      # accessed for over 7 days. We rotate the cache key weekly; if no cache exists for the
-      # current week, a cache from a previous week (via the prefix restore key) will be restored
-      # and then saved under the current week's key at the end of the job. This effectively limits
-      # the cache to at most two weeks of cache data.
-      - name: Restore ccache cache
-        uses: actions/cache@v5
-        with:
-          path: ${{ env.CCACHE_LOCAL_DIR }}
-          key: ccache-${{ matrix.config.name }}-${{ steps.cache_suffix.outputs.week }}
-          restore-keys: |
-            ccache-${{ matrix.config.name }}-
-
-      - name: Build Tool-Solutions PyTorch
-        working-directory: ${{ github.workspace }}/Tool-Solutions/ML-Frameworks/pytorch-aarch64
-        run: ${{ github.workspace }}/Tool-Solutions/ML-Frameworks/pytorch-aarch64/build.sh
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CCACHE_LOCAL_DIR: ${{ env.CCACHE_LOCAL_DIR }}
-          CCACHE_MAXSIZE: 2G
-
-      - name: Print ccache disk usage
-        run: du -sh "${{ env.CCACHE_LOCAL_DIR }}" || true
-
-      - name: Report final ccache build stats
-        run: docker exec "$(cat ${{ env.TORCH_BUILD_CONTAINER_ID_FILE }})" ccache -s || true
-
-      - name: Save image as an artifact
-        run: docker save toolsolutions-pytorch:latest -o toolsolutions-pytorch-image-${{ matrix.config.name }}.tar
-
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v5
-        with:
-          name: toolsolutions-pytorch-image-${{ matrix.config.name }}
-          path: toolsolutions-pytorch-image-${{ matrix.config.name }}.tar
-          compression-level: 9
-          retention-days: 1
-
-  test:
-    needs: build-image
-    strategy:
-      fail-fast: false
-      matrix:
-        config:
-          [
-            { name: c7g, label: ah-ubuntu_24_04-c7g_8x-100 },
-            { name: c8g, label: ah-ubuntu_24_04-c8g_8x }
-           ]
-        onednn_fpmath_mode: [FP32, BF16]
-    runs-on: ${{ matrix.config.label }}
-    steps:
-      - name: Download image artifact
-        uses: actions/download-artifact@v5
-        with:
-          name: toolsolutions-pytorch-image-${{ matrix.config.name }}
-          path: .
-
-      - name: Set up Docker
-        uses: docker/setup-docker-action@v4
-
-      - name: Load Docker image
-        run: docker load -i toolsolutions-pytorch-image-${{ matrix.config.name }}.tar
-
-      - name: Run smoke tests
-        run: |
-          docker run --rm \
-            -e ONEDNN_DEFAULT_FPMATH_MODE=${{ matrix.onednn_fpmath_mode }} \
-            toolsolutions-pytorch:latest ./test-examples.sh
-
-      - name: Run unit tests
-        run: |
-          docker run --rm \
-            -e ONEDNN_DEFAULT_FPMATH_MODE=${{ matrix.onednn_fpmath_mode }} \
-            toolsolutions-pytorch:latest ./run_unit_tests.sh
+  run-c8g:
+    name: "c8g - build & test"
+    uses: ./.github/workflows/_pytorch-single-platform.yml
+    with:
+      target_name: c8g
+      runner_label: ah-ubuntu_24_04-c8g_8x
+      onednn_fpmath_modes_json: '["FP32","BF16"]'
+    secrets: inherit

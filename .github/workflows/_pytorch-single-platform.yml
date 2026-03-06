@@ -1,0 +1,111 @@
+# SPDX-FileCopyrightText: Copyright 2026 Arm Limited and affiliates.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+name: "PyTorch single platform build-and-test"
+
+on:
+  workflow_call:
+    inputs:
+      target_name:
+        required: true
+        type: string
+      runner_label:
+        required: true
+        type: string
+      onednn_fpmath_modes_json:
+        required: true
+        type: string
+
+# Declare default permissions as read only.
+permissions: read-all
+
+jobs:
+  build-image:
+    runs-on: ${{ inputs.runner_label }}
+    env:
+      TARGET_NAME: ${{ inputs.target_name }}
+      CCACHE_LOCAL_DIR: ${{ github.workspace }}/Tool-Solutions/ML-Frameworks/pytorch-aarch64/.ccache
+      TORCH_BUILD_CONTAINER_ID_FILE: ${{ github.workspace }}/Tool-Solutions/ML-Frameworks/pytorch-aarch64/.torch_build_container_id
+    steps:
+      - name: Checkout Tool-Solutions
+        uses: actions/checkout@v6.0.2
+        with:
+          path: Tool-Solutions
+
+      - name: Set up Docker
+        uses: docker/setup-docker-action@v5.0.0
+
+      - name: Create unique cache key from the year and week (YYYY-WW)
+        id: cache_suffix
+        run: echo "week=$(date -u +%G-%V)" >> "$GITHUB_OUTPUT"
+
+      # Restore cache if available. GitHub automatically evicts cache entries that have not been
+      # accessed for over 7 days. We rotate the cache key weekly; if no cache exists for the
+      # current week, a cache from a previous week (via the prefix restore key) will be restored
+      # and then saved under the current week's key at the end of the job. This effectively limits
+      # the cache to at most two weeks of cache data.
+      - name: Restore ccache cache
+        uses: actions/cache@v5.0.3
+        with:
+          path: ${{ env.CCACHE_LOCAL_DIR }}
+          key: ccache-${{ env.TARGET_NAME }}-${{ steps.cache_suffix.outputs.week }}
+          restore-keys: |
+            ccache-${{ env.TARGET_NAME }}-
+
+      - name: Build Tool-Solutions PyTorch
+        working-directory: ${{ github.workspace }}/Tool-Solutions/ML-Frameworks/pytorch-aarch64
+        run: ${{ github.workspace }}/Tool-Solutions/ML-Frameworks/pytorch-aarch64/build.sh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CCACHE_LOCAL_DIR: ${{ env.CCACHE_LOCAL_DIR }}
+          CCACHE_MAXSIZE: 2G
+
+      - name: Print ccache disk usage
+        run: du -sh "${{ env.CCACHE_LOCAL_DIR }}" || true
+
+      - name: Report final ccache build stats
+        run: docker exec "$(cat ${{ env.TORCH_BUILD_CONTAINER_ID_FILE }})" ccache -s || true
+
+      - name: Save image as an artifact
+        run: docker save toolsolutions-pytorch:latest -o toolsolutions-pytorch-image-${{ env.TARGET_NAME }}.tar
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v7.0.0
+        with:
+          name: toolsolutions-pytorch-image-${{ env.TARGET_NAME }}
+          path: toolsolutions-pytorch-image-${{ env.TARGET_NAME }}.tar
+          compression-level: 9
+          retention-days: 1
+
+  test:
+    needs: build-image
+    strategy:
+      fail-fast: false
+      matrix:
+        onednn_fpmath_mode: ${{ fromJSON(inputs.onednn_fpmath_modes_json) }}
+    runs-on: ${{ inputs.runner_label }}
+    steps:
+      - name: Download image artifact
+        uses: actions/download-artifact@v8.0.0
+        with:
+          name: toolsolutions-pytorch-image-${{ inputs.target_name }}
+          path: .
+
+      - name: Set up Docker
+        uses: docker/setup-docker-action@v5.0.0
+
+      - name: Load Docker image
+        run: docker load -i toolsolutions-pytorch-image-${{ inputs.target_name }}.tar
+
+      - name: Run smoke tests
+        run: |
+          docker run --rm \
+            -e ONEDNN_DEFAULT_FPMATH_MODE=${{ matrix.onednn_fpmath_mode }} \
+            toolsolutions-pytorch:latest ./test-examples.sh
+
+      - name: Run unit tests
+        run: |
+          docker run --rm \
+            -e ONEDNN_DEFAULT_FPMATH_MODE=${{ matrix.onednn_fpmath_mode }} \
+            toolsolutions-pytorch:latest ./run_unit_tests.sh
