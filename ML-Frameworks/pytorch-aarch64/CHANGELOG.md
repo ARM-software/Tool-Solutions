@@ -36,7 +36,8 @@ https://github.com/ARM-software/Tool-Solutions/tree/r26.03
    - `OPENBLAS_VERSION` to release v0.3.31, Jan 15th.
 
 ### Removed
- - Removed pytorch/pull/167720 as it has been merged upstream.
+ - Removes pytorch/pull/167720 as it has been merged upstream.
+ - Removes `pip` in favour of `uv`.
 
 ### Fixed
 

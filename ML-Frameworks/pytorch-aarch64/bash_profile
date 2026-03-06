@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright 2020, 2024, 2025 Arm Limited and affiliates.
+# SPDX-FileCopyrightText: Copyright 2020, 2024-2026 Arm Limited and affiliates.
 #
 # SPDX-License-Identifier: Apache-2.0
 
@@ -21,3 +21,13 @@ export PS1
 
 # Add local bin to PATH
 export PATH="$HOME/.local/bin:$PATH"
+
+# Deprecate pip in favor of uv
+function pip () {
+    echo ""
+    echo "   *******************************************************************************"
+    echo "   * We no longer ship pip with Tool-Solutions, please use uv instead. Note that *"
+    echo "   * you can use uv pip to get functionality similar to pip.                     *"
+    echo "   *******************************************************************************"
+    echo ""
+}
