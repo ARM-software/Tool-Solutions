@@ -21,7 +21,7 @@ where `YY` is the year, and `MM` the month of the increment.
 
 ### Fixed
 
-## [r26.03] 2026-03-09
+## [r26.03] 2026-03-13
 https://github.com/ARM-software/Tool-Solutions/tree/r26.03
 
 ### Added
@@ -33,7 +33,6 @@ https://github.com/ARM-software/Tool-Solutions/tree/r26.03
    - `ONEDNN_HASH` to `a83f8b4c7ca45fb339f3ecdf82895bc496941808`, from main, Feb 27th.
    - `TORCH_AO_HASH` to `9bdc0ca87c1134b7c1dedaa9512233b726f22955`, from main, Feb 27th.
    - `KLEIDIAI_HASH` to `98a6df72bdbb566bc7d8ba13d71991bcd94a8393`, v1.22.0 from main, Feb 19th.
-   - `OPENBLAS_VERSION` to release v0.3.31, Jan 15th.
 
 ### Removed
  - Removes pytorch/pull/167720 as it has been merged upstream.
