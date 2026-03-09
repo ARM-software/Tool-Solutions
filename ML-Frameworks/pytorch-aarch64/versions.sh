@@ -17,7 +17,7 @@ KLEIDIAI_HASH=98a6df72bdbb566bc7d8ba13d71991bcd94a8393  # v1.22.0 from main, Feb
 
 # build-wheel.sh deps
 ACL_VERSION="v52.8.0"
-OPENBLAS_VERSION="v0.3.31"
+OPENBLAS_VERSION="v0.3.30"
 
 # Dockerfile deps
 TORCHVISION_NIGHTLY="0.25.0.dev20260130"
