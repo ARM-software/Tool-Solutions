@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright 2025 Arm Limited and affiliates.
+# SPDX-FileCopyrightText: Copyright 2025, 2026 Arm Limited and affiliates.
 #
 # SPDX-License-Identifier: Apache-2.0
 
@@ -55,12 +55,12 @@ jobs:
     runs-on: ${{ matrix.config.label }}
     steps:
       - name: Checkout Tool-Solutions
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@v6.0.2
         with:
           path: Tool-Solutions
 
       - name: Set up Docker
-        uses: docker/setup-docker-action@v4
+        uses: docker/setup-docker-action@v5.0.0
 
       - name: Build Tool-Solutions Tensorflow
         working-directory: ${{ github.workspace }}/Tool-Solutions/ML-Frameworks/tensorflow-aarch64
