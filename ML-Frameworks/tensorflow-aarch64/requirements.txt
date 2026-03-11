@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright 2025 Arm Limited and affiliates.
+# SPDX-FileCopyrightText: Copyright 2025, 2026 Arm Limited and affiliates.
 #
 # SPDX-License-Identifier: Apache-2.0
 
@@ -7,7 +7,7 @@ fsspec==2025.2.0
 huggingface-hub~=0.34.0
 opencv-python-headless~=4.11.0.86
 pandas~=2.2.3
-pillow~=11.1.0
+pillow~=12.1.1
 python-dateutil==2.9.0.post0
 pytz==2025.1
 PyYAML~=6.0.2

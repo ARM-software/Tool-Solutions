@@ -28,6 +28,7 @@ https://github.com/ARM-software/Tool-Solutions/tree/r26.03
 
 ### Changed
  - Updates TensorFlow hash to 535fc05dbac76cec4a446eec0bed866394167c05 from nightly, Feb 25th
+ - Updates `pillow` from 11.1.0 to 12.1.1
 
 ### Removed
  - Removes `pip` in favour of `uv`

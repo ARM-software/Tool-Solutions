@@ -33,6 +33,7 @@ https://github.com/ARM-software/Tool-Solutions/tree/r26.03
    - `ONEDNN_HASH` to `a83f8b4c7ca45fb339f3ecdf82895bc496941808`, from main, Feb 27th.
    - `TORCH_AO_HASH` to `9bdc0ca87c1134b7c1dedaa9512233b726f22955`, from main, Feb 27th.
    - `KLEIDIAI_HASH` to `98a6df72bdbb566bc7d8ba13d71991bcd94a8393`, v1.22.0 from main, Feb 19th.
+ - Updates `pillow` from 11.1.0 to 12.1.1.
 
 ### Removed
  - Removes pytorch/pull/167720 as it has been merged upstream.
