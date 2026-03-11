@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright 2024, 2025 Arm Limited and affiliates.
+# SPDX-FileCopyrightText: Copyright 2024-2026 Arm Limited and affiliates.
 #
 # SPDX-License-Identifier: Apache-2.0
 
@@ -20,7 +20,7 @@ numpy~=2.1.2
 opencv-python-headless~=4.10.0.84
 packaging~=24.1
 pandas~=2.2.3
-pillow~=11.0.0
+pillow~=12.1.1
 protobuf==5.29.5      # GenAI models dependency
 pyaml~=24.9.0
 python-dateutil~=2.9.0.post0
