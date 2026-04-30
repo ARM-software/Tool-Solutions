@@ -11,11 +11,10 @@ build_log=build-$(git rev-parse --short=7 HEAD)-$(date '+%Y-%m-%dT%H-%M-%S').log
 exec &> >(tee -a "$build_log")
 
 # Bail out if sources are already there
-if [ -f .torch_build_container_id ] || [ -d pytorch ]; then
-    printf "\n\n%s\n%s\n%s\n%s\n\n\n" \
+if [ -d pytorch ]; then
+    printf "\n\n%s\n%s\n%s\n\n\n" \
         "You appear to have artefacts from a previous build lying around." \
         "Check for any of the following:" \
-        "  - .torch_build_container_id" \
         "  - pytorch"
 
     if [[ "$*" != *--fresh* ]] && [[ "$*" != *--use-existing-sources* ]]; then
@@ -28,24 +27,14 @@ if [ -f .torch_build_container_id ] || [ -d pytorch ]; then
 
     # Wipe old build artefacts
     if [[ $* == *--fresh* ]]; then
-        # Make sure we can wipe directories created with root privileges in Docker
-        if [ -f .torch_build_container_id ]; then
-            TORCH_BUILD_CONTAINER=$(cat .torch_build_container_id)
-            if [ ! -z "$(docker ps -a --no-trunc | grep $TORCH_BUILD_CONTAINER)" ]; then
-                # Change permissions from root
-                docker exec $TORCH_BUILD_CONTAINER chown -R $(id -u):$(id -g) /artifacts 2>/dev/null || true
-                docker exec $TORCH_BUILD_CONTAINER chown -R $(id -u):$(id -g) /pytorch 2>/dev/null || true
-
-                # Wipe old container
-                docker rm -f $TORCH_BUILD_CONTAINER 2>/dev/null || true
-            fi
-            rm -f .torch_build_container_id
-        fi
-
         # Wipe the other directories; we should have the privileges now
         if [ -d pytorch ]; then rm -rf pytorch; fi
     fi
 fi
+
+# Older builds wrote this file for persistent builder-container reuse. The
+# current flow uses Docker image layers and fresh containers instead.
+rm -f .torch_build_container_id
 
 if ! [[ $* == *--use-existing-sources* ]]; then
     ./get-source.sh
