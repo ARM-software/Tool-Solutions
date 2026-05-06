@@ -4,6 +4,8 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+# This script builds *the* PyTorch Tool-Solutions, of which there is only one type
+
 # The logic in this script should mirror the upstream build pipelines as closely
 # as possible, along with Tool-Solutions specific changes we want to test (e.g.
 # installing tbb) or improving local development in a way that doesn't affect

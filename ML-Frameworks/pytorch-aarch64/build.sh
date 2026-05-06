@@ -12,10 +12,8 @@ exec &> >(tee -a "$build_log")
 
 # Bail out if sources are already there
 if [ -d pytorch ]; then
-    printf "\n\n%s\n%s\n%s\n\n\n" \
-        "You appear to have artefacts from a previous build lying around." \
-        "Check for any of the following:" \
-        "  - pytorch"
+    printf "\n\n%s\n\n\n" \
+        "You appear to have the 'pytorch/' folder lying around from a previous build."
 
     if [[ "$*" != *--fresh* ]] && [[ "$*" != *--use-existing-sources* ]]; then
         >&2 printf "\n\n%s\n%s\n%s\n\n\n" \
@@ -25,9 +23,7 @@ if [ -d pytorch ]; then
         exit 1
     fi
 
-    # Wipe old build artefacts
     if [[ $* == *--fresh* ]]; then
-        # Wipe the other directories; we should have the privileges now
         if [ -d pytorch ]; then rm -rf pytorch; fi
     fi
 fi

@@ -14,12 +14,8 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
     # Apply patches to PyTorch build
     cd pytorch
 
-    # https://github.com/pytorch/pytorch/pull/167829 - Refactor ACL and OpenBLAS install scripts on AArch64
-    apply-github-patch pytorch/pytorch f5e7b3ab44b14902f1e44ac138006b04bd9b7728
-
-    # https://github.com/pytorch/pytorch/pull/170062 - Add ccache support to ACL/OpenBLAS and manywheel
-    # build script.
-    apply-github-patch pytorch/pytorch 327b118078869b85d979d9f7eb1038b8a53c8a49
+    # https://github.com/pytorch/pytorch/pull/182655 - Update ACL/OpenBLAS/manywheel build scripts and add ccache support
+    apply-github-patch pytorch/pytorch 159406ab7f210bacadb757fabef28ac9ddacb706
 
     # https://github.com/pytorch/pytorch/pull/170600 - Gate deletion of clean-up steps in build_common.sh
     apply-github-patch pytorch/pytorch e368ec2693b8b2b8ba35d0913f1d663ba2fdc804
@@ -29,9 +25,10 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
     apply-github-patch pytorch/pytorch b1782bbe0eda5957870e2f6e95b8f167e04843cb
     apply-github-patch pytorch/pytorch 337925aed2babb3ef7808f78536bbbc9df346a4f
 
-    # https://github.com/pytorch/pytorch/pull/177009 - Accelerate SDPA on Arm CPUs: Unroll exp_sum and max_mul kernels
-    apply-github-patch pytorch/pytorch f6a6cc94e92636902acbbe443d00cec4a8efa12d
-    apply-github-patch pytorch/pytorch 253a1ea6db210c01178dd365922eb49fe4892fe7
+    # https://github.com/pytorch/pytorch/pull/177867 - Add ASIMD_BF16 Vectorized class specialisation
+    apply-github-patch pytorch/pytorch 6cbed7b8e0d5985569b4cc36931afc717930fe00
+    apply-github-patch pytorch/pytorch 6e6878ec8869fd8f7d9314571a3e84933f149ef5
+    apply-github-patch pytorch/pytorch e14a2184c44c96e433f468ba12e104dc6be85886
 
     # Remove deps that we don't need for manylinux AArch64 CPU builds before fetching.
     # Only used when jni.h is present (see .ci/pytorch/build.sh:116), which is not the case for manylinux
@@ -73,9 +70,6 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
         (
             cd mkl-dnn
             git fetch origin $ONEDNN_HASH && git clean -f && git checkout -f FETCH_HEAD
-
-            # https://github.com/uxlfoundation/oneDNN/pull/4911 - cpu: aarch64: add LUT-based gelu_erf JIT implementations #4911
-            apply-github-patch uxlfoundation/oneDNN 86661869d4267b49db667ed7946eefba4e44d2c0
         )
     )
     (
