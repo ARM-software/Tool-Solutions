@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright 2021-2025 Arm Limited and affiliates.
+# SPDX-FileCopyrightText: Copyright 2021-2026 Arm Limited and affiliates.
 #
 # SPDX-License-Identifier: Apache-2.0
 """
@@ -10,7 +10,6 @@ import runpy
 import time
 import sys
 from urllib.parse import urlparse
-import urllib.request
 import warnings
 import zipfile
 
@@ -19,6 +18,8 @@ from tqdm import tqdm
 
 import torch
 import torchvision.models as torch_models
+
+from utils import common
 
 
 def _zip_file(zip_file, model_name, extract):
@@ -101,10 +102,10 @@ class Model:
                 return model_name
 
         # Download the model
-        urllib.request.urlretrieve(
+        common.download_url(
             model_url,
             model_name,
-            DownloadProgressBar("Downloading: " + model_name + "..."),
+            reporthook=DownloadProgressBar("Downloading: " + model_name + "..."),
         )
 
         # once it is downloaded and if it is archive then

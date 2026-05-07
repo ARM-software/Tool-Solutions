@@ -1,12 +1,14 @@
-# SPDX-FileCopyrightText: Copyright 2021, 2022, 2025 Arm Limited and affiliates.
+# SPDX-FileCopyrightText: Copyright 2021, 2022, 2025, 2026 Arm Limited and affiliates.
 #
 # SPDX-License-Identifier: Apache-2.0
 
 import sys
-import os
 import json
-import urllib.request
+from pathlib import Path
+
 import pandas
+
+from . import common
 
 
 def clean(question):
@@ -27,14 +29,13 @@ def import_squad_data():
     squad_url = (
         "https://rajpurkar.github.io/SQuAD-explorer/dataset/dev-v2.0.json"
     )
-    squad_file = squad_url.split("/")[-1]  # last part of URL
+    squad_file = Path(squad_url.rsplit("/", maxsplit=1)[-1])
+    common.download_url(squad_url, squad_file)
 
-    urllib.request.urlretrieve(squad_url, squad_file)
-
-    if not os.path.isfile(squad_file):
+    if not squad_file.is_file():
         sys.exit("Dataset %s does not exist!" % squad_file)
 
-    with open(squad_file) as squad_file_handle:
+    with squad_file.open() as squad_file_handle:
         squad_data = json.load(squad_file_handle)["data"]
 
         title_list = []

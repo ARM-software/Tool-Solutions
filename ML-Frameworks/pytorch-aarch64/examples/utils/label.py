@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright 2021-2023, 2025 Arm Limited and affiliates.
+# SPDX-FileCopyrightText: Copyright 2021-2023, 2025, 2026 Arm Limited and affiliates.
 #
 # SPDX-License-Identifier: Apache-2.0
 """
@@ -7,7 +7,6 @@ Utility functions to label predictions
 
 import os
 import sys
-import urllib.request
 import json
 
 import numpy as np
@@ -30,7 +29,7 @@ def _get_labels_file(labels_loc):
 
         if not os.path.isfile(labels_file):
             # Download the labels if required
-            urllib.request.urlretrieve(labels_loc, labels_file)
+            common.download_url(labels_loc, labels_file)
 
     if not os.path.isfile(labels_file):
         sys.exit("Labels file %s does not exist!" % labels_file)
