@@ -1,11 +1,10 @@
-# SPDX-FileCopyrightText: Copyright 2021-2025 Arm Limited and affiliates.
+# SPDX-FileCopyrightText: Copyright 2021-2026 Arm Limited and affiliates.
 #
 # SPDX-License-Identifier: Apache-2.0
 """
 Helper methods for pre- and post-processing of images
 """
 
-import urllib.request
 import os
 import sys
 
@@ -19,16 +18,6 @@ from torchvision import transforms
 import cv2
 
 from . import common
-
-# Install user agent to comply with Wikipedia policy
-opener = urllib.request.build_opener()
-opener.addheaders = [
-    (
-        "User-agent",
-        "Tool-Solutions/1.0 (https://github.com/ARM-software/Tool-Solutions)",
-    )
-]
-urllib.request.install_opener(opener)
 
 
 def download_image(image_loc):
@@ -44,7 +33,7 @@ def download_image(image_loc):
 
         if not os.path.isfile(image_file):
             # download the image if required
-            urllib.request.urlretrieve(image_loc, image_file)
+            common.download_url(image_loc, image_file)
 
     if not os.path.isfile(image_file):
         sys.exit("Image %s does not exist!" % image_file)

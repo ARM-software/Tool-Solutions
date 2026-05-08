@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright 2021, 2025 Arm Limited and affiliates.
+# SPDX-FileCopyrightText: Copyright 2021, 2025, 2026 Arm Limited and affiliates.
 #
 # SPDX-License-Identifier: Apache-2.0
 """
@@ -10,7 +10,7 @@ import datetime
 import os
 import sys
 
-import urllib.request
+from utils import common
 
 # List of files that need downloading
 REPO = "https://raw.githubusercontent.com/mlcommons/inference"
@@ -44,7 +44,7 @@ def main():
         basename = python_file.split("/")[-1]
         dest = os.path.join(folder, basename)
         url = os.path.join(REPO, COMMIT, python_file)
-        urllib.request.urlretrieve(url, dest)
+        common.download_url(url, dest)
 
         # Check whether downloaded file needs to be patched
         if basename in PATCH:
