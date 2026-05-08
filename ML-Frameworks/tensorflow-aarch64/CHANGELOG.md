@@ -16,6 +16,8 @@ where `YY` is the year, and `MM` the month of the increment.
 ### Added
 
 ### Changed
+ - Updates `filelock` from 3.17.0 to 3.20.3.
+ - Updates `pillow` from 12.1.1 to 12.2.0.
 
 ### Removed
 
