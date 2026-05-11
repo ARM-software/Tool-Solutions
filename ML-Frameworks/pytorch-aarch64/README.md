@@ -74,6 +74,11 @@ adding your patch to `utils/patch_cache` with the name
 - `--use-existing-sources` skips `get-source.sh` and just builds
 - `--fresh` overwrites sources
 - `--wheel-only` build just the torch wheel (no Docker image)
+- `--source-variant {upstream,pinned,patched}` controls which source recipe
+  `get-source.sh` uses:
+  - `upstream` uses PyTorch's upstream submodule hashes without extra patches
+  - `pinned` uses repo-pinned component hashes without extra patches
+  - `patched` uses repo-pinned component hashes and extra patches (default)
 
 ### Updating pinned versions
 
@@ -172,6 +177,13 @@ Note that we get patches from PRs for two reasons:
 - We can see the context of the patch: who did it, what was it for and most
   crucially whether it has been merged.
 - We avoid the license ambiguity of patches from one project living in another
+
+> [!NOTE]
+>
+> If you wish to disable patch application, run `build.sh` or `get-source.sh`
+> with `--source-variant pinned`.
+> If you also wish to use PyTorch's upstream submodule versions for ideep,
+> oneDNN, and KleidiAI, use `--source-variant upstream`.
 
 To keep up to date with the development branches of the components, there is a
 helper script called `./bump-sources.sh`.

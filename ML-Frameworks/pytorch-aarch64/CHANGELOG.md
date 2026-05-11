@@ -15,6 +15,10 @@ where `YY` is the year, and `MM` the month of the increment.
 
 ### Added
  - TorchAO installation via nightly AArch64 wheel (0.18.0.dev20260505) in Dockerfile
+ - Adds a `--source-variant {upstream,pinned,patched}` option to `build.sh` and
+   `get-source.sh` to select PyTorch's upstream submodule hashes, repo-pinned
+   component hashes without patches, or the default repo-pinned patched source tree.
+ - Adds the installation of `torchao` via nightly AArch64 wheels in Dockerfile.
 
 ### Changed
  - Updates `filelock` from 3.16.1 to 3.20.3.
