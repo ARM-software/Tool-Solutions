@@ -33,7 +33,25 @@ fi
 rm -f .torch_build_container_id
 
 if ! [[ $* == *--use-existing-sources* ]]; then
-    ./get-source.sh
+    get_source_args=()
+    args=("$@")
+    for ((i = 0; i < ${#args[@]}; i++)); do
+        case "${args[$i]}" in
+            --source-variant)
+                if [[ $((i + 1)) -ge ${#args[@]} ]]; then
+                    >&2 echo "error: --source-variant requires a value"
+                    exit 1
+                fi
+                get_source_args+=(--source-variant "${args[$((i + 1))]}")
+                i=$((i + 1))
+                ;;
+            --source-variant=*)
+                get_source_args+=("${args[$i]}")
+                ;;
+        esac
+    done
+
+    ./get-source.sh "${get_source_args[@]}"
 fi
 
 # Set the output dir for the wheels

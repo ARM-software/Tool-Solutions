@@ -9,26 +9,62 @@ source ./versions.sh
 
 set -eux -o pipefail
 
+source_variant=patched
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --source-variant)
+            if [[ $# -lt 2 ]]; then
+                >&2 echo "error: --source-variant requires a value"
+                exit 1
+            fi
+            source_variant="$2"
+            shift 2
+            ;;
+        --source-variant=*)
+            source_variant="${1#*=}"
+            shift
+            ;;
+        *)
+            >&2 echo "error: unknown option '$1'"
+            exit 1
+            ;;
+    esac
+done
+
+case "$source_variant" in
+    upstream|pinned|patched) ;;
+    *)
+        >&2 echo "error: invalid --source-variant '$source_variant'"
+        >&2 echo "valid values: upstream, pinned, patched"
+        exit 1
+        ;;
+esac
+
 git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
 (
-    # Apply patches to PyTorch build
     cd pytorch
 
-    # https://github.com/pytorch/pytorch/pull/182655 - Update ACL/OpenBLAS/manywheel build scripts and add ccache support
-    apply-github-patch pytorch/pytorch 159406ab7f210bacadb757fabef28ac9ddacb706
+    # Apply patches to PyTorch
+    if [[ "$source_variant" != patched ]]; then
+        echo "Not applying extra patches to PyTorch build for source variant '$source_variant'"
+    else
+        # https://github.com/pytorch/pytorch/pull/182655 - Update ACL/OpenBLAS/manywheel build scripts and add ccache support
+        apply-github-patch pytorch/pytorch 159406ab7f210bacadb757fabef28ac9ddacb706
 
-    # https://github.com/pytorch/pytorch/pull/170600 - Gate deletion of clean-up steps in build_common.sh
-    apply-github-patch pytorch/pytorch e368ec2693b8b2b8ba35d0913f1d663ba2fdc804
+        # https://github.com/pytorch/pytorch/pull/170600 - Gate deletion of clean-up steps in build_common.sh
+        apply-github-patch pytorch/pytorch e368ec2693b8b2b8ba35d0913f1d663ba2fdc804
 
-    # https://github.com/pytorch/pytorch/pull/167328 - Build cpuinfo into c10 shared library
-    apply-github-patch pytorch/pytorch 7c053dd1582b778c81101dd452708c4ec6e58233
-    apply-github-patch pytorch/pytorch b1782bbe0eda5957870e2f6e95b8f167e04843cb
-    apply-github-patch pytorch/pytorch 337925aed2babb3ef7808f78536bbbc9df346a4f
+        # https://github.com/pytorch/pytorch/pull/167328 - Build cpuinfo into c10 shared library
+        apply-github-patch pytorch/pytorch 7c053dd1582b778c81101dd452708c4ec6e58233
+        apply-github-patch pytorch/pytorch b1782bbe0eda5957870e2f6e95b8f167e04843cb
+        apply-github-patch pytorch/pytorch 337925aed2babb3ef7808f78536bbbc9df346a4f
 
-    # https://github.com/pytorch/pytorch/pull/177867 - Add ASIMD_BF16 Vectorized class specialisation
-    apply-github-patch pytorch/pytorch 6cbed7b8e0d5985569b4cc36931afc717930fe00
-    apply-github-patch pytorch/pytorch 6e6878ec8869fd8f7d9314571a3e84933f149ef5
-    apply-github-patch pytorch/pytorch e14a2184c44c96e433f468ba12e104dc6be85886
+        # https://github.com/pytorch/pytorch/pull/177867 - Add ASIMD_BF16 Vectorized class specialisation
+        apply-github-patch pytorch/pytorch 6cbed7b8e0d5985569b4cc36931afc717930fe00
+        apply-github-patch pytorch/pytorch 6e6878ec8869fd8f7d9314571a3e84933f149ef5
+        apply-github-patch pytorch/pytorch e14a2184c44c96e433f468ba12e104dc6be85886
+    fi
 
     # Remove deps that we don't need for manylinux AArch64 CPU builds before fetching.
     # Only used when jni.h is present (see .ci/pytorch/build.sh:116), which is not the case for manylinux
@@ -63,19 +99,30 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
         git rm 3rdparty/composable_kernel
     )
 
-    (
-        cd third_party/ideep
-        git fetch origin $IDEEP_HASH && git clean -f && git checkout -f FETCH_HEAD
-
+    # Fetch desired version of ideep/oneDNN/KleidiAI
+    if [[ "$source_variant" == upstream ]]; then
+        echo "Using PyTorch's upstream submodule hashes for ideep, oneDNN, and KleidiAI for source variant '$source_variant'"
+    else
         (
-            cd mkl-dnn
-            git fetch origin $ONEDNN_HASH && git clean -f && git checkout -f FETCH_HEAD
+            cd third_party/ideep
+            git fetch origin $IDEEP_HASH && git clean -f && git checkout -f FETCH_HEAD
+
+            (
+                cd mkl-dnn
+                git fetch origin $ONEDNN_HASH && git clean -f && git checkout -f FETCH_HEAD
+
+                if [[ "$source_variant" != patched ]]; then
+                    echo "Not applying extra patches to oneDNN build for source variant '$source_variant'"
+                else
+                    echo "No oneDNN patches to apply"
+                fi
+            )
         )
-    )
-    (
-        cd third_party/kleidiai
-        git fetch origin $KLEIDIAI_HASH && git clean -f && git checkout -f FETCH_HEAD
-    )
+        (
+            cd third_party/kleidiai
+            git fetch origin $KLEIDIAI_HASH && git clean -f && git checkout -f FETCH_HEAD
+        )
+    fi
 
     # rebuild third_party/LICENSES_BUNDLED.txt after modifying PyTorch submodules if we can
     # this will also get done in PyTorch build too
