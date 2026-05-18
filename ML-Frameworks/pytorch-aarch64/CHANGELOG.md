@@ -20,7 +20,6 @@ where `YY` is the year, and `MM` the month of the increment.
  - Updates `filelock` from 3.16.1 to 3.20.3.
  - Updates `pillow` from 12.1.1 to 12.2.0.
  - Updates `protobuf` from 5.29.5 to 5.29.6.
- - Updates `pytest` from 8.4.2 to 9.0.3.
  - Updates `requests` from 2.32.3 to 2.33.0.
  - Updates `urllib3` from 2.2.3 to 2.6.3.
  - Updates the build to use Docker layer caching for PyTorch builder image.
@@ -37,6 +36,7 @@ where `YY` is the year, and `MM` the month of the increment.
  - Removes PRs that have already been merged.
 
 ### Fixed
+ - Constrains `pytest` to the 8.4 series to keep PyTorch's copied unit tests compatible with pytest hook deprecation handling.
 
 ## [r26.04] 2026-04-10
 
