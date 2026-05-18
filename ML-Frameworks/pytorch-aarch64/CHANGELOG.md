@@ -14,7 +14,7 @@ where `YY` is the year, and `MM` the month of the increment.
 ## [unreleased]
 
 ### Added
- - TorchAO installation via nightly AArch64 wheel in Dockerfile
+ - TorchAO installation via nightly AArch64 wheel (0.18.0.dev20260505) in Dockerfile
 
 ### Changed
  - Updates `filelock` from 3.16.1 to 3.20.3.
@@ -23,9 +23,18 @@ where `YY` is the year, and `MM` the month of the increment.
  - Updates `pytest` from 8.4.2 to 9.0.3.
  - Updates `requests` from 2.32.3 to 2.33.0.
  - Updates `urllib3` from 2.2.3 to 2.6.3.
+ - Updates the build to use Docker layer caching for PyTorch builder image.
+ - Updates hashes for:
+   - `PYTORCH_HASH=004acb4e35805062a643ee1588cdae584b2b2957`, 2.13.0.dev20260504 from viable/strict, May 4th, 2026.
+   - `IDEEP_HASH=6469a610baaa94ba15de1902fd1afb25316171d2`, from ideep_pytorch, Apr 23rd, 2026.
+   - `ONEDNN_HASH=8fa20dc93a75c094f618f3f8c206775731d63301`, from main, May 5th, 2026.
+   - `KLEIDIAI_HASH=7a7da265d21f42053d453ef664814c5b5cad8cd3`, v1.24.0 from main, May 4th, 2026.
+ - Updates `OPENBLAS_VERSION` from `d26960a21ec5da7f77377f28bd6e230060841ae0` to v0.3.33, from main, Apr 23rd.
+ - Updates `torchvision` from 0.26.0.dev20260329 to 0.27.0.dev20260505.
 
 ### Removed
- - TorchAO wheel build from source
+ - Removes TorchAO wheel build from source.
+ - Removes PRs that have already been merged.
 
 ### Fixed
 
