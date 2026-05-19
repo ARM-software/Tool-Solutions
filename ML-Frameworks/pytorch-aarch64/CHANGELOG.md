@@ -24,6 +24,8 @@ where `YY` is the year, and `MM` the month of the increment.
 ## [r26.06] 2026-06-19
 
 ### Added
+ - Adds PyTorch [PR #184372](https://github.com/pytorch/pytorch/pull/184372).
+ - Adds oneDNN [PR #5156](https://github.com/uxlfoundation/oneDNN/pull/5156).
  - TorchAO installation via nightly AArch64 wheel (0.18.0.dev20260528) in Dockerfile
  - Adds a `--source-variant {upstream,pinned,patched}` option to `build.sh` and
    `get-source.sh` to select PyTorch's upstream submodule hashes, repo-pinned
@@ -48,6 +50,9 @@ where `YY` is the year, and `MM` the month of the increment.
  - Updates `torchvision` from 0.26.0.dev20260329 to 0.28.0.dev20260527.
 
 ### Removed
+ - Disables PyTorch [PR #182655](https://github.com/pytorch/pytorch/pull/182655), to update the PyTorch CI build scripts.
+ - Disables PyTorch [PR #170600](https://github.com/pytorch/pytorch/pull/170600), to gate deletion of clean-up steps in build_common.sh.
+ - Disables PyTorch [PR #167328](https://github.com/pytorch/pytorch/pull/167328), to build cpuinfo into c10 shared library.
  - Removes the `scripts/` directory containing retired helper scripts.
  - Removes TorchAO wheel build from source.
  - Removes PRs that have already been merged.

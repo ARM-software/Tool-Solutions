@@ -56,16 +56,21 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
         git add .ci/docker/manywheel/build.sh
         git-with-credentials commit -m "Disable sudo commands in manywheel build"
 
-        # https://github.com/pytorch/pytorch/pull/182655 - Update ACL/OpenBLAS/manywheel build scripts and add ccache support
-        apply-github-patch pytorch/pytorch 159406ab7f210bacadb757fabef28ac9ddacb706
+        # # https://github.com/pytorch/pytorch/pull/182655 - Update ACL/OpenBLAS/manywheel build scripts and add ccache support
+        # apply-github-patch pytorch/pytorch 159406ab7f210bacadb757fabef28ac9ddacb706
 
-        # https://github.com/pytorch/pytorch/pull/170600 - Gate deletion of clean-up steps in build_common.sh
-        apply-github-patch pytorch/pytorch e368ec2693b8b2b8ba35d0913f1d663ba2fdc804
+        # # https://github.com/pytorch/pytorch/pull/170600 - Gate deletion of clean-up steps in build_common.sh
+        # apply-github-patch pytorch/pytorch e368ec2693b8b2b8ba35d0913f1d663ba2fdc804
 
-        # https://github.com/pytorch/pytorch/pull/167328 - Build cpuinfo into c10 shared library
-        apply-github-patch pytorch/pytorch 7c053dd1582b778c81101dd452708c4ec6e58233
-        apply-github-patch pytorch/pytorch b1782bbe0eda5957870e2f6e95b8f167e04843cb
-        apply-github-patch pytorch/pytorch 337925aed2babb3ef7808f78536bbbc9df346a4f
+        # # https://github.com/pytorch/pytorch/pull/167328 - Build cpuinfo into c10 shared library
+        # apply-github-patch pytorch/pytorch 7c053dd1582b778c81101dd452708c4ec6e58233
+        # apply-github-patch pytorch/pytorch b1782bbe0eda5957870e2f6e95b8f167e04843cb
+        # apply-github-patch pytorch/pytorch 337925aed2babb3ef7808f78536bbbc9df346a4f
+
+        # https://github.com/pytorch/pytorch/pull/184372 - [Draft] Remove ACL
+        apply-github-patch pytorch/pytorch 0b0d4ac70463892391dcacde63d087e8fa1c980d
+        apply-github-patch pytorch/pytorch 30788230c5dcdd2a2a716c7cf4aa7530615ffe89
+        apply-github-patch pytorch/pytorch 129cc717fa87f733aa41b4807bac399c94c2057c
     fi
 
     # Remove deps that we don't need for manylinux AArch64 CPU builds before fetching.
@@ -116,7 +121,11 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
                 if [[ "$source_variant" != patched ]]; then
                     echo "Not applying extra patches to oneDNN build for source variant '$source_variant'"
                 else
-                    echo "No oneDNN patches to apply"
+                    # https://github.com/uxlfoundation/oneDNN/pull/5156 - cpu: aarch64: replace acl with kleidiai
+                    apply-github-patch uxlfoundation/oneDNN 9d2436344f2cecb2ac2f879a2ffbbcc27cbe2aaf
+                    apply-github-patch uxlfoundation/oneDNN 685713adc27e3a34d6265f9e4cfd2eb3541ed6be
+                    apply-github-patch uxlfoundation/oneDNN c0dec6ea825430977b23773547a62310ab806cea
+                    git submodule update --init third_party/kleidiai
                 fi
             )
         )
