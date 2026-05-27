@@ -36,6 +36,7 @@ where `YY` is the year, and `MM` the month of the increment.
  - Updates `torchvision` from 0.26.0.dev20260329 to 0.27.0.dev20260505.
 
 ### Removed
+ - Removes the `scripts/` directory containing retired helper scripts.
  - Removes TorchAO wheel build from source.
  - Removes PRs that have already been merged.
 
