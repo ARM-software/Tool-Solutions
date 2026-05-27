@@ -11,6 +11,13 @@ patch_cache_dir="$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")/patch_cache"
 mkdir -p "$patch_cache_dir"
 export patch_cache_dir
 
+function git-with-credentials() {
+    git -c user.name="apply-github-patch" \
+        -c user.email="noreply@example.com" \
+        -c commit.gpgsign="false" \
+        "$@"
+}
+
 function git-shallow-clone {
     (
         local repo_name=$(basename "$1" .git)
@@ -51,16 +58,9 @@ function apply-github-patch {
         fi
     fi
 
-    _git_with_credentials() {
-        git -c user.name="apply-github-patch" \
-            -c user.email="noreply@example.com" \
-            -c commit.gpgsign="false" \
-            "$@"
-    }
-
     # Approach #1: Try a simple patch application with 'git am'
-    _git_with_credentials am --keep-cr "$patch_file" && return 0
-    _git_with_credentials am --abort || true # wokeignore:rule=abort/terminate
+    git-with-credentials am --keep-cr "$patch_file" && return 0
+    git-with-credentials am --abort || true # wokeignore:rule=abort/terminate
 
     # Approach #2: Try a three-way merge after fetching the parent commit. It can handle
     # scenarios in which the context of the patch has moved. However, we need the parent
@@ -70,12 +70,25 @@ function apply-github-patch {
         fetch_url="https://x-access-token:${GITHUB_TOKEN}@github.com/$1.git"
     fi
     git fetch --no-tags --quiet --depth=2 "$fetch_url" "$2" || true
-    _git_with_credentials am --3way --keep-cr "$patch_file" && return 0
-    _git_with_credentials am --abort || true # wokeignore:rule=abort/terminate
+    git-with-credentials am --3way --keep-cr "$patch_file" && return 0
+    git-with-credentials am --abort || true # wokeignore:rule=abort/terminate
 
     # Approach #3: Fall back to GNU 'patch'
     patch -p1 < "$patch_file" || return 1
     git add -A
-    _git_with_credentials commit -m "Applied patch $2 from $1."
+    git-with-credentials commit -m "Applied patch $2 from $1."
     return 0
+}
+
+function replace_once() {
+    python3 - "$@" <<'PY'
+import sys
+from pathlib import Path
+
+path, old, new = Path(sys.argv[1]), sys.argv[2], sys.argv[3]
+text = path.read_text(encoding="utf-8")
+if old not in text:
+    raise SystemExit(f"{path}: expected text not found: {old!r}")
+path.write_text(text.replace(old, new, 1), encoding="utf-8")
+PY
 }

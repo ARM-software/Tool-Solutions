@@ -49,6 +49,13 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
     if [[ "$source_variant" != patched ]]; then
         echo "Not applying extra patches to PyTorch build for source variant '$source_variant'"
     else
+        # Disable the sudo commands in the manywheel build which restart the Docker daemon
+        replace_once .ci/docker/manywheel/build.sh \
+            'if [ "$(uname -m)" != "s390x" ] && [ -v CI ]; then' \
+            'if false; then'
+        git add .ci/docker/manywheel/build.sh
+        git-with-credentials commit -m "Disable sudo commands in manywheel build"
+
         # https://github.com/pytorch/pytorch/pull/182655 - Update ACL/OpenBLAS/manywheel build scripts and add ccache support
         apply-github-patch pytorch/pytorch 159406ab7f210bacadb757fabef28ac9ddacb706
 

@@ -41,6 +41,7 @@ where `YY` is the year, and `MM` the month of the increment.
  - Removes PRs that have already been merged.
 
 ### Fixed
+ - Disables `sudo` commands in PyTorch scripts used to build wheel.
  - Constrains `pytest` to the 8.4 series to keep PyTorch's copied unit tests compatible with pytest hook deprecation handling.
 
 ## [r26.04] 2026-04-10
