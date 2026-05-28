@@ -16,6 +16,17 @@ where `YY` is the year, and `MM` the month of the increment.
 ### Added
 
 ### Changed
+
+### Removed
+
+### Fixed
+
+## [r26.06] 2026-06-19
+
+### Added
+
+### Changed
+ - Updates TensorFlow hash to fff60aa253b3d2a3cb9e0e988e72cdab761530d1 from nightly, May 28th
  - Updates `filelock` from 3.17.0 to 3.20.3.
  - Updates `pillow` from 12.1.1 to 12.2.0.
 

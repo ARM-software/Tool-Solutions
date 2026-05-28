@@ -14,7 +14,17 @@ where `YY` is the year, and `MM` the month of the increment.
 ## [unreleased]
 
 ### Added
- - TorchAO installation via nightly AArch64 wheel (0.18.0.dev20260505) in Dockerfile
+
+### Changed
+
+### Removed
+
+### Fixed
+
+## [r26.06] 2026-06-19
+
+### Added
+ - TorchAO installation via nightly AArch64 wheel (0.18.0.dev20260528) in Dockerfile
  - Adds a `--source-variant {upstream,pinned,patched}` option to `build.sh` and
    `get-source.sh` to select PyTorch's upstream submodule hashes, repo-pinned
    component hashes without patches, or the default repo-pinned patched source tree.
@@ -28,12 +38,13 @@ where `YY` is the year, and `MM` the month of the increment.
  - Updates `urllib3` from 2.2.3 to 2.6.3.
  - Updates the build to use Docker layer caching for PyTorch builder image.
  - Updates hashes for:
-   - `PYTORCH_HASH=004acb4e35805062a643ee1588cdae584b2b2957`, 2.13.0.dev20260504 from viable/strict, May 4th, 2026.
-   - `IDEEP_HASH=6469a610baaa94ba15de1902fd1afb25316171d2`, from ideep_pytorch, Apr 23rd, 2026.
-   - `ONEDNN_HASH=8fa20dc93a75c094f618f3f8c206775731d63301`, from main, May 5th, 2026.
-   - `KLEIDIAI_HASH=7a7da265d21f42053d453ef664814c5b5cad8cd3`, v1.24.0 from main, May 4th, 2026.
+   - `PYTORCH_HASH=c230e6986c6aaee101e24ca14813c21add0b148f`, 2.13.0.dev20260528 from viable/strict, May 28th, 2026.
+   - `IDEEP_HASH=e087b6e4b32a7ba684db82231d1558123968ac1d`, from ideep_pytorch, May 11th, 2026.
+   - `ONEDNN_HASH=3004f0a1d9cf92c06eaaca57840aaa2149ebba85`, from main, May 27th, 2026.
+   - `KLEIDIAI_HASH=5866364d3bc079d2d6cae5f0acf6d076594bc7a7`, v1.25.0 from main, May 28th, 2026.
+ - Replaces `ACL_VERSION=v52.8.0` with `ACL_VERSION=v53.1.0`, from main, May 18th.
  - Updates `OPENBLAS_VERSION` from `d26960a21ec5da7f77377f28bd6e230060841ae0` to v0.3.33, from main, Apr 23rd.
- - Updates `torchvision` from 0.26.0.dev20260329 to 0.27.0.dev20260505.
+ - Updates `torchvision` from 0.26.0.dev20260329 to 0.28.0.dev20260527.
 
 ### Removed
  - Removes the `scripts/` directory containing retired helper scripts.
