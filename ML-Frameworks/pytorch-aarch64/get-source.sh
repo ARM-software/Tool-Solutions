@@ -66,11 +66,6 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
         apply-github-patch pytorch/pytorch 7c053dd1582b778c81101dd452708c4ec6e58233
         apply-github-patch pytorch/pytorch b1782bbe0eda5957870e2f6e95b8f167e04843cb
         apply-github-patch pytorch/pytorch 337925aed2babb3ef7808f78536bbbc9df346a4f
-
-        # https://github.com/pytorch/pytorch/pull/177867 - Add ASIMD_BF16 Vectorized class specialisation
-        apply-github-patch pytorch/pytorch 6cbed7b8e0d5985569b4cc36931afc717930fe00
-        apply-github-patch pytorch/pytorch 6e6878ec8869fd8f7d9314571a3e84933f149ef5
-        apply-github-patch pytorch/pytorch e14a2184c44c96e433f468ba12e104dc6be85886
     fi
 
     # Remove deps that we don't need for manylinux AArch64 CPU builds before fetching.
@@ -129,11 +124,5 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
             cd third_party/kleidiai
             git fetch origin $KLEIDIAI_HASH && git clean -f && git checkout -f FETCH_HEAD
         )
-    fi
-
-    # rebuild third_party/LICENSES_BUNDLED.txt after modifying PyTorch submodules if we can
-    # this will also get done in PyTorch build too
-    if command -v python3 >/dev/null 2>&1; then
-        python3 third_party/build_bundled.py
     fi
 )
