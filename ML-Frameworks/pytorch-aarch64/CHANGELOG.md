@@ -16,7 +16,7 @@ where `YY` is the year, and `MM` the month of the increment.
 ### Added
 
 ### Changed
-
+ 
 ### Removed
 
 ### Fixed
@@ -31,6 +31,7 @@ where `YY` is the year, and `MM` the month of the increment.
  - Adds the installation of `torchao` via nightly AArch64 wheels in Dockerfile.
 
 ### Changed
+ - Update Dockerfile to use `3.12-trixie` (instead of `3.12-slim`) for the base image.
  - Updates `filelock` from 3.16.1 to 3.20.3.
  - Updates `pillow` from 12.1.1 to 12.2.0.
  - Updates `protobuf` from 5.29.5 to 5.29.6.
