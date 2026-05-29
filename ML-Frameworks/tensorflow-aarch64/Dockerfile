@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # Specify DOCKER_IMAGE_MIRROR if you want to use a mirror of hub.docker.com
-ARG BASE_IMAGE=python:3.12-slim
+ARG BASE_IMAGE=python:3.12-trixie
 ARG DOCKER_IMAGE_MIRROR=""
 
 # ============================

@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # Specify DOCKER_IMAGE_MIRROR if you want to use a mirror of hub.docker.com
-ARG BASE_IMAGE=python:3.12-slim
+ARG BASE_IMAGE=python:3.12-trixie
 ARG DOCKER_IMAGE_MIRROR=""
 
 # ============================
@@ -79,9 +79,6 @@ ENV DOCKER_USER=debian
 
 # Runtime OS bits + UI
 RUN set -eux && \
-    apt-get update && \
-    apt-get install -y --no-install-recommends g++ && \
-    rm -rf /var/lib/apt/lists/* && \
     if ! id "$DOCKER_USER" >/dev/null 2>&1; then useradd --create-home -s /bin/bash "$DOCKER_USER"; fi && \
     echo '[ -n "$TERM" -a -r "$HOME/welcome.txt" ] && cat "$HOME/welcome.txt"' >> /etc/bash.bashrc && \
     echo 'export PATH="$HOME/.local/bin:$HOME/.venv/bin:$PATH"' >> /etc/bash.bashrc && \
