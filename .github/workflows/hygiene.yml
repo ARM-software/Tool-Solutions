@@ -29,31 +29,15 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Set up Python
+        uses: actions/setup-python@v6.0.0
+        with:
+          python-version: "3.12"
+
       - name: Install hygiene tooling
         run: |
-          python3 -m pip install --user --no-cache-dir pre-commit==4.5.1 reuse==6.2.0
+          python -m pip install --user --no-cache-dir pre-commit==4.5.1 reuse==6.2.0
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
-
-      - name: Run pre-commit on changed files
-        env:
-          EVENT_NAME: ${{ github.event_name }}
-          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
-          PUSH_BEFORE_SHA: ${{ github.event.before }}
-        run: |
-          set -euo pipefail
-
-          base_ref=""
-          if [[ "$EVENT_NAME" == "pull_request" ]]; then
-            base_ref="$PR_BASE_SHA"
-          elif [[ -n "${PUSH_BEFORE_SHA:-}" && "$PUSH_BEFORE_SHA" != "0000000000000000000000000000000000000000" ]]; then
-            base_ref="$PUSH_BEFORE_SHA"
-          fi
-
-          if [[ -n "$base_ref" ]] && git cat-file -e "${base_ref}^{commit}"; then
-            pre-commit run --from-ref "$base_ref" --to-ref HEAD
-          else
-            echo "No base ref available; skipping changed-file pre-commit hooks."
-          fi
 
       - name: Run whole-repo whitespace check
         run: pre-commit run trailing-whitespace --all-files
@@ -71,6 +55,7 @@ jobs:
           pre-commit run check-added-large-files --all-files
           pre-commit run check-executables-have-shebangs --all-files
           pre-commit run check-shebang-scripts-are-executable --all-files
+          pre-commit run ruff-check --all-files
 
       - name: Run whole-repo REUSE lint
         run: reuse lint
