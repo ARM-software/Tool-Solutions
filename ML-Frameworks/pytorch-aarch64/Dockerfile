@@ -43,7 +43,8 @@ WORKDIR /home/$DOCKER_USER
 ENV PATH="/home/$DOCKER_USER/.local/bin:${PATH}"
 
 # Install uv for quicker package installations (installed to ~/.local/bin with --user)
-RUN python -m pip install --user uv==0.9.29
+ENV UV_NO_CACHE=1
+RUN python -m pip install --no-cache-dir --user uv==0.9.29
 
 # Create virtual environment with uv
 RUN uv venv /home/$DOCKER_USER/.venv
