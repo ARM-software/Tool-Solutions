@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright 2025 Arm Limited and affiliates.
+# SPDX-FileCopyrightText: Copyright 2025, 2026 Arm Limited and affiliates.
 #
 # SPDX-License-Identifier: Apache-2.0
 
@@ -8,6 +8,8 @@ repos:
   - repo: local
     hooks:
       # Python/YAML/shell: use hash comments (no --multi-line)
+      # This hook mutates copyright metadata, so CI must only run it on changed
+      # files via --from-ref/--to-ref. Do not run this hook with --all-files.
       - id: reuse-annotate-current-year-python-yaml-shell-files
         name: REUSE Annotate (Python add current year, merge)
         language: python
@@ -28,6 +30,8 @@ repos:
         stages: [ pre-commit ]
 
       # JSON/Markdown/welcome.txt: use sidecar .license files
+      # This hook mutates copyright metadata, so CI must only run it on changed
+      # files via --from-ref/--to-ref. Do not run this hook with --all-files.
       - id: reuse-annotate-current-year-json-and-md
         name: REUSE Annotate (JSON/Markdown/welcome.txt sidecar fallback add current year, merge)
         language: python
@@ -49,6 +53,8 @@ repos:
   - repo: https://github.com/fsfe/reuse-tool
     rev: v6.2.0
     hooks:
+      # File-level REUSE validation for changed files. CI also runs `reuse lint`
+      # across the whole repo because validation is non-mutating.
       - id: reuse-lint-file
         stages: [ pre-commit ]
         name: "REUSE Compliant Copyright and License"
@@ -57,4 +63,37 @@ repos:
     rev: v6.0.0
     hooks:
       - id: trailing-whitespace
+        stages: [ pre-commit ]
+      - id: end-of-file-fixer
+        stages: [ pre-commit ]
+      - id: mixed-line-ending
+        stages: [ pre-commit ]
+      # Cheap changed-file guard for accidentally committed conflict markers.
+      # GitHub detects active merge conflicts, but this also catches conflict
+      # markers committed into files.
+      - id: check-merge-conflict
+        stages: [ pre-commit ]
+      # Avoid adding paths that collide on case-insensitive filesystems.
+      - id: check-case-conflict
+        stages: [ pre-commit ]
+      # Catch symlinks that point to missing targets. This is normally a no-op
+      # for this repo, but keeps broken links from entering via future changes.
+      - id: check-symlinks
+        stages: [ pre-commit ]
+      - id: check-json
+        stages: [ pre-commit ]
+      - id: check-yaml
+        stages: [ pre-commit ]
+      # Only checks newly added files, even when invoked with --all-files.
+      - id: check-added-large-files
+        args: [ --maxkb=1024 ]
+        stages: [ pre-commit ]
+      # Scoped to PyTorch because the existing TensorFlow tree currently has
+      # the same classify_image.py executable-bit mismatch.
+      - id: check-executables-have-shebangs
+        files: ^ML-Frameworks/pytorch-aarch64/
+        stages: [ pre-commit ]
+      # Keep script shebangs and executable bits consistent for runnable files.
+      - id: check-shebang-scripts-are-executable
+        files: ^ML-Frameworks/pytorch-aarch64/
         stages: [ pre-commit ]
