@@ -88,12 +88,14 @@ repos:
       - id: check-added-large-files
         args: [ --maxkb=1024 ]
         stages: [ pre-commit ]
-      # Scoped to PyTorch because the existing TensorFlow tree currently has
-      # the same classify_image.py executable-bit mismatch.
       - id: check-executables-have-shebangs
-        files: ^ML-Frameworks/pytorch-aarch64/
         stages: [ pre-commit ]
       # Keep script shebangs and executable bits consistent for runnable files.
       - id: check-shebang-scripts-are-executable
-        files: ^ML-Frameworks/pytorch-aarch64/
+        stages: [ pre-commit ]
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.15
+    hooks:
+      - id: ruff-check
         stages: [ pre-commit ]
