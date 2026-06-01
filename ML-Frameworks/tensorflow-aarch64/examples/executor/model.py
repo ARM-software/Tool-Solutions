@@ -13,7 +13,6 @@ import urllib.request
 import zipfile
 
 import numpy as np
-import yaml
 from tqdm import tqdm
 
 import tensorflow as tf
