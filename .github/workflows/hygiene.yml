@@ -1,0 +1,59 @@
+# SPDX-FileCopyrightText: Copyright 2026 Arm Limited and affiliates.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+name: Hygiene
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+
+#* Stop stale workflows when pull requests are updated: https://stackoverflow.com/a/70972844
+#* Does not apply to the main branch.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+# Declare default permissions as read only.
+permissions: read-all
+
+jobs:
+  hygiene:
+    runs-on: ah-ubuntu_24_04-c7g_2x-50
+    steps:
+      - name: Checkout Tool-Solutions
+        uses: actions/checkout@v6.0.2
+
+      - name: Set up Python
+        uses: actions/setup-python@v6.0.0
+        with:
+          python-version: "3.12"
+
+      - name: Install hygiene tooling
+        run: |
+          python -m pip install --user --no-cache-dir pre-commit==4.5.1 reuse==6.2.0
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Run whole-repo whitespace check
+        run: pre-commit run trailing-whitespace --all-files
+
+      - name: Run safe whole-repo pre-commit checks
+        run: |
+          set -euo pipefail
+          pre-commit run end-of-file-fixer --all-files
+          pre-commit run mixed-line-ending --all-files
+          pre-commit run check-merge-conflict --all-files
+          pre-commit run check-case-conflict --all-files
+          pre-commit run check-symlinks --all-files
+          pre-commit run check-json --all-files
+          pre-commit run check-yaml --all-files
+          pre-commit run check-added-large-files --all-files
+          pre-commit run check-executables-have-shebangs --all-files
+          pre-commit run check-shebang-scripts-are-executable --all-files
+          pre-commit run ruff-check --all-files
+
+      - name: Run whole-repo REUSE lint
+        run: reuse lint
