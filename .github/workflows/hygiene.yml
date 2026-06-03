@@ -26,8 +26,6 @@ jobs:
     steps:
       - name: Checkout Tool-Solutions
         uses: actions/checkout@v6.0.2
-        with:
-          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v6.0.0
