@@ -71,6 +71,7 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
         apply-github-patch pytorch/pytorch 0b0d4ac70463892391dcacde63d087e8fa1c980d
         apply-github-patch pytorch/pytorch 30788230c5dcdd2a2a716c7cf4aa7530615ffe89
         apply-github-patch pytorch/pytorch 129cc717fa87f733aa41b4807bac399c94c2057c
+        apply-github-patch pytorch/pytorch 09a5778ad1dbc12aff17897f4a30774d9cf55dfa
     fi
 
     # Remove deps that we don't need for manylinux AArch64 CPU builds before fetching.
@@ -125,6 +126,7 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
                     apply-github-patch uxlfoundation/oneDNN 9d2436344f2cecb2ac2f879a2ffbbcc27cbe2aaf
                     apply-github-patch uxlfoundation/oneDNN 685713adc27e3a34d6265f9e4cfd2eb3541ed6be
                     apply-github-patch uxlfoundation/oneDNN c0dec6ea825430977b23773547a62310ab806cea
+                    apply-github-patch uxlfoundation/oneDNN aca6e5ae45dfb375178eafe2110c93a4e5f9e508
                     git submodule update --init third_party/kleidiai
                 fi
             )
