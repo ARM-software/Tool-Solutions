@@ -71,6 +71,7 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
         apply-github-patch pytorch/pytorch 0b0d4ac70463892391dcacde63d087e8fa1c980d
         apply-github-patch pytorch/pytorch 30788230c5dcdd2a2a716c7cf4aa7530615ffe89
         apply-github-patch pytorch/pytorch 129cc717fa87f733aa41b4807bac399c94c2057c
+        apply-github-patch pytorch/pytorch 09a5778ad1dbc12aff17897f4a30774d9cf55dfa
     fi
 
     # Remove deps that we don't need for manylinux AArch64 CPU builds before fetching.
