@@ -109,10 +109,7 @@ Note: use the `CommitDate` for the trailing comments unless otherwise specified 
 
 #### Tags
 
-For these dependencies, you should assign the latest tag from the releases to the appropriate variable in `versions.sh` (e.g. assign the latest tag for `ComputeLibrary` to `ACL_VERSION`).
-
-- ComputeLibrary: https://github.com/ARM-software/ComputeLibrary/tags
-  - Pick the newest release tag.
+For these dependencies, you should assign the latest tag from the releases to the appropriate variable in `versions.sh` (e.g. assign the latest tag for `OpenBLAS` to `OPENBLAS_VERSION`).
 
 - OpenBLAS: https://github.com/OpenMathLib/OpenBLAS/tags
   - Pick the newest release tag.

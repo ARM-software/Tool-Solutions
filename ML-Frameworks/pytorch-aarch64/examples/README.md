@@ -1,5 +1,5 @@
 <!--
-SPDX-FileCopyrightText: Copyright 2021-2025 Arm Limited and affiliates.
+SPDX-FileCopyrightText: Copyright 2021-2026 Arm Limited and affiliates.
 
 SPDX-License-Identifier: Apache-2.0
 -->
@@ -9,25 +9,23 @@ SPDX-License-Identifier: Apache-2.0
 <!-- Generated with VS Code's 'Markdown All in One' extension. -->
 <!-- Regenerate with: 'Markdown All in One: Update Table of Contents'. -->
 
-- [Examples](#examples)
-  - [Description](#description)
-  - [Vision](#vision)
-    - [Image classification](#image-classification)
-    - [Object detection](#object-detection)
-  - [Natural Language Processing (NLP)](#natural-language-processing-nlp)
-    - [Question answering](#question-answering)
-  - [Dynamic quantization](#dynamic-quantization)
-  - [General optimization guidelines](#general-optimization-guidelines)
-    - [Weight prepacking](#weight-prepacking)
-    - [General flags](#general-flags)
-    - [Compiled mode flags](#compiled-mode-flags)
-    - [Eager mode flags](#eager-mode-flags)
-  - [Generative AI](#generative-ai)
-    - [4 bit Dynamic Quantization](#4-bit-dynamic-quantization)
-    - [Vision](#vision-1)
-      - [Command-Line Options](#command-line-options)
-    - [Text Generation](#text-generation)
-      - [Command-Line Options](#command-line-options-1)
+- [Description](#description)
+- [Vision](#vision)
+  - [Image classification](#image-classification)
+  - [Object detection](#object-detection)
+- [Natural Language Processing (NLP)](#natural-language-processing-nlp)
+  - [Question answering](#question-answering)
+- [Dynamic quantization](#dynamic-quantization)
+- [General optimization guidelines](#general-optimization-guidelines)
+  - [General flags](#general-flags)
+  - [Compiled mode flags](#compiled-mode-flags)
+  - [Eager mode flags](#eager-mode-flags)
+- [Generative AI](#generative-ai)
+  - [4 bit Dynamic Quantization](#4-bit-dynamic-quantization)
+  - [Vision](#vision-1)
+    - [Command-Line Options](#command-line-options)
+  - [Text Generation](#text-generation)
+    - [Command-Line Options](#command-line-options-1)
 
 ## Description
 
@@ -56,7 +54,7 @@ The file [`resnet_v1-50.yml`](resnet_v1-50.yml) provides, in [YAML format](https
 
 ### Object detection
 
-The script [`detect_objects.py`](detect_object.py) demonstrates how to run object detection using SSD-ResNet-34.
+The script [`detect_objects.py`](detect_objects.py) demonstrates how to run object detection using SSD-ResNet-34.
 
 The SSD-ResNet-34 model is trained from the Common Object in Context (COCO) image dataset.
 This is a multiscale SSD (Single Shot Detection) model based on the ResNet-34 backbone network that performs object detection.
@@ -198,15 +196,11 @@ Note that in the above data we used the `--warmup` flag to run the model once be
 
 ## General optimization guidelines
 
-### Weight prepacking
-
-`Linear` layers calling [Arm ComputeLibrary](https://github.com/ARM-software/ComputeLibrary) (ACL) matmuls reorder weights during runtime by default. These reorders can be eliminated by calling `pack_linear_weights` as shown in `pack_linear_weights.py`. This improves the performance of any models calling a `Linear` layer multiple times.
-
 ### General flags
 
 There are several flags which typically improve the performance of PyTorch.
 
-`DNNL_DEFAULT_FPMATH_MODE`: setting the environment variable `DNNL_DEFAULT_FPMATH_MODE` to `BF16` or `ANY` will instruct ACL to dispatch fp32 workloads to bfloat16 kernels where hardware support permits. _Note: this may introduce a drop in accuracy._
+`DNNL_DEFAULT_FPMATH_MODE`: setting the environment variable `DNNL_DEFAULT_FPMATH_MODE` to `BF16` or `ANY` will result in fp32 workloads being dispatched to bfloat16 kernels where hardware support permits. _Note: this may introduce a drop in accuracy._
 
 You can control the number of threads with `OMP_NUM_THREADS`, smaller models may perform better with fewer threads.
 
