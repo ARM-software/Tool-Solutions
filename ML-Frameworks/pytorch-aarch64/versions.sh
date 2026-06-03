@@ -15,7 +15,6 @@ ONEDNN_HASH=3004f0a1d9cf92c06eaaca57840aaa2149ebba85    # From main, May 27th, 2
 KLEIDIAI_HASH=5866364d3bc079d2d6cae5f0acf6d076594bc7a7  # v1.25.0 from main, May 28th, 2026
 
 # build-wheel.sh deps
-ACL_VERSION="v53.1.0"   # May 18th
 OPENBLAS_VERSION="v0.3.33"  # Apr 23rd
 
 # Dockerfile deps

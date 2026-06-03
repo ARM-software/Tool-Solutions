@@ -94,10 +94,9 @@ mkdir -p "${OUTPUT_LOCAL_DIR}"
 
 trap cleanup EXIT
 
-echo "Building local manywheel builder image with ACL_VERSION=${ACL_VERSION} and OPENBLAS_VERSION=${OPENBLAS_VERSION}"
+echo "Building local manywheel builder image with OPENBLAS_VERSION=${OPENBLAS_VERSION}"
 (
     cd "${PYTORCH_LOCAL_DIR}"
-    ACL_VERSION="${ACL_VERSION}" \
     OPENBLAS_VERSION="${OPENBLAS_VERSION}" \
     MAX_JOBS="${MAX_JOBS}" \
     USE_CCACHE="${USE_CCACHE}" \
