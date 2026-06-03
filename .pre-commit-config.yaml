@@ -7,9 +7,8 @@ fail_fast: false
 repos:
   - repo: local
     hooks:
-      # Python/YAML/shell: use hash comments (no --multi-line)
-      # This hook mutates copyright metadata, so CI must only run it on changed
-      # files via --from-ref/--to-ref. Do not run this hook with --all-files.
+      # Python/YAML/shell: use hash comments (no --multi-line). This hook
+      # mutates copyright metadata. Do not run this hook with --all-files.
       - id: reuse-annotate-current-year-python-yaml-shell-files
         name: REUSE Annotate (Python add current year, merge)
         language: python
@@ -29,9 +28,8 @@ repos:
         files: '(\.gitignore|\.dockerignore|requirements\.txt|bash_profile|Dockerfile|\.(py|yml|yaml|sh|bash))$'
         stages: [ pre-commit ]
 
-      # JSON/Markdown/welcome.txt: use sidecar .license files
-      # This hook mutates copyright metadata, so CI must only run it on changed
-      # files via --from-ref/--to-ref. Do not run this hook with --all-files.
+      # JSON/Markdown/welcome.txt: use sidecar .license files. This hook
+      # mutates copyright metadata. Do not run this hook with --all-files.
       - id: reuse-annotate-current-year-json-and-md
         name: REUSE Annotate (JSON/Markdown/welcome.txt sidecar fallback add current year, merge)
         language: python
