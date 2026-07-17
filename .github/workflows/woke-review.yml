@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright 2025 Arm Limited and affiliates.
+# SPDX-FileCopyrightText: Copyright 2025, 2026 Arm Limited and affiliates.
 #
 # SPDX-License-Identifier: Apache-2.0
 
@@ -19,7 +19,7 @@ permissions: read-all
 
 jobs:
   woke:
-    runs-on: ah-ubuntu_24_04-c7g_2x-50
+    runs-on: ah-ubuntu_24_04-c7g_x-50
     steps:
       - name: Checkout Tool-Solutions
         uses: actions/checkout@v6.0.1

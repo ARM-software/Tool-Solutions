@@ -13,7 +13,3 @@ python detect_objects.py -m ./ssd_resnet34.yml -i https://raw.githubusercontent.
 python answer_questions.py
 python answer_questions.py -s "Normans"
 python answer_questions.py -id 56de16ca4396321400ee25c7
-python answer_questions.py -t README.md -q "What does this folder contain?"
-python answer_questions.py --quantize
-python quantized_linear.py 384 1024 768
-python answer_questions.py -id 56de16ca4396321400ee25c7 --quantize --bert-large

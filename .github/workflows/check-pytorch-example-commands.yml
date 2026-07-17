@@ -1,0 +1,32 @@
+# SPDX-FileCopyrightText: Copyright 2026 Arm Limited and affiliates.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+name: "Check PyTorch example commands"
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "ML-Frameworks/pytorch-aarch64/examples/README.md"
+      - "ML-Frameworks/pytorch-aarch64/examples/test-examples.sh"
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - "ML-Frameworks/pytorch-aarch64/examples/README.md"
+      - "ML-Frameworks/pytorch-aarch64/examples/test-examples.sh"
+  workflow_dispatch:
+
+# Declare default permissions as read only.
+permissions: read-all
+
+jobs:
+  check-example-commands:
+    runs-on: ah-ubuntu_24_04-c7g_x-50
+    steps:
+      - name: Checkout Tool-Solutions
+        uses: actions/checkout@v6.0.2
+
+      - name: Compare example commands
+        working-directory: ML-Frameworks/pytorch-aarch64/examples
+        run: diff -u --label README.md --label test-examples.sh <(grep '^python' README.md) <(grep '^python' test-examples.sh)

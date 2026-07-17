@@ -113,4 +113,4 @@ jobs:
         run: |
           docker run --rm \
             -e ONEDNN_DEFAULT_FPMATH_MODE=${{ matrix.onednn_fpmath_mode }} \
-            toolsolutions-pytorch:latest ./run_unit_tests.sh
+            toolsolutions-pytorch:latest ./run-unit-tests.sh
