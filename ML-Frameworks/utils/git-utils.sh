@@ -80,6 +80,40 @@ function apply-github-patch {
     return 0
 }
 
+function apply-arm-gitlab-patch {
+    # Apply a specific GitLab commit.
+    # $1 is 'organisation/repo', $2 is the commit hash
+    # To use an API token, which may avoid rate limits, set the environment variable GITLAB_TOKEN
+    set -u
+
+    local gitlab_url='https://gitlab.arm.com'
+    local project="$1"
+    local commit="$2"
+    local fetch_url="${gitlab_url}/${project}.git"
+    local patch_file="${patch_cache_dir}/${commit}.patch"
+
+    if [ ! -f "$patch_file" ]; then
+        curl --silent -L "$gitlab_url/${project}/-/commit/${commit}.patch" -o "$patch_file"
+    fi
+
+    # Approach #1: Try a simple patch application with 'git am'
+    git-with-credentials am --keep-cr "${patch_file}" && return 0
+    git-with-credentials am --abort || true # wokeignore:rule=abort/terminate
+
+    # Approach #2: Try a three-way merge after fetching the parent commit. It can handle
+    # scenarios in which the context of the patch has moved. However, we need the parent
+    # commit of the patch for this so we'll try to fetch it with the '--depth=2'
+    git fetch --no-tags --quiet --depth=2 "$fetch_url" "$commit" || true
+    git-with-credentials am --3way --keep-cr "${patch_file}" && return 0
+    git-with-credentials am --abort || true # wokeignore:rule=abort/terminate
+
+    # Approach #3: Fall back to GNU 'patch'
+    patch -p1 < "${patch_file}" || return 1
+    git add -A
+    git-with-credentials commit -m "Applied patch ${commit} from ${project}."
+    return 0
+}
+
 function replace_once() {
     python3 - "$@" <<'PY'
 import sys
