@@ -69,7 +69,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run smoke tests
-        run: docker run --rm toolsolutions-tensorflow:latest ./test_examples.sh
+        run: docker run --rm toolsolutions-tensorflow:latest ./test-examples.sh
 
       - name: Run unit tests
-        run: docker run --rm toolsolutions-tensorflow:latest ./run_unit_tests.sh
+        run: docker run --rm toolsolutions-tensorflow:latest ./run-unit-tests.sh
