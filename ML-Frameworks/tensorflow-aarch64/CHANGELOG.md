@@ -21,6 +21,19 @@ where `YY` is the year, and `MM` the month of the increment.
 
 ### Fixed
 
+## [r26.08] 2026-08-03
+
+### Added
+
+### Changed
+ - Updates TensorFlow hash to 7fd0883713c3c95b4ace0a637de461c731c1db1d from nightly, July 7th
+
+### Removed
+ - Removes TensorFlow [PR #102272](https://github.com/tensorflow/tensorflow/pull/102272), which fixes AArch64 CPUIDInfo init. 
+ It was merged upstream on 17 June.
+
+### Fixed
+
 ## [r26.06] 2026-06-19
 
 ### Added

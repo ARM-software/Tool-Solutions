@@ -68,10 +68,7 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
         # apply-github-patch pytorch/pytorch 337925aed2babb3ef7808f78536bbbc9df346a4f
 
         # https://github.com/pytorch/pytorch/pull/184372 - [Draft] Remove ACL
-        apply-github-patch pytorch/pytorch 0b0d4ac70463892391dcacde63d087e8fa1c980d
-        apply-github-patch pytorch/pytorch 30788230c5dcdd2a2a716c7cf4aa7530615ffe89
-        apply-github-patch pytorch/pytorch 129cc717fa87f733aa41b4807bac399c94c2057c
-        apply-github-patch pytorch/pytorch 09a5778ad1dbc12aff17897f4a30774d9cf55dfa
+        apply-github-patch pytorch/pytorch bd758083863f9ce8d44ae6bab17e385207e7fcd5
     fi
 
     # Remove deps that we don't need for manylinux AArch64 CPU builds before fetching.
@@ -123,11 +120,20 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
                     echo "Not applying extra patches to oneDNN build for source variant '$source_variant'"
                 else
                     # https://github.com/uxlfoundation/oneDNN/pull/5156 - cpu: aarch64: replace acl with kleidiai
-                    apply-github-patch uxlfoundation/oneDNN 9d2436344f2cecb2ac2f879a2ffbbcc27cbe2aaf
-                    apply-github-patch uxlfoundation/oneDNN 685713adc27e3a34d6265f9e4cfd2eb3541ed6be
-                    apply-github-patch uxlfoundation/oneDNN c0dec6ea825430977b23773547a62310ab806cea
-                    apply-github-patch uxlfoundation/oneDNN aca6e5ae45dfb375178eafe2110c93a4e5f9e508
-                    git submodule update --init third_party/kleidiai
+                    apply-github-patch uxlfoundation/oneDNN 97b72eb5321dd440ffc8d1c3e3b0ebd7e4f2eaad
+                    apply-github-patch uxlfoundation/oneDNN 47b2bf4f4df49310a7b81e848d85a0c6ac737a22
+                    apply-github-patch uxlfoundation/oneDNN 3d6c6f3148d929035400d0d7aa1a953c1eda8e63
+                    apply-github-patch uxlfoundation/oneDNN b417480f50213ee705312c9e948e713f36b75bd1
+                    apply-github-patch uxlfoundation/oneDNN b0a05befe6b7d06f4c8a45e8e1c0554f842b39f6
+                    apply-github-patch uxlfoundation/oneDNN ab71e9c969ee4862d24acfd8e319de331008bd1a
+                    apply-github-patch uxlfoundation/oneDNN 41d836b61ec3fd3fe6ae06716a3854fa47c5f233
+                    apply-github-patch uxlfoundation/oneDNN 7220a64d5e4729e69a1c5b60c6f3514b6b2de139
+                    apply-github-patch uxlfoundation/oneDNN 550aa0d043ddf375c6b580e7cb91095c8cc63dda
+                    git update-index --cacheinfo "160000,$KLEIDIAI_HASH,third_party/kleidiai"
+                    git submodule update --init --checkout --force third_party/kleidiai
+                    cd third_party/kleidiai
+                    # https://gitlab.arm.com/kleidi/kleidiai/-/merge_requests/763 - fix: Fix bf16 weight format mismatch
+                    apply-arm-gitlab-patch kleidi/kleidiai acbe2cd12ea85a7d77bca9f99e4df2d2e795740f
                 fi
             )
         )
@@ -137,3 +143,4 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
         )
     fi
 )
+
