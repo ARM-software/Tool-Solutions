@@ -129,6 +129,7 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
                     apply-github-patch uxlfoundation/oneDNN 41d836b61ec3fd3fe6ae06716a3854fa47c5f233
                     apply-github-patch uxlfoundation/oneDNN 7220a64d5e4729e69a1c5b60c6f3514b6b2de139
                     apply-github-patch uxlfoundation/oneDNN 550aa0d043ddf375c6b580e7cb91095c8cc63dda
+                    apply-github-patch uxlfoundation/oneDNN 9c4a810fe944c9187da42583cda1a58b0e7cae33
                     git update-index --cacheinfo "160000,$KLEIDIAI_HASH,third_party/kleidiai"
                     git submodule update --init --checkout --force third_party/kleidiai
                     cd third_party/kleidiai
