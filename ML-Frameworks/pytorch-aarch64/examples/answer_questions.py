@@ -148,7 +148,10 @@ def main():
         )
 
     # Encode context
-    encoding = token.encode_plus(question, context, max_length=512, truncation=True)
+    # Use the tokenizer's public callable API.  It returns the BatchEncoding
+    # needed below and is supported by tokenizer versions that lack
+    # ``encode_plus``.
+    encoding = token(question, context, max_length=512, truncation=True)
     (input_ids, attention_mask) = (encoding["input_ids"], encoding["attention_mask"])
 
     # Warm-up
