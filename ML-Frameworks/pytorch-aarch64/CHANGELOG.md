@@ -26,13 +26,18 @@ where `YY` is the year, and `MM` the month of the increment.
 ### Added
 
 ### Changed
- - Updates `torchao` from 0.18.0.dev20260528 to 0.18.0.dev20260726
- - updates `torchvision` from 0.28.0.dev20260527 to 0.29.0.dev20260726
+ - Updates `huggingface_hub` to 1.3.0.
+ - Updates `safetensors` to 0.5.0.
+ - Updates `tokenizers` to 0.22.0.
+ - Updates `transformers` to 5.3.0.
+ - Updates `pillow` to 12.3.0.
+ - Updates `torchao` from 0.18.0.dev20260528 to 0.18.0.dev20260726.
+ - Updates `torchvision` from 0.28.0.dev20260527 to 0.29.0.dev20260726.
  - Updates hashes for:
    - `PYTORCH_HASH=e89c5aa724af75b3d439f7237d8815de19f284a3`, 2.14.0.dev20260707 from viable/strict, July 7th, 2026.
-   - `IDEEP_HASH=78d0ba267580381a4efa7344d97091499d978de4`, from ideep_pytorch, July 2th, 2026
-   - `ONEDNN_HASH=47b2bf4f4df49310a7b81e848d85a0c6ac737a22`, From main, July 14th, 2026
-   - `KLEIDIAI_HASH=13cd35993d8439143aff1e756a862d366acded0d`, v1.29.0 from main, July 22th, 2026
+   - `IDEEP_HASH=78d0ba267580381a4efa7344d97091499d978de4`, from ideep_pytorch, July 2th, 2026.
+   - `ONEDNN_HASH=47b2bf4f4df49310a7b81e848d85a0c6ac737a22`, From main, July 14th, 2026.
+   - `KLEIDIAI_HASH=13cd35993d8439143aff1e756a862d366acded0d`, v1.29.0 from main, July 22th, 2026.
 
 ### Removed
 
