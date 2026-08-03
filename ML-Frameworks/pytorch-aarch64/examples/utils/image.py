@@ -247,7 +247,8 @@ def _postprocess_image_for_openimages_detection(
 
         # resizing the box values from the 800x800 image to the original
         # resolution.
-        resize = lambda x, orig: int((x / 800) * orig)
+        def resize(x, orig):
+            return int((x / 800) * orig)
         left = resize(box[0], width)
         top = resize(box[1], height)
         right = resize(box[2], width)

@@ -8,7 +8,6 @@ Class that wraps around TensorFlow session and execute frozen model
 import os
 import runpy
 import time
-import sys
 from urllib.parse import urlparse
 import warnings
 import zipfile
