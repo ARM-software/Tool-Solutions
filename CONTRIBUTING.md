@@ -1,5 +1,5 @@
 <!--
-SPDX-FileCopyrightText: Copyright 2025 Arm Limited and affiliates.
+SPDX-FileCopyrightText: Copyright 2025, 2026 Arm Limited and affiliates.
 
 SPDX-License-Identifier: Apache-2.0
 -->
@@ -84,8 +84,18 @@ pre-commit --version
    - Re-run:
 
         ```bash
-        pre-commit run --all-files
+        pre-commit run
         ```
+
+   The command above checks the currently staged files and may update their
+   copyright metadata. Inspect and stage any hook changes before rerunning it.
+
+   To run every repository-safe check across the whole repository without
+   changing copyright metadata, use:
+
+    ```bash
+    pre-commit run --all-files --hook-stage manual
+    ```
 
 5. Push once everything passes:
 
