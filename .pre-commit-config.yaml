@@ -1,13 +1,15 @@
-# SPDX-FileCopyrightText: Copyright 2025 Arm Limited and affiliates.
+# SPDX-FileCopyrightText: Copyright 2025, 2026 Arm Limited and affiliates.
 #
 # SPDX-License-Identifier: Apache-2.0
 
 fail_fast: false
+default_stages: [ pre-commit, manual ]
 
 repos:
   - repo: local
     hooks:
-      # Python/YAML/shell: use hash comments (no --multi-line)
+      # Python/YAML/shell: use hash comments (no --multi-line). This hook
+      # mutates copyright metadata. Do not run this hook with --all-files.
       - id: reuse-annotate-current-year-python-yaml-shell-files
         name: REUSE Annotate (Python add current year, merge)
         language: python
@@ -27,7 +29,8 @@ repos:
         files: '(\.gitignore|\.dockerignore|requirements\.txt|bash_profile|Dockerfile|\.(py|yml|yaml|sh|bash))$'
         stages: [ pre-commit ]
 
-      # JSON/Markdown/welcome.txt: use sidecar .license files
+      # JSON/Markdown/welcome.txt: use sidecar .license files. This hook
+      # mutates copyright metadata. Do not run this hook with --all-files.
       - id: reuse-annotate-current-year-json-and-md
         name: REUSE Annotate (JSON/Markdown/welcome.txt sidecar fallback add current year, merge)
         language: python
@@ -49,12 +52,37 @@ repos:
   - repo: https://github.com/fsfe/reuse-tool
     rev: v6.2.0
     hooks:
+      # File-level REUSE validation for changed files. CI also runs `reuse lint`
+      # across the whole repo because validation is non-mutating.
       - id: reuse-lint-file
-        stages: [ pre-commit ]
         name: "REUSE Compliant Copyright and License"
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
     hooks:
       - id: trailing-whitespace
-        stages: [ pre-commit ]
+      - id: end-of-file-fixer
+      - id: mixed-line-ending
+      # Cheap changed-file guard for accidentally committed conflict markers.
+      # GitHub detects active merge conflicts, but this also catches conflict
+      # markers committed into files.
+      - id: check-merge-conflict
+      # Avoid adding paths that collide on case-insensitive filesystems.
+      - id: check-case-conflict
+      # Catch symlinks that point to missing targets. This is normally a no-op
+      # for this repo, but keeps broken links from entering via future changes.
+      - id: check-symlinks
+      - id: check-json
+      - id: check-yaml
+      # Enforce the size limit for every file in whole-repo CI checks as well as
+      # for newly added files in normal pre-commit runs.
+      - id: check-added-large-files
+        args: [ --maxkb=1024, --enforce-all ]
+      - id: check-executables-have-shebangs
+      # Keep script shebangs and executable bits consistent for runnable files.
+      - id: check-shebang-scripts-are-executable
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.15
+    hooks:
+      - id: ruff-check

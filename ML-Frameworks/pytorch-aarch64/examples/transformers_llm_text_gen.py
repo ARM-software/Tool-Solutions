@@ -158,8 +158,7 @@ def eval_quantized_output(quantized_model, tokenizer, input_tensor, max_min_toke
 
 
 def main(args):
-    name_string = f"{args.model}"
-    quantized_model_, tokenizer_, config_ = get_quantized_model(args)
+    quantized_model_, tokenizer_, _ = get_quantized_model(args)
     input_tensor = tokenizer_.encode(args.prompt, return_tensors="pt")
     eval_quantized_output(
         quantized_model_, tokenizer_, input_tensor, args.max_new_tokens

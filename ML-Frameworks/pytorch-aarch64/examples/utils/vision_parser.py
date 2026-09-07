@@ -61,7 +61,7 @@ def parse_arguments():
     else:
         try:
             os.path.isfile(args["image"])
-        except:
+        except Exception as _:
             assert False, "Image not found"
 
     return args
