@@ -140,6 +140,15 @@ fi
 
 docker_exec bash "${PYTORCH_CONTAINER_DIR}/.ci/pytorch/binary_populate_env.sh"
 
+# pytorch/pyproject.toml now contains the key 'license-files' (see PEP 
+# 639) which explicitly lists the license files it expects in the project
+# including under `third_party`. As we prune unused submodules from the 
+# repo (in get-source.sh) before building it, we therefore necessitate 
+# their removal from the 'license-files' list, which is what the script
+# prepare-wheel-metadata.py helps us do.
+docker cp prepare-wheel-metadata.py "${TORCH_BUILD_CONTAINER}:/tmp/prepare-wheel-metadata.py"
+docker_exec python3 /tmp/prepare-wheel-metadata.py "${PYTORCH_CONTAINER_DIR}"
+
 # If there are multiple wheels in the dist directory, an old wheel can be
 # erroneously copied to results, so we clear the directory to be sure
 docker_exec rm -rf "${PYTORCH_CONTAINER_DIR}/dist"
@@ -160,5 +169,28 @@ docker_exec bash -lc "
   WIPE_RH_CUDA_AFTER_BUILD=0 \
   PYTORCH_BUILD_NUMBER=0 \
   PYTORCH_BUILD_VERSION=${PYTORCH_BUILD_VERSION} \
-  bash ${PYTORCH_CONTAINER_DIR}/.ci/manywheel/build.sh
+  bash ${PYTORCH_CONTAINER_DIR}/.ci/wheel/linux/build.sh
 "
+
+# The upstream pipeline logs the raw linux_* name before repair retags it.
+# Identify the final artifact for this version and ABI and report its real path.
+shopt -s nullglob
+wheel_files=("${PYTORCH_FINAL_PACKAGE_LOCAL_DIR}"/torch-"${PYTORCH_BUILD_VERSION}"-cp"${PYTHON_VERSION/./}"-cp"${PYTHON_VERSION/./}"-manylinux*_aarch64.whl)
+shopt -u nullglob
+
+if [[ ${#wheel_files[@]} -ne 1 ]]; then
+    echo "error: expected one repaired wheel for ${PYTORCH_BUILD_VERSION}, found ${#wheel_files[@]} in ${PYTORCH_FINAL_PACKAGE_LOCAL_DIR}" >&2
+    exit 1
+fi
+
+if [[ ! -f "${wheel_files[0]}" ]]; then
+    echo "error: repaired wheel is not a file: ${wheel_files[0]}" >&2
+    exit 1
+fi
+
+# dockerize.sh's Dockerfile COPY expects a path relative to its build context.
+torch_wheel_path=$(realpath --relative-to="$PWD" "${wheel_files[0]}")
+printf 'Repaired wheel: %s\n' "$torch_wheel_path"
+if [[ -n "${PYTORCH_WHEEL_PATH_FILE:-}" ]]; then
+    printf '%s\n' "$torch_wheel_path" > "$PYTORCH_WHEEL_PATH_FILE"
+fi
