@@ -129,6 +129,8 @@ TORCH_BUILD_CONTAINER=$(docker run -t -d \
     "${BUILDER_IMAGE_NAME}")
 
 if [[ "$*" != *--disable-ccache* ]]; then
+    docker_exec yum install -y ccache
+    docker_exec ccache --version
     if [ -n "${CCACHE_MAXSIZE}" ]; then
         docker_exec ccache --max-size="$CCACHE_MAXSIZE" || true
     fi
