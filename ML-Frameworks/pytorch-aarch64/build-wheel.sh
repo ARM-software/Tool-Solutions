@@ -142,10 +142,10 @@ fi
 
 docker_exec bash "${PYTORCH_CONTAINER_DIR}/.ci/pytorch/binary_populate_env.sh"
 
-# pytorch/pyproject.toml now contains the key 'license-files' (see PEP 
+# pytorch/pyproject.toml now contains the key 'license-files' (see PEP
 # 639) which explicitly lists the license files it expects in the project
-# including under `third_party`. As we prune unused submodules from the 
-# repo (in get-source.sh) before building it, we therefore necessitate 
+# including under `third_party`. As we prune unused submodules from the
+# repo (in get-source.sh) before building it, we therefore necessitate
 # their removal from the 'license-files' list, which is what the script
 # prepare-wheel-metadata.py helps us do.
 docker cp prepare-wheel-metadata.py "${TORCH_BUILD_CONTAINER}:/tmp/prepare-wheel-metadata.py"
