@@ -21,6 +21,18 @@ where `YY` is the year, and `MM` the month of the increment.
 
 ### Fixed
 
+## [r26.10] 2026-10-26
+
+### Added
+
+### Changed
+ - Updates TensorFlow hash to b5d8801b1e0db562ced3f7f940c65f25d7aea453 from nightly, Sep 24th
+
+### Removed
+- Removes TensorFlow [PR #113368](https://github.com/tensorflow/tensorflow/pull/113368), which bump Compute Library version from v24.12 to v52.8.0.
+
+### Fixed
+
 ## [r26.08] 2026-08-03
 
 ### Added

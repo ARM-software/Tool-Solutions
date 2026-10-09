@@ -37,6 +37,6 @@ sympy~=1.13.1
 tokenizers~=0.22.0
 tqdm~=4.66.5
 transformers~=5.3.0  # >= 5.3.0 due to CVE-2026-4372
-typing_extensions~=4.12.2
+typing_extensions~=4.16.0
 tzdata==2024.2
 urllib3~=2.7.0
