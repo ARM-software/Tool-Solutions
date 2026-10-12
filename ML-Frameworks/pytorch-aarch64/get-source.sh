@@ -63,6 +63,9 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
 
         # https://github.com/pytorch/pytorch/pull/196435 - Replace Linear inner_product calls with matmul
         apply-github-patch pytorch/pytorch 6588e8f43a50816684e570f37475591d68ebce28
+
+        # https://github.com/pytorch/pytorch/pull/200595 - Remove redundant python3.15 installation from aarch64 builder image
+        apply-github-patch pytorch/pytorch 6a55966c9a655ee9bc1dad504c910197f1adc38b
     fi
 
     # Remove deps that we don't need for manylinux AArch64 CPU builds before fetching.

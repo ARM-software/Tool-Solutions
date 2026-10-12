@@ -27,6 +27,7 @@ where `YY` is the year, and `MM` the month of the increment.
  - Adds PyTorch [PR #196237](https://github.com/pytorch/pytorch/pull/196237), to support Triton module globals in user-defined kernels.
  - Adds PyTorch [PR #196435](https://github.com/pytorch/pytorch/pull/196435), to replace linear inner-product calls with matrix multiplication.
  - Adds PyTorch [PR #193369](https://github.com/pytorch/pytorch/pull/193369), to enable a reference CPU MXFP scaled_mm path.
+ - Adds PyTorch [PR #200595](https://github.com/pytorch/pytorch/pull/200595), to remove redundant python3.15 installation from aarch64 builder image.
 
 ### Changed
  - Updates `build-wheel.sh` to use PyTorch's new `.ci/wheel/linux/build.sh` instead of the now-removed `.ci/docker/manywheel/build.sh`.
