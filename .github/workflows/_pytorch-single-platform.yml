@@ -29,12 +29,12 @@ jobs:
       BUILDER_IMAGE_NAME: local/pytorch-manylinux2_28_aarch64-builder:cpu-aarch64
     steps:
       - name: Checkout Tool-Solutions
-        uses: actions/checkout@v6.0.2
+        uses: actions/checkout@v7.0.1
         with:
           path: Tool-Solutions
 
       - name: Set up Docker
-        uses: docker/setup-docker-action@v5.0.0
+        uses: docker/setup-docker-action@v5.5.0
 
       - name: Create unique cache key from the year and week (YYYY-WW)
         id: cache_suffix
@@ -46,7 +46,7 @@ jobs:
       # and then saved under the current week's key at the end of the job. This effectively limits
       # the cache to at most two weeks of cache data.
       - name: Restore ccache cache
-        uses: actions/cache@v5.0.3
+        uses: actions/cache@v6.1.0
         with:
           path: ${{ env.CCACHE_LOCAL_DIR }}
           key: ccache-${{ env.TARGET_NAME }}-${{ steps.cache_suffix.outputs.week }}
@@ -76,7 +76,7 @@ jobs:
         run: docker save toolsolutions-pytorch:latest -o toolsolutions-pytorch-image-${{ env.TARGET_NAME }}.tar
 
       - name: Upload build artifact
-        uses: actions/upload-artifact@v7.0.0
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: toolsolutions-pytorch-image-${{ env.TARGET_NAME }}
           path: toolsolutions-pytorch-image-${{ env.TARGET_NAME }}.tar
@@ -92,15 +92,16 @@ jobs:
     runs-on: ${{ inputs.runner_label }}
     steps:
       - name: Download image artifact
-        uses: actions/download-artifact@v8.0.0
+        uses: actions/download-artifact@v8.0.2
         with:
           name: toolsolutions-pytorch-image-${{ inputs.target_name }}
           path: .
 
       - name: Set up Docker
-        uses: docker/setup-docker-action@v5.0.0
+        uses: docker/setup-docker-action@v5.5.0
 
       - name: Load Docker image
+        id: load-image
         run: docker load -i toolsolutions-pytorch-image-${{ inputs.target_name }}.tar
 
       - name: Run smoke tests
@@ -110,6 +111,8 @@ jobs:
             toolsolutions-pytorch:latest ./test-examples.sh
 
       - name: Run unit tests
+        # Run after smoke-test failures, provided the image loaded successfully.
+        if: ${{ !cancelled() && steps.load-image.outcome == 'success' }}
         run: |
           docker run --rm \
             -e ONEDNN_DEFAULT_FPMATH_MODE=${{ matrix.onednn_fpmath_mode }} \

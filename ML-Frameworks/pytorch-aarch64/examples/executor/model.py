@@ -48,6 +48,10 @@ class DownloadProgressBar:
         :param total_size: Total size of the file in bytes
         :return: returns nothing
         """
+        # A new attempt starts at block zero; reset progress after a retry.
+        if block_num == 0 and self.pbar:
+            self.pbar.close()
+            self.pbar = None
         if not self.pbar:
             self.pbar = tqdm(
                 desc=self.msg, unit="b", unit_scale=True, total=total_size
