@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright 2021-2023, 2025 Arm Limited and affiliates.
+# SPDX-FileCopyrightText: Copyright 2021-2023, 2025, 2026 Arm Limited and affiliates.
 #
 # SPDX-License-Identifier: Apache-2.0
 """
@@ -9,11 +9,12 @@ import os
 import sys
 import time
 from urllib.parse import urlparse
-import urllib.request
 import zipfile
 
 import numpy as np
 from tqdm import tqdm
+
+from utils import common
 
 import tensorflow as tf
 from tensorflow.python.tools.optimize_for_inference_lib import (
@@ -49,6 +50,10 @@ class DownloadProgressBar:
         :param total_size: Total size of the file in bytes
         :return: returns nothing
         """
+        # A new attempt starts at block zero; reset progress after a retry.
+        if block_num == 0 and self.pbar:
+            self.pbar.close()
+            self.pbar = None
         if not self.pbar:
             self.pbar = tqdm(
                 desc=self.msg, unit="b", unit_scale=True, total=total_size
@@ -109,10 +114,10 @@ class Model:
                 return model_name
 
         # Download the model
-        urllib.request.urlretrieve(
+        common.download_url(
             model_url,
             model_name,
-            DownloadProgressBar("Downloading: " + model_name + "..."),
+            reporthook=DownloadProgressBar("Downloading: " + model_name + "..."),
         )
 
         # once it is downloaded and if it is archive then
