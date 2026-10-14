@@ -64,9 +64,7 @@ jobs:
 
       - name: Build TensorFlow wheel
         working-directory: ${{ github.workspace }}/Tool-Solutions/ML-Frameworks/tensorflow-aarch64
-        run: |
-          ./get-source.sh
-          ./build-wheel.sh
+        run: ./build.sh --wheel-only
 
       - name: Upload TensorFlow wheel
         uses: actions/upload-artifact@v7.0.2
