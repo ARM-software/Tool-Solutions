@@ -45,7 +45,7 @@ concurrency:
 permissions: read-all
 
 jobs:
-  build-and-test:
+  build-wheel:
     strategy:
       matrix:
         config: [
@@ -55,21 +55,62 @@ jobs:
     runs-on: ${{ matrix.config.label }}
     steps:
       - name: Checkout Tool-Solutions
-        uses: actions/checkout@v6.0.2
+        uses: actions/checkout@v7.0.1
         with:
           path: Tool-Solutions
 
       - name: Set up Docker
-        uses: docker/setup-docker-action@v5.0.0
+        uses: docker/setup-docker-action@v5.5.0
 
-      - name: Build Tool-Solutions Tensorflow
+      - name: Build TensorFlow wheel
         working-directory: ${{ github.workspace }}/Tool-Solutions/ML-Frameworks/tensorflow-aarch64
-        run: ${{ github.workspace }}/Tool-Solutions/ML-Frameworks/tensorflow-aarch64/build.sh
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./build.sh --wheel-only
+
+      - name: Upload TensorFlow wheel
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: tensorflow-wheel-${{ matrix.config.name }}
+          path: Tool-Solutions/ML-Frameworks/tensorflow-aarch64/results/*.whl
+          if-no-files-found: error
+          compression-level: 0 # Wheels are already compressed.
+          retention-days: 3
+
+  test:
+    needs: build-wheel
+    strategy:
+      matrix:
+        config: [
+          { name: c7g, label: ah-ubuntu_24_04-c7g_8x-100 }
+        ]
+
+    runs-on: ${{ matrix.config.label }}
+    steps:
+      - name: Checkout Tool-Solutions
+        uses: actions/checkout@v7.0.1
+        with:
+          path: Tool-Solutions
+
+      - name: Download TensorFlow wheel
+        uses: actions/download-artifact@v8.0.2
+        with:
+          name: tensorflow-wheel-${{ matrix.config.name }}
+          path: Tool-Solutions/ML-Frameworks/tensorflow-aarch64/results
+
+      - name: Set up Docker
+        uses: docker/setup-docker-action@v5.5.0
+
+      - name: Build TensorFlow test image
+        id: build-image
+        working-directory: ${{ github.workspace }}/Tool-Solutions/ML-Frameworks/tensorflow-aarch64
+        run: |
+          # The image includes upstream sources used by the unit tests.
+          ./get-source.sh
+          ./dockerize.sh results/*.whl --build-only
 
       - name: Run smoke tests
         run: docker run --rm toolsolutions-tensorflow:latest ./test-examples.sh
 
       - name: Run unit tests
+        # Run after smoke-test failures, provided the image built successfully.
+        if: ${{ !cancelled() && steps.build-image.outcome == 'success' }}
         run: docker run --rm toolsolutions-tensorflow:latest ./run-unit-tests.sh

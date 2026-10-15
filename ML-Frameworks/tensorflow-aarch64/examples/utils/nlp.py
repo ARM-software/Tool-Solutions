@@ -1,12 +1,13 @@
-# SPDX-FileCopyrightText: Copyright 2021, 2025 Arm Limited and affiliates.
+# SPDX-FileCopyrightText: Copyright 2021, 2025, 2026 Arm Limited and affiliates.
 #
 # SPDX-License-Identifier: Apache-2.0
 
 import sys
 import os
 import json
-import urllib.request
 import pandas
+
+from . import common
 
 
 def clean(question):
@@ -29,7 +30,7 @@ def import_squad_data():
     )
     squad_file = squad_url.split("/")[-1]  # last part of URL
 
-    urllib.request.urlretrieve(squad_url, squad_file)
+    common.download_url(squad_url, squad_file)
 
     if not os.path.isfile(squad_file):
         sys.exit("Dataset %s does not exist!" % squad_file)

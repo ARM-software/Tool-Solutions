@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# SPDX-FileCopyrightText: Copyright 2019-2025 Arm Limited and affiliates.
+# SPDX-FileCopyrightText: Copyright 2019-2026 Arm Limited and affiliates.
 #
 # SPDX-License-Identifier: Apache-2.0
 
@@ -54,6 +54,9 @@ if ! [[ $* == *--use-existing-sources* ]]; then
 fi
 
 ./build-wheel.sh
+
+# Allow CI to upload the wheel and package the test image in a separate job.
+[[ $* == *--wheel-only* ]] && exit 0
 
 # Use the second to last match, otherwise grep finds itself
 tf_wheel_name=$(grep -o "tensorflow-.*.whl" $build_log | head -n -1 | tail -n 1)

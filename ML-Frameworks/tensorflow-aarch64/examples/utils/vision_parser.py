@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright 2021, 2022, 2025 Arm Limited and affiliates.
+# SPDX-FileCopyrightText: Copyright 2021, 2022, 2025, 2026 Arm Limited and affiliates.
 #
 # SPDX-License-Identifier: Apache-2.0
 """
@@ -7,8 +7,6 @@ Parse arguments from the command line
 
 import argparse
 import os
-
-import requests
 
 
 def parse_arguments():
@@ -80,16 +78,8 @@ def parse_arguments():
         args["model"]
     ), "File describing model does not exists"
 
-    # Check the image exists
-    if args["image"].startswith('http'):
-        try:
-            requests.get(args["image"])
-        except requests.ConnectionError as _:
-            assert False, "Image URL is not available!"
-    else:
-        try:
-            os.path.isfile(args["image"])
-        except Exception as _:
-            assert False, "Image not found"
+    # Remote images are checked by the downloader, which retries transient failures.
+    if not args["image"].startswith('http'):
+        assert os.path.isfile(args["image"]), "Image not found"
 
     return args
