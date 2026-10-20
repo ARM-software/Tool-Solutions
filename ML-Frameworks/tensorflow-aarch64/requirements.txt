@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 filelock~=3.20.3
-fsspec==2025.2.0
+fsspec==2026.6.0
 huggingface-hub~=0.34.0
 opencv-python-headless~=4.11.0.86
 pandas~=2.2.3
@@ -18,3 +18,4 @@ tokenizers~=0.21.0
 tqdm~=4.67.1
 transformers~=4.53.0
 tzdata==2025.1
+urllib3~=2.8.0
