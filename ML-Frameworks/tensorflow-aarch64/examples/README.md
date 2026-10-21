@@ -1,5 +1,5 @@
 <!--
-SPDX-FileCopyrightText: Copyright 2021-2023, 2025 Arm Limited and affiliates.
+SPDX-FileCopyrightText: Copyright 2021-2023, 2025, 2026 Arm Limited and affiliates.
 
 SPDX-License-Identifier: Apache-2.0
 -->
@@ -62,49 +62,3 @@ Finally, there is additional information in `image_preprocess` that is used to p
 - `std`: Standard deviation values per channel for normalizing image
 
 By default, the model will be optimized for inference before the object detection is performed. This optimization takes a couple of minutes to complete. Set the flag `-u` to disable this optimization.
-
-## Natural Language Processing (NLP)
-
-### Question answering
-
-The script `answer_questions.py` demonstrates how to build a simple question answering system using the pre-trained DistilBERT model. The script can answer questions from the [Stanford Question Answering Dataset (SQuAD)](https://rajpurkar.github.io/SQuAD-explorer/), or can be provided with a user defined context and question.
-
-To run the script on a random entry from the SQuAD dev-v2.0 dataset call:
-
-```
-python answer_questions.py
-```
-
-To pick a random question on a specific topic in the SQuAD dataset, use `-s` flag:
-
-```
-python answer_questions.py -s "Normans"
-```
-
-The routine `print_squad_questions` can be used to give a list of available subjects, see below.
-
-
-To choose a specific entry from the SQuAD dataset use the `-id` flag to supply the ID of the question, for example:
-
-```
-python answer_questions.py -id 56de16ca4396321400ee25c7
-```
-
-will attempt to answer "When was the battle of Hastings?" based on one of the entries on the [Normans from the SQuAD dataset](https://rajpurkar.github.io/SQuAD-explorer/explore/v2.0/dev/Normans.html) (originally derived from Wikipedia). The expected answer is "In 1066".
-
-In the `utils` folder, [nlp.py](utils/nlp.py) provides a some simple tools for obtaining and browsing the dataset. This also displays the ID of each question which can be supplied to `answer_questions.py`. Calling `print_squad_questions` will display a list of the various subjects contained in the dataset and supplying a `subject` argument will print the details of all the questions on that subject, for example, from within your Python environment:
-
-```
-from utils import nlp
-nlp.print_squad_questions(subject="Normans")
-```
-
-will print all the SQuAD entries on Normans - the context, questions, reference answers and IDs.
-
-It is also possible to supply a question, and context, to `answer_questions.py` directly at the command line using the flags `-t` and `-q`, for example:
-
-```
-python answer_questions.py -t <context> -q <question>
-```
-
-where `<context>` is the text file containing the text on which the `<question>` is based. If no text file is provided, `answer_questions.py` will search through the SQuAD dataset for the question and, if the question can be located, use the context associated with it.

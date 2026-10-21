@@ -16,13 +16,19 @@ where `YY` is the year, and `MM` the month of the increment.
 ### Added
 
 ### Changed
- - Updates `fsspec` from 2025.2.0 to 2026.6.0 for CVE-2026-104851.
- - Adds an explicit `urllib3~=2.8.0` requirement to keep transitive installations on the 2.8 series for CVE-2026-97687, CVE-2026-97688 and CVE-2026-97689.
+ - Adds an explicit `urllib3~=2.8.0` requirement to keep transitive installations on the 2.8 series
+   for CVE-2026-97687, CVE-2026-97688 and CVE-2026-97689.
 
 ### Removed
+ - Removes the DistilBERT question-answering example, its NLP helpers, documentation and smoke-test
+   commands because support has been dropped by `transformers` in v5.
+ - Removes `transformers` and the example-only dependencies `huggingface-hub`, `tokenizers`,
+   `safetensors`, `tf_keras`, `fsspec`, `regex`, `pandas`, `python-dateutil`, `pytz` and `tzdata`
+   from the requirements.
 
 ### Fixed
- - Upgrades librsvg in the final image and requires version 2.60.0+dfsg-1+deb13u1 or later for CVE-2026-96889, using the existing runtime `RUN` instruction to preserve the final layer count.
+ - Upgrades librsvg in the final image and requires version 2.60.0+dfsg-1+deb13u1 or later for
+   CVE-2026-96889, using the existing runtime `RUN` instruction to preserve the final layer count.
 
 ## [r26.10] 2026-10-26
 

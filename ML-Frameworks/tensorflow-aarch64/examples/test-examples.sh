@@ -10,6 +10,3 @@
 python classify_image.py -m ./resnet_v1-50.yml -i https://upload.wikimedia.org/wikipedia/commons/3/32/Weimaraner_wb.jpg
 # wokeignore:rule=master
 python detect_objects.py -m ./ssd_resnet34.yml -i https://raw.githubusercontent.com/zhreshold/mxnet-ssd/master/data/demo/street.jpg
-python answer_questions.py
-python answer_questions.py -s "Normans"
-python answer_questions.py -id 56de16ca4396321400ee25c7
