@@ -73,7 +73,15 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV DOCKER_USER=debian
 
 # Runtime OS bits + UI
+# Keep the librsvg security update in this RUN to preserve the final layer count.
 RUN set -eux && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends --only-upgrade \
+        librsvg2-2 librsvg2-common librsvg2-dev && \
+    dpkg --compare-versions \
+        "$(dpkg-query -W -f='${Version}' librsvg2-2)" \
+        ge '2.60.0+dfsg-1+deb13u1' && \
+    rm -rf /var/lib/apt/lists/* && \
     if ! id "$DOCKER_USER" >/dev/null 2>&1; then useradd --create-home -s /bin/bash "$DOCKER_USER"; fi && \
     echo '[ -n "$TERM" -a -r "$HOME/welcome.txt" ] && cat "$HOME/welcome.txt"' >> /etc/bash.bashrc && \
     echo 'export PATH="$HOME/.local/bin:$HOME/.venv/bin:$PATH"' >> /etc/bash.bashrc && \

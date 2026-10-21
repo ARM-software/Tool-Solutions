@@ -16,10 +16,14 @@ where `YY` is the year, and `MM` the month of the increment.
 ### Added
 
 ### Changed
+ - Updates `fsspec` from 2024.9.0 to 2026.6.0 for CVE-2026-104851.
+ - Updates `urllib3` from the 2.7 series to the 2.8 series for CVE-2026-97687, CVE-2026-97688 and CVE-2026-97689.
+ - Updates `transformers` from the 5.3 series to the 5.20 series to address CVE-2026-9856, CVE-2026-80047 and CVE-2026-75104, and raises the compatible dependency requirements to `huggingface_hub>=1.31.0,<3.0`, `tokenizers~=0.23.1`, `safetensors>=0.8.0` and `regex>=2025.10.22`.
 
 ### Removed
 
 ### Fixed
+ - Upgrades librsvg in the final image and requires version 2.60.0+dfsg-1+deb13u1 or later for CVE-2026-96889, using the existing runtime `RUN` instruction to preserve the final layer count.
 
 ## [r26.10] 2026-10-26
 
