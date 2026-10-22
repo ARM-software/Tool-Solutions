@@ -33,7 +33,7 @@ def load_model_components(model_folder_path):
                     model_folder_path, local_files_only=True
                 )
                 model = AutoModelForCausalLM.from_pretrained(
-                    model_folder_path, local_files_only=True
+                    model_folder_path, dtype=torch.float32,local_files_only=True
                 )
                 print("Model components loaded successfully from local directory.")
                 return config, tokenizer, model
@@ -47,7 +47,7 @@ def load_model_components(model_folder_path):
                 print("Loading model components from Hugging Face Model Hub.")
                 config = AutoConfig.from_pretrained(model_folder_path)
                 tokenizer = AutoTokenizer.from_pretrained(model_folder_path)
-                model = AutoModelForCausalLM.from_pretrained(model_folder_path)
+                model = AutoModelForCausalLM.from_pretrained(model_folder_path, dtype=torch.float32)
                 print(
                     "Model components loaded successfully from Hugging Face Model Hub."
                 )
