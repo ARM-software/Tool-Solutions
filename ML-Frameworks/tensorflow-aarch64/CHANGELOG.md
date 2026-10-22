@@ -18,6 +18,7 @@ where `YY` is the year, and `MM` the month of the increment.
 ### Changed
  - Adds an explicit `urllib3~=2.8.0` requirement to keep transitive installations on the 2.8 series
    for CVE-2026-97687, CVE-2026-97688 and CVE-2026-97689.
+ - Updates `uv` from 0.9.29 to 0.13.4 for a security fix.
 
 ### Removed
  - Removes the DistilBERT question-answering example, its NLP helpers, documentation and smoke-test
@@ -29,6 +30,7 @@ where `YY` is the year, and `MM` the month of the increment.
 ### Fixed
  - Upgrades librsvg in the final image and requires version 2.60.0+dfsg-1+deb13u1 or later for
    CVE-2026-96889, using the existing runtime `RUN` instruction to preserve the final layer count.
+ - Upgrades pillow to 13.0.0 and filelock to 4.2.1 to address several CVEs.
 
 ## [r26.10] 2026-10-26
 
