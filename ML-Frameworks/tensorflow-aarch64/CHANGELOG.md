@@ -16,11 +16,20 @@ where `YY` is the year, and `MM` the month of the increment.
 ### Added
 
 ### Changed
- - Adds an explicit `urllib3~=2.8.0` requirement to keep transitive installations on the 2.8 series
-   for CVE-2026-97687, CVE-2026-97688 and CVE-2026-97689.
- - Updates `uv` from 0.9.29 to 0.13.4 for a security fix.
 
 ### Removed
+
+### Fixed
+
+## [r26.10] 2026-10-26
+
+### Added
+
+### Changed
+ - Updates TensorFlow hash to b5d8801b1e0db562ced3f7f940c65f25d7aea453 from nightly, Sep 24th
+
+### Removed
+ - Removes TensorFlow [PR #113368](https://github.com/tensorflow/tensorflow/pull/113368), which bump Compute Library version from v24.12 to v52.8.0.
  - Removes the DistilBERT question-answering example, its NLP helpers, documentation and smoke-test
    commands because support has been dropped by `transformers` in v5.
  - Removes `transformers` and the example-only dependencies `huggingface-hub`, `tokenizers`,
@@ -31,18 +40,9 @@ where `YY` is the year, and `MM` the month of the increment.
  - Upgrades librsvg in the final image and requires version 2.60.0+dfsg-1+deb13u1 or later for
    CVE-2026-96889, using the existing runtime `RUN` instruction to preserve the final layer count.
  - Upgrades pillow to 13.0.0 and filelock to 4.2.1 to address several CVEs.
-
-## [r26.10] 2026-10-26
-
-### Added
-
-### Changed
- - Updates TensorFlow hash to b5d8801b1e0db562ced3f7f940c65f25d7aea453 from nightly, Sep 24th
-
-### Removed
-- Removes TensorFlow [PR #113368](https://github.com/tensorflow/tensorflow/pull/113368), which bump Compute Library version from v24.12 to v52.8.0.
-
-### Fixed
+ - Adds an explicit `urllib3~=2.8.0` requirement to keep transitive installations on v2.8
+   for CVE-2026-97687, CVE-2026-97688 and CVE-2026-97689.
+ - Updates `uv` from 0.9.29 to 0.13.4 for a security fix.
 
 ## [r26.08] 2026-08-03
 
