@@ -16,17 +16,10 @@ where `YY` is the year, and `MM` the month of the increment.
 ### Added
 
 ### Changed
- - Updates `fsspec` from 2024.9.0 to 2026.6.0 for CVE-2026-104851.
- - Updates `urllib3` from the 2.7 series to the 2.8 series for CVE-2026-97687, CVE-2026-97688 and CVE-2026-97689.
- - Updates `transformers` from the 5.3 series to the 5.20 series to address CVE-2026-9856, CVE-2026-80047 and CVE-2026-75104, and raises the compatible dependency requirements to `huggingface_hub>=1.31.0,<3.0`, `tokenizers~=0.23.1`, `safetensors>=0.8.0` and `regex>=2025.10.22`.
- - Updates `certifi` from 2024.8.30 to 2026.10.19 for a security fix.
- - Updates `uv` from 0.9.29 to 0.13.4 for a security fix.
 
 ### Removed
 
 ### Fixed
- - Upgrades librsvg in the final image and requires version 2.60.0+dfsg-1+deb13u1 or later for CVE-2026-96889, using the existing runtime `RUN` instruction to preserve the final layer count.
- - Upgrades pillow to 13.0.0 and filelock to 4.2.1 to address several CVEs.
 
 ## [r26.10] 2026-10-26
 
@@ -53,6 +46,13 @@ where `YY` is the year, and `MM` the month of the increment.
  - Removes the KleidiAI [MR #763](https://gitlab.arm.com/kleidi/kleidiai/-/merge_requests/763) that has already been merged.
 
 ### Fixed
+ - Upgrades librsvg in the final image and requires version 2.60.0+dfsg-1+deb13u1 or later for CVE-2026-96889, using the existing runtime `RUN` instruction to preserve the final layer count.
+ - Updates `fsspec` from 2024.9.0 to 2026.6.0 for CVE-2026-104851.
+ - Updates `urllib3` from the 2.7 series to the 2.8 series for CVE-2026-97687, CVE-2026-97688 and CVE-2026-97689.
+ - Updates `transformers` from the 5.3 series to the 5.20 series to address CVE-2026-9856, CVE-2026-80047 and CVE-2026-75104, and raises the compatible dependency requirements to `huggingface_hub>=1.31.0,<3.0`, `tokenizers~=0.23.1`, `safetensors>=0.8.0` and `regex>=2025.10.22`.
+ - Upgrades pillow to 13.0.0 and filelock to 4.2.1 to address several CVEs.
+ - Updates `certifi` from 2024.8.30 to 2026.10.19 for a security fix.
+ - Updates `uv` from 0.9.29 to 0.13.4 for a security fix.
 
 ## [r26.08] 2026-08-03
 
