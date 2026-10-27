@@ -44,6 +44,7 @@ where `YY` is the year, and `MM` the month of the increment.
  - Removes the obsolete workaround that disabled `sudo` in PyTorch's manywheel build because upstream [PR #189837](https://github.com/pytorch/pytorch/pull/189837) removed the Docker-daemon restart commands during its migration to remote BuildKit.
  - Removes obsolete oneDNN KleidiAI submodule setup now that PR #5156 adds KleidiAI as a regular directory.
  - Removes the KleidiAI [MR #763](https://gitlab.arm.com/kleidi/kleidiai/-/merge_requests/763) that has already been merged.
+ - Removes `uv` in favour of `pip` to simplify licensing.
 
 ### Fixed
  - Upgrades librsvg in the final image and requires version 2.60.0+dfsg-1+deb13u1 or later for CVE-2026-96889, using the existing runtime `RUN` instruction to preserve the final layer count.

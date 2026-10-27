@@ -34,31 +34,25 @@ COPY --chown=$DOCKER_USER:$DOCKER_USER welcome.txt /home/$DOCKER_USER/welcome.tx
 USER $DOCKER_USER
 WORKDIR /home/$DOCKER_USER
 
-# Add ~/.local/bin to PATH to use uv later
-ENV PATH="/home/$DOCKER_USER/.local/bin:${PATH}"
-
-# Install uv for quicker package installations (installed to ~/.local/bin with --user)
-ENV UV_NO_CACHE=1
-RUN python -m pip install --no-cache-dir --user uv==0.13.4
-
-# Create virtual environment with uv
-RUN uv venv /home/$DOCKER_USER/.venv
+# Create virtual environment with pip
+RUN python3 -m venv /home/$DOCKER_USER/.venv
 ENV PATH="/home/$DOCKER_USER/.venv/bin:${PATH}"
+ENV PIP_NO_CACHE_DIR=1
 
-# Remove pip and update to newer setuptools/wheel (setuptools >= 70.0.0 due to CVE-2024-6345
+# Update setuptools/wheel (setuptools >= 70.0.0 due to CVE-2024-6345
 # and CVE-2025-47273, wheel >= 0.38.0 due to CVE-2022-40898)
-RUN uv pip uninstall pip && uv pip install --upgrade setuptools~=78.1.1 wheel~=0.45.1
+RUN python3 -m pip install --upgrade setuptools~=78.1.1 wheel~=0.45.1
 
 # Install non-TensorFlow requirements
 COPY --chown=$DOCKER_USER:$DOCKER_USER requirements.txt .
-RUN uv pip install -r requirements.txt --no-deps
+RUN python3 -m pip install -r requirements.txt --no-deps
 
 # Bring wheels into image
 RUN test -n "${TENSORFLOW_WHEEL}"
 COPY --chown=$DOCKER_USER:$DOCKER_USER ${TENSORFLOW_WHEEL} /home/$DOCKER_USER/
 
 # Install wheel
-RUN set -eux && uv pip install "$(basename "$TENSORFLOW_WHEEL")" && rm "$(basename "$TENSORFLOW_WHEEL")"
+RUN set -eux && python3 -m pip install "$(basename "$TENSORFLOW_WHEEL")" && rm "$(basename "$TENSORFLOW_WHEEL")"
 
 # Copy examples/tests into image
 COPY --chown=$DOCKER_USER:$DOCKER_USER examples/ /home/$DOCKER_USER/
@@ -73,19 +67,10 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV DOCKER_USER=debian
 
 # Runtime OS bits + UI
-# Keep the librsvg security update in this RUN to preserve the final layer count.
 RUN set -eux && \
-    apt-get update && \
-    apt-get install -y --no-install-recommends --only-upgrade \
-        librsvg2-2 librsvg2-common librsvg2-dev && \
-    dpkg --compare-versions \
-        "$(dpkg-query -W -f='${Version}' librsvg2-2)" \
-        ge '2.60.0+dfsg-1+deb13u1' && \
-    rm -rf /var/lib/apt/lists/* && \
     if ! id "$DOCKER_USER" >/dev/null 2>&1; then useradd --create-home -s /bin/bash "$DOCKER_USER"; fi && \
     echo '[ -n "$TERM" -a -r "$HOME/welcome.txt" ] && cat "$HOME/welcome.txt"' >> /etc/bash.bashrc && \
-    echo 'export PATH="$HOME/.local/bin:$HOME/.venv/bin:$PATH"' >> /etc/bash.bashrc && \
-    python3 -m pip uninstall -y pip
+    echo 'export PATH="$HOME/.local/bin:$HOME/.venv/bin:$PATH"' >> /etc/bash.bashrc
 
 # Bring in prepped env + code
 COPY --from=workshop --chown=$DOCKER_USER:$DOCKER_USER /home/$DOCKER_USER /home/$DOCKER_USER
