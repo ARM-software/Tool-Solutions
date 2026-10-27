@@ -21,7 +21,7 @@ where `YY` is the year, and `MM` the month of the increment.
 
 ### Fixed
 
-## [r26.10] 2026-10-26
+## [r26.10] 2026-10-30
 
 ### Added
 
