@@ -35,6 +35,7 @@ where `YY` is the year, and `MM` the month of the increment.
  - Removes `transformers` and the example-only dependencies `huggingface-hub`, `tokenizers`,
    `safetensors`, `tf_keras`, `fsspec`, `regex`, `pandas`, `python-dateutil`, `pytz` and `tzdata`
    from the requirements.
+ - Removes `uv` in favour of `pip` to simplify licensing.
 
 ### Fixed
  - Upgrades librsvg in the final image and requires version 2.60.0+dfsg-1+deb13u1 or later for
