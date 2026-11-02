@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 """
-Class that wraps around TensorFlow session and execute frozen model
+Class that wraps and executes a model
 """
 
 import os
@@ -71,7 +71,7 @@ class DownloadProgressBar:
 
 class Model:
     """
-    Wrap around TensorFlow session and run inference
+    Wrap around model and run inference
     """
 
     def __init__(self):
@@ -120,8 +120,7 @@ class Model:
 
     def load(self, model_file, model_descriptor):
         """
-        Downloads the model from given URL and builds frozen function
-        that can be used for inference
+        Downloads the model from given URL and readies it for inference
         :param model_file: File describing model to build
         :param model_descriptor: Parsed yaml file describing model to build
         :returns: Function to be used for inference
