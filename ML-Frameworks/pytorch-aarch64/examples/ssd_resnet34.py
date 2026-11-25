@@ -20,8 +20,13 @@ FILES = [
     "vision/classification_and_detection/python/models/base_model_r34.py",
 ]
 
-# We need to replace calls to view with reshape with new PyTorch versions
-PATCH = {"ssd_r34.py": [".view", ".reshape"]}
+# Adapt the downloaded model to current PyTorch APIs and tensor layouts.
+PATCH = {
+    "ssd_r34.py": [
+        (".view", ".reshape"),
+        ("@torch.jit.script\n", ""),
+    ]
+}
 
 # Name of directory where the files should sit
 FOLDER = "models"
@@ -51,9 +56,8 @@ def main():
             with open(dest, "r") as file:
                 filedata = file.read()
                 # Patch the file
-                filedata = filedata.replace(
-                    PATCH[basename][0], PATCH[basename][1]
-                )
+                for old, new in PATCH[basename]:
+                    filedata = filedata.replace(old, new)
             with open(dest, "w") as file:
                 file.write(filedata)
 
