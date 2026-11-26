@@ -50,22 +50,21 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
         echo "Not applying extra patches to PyTorch build for source variant '$source_variant'"
     else
         # https://github.com/pytorch/pytorch/pull/193369 - Enable a reference CPU MXFP scaled_mm path
-        apply-github-patch pytorch/pytorch e2c390d3c2413434fb5f9564681ee276315fd600
-        apply-github-patch pytorch/pytorch ee3d7365af619245970121b7e78cb91d3ee3bce1
-        apply-github-patch pytorch/pytorch 022eb85860279f6c81ebd6ff4108c0ea0896c12b
+        apply-github-patch pytorch/pytorch 5355dbb998343f137d0959e55af245ec8a06f88a
+        apply-github-patch pytorch/pytorch 98a4bb017aab394d4788ad2a82d8e3309d2e39d7
+        apply-github-patch pytorch/pytorch 791e25280f4a34de8f89c3f07ae6cf7b1c98dc89
 
         # https://github.com/pytorch/pytorch/pull/184372 - [Draft] Remove ACL
-        apply-github-patch pytorch/pytorch c571509944f87598ded77fa184462fe074cfc8c5
-        apply-github-patch pytorch/pytorch 6fdf90160e24cefcfa7e22e9bccb3e8a0e7019e7
-
-        # https://github.com/pytorch/pytorch/pull/196237 - [inductor] Support Triton module globals in user-defined kernels
-        apply-github-patch pytorch/pytorch 1e17023ce4f8ea329dcfbef438f9cab18210b362
+        apply-github-patch pytorch/pytorch 1b1f3c78fa42ca3733eac24b43a89df134518ace
 
         # https://github.com/pytorch/pytorch/pull/196435 - Replace Linear inner_product calls with matmul
-        apply-github-patch pytorch/pytorch 6588e8f43a50816684e570f37475591d68ebce28
+        apply-github-patch pytorch/pytorch ac57d46fc92c701e83c232230378f3f6a91bbc67
 
-        # https://github.com/pytorch/pytorch/pull/200595 - Remove redundant python3.15 installation from aarch64 builder image
-        apply-github-patch pytorch/pytorch 6a55966c9a655ee9bc1dad504c910197f1adc38b
+        # https://github.com/pytorch/pytorch/pull/206798 - Preserve copy-on-write weights and biases in oneDNN Linear
+        apply-github-patch pytorch/pytorch de149d2b71ef1c7d0076871027a6fdfe84edc2cb
+
+        # https://github.com/pytorch/pytorch/pull/206684 - Fix zero-stride gradients in oneDNN GELU backward
+        apply-github-patch pytorch/pytorch d52880991949d9555eafa6d14fff6648930ceed7
     fi
 
     # Remove deps that we don't need for manylinux AArch64 CPU builds before fetching.
@@ -117,13 +116,14 @@ git-shallow-clone https://github.com/pytorch/pytorch.git $PYTORCH_HASH
                     echo "Not applying extra patches to oneDNN build for source variant '$source_variant'"
                 else
                     # https://github.com/uxlfoundation/oneDNN/pull/5156 - cpu: aarch64: replace acl with kleidiai
-                    apply-github-patch uxlfoundation/oneDNN 59e4143c2d47f3347b2574946200ea95812b988e
-                    apply-github-patch uxlfoundation/oneDNN 1b8417b74701753089a063415b03c852e2aed4f8
-                    apply-github-patch uxlfoundation/oneDNN 341943b3d423762385c3733b2392a3829dde5344
-                    apply-github-patch uxlfoundation/oneDNN 44ec824dfcab928947d9cfa3e7110d087c3932bc
-                    apply-github-patch uxlfoundation/oneDNN 294a037ddbd7942ac23ce0859dd05537106c9175
-                    apply-github-patch uxlfoundation/oneDNN 12765c5ff27aeae1e8cc86edda6c68450f94e326
-                    apply-github-patch uxlfoundation/oneDNN 6378bc0fe9f6ef254e92e006b224508444727fcf
+                    apply-github-patch uxlfoundation/oneDNN aa471b53ff24dfc5eeacb5de0b4d6b476129a208
+                    apply-github-patch uxlfoundation/oneDNN ad3fb910575ec142665a4e7e42e5777359575488
+                    apply-github-patch uxlfoundation/oneDNN ef0a1218801c8c715c7be5fe499aab273cbaf3b2
+                    apply-github-patch uxlfoundation/oneDNN d2a8a3d114c8af83e98dcbd930c8ff5743689101
+                    apply-github-patch uxlfoundation/oneDNN bb239310f91fa1ee4f9c53b911ac86f2c1a4a5d8
+                    apply-github-patch uxlfoundation/oneDNN 3559154b042d320e20b55c8473e3253e70144c8f
+                    apply-github-patch uxlfoundation/oneDNN 795878ff401032d5f53ef530240618c4c7b921c7
+                    apply-github-patch uxlfoundation/oneDNN eda9f9d2be04311cec586a14db0cd1dd0e7c9aae
 
                     # https://github.com/uxlfoundation/oneDNN/pull/6202 - cpu: aarch64: Preserve the precomputed input contribution in BRGEMM LSTM
                     apply-github-patch uxlfoundation/oneDNN 3767f886ee6a7cf002dac33e305d25a7d836a26a

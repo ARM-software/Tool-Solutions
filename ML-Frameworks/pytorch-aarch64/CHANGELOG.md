@@ -21,6 +21,34 @@ where `YY` is the year, and `MM` the month of the increment.
 
 ### Fixed
 
+## [r26.12] 2026-12-11
+
+### Added
+
+### Changed
+ - Updates `torchao` from 0.19.0.dev20260928 to 0.19.0.dev20261124.
+ - Updates `torchvision` from 0.30.0.dev20260927 to 0.30.0.dev20261007.
+ - Updates hashes for:
+   - `PYTORCH_HASH=68f0e54fd5ad3d7ceba57b36a5c2ebbacd3d6756`, 2.16.0.dev20261116 from viable/strict, November 16th, 2026.
+   - `IDEEP_HASH=788fed8c794f1e934b1c2330b69de3fed3905bec`, from ideep_pytorch, October 30th, 2026.
+   - `ONEDNN_HASH=9c7a3b6d6cf4e4068a16a30f65e4c5f7b0539c78`, from main, November 24th, 2026.
+   - `KLEIDIAI_HASH=2b0c108eb6a19e12e1e57cb84a2ce1773aa8b3ae`, v1.34.0 from main, November 24th, 2026.
+ - Updates patches from PyTorch:
+   - [PR #193369](https://github.com/pytorch/pytorch/pull/193369),
+   - [PR #184372](https://github.com/pytorch/pytorch/pull/184372),
+   - [PR #196435](https://github.com/pytorch/pytorch/pull/196435).
+ - Updates patches from oneDNN:
+   - [PR #5156](https://github.com/uxlfoundation/oneDNN/pull/5156).
+
+### Removed
+ - Disables the patch for PyTorch [PR #196237](https://github.com/pytorch/pytorch/pull/196237), which is already included upstream.
+ - Disables the patch for PyTorch [PR #200595](https://github.com/pytorch/pytorch/pull/200595), superseded by the already-included [PR #200653](https://github.com/pytorch/pytorch/pull/200653).
+ - Disables the redundant ideep update from PyTorch [PR #184372](https://github.com/pytorch/pytorch/pull/184372), since `IDEEP_HASH` and `ONEDNN_HASH` explicitly select the dependency revisions.
+
+### Fixed
+ - Preserves copy-on-write storage for read-only oneDNN Linear weights and biases with [PR #206798](https://github.com/pytorch/pytorch/pull/206798), fixing the regression introduced by PyTorch [PR #196435](https://github.com/pytorch/pytorch/pull/196435).
+ - Fixes oneDNN GELU backward failures with zero-stride gradients from `sum().backward()` by applying PyTorch [PR #206684](https://github.com/pytorch/pytorch/pull/206684).
+
 ## [r26.10] 2026-10-30
 
 ### Added
